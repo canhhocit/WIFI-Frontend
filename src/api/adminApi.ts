@@ -17,6 +17,12 @@ import {
   NetworkDeviceDto,
   DeviceSwapRequest,
   ExcelImportSummaryDto,
+  CampaignDto,
+  CreateCampaignRequest,
+  ApproveCampaignRequest,
+  SurveyDto,
+  SurveyResponseDto,
+  PortalTemplateDto,
 } from '../types/models';
 
 export const adminApi = {
@@ -219,5 +225,87 @@ export const adminApi = {
     if (params.size !== undefined) sp.append('size', params.size.toString());
 
     return request<PageResponse<AuditEventDto>>(`/admin/audit?${sp.toString()}`);
+  },
+
+  // Campaigns (Policy & Media)
+  getCampaigns: (params: { status?: string; page?: number; size?: number }) => {
+    const sp = new URLSearchParams();
+    if (params.status) sp.append('status', params.status);
+    if (params.page !== undefined) sp.append('page', params.page.toString());
+    if (params.size !== undefined) sp.append('size', params.size.toString());
+
+    return request<PageResponse<CampaignDto>>(`/v1/admin/campaigns?${sp.toString()}`);
+  },
+
+  getCampaignById: (id: number) => {
+    return request<CampaignDto>(`/v1/admin/campaigns/${id}`);
+  },
+
+  createCampaign: (data: CreateCampaignRequest) => {
+    return request<CampaignDto>('/v1/admin/campaigns', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  submitCampaign: (id: number) => {
+    return request<CampaignDto>(`/v1/admin/campaigns/${id}/submit`, {
+      method: 'POST',
+    });
+  },
+
+  approveCampaign: (id: number, data?: ApproveCampaignRequest) => {
+    return request<CampaignDto>(`/v1/admin/campaigns/${id}/approve`, {
+      method: 'POST',
+      body: JSON.stringify(data || {}),
+    });
+  },
+
+  rejectCampaign: (id: number, data?: ApproveCampaignRequest) => {
+    return request<CampaignDto>(`/v1/admin/campaigns/${id}/reject`, {
+      method: 'POST',
+      body: JSON.stringify(data || {}),
+    });
+  },
+
+  // Surveys
+  getSurveys: (params: { active?: boolean; page?: number; size?: number }) => {
+    const sp = new URLSearchParams();
+    if (params.active !== undefined) sp.append('active', params.active.toString());
+    if (params.page !== undefined) sp.append('page', params.page.toString());
+    if (params.size !== undefined) sp.append('size', params.size.toString());
+
+    return request<PageResponse<SurveyDto>>(`/v1/admin/surveys?${sp.toString()}`);
+  },
+
+  getSurveyById: (id: number) => {
+    return request<SurveyDto>(`/v1/admin/surveys/${id}`);
+  },
+
+  createSurvey: (data: SurveyDto) => {
+    return request<SurveyDto>('/v1/admin/surveys', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  getSurveyResponses: (id: number, page = 0, size = 20) => {
+    return request<PageResponse<SurveyResponseDto>>(`/v1/admin/surveys/${id}/responses?page=${page}&size=${size}`);
+  },
+
+  // Portal Templates
+  getPortalTemplates: () => {
+    return request<PortalTemplateDto[]>('/v1/admin/portal-templates');
+  },
+
+  getActivePortalTemplate: () => {
+    return request<PortalTemplateDto>('/v1/admin/portal-templates/active');
+  },
+
+  savePortalTemplate: (data: PortalTemplateDto) => {
+    return request<PortalTemplateDto>('/v1/admin/portal-templates', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 };

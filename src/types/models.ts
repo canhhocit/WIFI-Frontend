@@ -182,6 +182,11 @@ export interface PortalInitResponse {
   clientMacHint: string;
   mockGateway: boolean;
   gatewayNotice: string;
+  activeCampaign?: CampaignDto;
+  activeSurvey?: SurveyDto;
+  portalTemplate?: PortalTemplateDto;
+  macRemembered?: boolean;
+  otpRequired?: boolean;
 }
 
 export interface GuestLoginRequest {
@@ -317,4 +322,125 @@ export interface PageResponse<T> {
   totalElements: number;
   totalPages: number;
   last: boolean;
+}
+
+export interface CampaignDto {
+  id: number;
+  title: string;
+  description?: string;
+  bannerUrl?: string;
+  videoUrl?: string;
+  actionUrl?: string;
+  targetAdminUnitId?: number;
+  targetLocationId?: number;
+  priority: number;
+  startTime: string;
+  endTime: string;
+  status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
+  createdBy?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectReason?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCampaignRequest {
+  title: string;
+  description?: string;
+  bannerUrl?: string;
+  videoUrl?: string;
+  actionUrl?: string;
+  targetAdminUnitId?: number;
+  targetLocationId?: number;
+  priority?: number;
+  startTime: string;
+  endTime: string;
+}
+
+export interface ApproveCampaignRequest {
+  comment?: string;
+  rejectReason?: string;
+}
+
+export interface SurveyBranchingRuleDto {
+  id?: number;
+  questionId?: number;
+  conditionValue: string;
+  nextQuestionId?: number;
+  terminateSurvey: boolean;
+}
+
+export interface SurveyQuestionDto {
+  id?: number;
+  surveyId?: number;
+  questionText: string;
+  questionType: 'SINGLE_CHOICE' | 'MULTI_CHOICE' | 'TEXT' | 'RATING';
+  optionsJson?: string;
+  sortOrder: number;
+  required: boolean;
+  branchingRules?: SurveyBranchingRuleDto[];
+}
+
+export interface SurveyDto {
+  id: number;
+  campaignId?: number;
+  title: string;
+  description?: string;
+  maxResponsesQuota?: number;
+  currentResponsesCount: number;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  questions?: SurveyQuestionDto[];
+}
+
+export interface SurveyResponseSubmitRequest {
+  locationId?: number;
+  clientMac: string;
+  answers: Record<string, any>;
+}
+
+export interface SurveyResponseDto {
+  id: number;
+  surveyId: number;
+  locationId?: number;
+  clientMac: string;
+  answersJson: string;
+  submittedAt: string;
+}
+
+export interface PortalTemplateDto {
+  id?: number;
+  name: string;
+  templateType: 'DEFAULT' | 'CULTURAL' | 'BANNER_SURVEY' | 'VIDEO_AD';
+  themeColor: string;
+  backgroundColor: string;
+  logoUrl?: string;
+  bannerUrl?: string;
+  title: string;
+  welcomeText?: string;
+  buttonText: string;
+  termsText?: string;
+  layoutConfig?: string;
+  active: boolean;
+}
+
+export interface OtpRequestDto {
+  phoneNumber: string;
+  clientMac: string;
+}
+
+export interface OtpVerifyRequestDto {
+  phoneNumber: string;
+  clientMac: string;
+  otpCode: string;
+}
+
+export interface OtpResultDto {
+  success: boolean;
+  message: string;
+  testCodeHint?: string;
+  expiresInSeconds?: number;
+  bypassOtpUntil?: string;
 }

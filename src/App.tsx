@@ -11,6 +11,9 @@ import { DevicesPage } from './pages/admin/DevicesPage';
 import { AnalyticsPage } from './pages/admin/AnalyticsPage';
 import { AuditPage } from './pages/admin/AuditPage';
 import { GatewayPage } from './pages/admin/GatewayPage';
+import { PortalBuilderPage } from './pages/admin/PortalBuilderPage';
+import { CampaignsPage } from './pages/admin/CampaignsPage';
+import { SurveysPage } from './pages/admin/SurveysPage';
 
 export const App: React.FC = () => {
   return (
@@ -28,6 +31,9 @@ export const App: React.FC = () => {
         <Route path="sessions" element={<SessionsPage />} />
         <Route path="locations" element={<LocationsPage />} />
         <Route path="devices" element={<DevicesPage />} />
+        <Route path="portal-builder" element={<PortalBuilderPage />} />
+        <Route path="campaigns" element={<CampaignsPage />} />
+        <Route path="surveys" element={<SurveysPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="gateway" element={<GatewayPage />} />
