@@ -62,3 +62,9 @@ dist-ssr/
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# AI Agent & Skills
+.agents/
+.agent/
+skills/
+
