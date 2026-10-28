@@ -14,9 +14,80 @@ export interface LocationDto {
   promoContent?: string;
   promoBannerUrl?: string;
   promoActionUrl?: string;
+  adminUnitId?: number;
+  adminUnitName?: string;
+  locationCode?: string;
+  latitude?: number;
+  longitude?: number;
+  status?: string;
+  statusReason?: string;
+  ispName?: string;
+  circuitCode?: string;
+  contactName?: string;
+  contactPhone?: string;
   active: boolean;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface AdminUnitDto {
+  id: number;
+  parentId?: number;
+  parentName?: string;
+  code: string;
+  name: string;
+  level: number;
+  path: string;
+  status: string;
+  notes?: string;
+  children?: AdminUnitDto[];
+  createdAt?: string;
+}
+
+export interface NetworkDeviceDto {
+  id: number;
+  locationId?: number;
+  locationName?: string;
+  locationCode?: string;
+  adminUnitName?: string;
+  deviceType: string;
+  serialNumber: string;
+  macAddress: string;
+  model?: string;
+  vendor?: string;
+  firmwareVersion?: string;
+  ipAddress?: string;
+  status: string;
+  cpuUsagePercent?: number;
+  memoryUsagePercent?: number;
+  uptimeSeconds?: number;
+  lastSeenAt?: string;
+  installedAt?: string;
+}
+
+export interface DeviceSwapRequest {
+  locationId: number;
+  oldDeviceId?: number;
+  deviceType: string;
+  newSerialNumber: string;
+  newMacAddress: string;
+  newModel?: string;
+  newVendor?: string;
+  swapReason: string;
+}
+
+export interface ExcelImportSummaryDto {
+  importSessionId: string;
+  totalRows: number;
+  validRows: number;
+  errorRows: number;
+  rowResults: Array<{
+    rowNumber: number;
+    code: string;
+    name: string;
+    valid: boolean;
+    errors: string[];
+  }>;
 }
 
 export interface CreateLocationRequest {
@@ -24,6 +95,14 @@ export interface CreateLocationRequest {
   name: string;
   address?: string;
   description?: string;
+  adminUnitId?: number;
+  locationCode?: string;
+  latitude?: number;
+  longitude?: number;
+  ispName?: string;
+  circuitCode?: string;
+  contactName?: string;
+  contactPhone?: string;
   sessionDurationMinutes: number;
   maxBandwidthMbps: number;
   termsAndConditions: string;
@@ -39,6 +118,14 @@ export interface UpdateLocationRequest {
   name: string;
   address?: string;
   description?: string;
+  adminUnitId?: number;
+  locationCode?: string;
+  latitude?: number;
+  longitude?: number;
+  ispName?: string;
+  circuitCode?: string;
+  contactName?: string;
+  contactPhone?: string;
   sessionDurationMinutes?: number;
   maxBandwidthMbps?: number;
   termsAndConditions: string;

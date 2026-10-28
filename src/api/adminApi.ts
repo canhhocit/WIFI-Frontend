@@ -13,6 +13,10 @@ import {
   GatewayTransactionDto,
   AuditEventDto,
   SessionStatus,
+  AdminUnitDto,
+  NetworkDeviceDto,
+  DeviceSwapRequest,
+  ExcelImportSummaryDto,
 } from '../types/models';
 
 export const adminApi = {
@@ -125,6 +129,86 @@ export const adminApi = {
 
   getGatewayTransactions: (page = 0, size = 20) => {
     return request<PageResponse<GatewayTransactionDto>>(`/admin/gateway/transactions?page=${page}&size=${size}`);
+  },
+
+  // Geography (3-Tier Tree)
+  getAdminTree: () => {
+    return request<AdminUnitDto[]>('/v1/admin/geography/tree');
+  },
+  getAdminByLevel: (level: number) => {
+    return request<AdminUnitDto[]>(`/v1/admin/geography/level/${level}`);
+  },
+  getAdminChildren: (parentId: number) => {
+    return request<AdminUnitDto[]>(`/v1/admin/geography/parent/${parentId}`);
+  },
+  mergeAdminUnits: (data: { sourceUnitIds: number[]; targetUnitId: number; notes?: string }) => {
+    return request<void>('/v1/admin/geography/merge', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Network Infrastructure Devices
+  getNetworkDevices: (params: { type?: string; status?: string; adminUnitId?: number; page?: number; size?: number }) => {
+    const sp = new URLSearchParams();
+    if (params.type) sp.append('type', params.type);
+    if (params.status) sp.append('status', params.status);
+    if (params.adminUnitId) sp.append('adminUnitId', params.adminUnitId.toString());
+    if (params.page !== undefined) sp.append('page', params.page.toString());
+    if (params.size !== undefined) sp.append('size', params.size.toString());
+
+    return request<PageResponse<NetworkDeviceDto>>(`/v1/admin/network-devices?${sp.toString()}`);
+  },
+
+  getNetworkDeviceById: (id: number) => {
+    return request<NetworkDeviceDto>(`/v1/admin/network-devices/${id}`);
+  },
+
+  swapNetworkDevice: (data: DeviceSwapRequest) => {
+    return request<NetworkDeviceDto>('/v1/admin/network-devices/swap', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Excel Batch Import / Export 1.584 Locations
+  validateLocationsExcel: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = localStorage.getItem('admin_token');
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+
+    const res = await fetch(`${API_BASE_URL}/admin/locations/import/validate`, {
+      method: 'POST',
+      headers: {
+        Authorization: token ? `Bearer ${token}` : '',
+      },
+      body: formData,
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || 'Lỗi kiểm tra file Excel');
+    return json.data as ExcelImportSummaryDto;
+  },
+
+  commitLocationsExcel: (sessionId: string) => {
+    return request<number>(`/admin/locations/import/commit?sessionId=${sessionId}`, {
+      method: 'POST',
+    });
+  },
+
+  getExcelTemplateUrl: () => {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+    return `${API_BASE_URL}/admin/locations/import/template`;
+  },
+
+  getExcelErrorsUrl: (sessionId: string) => {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+    return `${API_BASE_URL}/admin/locations/import/errors/${sessionId}`;
+  },
+
+  getExcelExportUrl: () => {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+    return `${API_BASE_URL}/admin/locations/export`;
   },
 
   // Audit Events

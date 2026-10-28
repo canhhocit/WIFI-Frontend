@@ -8,22 +8,30 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  Zap,
   Loader2,
   RefreshCw,
   ExternalLink,
-  Signal
+  Signal,
+  Download,
+  Upload,
+  Globe2
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
-import { LocationDto, CreateLocationRequest, UpdateLocationRequest } from '../../types/models';
+import { LocationDto, CreateLocationRequest, UpdateLocationRequest, AdminUnitDto } from '../../types/models';
 import { Modal } from '../../components/Modal';
 import { AlertBanner } from '../../components/AlertBanner';
+import { ExcelImportModal } from '../../components/ExcelImportModal';
 
 export const LocationsPage: React.FC = () => {
   const [locations, setLocations] = useState<LocationDto[]>([]);
+  const [adminUnits, setAdminUnits] = useState<AdminUnitDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedAdminUnit, setSelectedAdminUnit] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+
+  // Excel Modal
+  const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
 
   // Modal State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -38,6 +46,11 @@ export const LocationsPage: React.FC = () => {
     name: '',
     address: '',
     description: '',
+    adminUnitId: '' as string | number,
+    latitude: '' as string | number,
+    longitude: '' as string | number,
+    ispProvider: 'VNPT',
+    circuitId: '',
     sessionDurationMinutes: 120,
     maxBandwidthMbps: 20,
     welcomeMessage: 'Chào mừng quý khách đến với mạng Wi-Fi miễn phí',
@@ -51,12 +64,13 @@ export const LocationsPage: React.FC = () => {
 
   useEffect(() => {
     loadLocations();
+    loadAdminUnits();
   }, []);
 
   const loadLocations = async () => {
     setLoading(true);
     try {
-      const resp = await adminApi.getLocations({ query: search.trim() || undefined, size: 50 });
+      const resp = await adminApi.getLocations({ query: search.trim() || undefined, size: 100 });
       setLocations(resp.content);
       setError(null);
     } catch (err: any) {
@@ -66,16 +80,30 @@ export const LocationsPage: React.FC = () => {
     }
   };
 
+  const loadAdminUnits = async () => {
+    try {
+      const units = await adminApi.getAdminByLevel(3);
+      setAdminUnits(units);
+    } catch {
+      // Silently fail or keep empty if no admin units yet
+    }
+  };
+
   const handleOpenCreate = () => {
     setFormData({
       slug: '',
       name: '',
       address: '',
       description: '',
+      adminUnitId: '',
+      latitude: '20.8449',
+      longitude: '106.6881',
+      ispProvider: 'VNPT',
+      circuitId: '',
       sessionDurationMinutes: 120,
       maxBandwidthMbps: 20,
-      welcomeMessage: 'Chào mừng quý khách đến với mạng Wi-Fi miễn phí',
-      termsAndConditions: 'Bằng việc kết nối vào mạng Wi-Fi này, quý khách cam kết tuân thủ chính sách sử dụng mạng hợp lý và an toàn thông tin.',
+      welcomeMessage: 'Chào mừng quý khách đến với mạng Wi-Fi Nhà văn hóa',
+      termsAndConditions: 'Bằng việc kết nối vào mạng Wi-Fi này, quý khách cam kết tuân thủ chính sách sử dụng mạng hợp lý và an toàn thông tin theo quy định của UBND TP Hải Phòng.',
       promoTitle: '',
       promoContent: '',
       promoBannerUrl: '',
@@ -93,6 +121,11 @@ export const LocationsPage: React.FC = () => {
       name: loc.name,
       address: loc.address || '',
       description: loc.description || '',
+      adminUnitId: loc.adminUnitId || '',
+      latitude: loc.latitude !== undefined && loc.latitude !== null ? loc.latitude : '',
+      longitude: loc.longitude !== undefined && loc.longitude !== null ? loc.longitude : '',
+      ispProvider: loc.ispName || 'VNPT',
+      circuitId: loc.circuitCode || '',
       sessionDurationMinutes: loc.sessionDurationMinutes,
       maxBandwidthMbps: loc.maxBandwidthMbps,
       welcomeMessage: loc.welcomeMessage || '',
@@ -117,6 +150,11 @@ export const LocationsPage: React.FC = () => {
         name: formData.name.trim(),
         address: formData.address.trim() || undefined,
         description: formData.description.trim() || undefined,
+        adminUnitId: formData.adminUnitId ? Number(formData.adminUnitId) : undefined,
+        latitude: formData.latitude !== '' ? Number(formData.latitude) : undefined,
+        longitude: formData.longitude !== '' ? Number(formData.longitude) : undefined,
+        ispName: formData.ispProvider.trim() || undefined,
+        circuitCode: formData.circuitId.trim() || undefined,
         sessionDurationMinutes: Number(formData.sessionDurationMinutes),
         maxBandwidthMbps: Number(formData.maxBandwidthMbps),
         welcomeMessage: formData.welcomeMessage.trim() || undefined,
@@ -150,6 +188,11 @@ export const LocationsPage: React.FC = () => {
         name: formData.name.trim(),
         address: formData.address.trim() || undefined,
         description: formData.description.trim() || undefined,
+        adminUnitId: formData.adminUnitId ? Number(formData.adminUnitId) : undefined,
+        latitude: formData.latitude !== '' ? Number(formData.latitude) : undefined,
+        longitude: formData.longitude !== '' ? Number(formData.longitude) : undefined,
+        ispName: formData.ispProvider.trim() || undefined,
+        circuitCode: formData.circuitId.trim() || undefined,
         sessionDurationMinutes: Number(formData.sessionDurationMinutes),
         maxBandwidthMbps: Number(formData.maxBandwidthMbps),
         welcomeMessage: formData.welcomeMessage.trim() || undefined,
@@ -185,17 +228,38 @@ export const LocationsPage: React.FC = () => {
     }
   };
 
+  const filteredLocations = locations.filter((loc) => {
+    if (selectedAdminUnit && loc.adminUnitId !== Number(selectedAdminUnit)) {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Title & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Điểm Phát Wi-Fi</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Hệ Thống 1.584 Điểm Phát Wi-Fi</h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Quản lý các chi nhánh cửa hàng, thời lượng phiên truy cập, giới hạn băng thông và lời chào mừng.
+            Quản lý mạng lưới Nhà văn hóa, cấu hình băng thông, định vị tọa độ GPS và địa bàn hành chính TP Hải Phòng.
           </p>
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => window.open(adminApi.getExcelExportUrl(), '_blank')}
+            className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-100 bg-white rounded-xl text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
+            title="Xuất toàn bộ 1.584 điểm phát ra file Excel"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-600" /> Xuất Excel
+          </button>
+          <button
+            onClick={() => setIsExcelModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-emerald-600/20 cursor-pointer"
+            title="Nhập hàng loạt điểm phát từ file Excel"
+          >
+            <Upload className="w-3.5 h-3.5" /> Nhập Excel 1.584 điểm
+          </button>
           <button
             onClick={loadLocations}
             className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-100 bg-white rounded-xl text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
@@ -206,29 +270,45 @@ export const LocationsPage: React.FC = () => {
             onClick={handleOpenCreate}
             className="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-sky-600/20 cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Thêm điểm phát mới
+            <Plus className="w-4 h-4" /> Thêm điểm phát
           </button>
         </div>
       </div>
 
       {error && <AlertBanner type="error" message={error} />}
 
-      {/* Search Input */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-2">
-        <div className="relative flex-1">
+      {/* Search & Admin Unit Filter */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center gap-3">
+        <div className="relative flex-1 w-full">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && loadLocations()}
-            placeholder="Tìm theo tên điểm phát, địa chỉ hoặc mã slug..."
+            placeholder="Tìm theo tên điểm phát, địa chỉ, mã đường truyền hoặc slug..."
             className="w-full pl-10 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition"
           />
         </div>
+        {adminUnits.length > 0 && (
+          <div className="w-full md:w-64">
+            <select
+              value={selectedAdminUnit}
+              onChange={(e) => setSelectedAdminUnit(e.target.value)}
+              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+            >
+              <option value="">-- Tất cả Xã / Phường / Thị trấn --</option>
+              {adminUnits.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name} ({u.code})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <button
           onClick={loadLocations}
-          className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+          className="w-full md:w-auto px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
         >
           Tìm kiếm
         </button>
@@ -241,9 +321,9 @@ export const LocationsPage: React.FC = () => {
             <thead>
               <tr className="bg-slate-50/70 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 <th className="py-3.5 px-4">Tên điểm phát & Slug</th>
-                <th className="py-3.5 px-4">Địa chỉ</th>
-                <th className="py-3.5 px-4">Thời lượng phiên</th>
-                <th className="py-3.5 px-4">Băng thông</th>
+                <th className="py-3.5 px-4">Địa chỉ & Tọa độ GPS</th>
+                <th className="py-3.5 px-4">Nhà mạng & Mã cáp</th>
+                <th className="py-3.5 px-4">Thời lượng & Băng thông</th>
                 <th className="py-3.5 px-4">Trạng thái</th>
                 <th className="py-3.5 px-4 text-right">Thao tác</th>
               </tr>
@@ -256,51 +336,47 @@ export const LocationsPage: React.FC = () => {
                     Đang tải danh sách điểm phát Wi-Fi...
                   </td>
                 </tr>
-              ) : locations.length === 0 ? (
+              ) : filteredLocations.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
-                    Chưa có điểm phát Wi-Fi nào. Hãy bấm "Thêm điểm phát mới".
+                    Không tìm thấy điểm phát nào phù hợp với điều kiện tìm kiếm.
                   </td>
                 </tr>
               ) : (
-                locations.map((loc) => (
+                filteredLocations.map((loc) => (
                   <tr key={loc.id} className="hover:bg-slate-50/80 transition">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2.5">
-                        {loc.promoBannerUrl ? (
-                          <img
-                            src={loc.promoBannerUrl}
-                            alt=""
-                            className="w-10 h-8 rounded-lg object-cover border border-slate-200 flex-shrink-0 shadow-xs"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center flex-shrink-0">
-                            <MapPin className="w-4 h-4" />
-                          </div>
-                        )}
+                        <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center flex-shrink-0">
+                          <MapPin className="w-4 h-4" />
+                        </div>
                         <div>
                           <span className="font-bold text-slate-900 block text-xs">{loc.name}</span>
                           <span className="text-[11px] font-mono text-slate-400 block">/portal?location={loc.slug}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-600 max-w-xs truncate">
-                      {loc.address || <span className="text-slate-400 italic">Chưa cập nhật địa chỉ</span>}
+                    <td className="py-3.5 px-4 text-slate-600 max-w-xs">
+                      <div className="truncate font-medium">{loc.address || <span className="text-slate-400 italic">Chưa có địa chỉ</span>}</div>
+                      {loc.latitude && loc.longitude ? (
+                        <span className="text-[10px] font-mono text-sky-600 flex items-center gap-1 mt-0.5">
+                          <Globe2 className="w-3 h-3" /> {loc.latitude.toFixed(4)}, {loc.longitude.toFixed(4)}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-amber-500 italic">Chưa gán GPS</span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-700">
+                      <div className="font-bold text-slate-800">{loc.ispName || 'VNPT'}</div>
+                      <div className="text-[11px] font-mono text-slate-400">{loc.circuitCode || 'Chưa gán mã'}</div>
                     </td>
                     <td className="py-3.5 px-4 font-semibold text-slate-700">
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-slate-400" />
-                        {loc.sessionDurationMinutes} phút
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 font-semibold text-slate-700">
-                      <span className="inline-flex items-center gap-1">
-                        <Signal className="w-3.5 h-3.5 text-emerald-600" />
-                        {loc.maxBandwidthMbps} Mbps
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-slate-400" /> {loc.sessionDurationMinutes} phút
+                      </div>
+                      <div className="flex items-center gap-1 text-[11px] text-emerald-600 mt-0.5">
+                        <Signal className="w-3 h-3" /> {loc.maxBandwidthMbps} Mbps
+                      </div>
                     </td>
                     <td className="py-3.5 px-4">
                       {loc.active ? (
@@ -319,7 +395,7 @@ export const LocationsPage: React.FC = () => {
                         target="_blank"
                         rel="noreferrer"
                         className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg inline-block transition"
-                        title="Mở thử Cổng khách của điểm phát này"
+                        title="Mở Cổng khách của điểm này"
                       >
                         <ExternalLink className="w-4 h-4" />
                       </a>
@@ -350,7 +426,7 @@ export const LocationsPage: React.FC = () => {
       <Modal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
-        title="Thêm Điểm Phát Wi-Fi Mới"
+        title="Thêm Điểm Phát Wi-Fi Nhà Văn Hóa Mới"
         maxWidth="lg"
       >
         <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs">
@@ -365,7 +441,7 @@ export const LocationsPage: React.FC = () => {
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Ví dụ: Circle K - Ga Trung Tâm"
+                placeholder="Ví dụ: Nhà văn hóa Thôn Lập Lễ"
                 className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20"
                 required
               />
@@ -379,7 +455,7 @@ export const LocationsPage: React.FC = () => {
                 type="text"
                 value={formData.slug}
                 onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
-                placeholder="Ví dụ: circle-k-central"
+                placeholder="Ví dụ: nvh-thon-lap-le"
                 className="w-full px-3 py-2 text-xs font-mono border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20"
                 required
               />
@@ -387,14 +463,79 @@ export const LocationsPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Địa chỉ chi nhánh</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Địa chỉ chi tiết</label>
             <input
               type="text"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              placeholder="Ví dụ: 102 Đại lộ Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh"
+              placeholder="Ví dụ: Thôn Lập Lễ, Xã Lập Lễ, Huyện Thủy Nguyên, Hải Phòng"
               className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20"
             />
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Xã / Phường trực thuộc</label>
+              <select
+                value={formData.adminUnitId}
+                onChange={(e) => setFormData({ ...formData, adminUnitId: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 bg-white"
+              >
+                <option value="">-- Chưa gán địa bàn --</option>
+                {adminUnits.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Vĩ độ (Latitude) Hải Phòng</label>
+              <input
+                type="number"
+                step="0.000001"
+                value={formData.latitude}
+                onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                placeholder="20.50 - 21.15"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Kinh độ (Longitude) Hải Phòng</label>
+              <input
+                type="number"
+                step="0.000001"
+                value={formData.longitude}
+                onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                placeholder="106.40 - 107.15"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-mono"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Nhà mạng (ISP)</label>
+              <select
+                value={formData.ispProvider}
+                onChange={(e) => setFormData({ ...formData, ispProvider: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 bg-white"
+              >
+                <option value="VNPT">VNPT</option>
+                <option value="Viettel">Viettel</option>
+                <option value="FPT">FPT Telecom</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Mã đường truyền / Hợp đồng cáp</label>
+              <input
+                type="text"
+                value={formData.circuitId}
+                onChange={(e) => setFormData({ ...formData, circuitId: e.target.value })}
+                placeholder="Ví dụ: HP-HBG-00129"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-mono"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -433,68 +574,6 @@ export const LocationsPage: React.FC = () => {
               onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
               className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20"
             />
-          </div>
-
-          {/* Promotional / Survey Marketing Section */}
-          <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-2.5">
-            <span className="text-xs font-bold text-slate-800 block">
-              Chiến dịch quảng cáo / Khảo sát (Tùy chọn cho chi nhánh này)
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div>
-                <label className="block text-[11px] font-medium text-slate-600 mb-0.5">Tiêu đề bài viết / Khảo sát</label>
-                <input
-                  type="text"
-                  value={formData.promoTitle}
-                  onChange={(e) => setFormData({ ...formData, promoTitle: e.target.value })}
-                  placeholder="VD: Khảo sát nhận voucher 20%"
-                  className="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-md bg-white"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-slate-600 mb-0.5">Link hành động / Link khảo sát</label>
-                <input
-                  type="text"
-                  value={formData.promoActionUrl}
-                  onChange={(e) => setFormData({ ...formData, promoActionUrl: e.target.value })}
-                  placeholder="VD: https://forms.gle/... hoặc link web"
-                  className="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-md bg-white"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-0.5">Link ảnh Banner quảng cáo</label>
-              <input
-                type="text"
-                value={formData.promoBannerUrl}
-                onChange={(e) => setFormData({ ...formData, promoBannerUrl: e.target.value })}
-                placeholder="VD: /banners/central.jpg hoặc https://..."
-                className="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-md bg-white"
-              />
-              {formData.promoBannerUrl && (
-                <div className="mt-1.5 rounded-lg overflow-hidden border border-slate-200 h-24 bg-slate-100 relative">
-                  <img
-                    src={formData.promoBannerUrl}
-                    alt="Xem trước banner"
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = 'none';
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-            <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-0.5">Nội dung giới thiệu / Khảo sát</label>
-              <textarea
-                rows={2}
-                value={formData.promoContent}
-                onChange={(e) => setFormData({ ...formData, promoContent: e.target.value })}
-                placeholder="Nội dung tóm tắt bài báo, thông điệp quảng cáo hoặc hướng dẫn khảo sát..."
-                className="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-md bg-white"
-              />
-            </div>
           </div>
 
           <div>
@@ -567,13 +646,75 @@ export const LocationsPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Địa chỉ chi nhánh</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Địa chỉ chi tiết</label>
             <input
               type="text"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20"
             />
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Xã / Phường trực thuộc</label>
+              <select
+                value={formData.adminUnitId}
+                onChange={(e) => setFormData({ ...formData, adminUnitId: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 bg-white"
+              >
+                <option value="">-- Chưa gán địa bàn --</option>
+                {adminUnits.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Vĩ độ GPS</label>
+              <input
+                type="number"
+                step="0.000001"
+                value={formData.latitude}
+                onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Kinh độ GPS</label>
+              <input
+                type="number"
+                step="0.000001"
+                value={formData.longitude}
+                onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-mono"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Nhà mạng (ISP)</label>
+              <select
+                value={formData.ispProvider}
+                onChange={(e) => setFormData({ ...formData, ispProvider: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 bg-white"
+              >
+                <option value="VNPT">VNPT</option>
+                <option value="Viettel">Viettel</option>
+                <option value="FPT">FPT Telecom</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Mã đường truyền cáp</label>
+              <input
+                type="text"
+                value={formData.circuitId}
+                onChange={(e) => setFormData({ ...formData, circuitId: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-mono"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -612,68 +753,6 @@ export const LocationsPage: React.FC = () => {
               onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
               className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20"
             />
-          </div>
-
-          {/* Promotional / Survey Marketing Section */}
-          <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-2.5">
-            <span className="text-xs font-bold text-slate-800 block">
-              Chiến dịch quảng cáo / Khảo sát (Tùy chọn cho chi nhánh này)
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div>
-                <label className="block text-[11px] font-medium text-slate-600 mb-0.5">Tiêu đề bài viết / Khảo sát</label>
-                <input
-                  type="text"
-                  value={formData.promoTitle}
-                  onChange={(e) => setFormData({ ...formData, promoTitle: e.target.value })}
-                  placeholder="VD: Khảo sát nhận voucher 20%"
-                  className="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-md bg-white"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-slate-600 mb-0.5">Link hành động / Link khảo sát</label>
-                <input
-                  type="text"
-                  value={formData.promoActionUrl}
-                  onChange={(e) => setFormData({ ...formData, promoActionUrl: e.target.value })}
-                  placeholder="VD: https://forms.gle/... hoặc link web"
-                  className="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-md bg-white"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-0.5">Link ảnh Banner quảng cáo</label>
-              <input
-                type="text"
-                value={formData.promoBannerUrl}
-                onChange={(e) => setFormData({ ...formData, promoBannerUrl: e.target.value })}
-                placeholder="VD: /banners/central.jpg hoặc https://..."
-                className="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-md bg-white"
-              />
-              {formData.promoBannerUrl && (
-                <div className="mt-1.5 rounded-lg overflow-hidden border border-slate-200 h-24 bg-slate-100 relative">
-                  <img
-                    src={formData.promoBannerUrl}
-                    alt="Xem trước banner"
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = 'none';
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-            <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-0.5">Nội dung giới thiệu / Khảo sát</label>
-              <textarea
-                rows={2}
-                value={formData.promoContent}
-                onChange={(e) => setFormData({ ...formData, promoContent: e.target.value })}
-                placeholder="Nội dung tóm tắt bài báo, thông điệp quảng cáo hoặc hướng dẫn khảo sát..."
-                className="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-md bg-white"
-              />
-            </div>
           </div>
 
           <div>
@@ -750,6 +829,15 @@ export const LocationsPage: React.FC = () => {
           </div>
         )}
       </Modal>
+
+      {/* Modal 4: Excel Import Wizard (Screen C08, C09) */}
+      <ExcelImportModal
+        isOpen={isExcelModalOpen}
+        onClose={() => setIsExcelModalOpen(false)}
+        onSuccess={() => {
+          loadLocations();
+        }}
+      />
     </div>
   );
 };
