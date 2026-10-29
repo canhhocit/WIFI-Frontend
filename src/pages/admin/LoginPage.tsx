@@ -97,7 +97,6 @@ export const LoginPage: React.FC = () => {
                 <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
                   Mật khẩu truy cập
                 </label>
-                <span className="text-[10px] text-slate-500 font-medium">Khóa sau 5 lần sai (C02)</span>
               </div>
               <input
                 type="password"

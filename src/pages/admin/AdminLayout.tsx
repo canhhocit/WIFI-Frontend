@@ -37,14 +37,17 @@ import { authApi } from '../../api/authApi';
 import { adminApi } from '../../api/adminApi';
 import { AdminUserDto, GatewayStatusDto } from '../../types/models';
 
+interface NavItem {
+  to: string;
+  label: string;
+  icon: any;
+  end?: boolean;
+  allowedRoles?: string[];
+}
+
 interface NavGroup {
   groupTitle: string;
-  items: Array<{
-    to: string;
-    label: string;
-    icon: any;
-    end?: boolean;
-  }>;
+  items: NavItem[];
 }
 
 const NAV_GROUPS: NavGroup[] = [
@@ -52,43 +55,133 @@ const NAV_GROUPS: NavGroup[] = [
     groupTitle: 'HẠ TẦNG & ĐIỂM PHÁT SÓNG',
     items: [
       { to: '/admin', label: 'Tổng quan điều hành', icon: LayoutDashboard, end: true },
-      { to: '/admin/gis', label: 'Bản đồ số GIS 1.584 Điểm', icon: Map },
+      {
+        to: '/admin/gis',
+        label: 'Bản đồ số GIS 1.584 Điểm',
+        icon: Map,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_DISTRICT_OFFICER', 'ROLE_VNPT_ENGINEER'],
+      },
       { to: '/admin/locations', label: 'Danh bạ Nhà văn hóa', icon: MapPin },
-      { to: '/admin/devices', label: 'Thiết bị & AP Gateway', icon: Smartphone },
+      {
+        to: '/admin/devices',
+        label: 'Thiết bị & AP Gateway',
+        icon: Smartphone,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_VNPT_ENGINEER'],
+      },
       { to: '/admin/sessions', label: 'Quản lý phiên truy cập', icon: Users },
     ],
   },
   {
     groupTitle: 'GIÁM SÁT MẠNG & SỰ CỐ SLA',
     items: [
-      { to: '/admin/alerts', label: 'Đo kiểm & Cảnh báo', icon: BellRing },
+      {
+        to: '/admin/alerts',
+        label: 'Đo kiểm & Cảnh báo',
+        icon: BellRing,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_DISTRICT_OFFICER', 'ROLE_VNPT_ENGINEER'],
+      },
       { to: '/admin/incidents', label: 'Xử lý sự cố viễn thông', icon: ShieldAlert },
-      { to: '/admin/sla', label: 'Cam kết SLA & MTTR', icon: ShieldCheck },
-      { to: '/admin/network-policies', label: 'Chính sách QoS băng thông', icon: Gauge },
-      { to: '/admin/blacklist', label: 'Danh sách cấm MAC', icon: Ban },
-      { to: '/admin/access-logs', label: 'Nhật ký 12 tháng pháp lý', icon: Lock },
-      { to: '/admin/radius-gateway', label: 'RADIUS & OPNsense', icon: Server },
+      {
+        to: '/admin/sla',
+        label: 'Cam kết SLA & MTTR',
+        icon: ShieldCheck,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_VNPT_ENGINEER'],
+      },
+      {
+        to: '/admin/network-policies',
+        label: 'Chính sách QoS băng thông',
+        icon: Gauge,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_VNPT_ENGINEER'],
+      },
+      {
+        to: '/admin/blacklist',
+        label: 'Danh sách cấm MAC',
+        icon: Ban,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_VNPT_ENGINEER'],
+      },
+      {
+        to: '/admin/access-logs',
+        label: 'Nhật ký 12 tháng pháp lý',
+        icon: Lock,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN'],
+      },
+      {
+        to: '/admin/radius-gateway',
+        label: 'RADIUS & OPNsense',
+        icon: Server,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_VNPT_ENGINEER'],
+      },
     ],
   },
   {
     groupTitle: 'CỔNG CHÀO & TRUYỀN THÔNG SỐ',
     items: [
-      { to: '/admin/portal-builder', label: 'Trình dựng Cổng chào', icon: Palette },
-      { to: '/admin/campaigns', label: 'Chiến dịch tuyên truyền', icon: Megaphone },
-      { to: '/admin/surveys', label: 'Khảo sát ý kiến nhân dân', icon: ClipboardList },
-      { to: '/admin/dns-filtering', label: 'Bộ lọc tên miền DNS & DVC', icon: Globe },
+      {
+        to: '/admin/portal-builder',
+        label: 'Trình dựng Cổng chào',
+        icon: Palette,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN'],
+      },
+      {
+        to: '/admin/campaigns',
+        label: 'Chiến dịch tuyên truyền',
+        icon: Megaphone,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_DISTRICT_OFFICER'],
+      },
+      {
+        to: '/admin/surveys',
+        label: 'Khảo sát ý kiến nhân dân',
+        icon: ClipboardList,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_DISTRICT_OFFICER', 'ROLE_COMMUNE_OFFICER'],
+      },
+      {
+        to: '/admin/dns-filtering',
+        label: 'Bộ lọc tên miền DNS & DVC',
+        icon: Globe,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN'],
+      },
     ],
   },
   {
     groupTitle: 'QUẢN TRỊ CHÍNH QUYỀN & HỆ THỐNG',
     items: [
-      { to: '/admin/government-report', label: 'Báo cáo Sở TT&TT / UBND', icon: Landmark },
-      { to: '/admin/users', label: 'Cán bộ 5 cấp & Địa bàn', icon: UserCheck },
-      { to: '/admin/role-permissions', label: 'Ma trận phân quyền RBAC', icon: KeyRound },
-      { to: '/admin/system-settings', label: 'Cấu hình tham số hệ thống', icon: Settings },
+      {
+        to: '/admin/government-report',
+        label: 'Báo cáo Sở TT&TT / UBND',
+        icon: Landmark,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_DISTRICT_OFFICER'],
+      },
+      {
+        to: '/admin/users',
+        label: 'Cán bộ 5 cấp & Địa bàn',
+        icon: UserCheck,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN'],
+      },
+      {
+        to: '/admin/role-permissions',
+        label: 'Ma trận phân quyền RBAC',
+        icon: KeyRound,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN'],
+      },
+      {
+        to: '/admin/system-settings',
+        label: 'Cấu hình tham số hệ thống',
+        icon: Settings,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN'],
+      },
       { to: '/admin/analytics', label: 'Thống kê & Báo cáo', icon: BarChart3 },
-      { to: '/admin/audit', label: 'Nhật ký kiểm toán an toàn', icon: ScrollText },
-      { to: '/admin/gateway', label: 'Chẩn đoán kết nối Gateway', icon: Radio },
+      {
+        to: '/admin/audit',
+        label: 'Nhật ký kiểm toán an toàn',
+        icon: ScrollText,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN'],
+      },
+      {
+        to: '/admin/gateway',
+        label: 'Chẩn đoán kết nối Gateway',
+        icon: Radio,
+        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_VNPT_ENGINEER'],
+      },
     ],
   },
 ];
@@ -137,21 +230,77 @@ export const AdminLayout: React.FC = () => {
   const getRoleBadge = (role?: string) => {
     switch (role) {
       case 'ROLE_SUPER_ADMIN':
-        return { label: 'Quản trị Tối cao', color: 'bg-slate-800 text-slate-100 border-slate-600' };
+      case 'ROLE_ADMIN':
+        return {
+          label: 'Quản trị Tối cao',
+          scope: 'Toàn quyền Hệ thống',
+          color: 'bg-slate-800 text-slate-100 border-slate-600',
+        };
       case 'ROLE_SOTTTT_ADMIN':
-        return { label: 'Sở TT&TT Hải Phòng', color: 'bg-[#004b87] text-white border-[#003865]' };
+        return {
+          label: 'Sở TT&TT Hải Phòng',
+          scope: 'Toàn Thành phố',
+          color: 'bg-[#004b87] text-white border-[#003865]',
+        };
       case 'ROLE_DISTRICT_OFFICER':
-        return { label: 'Cán bộ Quận/Huyện', color: 'bg-slate-700 text-slate-100 border-slate-600' };
+        return {
+          label: 'Cán bộ Quận/Huyện',
+          scope: 'Địa bàn Quận / Huyện',
+          color: 'bg-slate-700 text-slate-100 border-slate-600',
+        };
       case 'ROLE_COMMUNE_OFFICER':
-        return { label: 'Cán bộ Phường/Xã', color: 'bg-slate-700 text-slate-100 border-slate-600' };
+        return {
+          label: 'Cán bộ Phường/Xã',
+          scope: 'Cơ sở Phường / Xã',
+          color: 'bg-slate-700 text-slate-100 border-slate-600',
+        };
       case 'ROLE_VNPT_ENGINEER':
-        return { label: 'Kỹ sư VNPT', color: 'bg-[#003865] text-blue-100 border-blue-700' };
+        return {
+          label: 'Kỹ sư VNPT',
+          scope: 'Hạ tầng Viễn thông',
+          color: 'bg-[#003865] text-blue-100 border-blue-700',
+        };
       default:
-        return { label: 'Cán bộ Vận hành', color: 'bg-slate-800 text-slate-300 border-slate-700' };
+        return {
+          label: 'Cán bộ Vận hành',
+          scope: 'Phân quyền Tiêu chuẩn',
+          color: 'bg-slate-800 text-slate-300 border-slate-700',
+        };
     }
   };
 
   const roleInfo = getRoleBadge(currentUser?.role);
+  const userRole = currentUser?.role || 'ROLE_SUPER_ADMIN';
+
+  // Dynamically filter navigation items based on current officer's RBAC role
+  const filteredNavGroups = NAV_GROUPS.map((group) => {
+    const visibleItems = group.items.filter((item) => {
+      if (!item.allowedRoles) return true;
+      if (userRole === 'ROLE_SUPER_ADMIN' || userRole === 'ROLE_ADMIN') return true;
+      return item.allowedRoles.includes(userRole);
+    });
+    return {
+      ...group,
+      items: visibleItems,
+    };
+  }).filter((group) => group.items.length > 0);
+
+  // Check if current URL route is permitted for current role
+  const isCurrentPathAllowed = () => {
+    if (userRole === 'ROLE_SUPER_ADMIN' || userRole === 'ROLE_ADMIN') return true;
+    for (const group of NAV_GROUPS) {
+      for (const item of group.items) {
+        const matches = item.end
+          ? location.pathname === item.to
+          : location.pathname === item.to || location.pathname.startsWith(`${item.to}/`);
+        if (matches) {
+          if (!item.allowedRoles) return true;
+          return item.allowedRoles.includes(userRole);
+        }
+      }
+    }
+    return true;
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row font-sans">
@@ -190,6 +339,11 @@ export const AdminLayout: React.FC = () => {
               <div className="text-[10.5px] text-slate-300 font-medium truncate mt-1">
                 Cổng Quản Trị Wi-Fi Công Cộng
               </div>
+              <div className="mt-1 flex items-center gap-1.5">
+                <span className="text-[9px] font-mono font-medium px-1.5 py-0.5 rounded-xs bg-[#18365a] text-blue-200 border border-blue-400/20 truncate">
+                  {roleInfo.scope}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -206,9 +360,9 @@ export const AdminLayout: React.FC = () => {
           </div>
         </div>
 
-        {/* Categorized Nav Groups */}
+        {/* Categorized Nav Groups (Generated dynamically by Role) */}
         <nav className="flex-1 px-3 py-3 space-y-4 overflow-y-auto custom-scrollbar">
-          {NAV_GROUPS.map((group) => (
+          {filteredNavGroups.map((group) => (
             <div key={group.groupTitle} className="space-y-1">
               <div className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 {group.groupTitle}
@@ -307,9 +461,34 @@ export const AdminLayout: React.FC = () => {
           </div>
         </header>
 
-        {/* Page Body */}
+        {/* Page Body with RBAC Route Guard */}
         <main className="flex-1 p-4 sm:p-5 lg:p-6 overflow-y-auto bg-slate-100">
-          <Outlet />
+          {!isCurrentPathAllowed() ? (
+            <div className="max-w-xl mx-auto mt-12 p-6 bg-white border border-slate-300 rounded shadow-xs text-center space-y-4">
+              <div className="w-12 h-12 rounded bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto">
+                <ShieldAlert className="w-6 h-6 text-amber-600" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
+                  Quyền Hạn Truy Cập Bị Giới Hạn
+                </h2>
+                <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+                  Tài khoản của bạn đăng nhập với vai trò <strong>{roleInfo.label}</strong> ({roleInfo.scope}).
+                  Tính năng này yêu cầu đặc quyền phân quyền cao hơn theo Ma trận phân quyền RBAC Thành phố.
+                </p>
+              </div>
+              <div className="pt-2">
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="px-4 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold cursor-pointer shadow-xs transition"
+                >
+                  Trở Về Bảng Điều Hành Trung Tâm
+                </button>
+              </div>
+            </div>
+          ) : (
+            <Outlet />
+          )}
         </main>
       </div>
     </div>
