@@ -137,15 +137,15 @@ export const AdminLayout: React.FC = () => {
   const getRoleBadge = (role?: string) => {
     switch (role) {
       case 'ROLE_SUPER_ADMIN':
-        return { label: 'Quản trị Tối cao', color: 'bg-purple-900/60 text-purple-200 border-purple-700/50' };
+        return { label: 'Quản trị Tối cao', color: 'bg-slate-800 text-slate-100 border-slate-600' };
       case 'ROLE_SOTTTT_ADMIN':
-        return { label: 'Sở TT&TT Hải Phòng', color: 'bg-blue-900/60 text-blue-200 border-blue-700/50' };
+        return { label: 'Sở TT&TT Hải Phòng', color: 'bg-[#004b87] text-white border-[#003865]' };
       case 'ROLE_DISTRICT_OFFICER':
-        return { label: 'Cán bộ Quận/Huyện', color: 'bg-emerald-900/60 text-emerald-200 border-emerald-700/50' };
+        return { label: 'Cán bộ Quận/Huyện', color: 'bg-slate-700 text-slate-100 border-slate-600' };
       case 'ROLE_COMMUNE_OFFICER':
-        return { label: 'Cán bộ Phường/Xã', color: 'bg-teal-900/60 text-teal-200 border-teal-700/50' };
+        return { label: 'Cán bộ Phường/Xã', color: 'bg-slate-700 text-slate-100 border-slate-600' };
       case 'ROLE_VNPT_ENGINEER':
-        return { label: 'Kỹ sư VNPT', color: 'bg-amber-900/60 text-amber-200 border-amber-700/50' };
+        return { label: 'Kỹ sư VNPT', color: 'bg-[#003865] text-blue-100 border-blue-700' };
       default:
         return { label: 'Cán bộ Vận hành', color: 'bg-slate-800 text-slate-300 border-slate-700' };
     }
@@ -158,14 +158,14 @@ export const AdminLayout: React.FC = () => {
       {/* Mobile Top Header */}
       <div className="md:hidden bg-[#0c2340] text-white px-4 py-3 flex items-center justify-between border-b border-[#18365a] sticky top-0 z-40">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded bg-red-700 text-yellow-300 font-bold flex items-center justify-center text-xs">
+          <div className="w-7 h-7 rounded bg-[#a81c1c] text-yellow-300 font-bold flex items-center justify-center text-xs border border-amber-300/40">
             ★
           </div>
-          <span className="font-bold text-xs uppercase tracking-wide">Wi-Fi Hải Phòng • Admin</span>
+          <span className="font-bold text-xs uppercase tracking-wide">Wi-Fi Hải Phòng • Quản Trị</span>
         </div>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-[#13355e] cursor-pointer"
+          className="p-1.5 rounded text-slate-300 hover:text-white hover:bg-[#13355e] cursor-pointer"
         >
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -180,17 +180,14 @@ export const AdminLayout: React.FC = () => {
         {/* Department / Brand Banner */}
         <div className="p-4 border-b border-[#18365a] bg-[#091a30]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-red-700 border border-yellow-400/40 text-yellow-300 flex items-center justify-center font-bold text-sm shadow-md flex-shrink-0">
+            <div className="w-9 h-9 rounded bg-[#a81c1c] border border-yellow-400/50 text-yellow-300 flex items-center justify-center font-bold text-sm shadow-xs flex-shrink-0">
               ★ HP
             </div>
             <div className="overflow-hidden">
               <div className="text-[10px] font-bold text-yellow-400 uppercase tracking-widest leading-none">
                 UBND TP. HẢI PHÒNG
               </div>
-              {/* <h1 className="text-xs font-bold text-white tracking-tight leading-snug mt-1 truncate">
-                Sở Thông Tin & Truyền Thông
-              </h1> */}
-              <div className="text-[10.5px] text-slate-300 font-medium truncate mt-0.5">
+              <div className="text-[10.5px] text-slate-300 font-medium truncate mt-1">
                 Cổng Quản Trị Wi-Fi Công Cộng
               </div>
             </div>
@@ -198,7 +195,7 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         {/* Real-time Gateway Telemetry Status Strip */}
-        <div className="px-4 py-2.5 border-b border-[#18365a] bg-[#071628] flex items-center justify-between text-[11px]">
+        <div className="px-4 py-2 border-b border-[#18365a] bg-[#071628] flex items-center justify-between text-[11px]">
           <div className="flex items-center gap-1.5 font-medium text-slate-300">
             <Activity className="w-3.5 h-3.5 text-blue-400" />
             <span>Gateway OPNsense</span>
@@ -228,9 +225,9 @@ export const AdminLayout: React.FC = () => {
                       to={item.to}
                       end={item.end}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition ${
+                      className={`flex items-center gap-2.5 px-3 py-1.5 rounded text-xs font-medium transition ${
                         isActive
-                          ? 'bg-[#026aa7] text-white font-semibold shadow-xs'
+                          ? 'bg-[#004b87] text-white font-semibold shadow-xs'
                           : 'text-slate-300 hover:text-white hover:bg-[#13355e]'
                       }`}
                     >
@@ -250,7 +247,7 @@ export const AdminLayout: React.FC = () => {
             href="/portal"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-[#13355e] border border-[#18365a] transition"
+            className="flex items-center justify-between px-3 py-2 rounded text-xs font-medium text-slate-300 hover:text-white hover:bg-[#13355e] border border-[#18365a] transition"
           >
             <span className="flex items-center gap-2 text-[11px]">
               <ExternalLink className="w-3.5 h-3.5 text-blue-400" />
@@ -261,7 +258,7 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         {/* User Profile & Logout */}
-        <div className="p-3.5 border-t border-[#18365a] bg-[#071628] flex items-center justify-between gap-2">
+        <div className="p-3 border-t border-[#18365a] bg-[#071628] flex items-center justify-between gap-2">
           <div className="truncate pr-1">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-bold text-slate-200 truncate">
@@ -275,7 +272,7 @@ export const AdminLayout: React.FC = () => {
           <button
             onClick={handleLogout}
             title="Đăng xuất an toàn"
-            className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-[#13355e] border border-transparent hover:border-red-900/30 transition cursor-pointer flex-shrink-0"
+            className="p-1.5 rounded text-slate-400 hover:text-red-400 hover:bg-[#13355e] border border-transparent hover:border-red-900/30 transition cursor-pointer flex-shrink-0"
           >
             <LogOut className="w-4 h-4" />
           </button>
@@ -285,7 +282,7 @@ export const AdminLayout: React.FC = () => {
       {/* Main Content Container with Top Bar */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Desktop Top Header Bar */}
-        <header className="hidden md:flex h-14 bg-white border-b border-slate-200/90 px-6 items-center justify-between shadow-xs">
+        <header className="hidden md:flex h-12 bg-white border-b border-slate-300 px-6 items-center justify-between shadow-2xs">
           <div className="flex items-center gap-3">
             <span className="text-xs font-semibold text-slate-500">Trung tâm Điều hành:</span>
             <span className="text-xs font-bold text-slate-800">
@@ -293,16 +290,16 @@ export const AdminLayout: React.FC = () => {
             </span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {/* Clock UTC+7 */}
-            <div className="flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-md font-mono">
+            <div className="flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-300 px-2.5 py-1 rounded-sm font-mono">
               <Clock className="w-3.5 h-3.5 text-slate-400" />
               <span>{currentTime} (GMT+7)</span>
             </div>
 
             {/* Officer Role Badge */}
             <div
-              className={`text-[11px] font-semibold px-2.5 py-1 rounded-md border flex items-center gap-1.5 ${roleInfo.color}`}
+              className={`text-[11px] font-semibold px-2.5 py-1 rounded-sm border flex items-center gap-1.5 ${roleInfo.color}`}
             >
               <Shield className="w-3 h-3" />
               <span>{roleInfo.label}</span>
@@ -311,7 +308,7 @@ export const AdminLayout: React.FC = () => {
         </header>
 
         {/* Page Body */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-7 overflow-y-auto bg-slate-100/70">
+        <main className="flex-1 p-4 sm:p-5 lg:p-6 overflow-y-auto bg-slate-100">
           <Outlet />
         </main>
       </div>

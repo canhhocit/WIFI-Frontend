@@ -148,13 +148,13 @@ export const SurveysPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={loadSurveys}
-            className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-100 bg-white rounded-xl text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-100 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" /> Làm mới
           </button>
           <button
             onClick={() => setIsCreateOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-sky-600/20 cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition shadow-sm shadow-sky-600/20 cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Tạo bài khảo sát mới
           </button>
@@ -164,11 +164,11 @@ export const SurveysPage: React.FC = () => {
       {error && <AlertBanner type="error" message={error} />}
 
       {/* Surveys Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div className="bg-white rounded border border-slate-300 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50/70 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <tr className="bg-slate-50/70 border-b border-slate-300 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 <th className="py-3.5 px-4">Tên bài khảo sát & Mô tả</th>
                 <th className="py-3.5 px-4">Tiến độ thu thập (Quota)</th>
                 <th className="py-3.5 px-4">Trạng thái</th>
@@ -180,7 +180,7 @@ export const SurveysPage: React.FC = () => {
               {loading ? (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-slate-400">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-sky-600" />
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#004b87]" />
                     Đang tải danh sách bài khảo sát...
                   </td>
                 </tr>
@@ -198,7 +198,7 @@ export const SurveysPage: React.FC = () => {
                     <tr key={s.id} className="hover:bg-slate-50/80 transition">
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
+                          <div className="w-8 h-8 rounded-sm bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
                             <ClipboardList className="w-4 h-4" />
                           </div>
                           <div>
@@ -225,11 +225,11 @@ export const SurveysPage: React.FC = () => {
                       </td>
                       <td className="py-3.5 px-4">
                         {s.active ? (
-                          <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full text-[11px]">
+                          <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-sm text-[11px]">
                             <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Đang mở nhận
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full text-[11px]">
+                          <span className="inline-flex items-center gap-1 font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-sm text-[11px]">
                             Đã đóng
                           </span>
                         )}
@@ -240,7 +240,7 @@ export const SurveysPage: React.FC = () => {
                       <td className="py-3.5 px-4 text-right">
                         <button
                           onClick={() => handleViewResponses(s)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-sm text-xs font-bold transition cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5" /> Xem phản hồi ({s.currentResponsesCount})
                         </button>
@@ -271,7 +271,7 @@ export const SurveysPage: React.FC = () => {
               value={newSurveyTitle}
               onChange={(e) => setNewSurveyTitle(e.target.value)}
               placeholder="Ví dụ: Đánh giá chất lượng dịch vụ Wi-Fi Nhà văn hóa quý 4"
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-1 focus:ring-[#004b87]"
               required
             />
           </div>
@@ -284,7 +284,7 @@ export const SurveysPage: React.FC = () => {
                 value={newSurveyDesc}
                 onChange={(e) => setNewSurveyDesc(e.target.value)}
                 placeholder="Khảo sát phục vụ nâng cấp chất lượng mạng công cộng"
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm"
               />
             </div>
             <div>
@@ -297,7 +297,7 @@ export const SurveysPage: React.FC = () => {
                 max="50000"
                 value={newSurveyQuota}
                 onChange={(e) => setNewSurveyQuota(Number(e.target.value))}
-                className="w-full px-3 py-2 text-xs font-mono border border-slate-200 rounded-xl"
+                className="w-full px-3 py-2 text-xs font-mono border border-slate-200 rounded-sm"
                 required
               />
             </div>
@@ -312,14 +312,14 @@ export const SurveysPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleAddQuestion}
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-sky-600 bg-sky-50 hover:bg-sky-100 rounded-lg transition cursor-pointer"
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-[#004b87] bg-sky-50 hover:bg-sky-100 rounded-sm transition cursor-pointer"
               >
                 <Plus className="w-3 h-3" /> Thêm câu hỏi
               </button>
             </div>
 
             {questions.map((q, idx) => (
-              <div key={idx} className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 relative">
+              <div key={idx} className="p-3 bg-slate-50 border border-slate-200 rounded-sm space-y-2 relative">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-slate-700 text-[11px]">Câu hỏi #{idx + 1}</span>
                   {questions.length > 1 && (
@@ -342,7 +342,7 @@ export const SurveysPage: React.FC = () => {
                     setQuestions(updated);
                   }}
                   placeholder="Nhập nội dung câu hỏi..."
-                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-sm"
                   required
                 />
 
@@ -356,7 +356,7 @@ export const SurveysPage: React.FC = () => {
                         updated[idx].questionType = e.target.value as any;
                         setQuestions(updated);
                       }}
-                      className="w-full px-2 py-1 text-xs bg-white border border-slate-200 rounded-lg"
+                      className="w-full px-2 py-1 text-xs bg-white border border-slate-200 rounded-sm"
                     >
                       <option value="SINGLE_CHOICE">Trắc nghiệm chọn 1 (Single Choice)</option>
                       <option value="MULTI_CHOICE">Trắc nghiệm chọn nhiều (Multi Choice)</option>
@@ -378,7 +378,7 @@ export const SurveysPage: React.FC = () => {
                           setQuestions(updated);
                         }}
                         placeholder="VD: Rất tốt, Tốt, Kém"
-                        className="w-full px-2 py-1 text-xs bg-white border border-slate-200 rounded-lg font-mono text-[11px]"
+                        className="w-full px-2 py-1 text-xs bg-white border border-slate-200 rounded-sm font-mono text-[11px]"
                       />
                     </div>
                   )}
@@ -391,14 +391,14 @@ export const SurveysPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsCreateOpen(false)}
-              className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+              className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-sm text-xs font-bold transition cursor-pointer"
             >
               Hủy
             </button>
             <button
               type="submit"
               disabled={creating}
-              className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm shadow-sky-600/20"
+              className="px-4 py-2 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm shadow-sky-600/20"
             >
               {creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
               Lưu & Xuất bản khảo sát
@@ -417,7 +417,7 @@ export const SurveysPage: React.FC = () => {
         <div className="space-y-4 text-xs">
           {loadingResponses ? (
             <div className="py-8 text-center text-slate-400">
-              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-sky-600" />
+              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#004b87]" />
               Đang tải danh sách câu trả lời...
             </div>
           ) : responses.length === 0 ? (
@@ -430,7 +430,7 @@ export const SurveysPage: React.FC = () => {
                     <span>MAC: <strong className="text-slate-700">{r.clientMac}</strong></span>
                     <span>{new Date(r.submittedAt).toLocaleString('vi-VN')}</span>
                   </div>
-                  <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 font-mono text-[11px] text-slate-700">
+                  <div className="bg-slate-50 p-2.5 rounded-sm border border-slate-200 font-mono text-[11px] text-slate-700">
                     {r.answersJson}
                   </div>
                 </div>
@@ -442,7 +442,7 @@ export const SurveysPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setSelectedSurveyForResponses(null)}
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-sm text-xs font-bold transition cursor-pointer"
             >
               Đóng
             </button>

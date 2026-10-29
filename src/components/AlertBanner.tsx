@@ -29,10 +29,10 @@ export const AlertBanner: React.FC<AlertBannerProps> = ({
   }[type];
 
   return (
-    <div className={`p-4 rounded-xl border flex gap-3 items-start text-sm ${styles} ${className}`}>
+    <div className={`p-3.5 rounded-sm border flex gap-3 items-start text-xs ${styles} ${className}`}>
       {icons}
       <div>
-        {title && <h4 className="font-semibold mb-0.5">{title}</h4>}
+        {title && <h4 className="font-bold mb-0.5">{title}</h4>}
         <p className="leading-relaxed opacity-95">{message}</p>
       </div>
     </div>

@@ -102,14 +102,14 @@ export const NetworkPoliciesPage: React.FC = () => {
           <button
             onClick={loadPolicies}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 shadow-sm"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             Làm mới
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Thêm chính sách QoS
@@ -118,7 +118,7 @@ export const NetworkPoliciesPage: React.FC = () => {
       </div>
 
       {actionMessage && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs font-medium flex items-center gap-2">
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-sm text-xs font-medium flex items-center gap-2">
           <CheckCircle className="w-4 h-4 text-emerald-600" />
           {actionMessage}
         </div>
@@ -135,7 +135,7 @@ export const NetworkPoliciesPage: React.FC = () => {
           policies.map((policy) => (
             <div
               key={policy.id}
-              className={`bg-white rounded-2xl border p-5 shadow-sm transition-all flex flex-col justify-between ${
+              className={`bg-white rounded border p-5 shadow-sm transition-all flex flex-col justify-between ${
                 policy.active ? 'border-gray-200 hover:shadow-md' : 'border-gray-200 bg-gray-50 opacity-60'
               }`}
             >
@@ -218,7 +218,7 @@ export const NetworkPoliciesPage: React.FC = () => {
       {/* Modal Create Policy */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-gray-100">
+          <div className="bg-white rounded max-w-lg w-full p-6 shadow-xl border border-gray-100">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <h3 className="font-bold text-gray-900 text-base flex items-center gap-2">
                 <Plus className="w-5 h-5 text-blue-600" />
@@ -238,7 +238,7 @@ export const NetworkPoliciesPage: React.FC = () => {
                   placeholder="Ví dụ: Chính sách Nhà văn hóa Khu vực Trung tâm"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                 />
               </div>
 
@@ -249,7 +249,7 @@ export const NetworkPoliciesPage: React.FC = () => {
                   placeholder="Áp dụng cho các nhà văn hóa phục vụ người dân học tập và tra cứu..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                 />
               </div>
 
@@ -261,7 +261,7 @@ export const NetworkPoliciesPage: React.FC = () => {
                     required
                     value={downloadSpeedKbps}
                     onChange={(e) => setDownloadSpeedKbps(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                   />
                   <span className="text-[10px] text-gray-400 font-mono">
                     = {(downloadSpeedKbps / 1024).toFixed(1)} Mbps
@@ -275,7 +275,7 @@ export const NetworkPoliciesPage: React.FC = () => {
                     required
                     value={uploadSpeedKbps}
                     onChange={(e) => setUploadSpeedKbps(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                   />
                   <span className="text-[10px] text-gray-400 font-mono">
                     = {(uploadSpeedKbps / 1024).toFixed(1)} Mbps
@@ -291,7 +291,7 @@ export const NetworkPoliciesPage: React.FC = () => {
                     required
                     value={maxSessionSeconds}
                     onChange={(e) => setMaxSessionSeconds(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                   />
                   <span className="text-[10px] text-gray-400 font-mono">
                     = {Math.round(maxSessionSeconds / 60)} phút
@@ -304,7 +304,7 @@ export const NetworkPoliciesPage: React.FC = () => {
                     type="number"
                     value={quotaMb}
                     onChange={(e) => setQuotaMb(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                   />
                 </div>
 
@@ -316,7 +316,7 @@ export const NetworkPoliciesPage: React.FC = () => {
                     max={10}
                     value={priority}
                     onChange={(e) => setPriority(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                   />
                 </div>
               </div>
@@ -325,13 +325,13 @@ export const NetworkPoliciesPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-sm hover:bg-gray-50"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-sm hover:bg-blue-700 font-medium shadow-sm"
                 >
                   Lưu chính sách QoS
                 </button>

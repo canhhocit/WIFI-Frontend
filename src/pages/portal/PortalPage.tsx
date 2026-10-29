@@ -209,11 +209,11 @@ export const PortalPage: React.FC = () => {
   const survey = portalData?.activeSurvey;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-100 via-blue-50/30 to-slate-100 flex flex-col items-center justify-center p-3 sm:p-5 text-slate-900">
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xl shadow-slate-200/60 max-w-md w-full overflow-hidden">
+    <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-3 sm:p-5 text-slate-900">
+      <div className="bg-white rounded border border-slate-300 shadow-sm max-w-md w-full overflow-hidden">
         {/* Official Header */}
-        <div className="bg-gradient-to-b from-[#991b1b] to-[#881313] text-white text-center p-4 pt-5 border-b border-[#7f1d1d] relative">
-          <div className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-yellow-400/20 text-yellow-300 font-bold text-xs mb-1.5 border border-yellow-300/40">
+        <div className="bg-[#a81c1c] text-white text-center p-4 border-b border-[#881313] relative">
+          <div className="inline-flex items-center justify-center w-7 h-7 rounded bg-red-800 text-yellow-300 font-bold text-xs mb-1.5 border border-amber-300/40 shadow-xs">
             ★
           </div>
           <div className="text-[10px] font-bold tracking-widest text-yellow-300 uppercase">
@@ -222,7 +222,7 @@ export const PortalPage: React.FC = () => {
           <div className="text-[10px] text-red-100 italic">
             Độc lập - Tự do - Hạnh phúc
           </div>
-          <div className="h-px w-20 bg-yellow-400/50 mx-auto my-1.5" />
+          <div className="h-0.5 w-20 bg-yellow-400/60 mx-auto my-1.5" />
           <div className="text-[10px] font-bold uppercase tracking-wider text-yellow-300">
             Ủy Ban Nhân Dân Thành Phố Hải Phòng
           </div>
@@ -232,9 +232,9 @@ export const PortalPage: React.FC = () => {
         </div>
 
         {/* Location & Speed Meta Strip */}
-        <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-[11px] text-slate-700">
+        <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-[11px] text-slate-700">
           <div className="flex items-center gap-1.5 font-semibold truncate mr-2">
-            <MapPin className="w-3.5 h-3.5 text-red-600 flex-shrink-0" />
+            <MapPin className="w-3.5 h-3.5 text-red-700 flex-shrink-0" />
             <span className="truncate">{portalData?.location.name || 'Nhà văn hóa Hải Phòng'}</span>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0 font-mono text-[10px] text-slate-500">
@@ -246,12 +246,12 @@ export const PortalPage: React.FC = () => {
 
         {/* Media Campaign / Government Notice */}
         {campaign && (
-          <div className="border-b border-slate-200 bg-amber-50/50 p-3.5 space-y-1.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-900 uppercase tracking-wider">
-              <Megaphone className="w-3 h-3 text-amber-700" /> Tuyên Truyền Chính Sách Số
+          <div className="border-b border-slate-200 bg-slate-50 p-3 space-y-1.5">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+              <Megaphone className="w-3 h-3 text-red-700" /> Tuyên Truyền Chính Sách Số
             </div>
             {campaign.bannerUrl && (
-              <div className="rounded-lg overflow-hidden border border-amber-200 max-h-32 bg-white">
+              <div className="rounded-sm overflow-hidden border border-slate-200 max-h-32 bg-white">
                 <img src={campaign.bannerUrl} alt="" className="w-full h-full object-cover" />
               </div>
             )}
@@ -264,24 +264,24 @@ export const PortalPage: React.FC = () => {
                 href={campaign.actionUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-amber-300 text-amber-900 rounded text-[10px] font-bold hover:bg-amber-100 transition shadow-xs"
+                className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-slate-300 text-slate-800 rounded-sm text-[10px] font-bold hover:bg-slate-100 transition shadow-xs"
               >
                 <span>Xem Cổng DVC Hải Phòng</span>
-                <ExternalLink className="w-3 h-3 text-amber-700" />
+                <ExternalLink className="w-3 h-3 text-slate-600" />
               </a>
             )}
           </div>
         )}
 
         {/* Portal Connect Form */}
-        <form onSubmit={handleConnect} className="p-5 space-y-4 text-xs">
+        <form onSubmit={handleConnect} className="p-4 sm:p-5 space-y-3.5 text-xs">
           {error && <AlertBanner type="error" message={error} />}
           {successInfo && <AlertBanner type="success" message={successInfo} />}
 
           {/* OTP Section */}
           {portalData?.macRemembered || otpVerified ? (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center gap-2.5 text-emerald-800 text-[11px]">
-              <ShieldCheck className="w-5 h-5 text-emerald-700 flex-shrink-0" />
+            <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-sm flex items-center gap-2.5 text-emerald-800 text-[11px]">
+              <ShieldCheck className="w-4 h-4 text-emerald-700 flex-shrink-0" />
               <div>
                 <span className="font-bold">Thiết bị đã xác thực bảo mật (Ghi nhớ 30 ngày).</span>
                 <span className="block text-[10px] text-emerald-600">
@@ -290,12 +290,12 @@ export const PortalPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-2.5">
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-sm space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                  <Smartphone className="w-3.5 h-3.5 text-blue-700" /> Xác thực số điện thoại
+                  <Smartphone className="w-3.5 h-3.5 text-[#004b87]" /> Xác thực số điện thoại
                 </span>
-                <span className="text-[10px] font-mono text-slate-500 bg-slate-200/70 px-1.5 py-0.5 rounded">
+                <span className="text-[10px] font-mono text-slate-600 bg-slate-200/80 px-1.5 py-0.5 rounded-sm">
                   SMS Brandname
                 </span>
               </div>
@@ -307,13 +307,13 @@ export const PortalPage: React.FC = () => {
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     placeholder="Nhập SĐT (VD: 0912345678)"
-                    className="flex-1 px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-600 font-mono"
+                    className="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:border-[#004b87] focus:ring-1 focus:ring-[#004b87] font-mono"
                   />
                   <button
                     type="button"
                     onClick={handleSendOtp}
                     disabled={submitting}
-                    className="px-3.5 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                    className="px-3 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
                   >
                     {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                     Gửi mã
@@ -328,19 +328,19 @@ export const PortalPage: React.FC = () => {
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value)}
                       placeholder="Nhập 6 số OTP"
-                      className="flex-1 px-3 py-2 text-xs font-mono tracking-widest text-center bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-600 font-bold"
+                      className="flex-1 px-3 py-1.5 text-xs font-mono tracking-widest text-center bg-white border border-slate-300 rounded-sm focus:outline-none focus:border-[#004b87] focus:ring-1 focus:ring-[#004b87] font-bold"
                     />
                     <button
                       type="button"
                       onClick={handleVerifyOtp}
                       disabled={submitting}
-                      className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+                      className="px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold transition cursor-pointer disabled:opacity-50"
                     >
                       Xác nhận
                     </button>
                   </div>
                   {otpHint && (
-                    <div className="text-[10px] font-mono text-blue-900 bg-blue-50 p-1.5 rounded border border-blue-200">
+                    <div className="text-[10px] font-mono text-slate-800 bg-white p-1.5 rounded-sm border border-slate-200">
                       Mã thử nghiệm mô phỏng: <strong>{otpHint}</strong>
                     </div>
                   )}
@@ -352,7 +352,7 @@ export const PortalPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={handleSendOtp}
-                        className="text-blue-700 font-semibold hover:underline cursor-pointer"
+                        className="text-[#004b87] font-semibold hover:underline cursor-pointer"
                       >
                         Gửi lại mã
                       </button>
@@ -365,12 +365,12 @@ export const PortalPage: React.FC = () => {
 
           {/* Smart Citizen Survey */}
           {survey && survey.questions && survey.questions.length > 0 && (
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-sm space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                  <ClipboardList className="w-3.5 h-3.5 text-blue-700" /> {survey.title}
+                  <ClipboardList className="w-3.5 h-3.5 text-[#004b87]" /> {survey.title}
                 </span>
-                <span className="text-[10px] text-blue-800 bg-blue-50 px-1.5 py-0.5 rounded font-medium border border-blue-200">
+                <span className="text-[10px] text-slate-700 bg-slate-200/80 px-1.5 py-0.5 rounded-sm font-medium">
                   Lấy ý kiến
                 </span>
               </div>
@@ -382,7 +382,7 @@ export const PortalPage: React.FC = () => {
                 } catch (_) {}
 
                 return (
-                  <div key={q.id} className="p-2 bg-white rounded border border-slate-200 space-y-1">
+                  <div key={q.id} className="p-2 bg-white rounded-sm border border-slate-200 space-y-1">
                     <p className="font-medium text-slate-800 text-[11px]">{q.questionText}</p>
                     {options.length > 0 ? (
                       <div className="grid grid-cols-2 gap-1">
@@ -393,9 +393,9 @@ export const PortalPage: React.FC = () => {
                             onClick={() =>
                               setSurveyAnswers({ ...surveyAnswers, [q.id?.toString() || oIdx]: opt })
                             }
-                            className={`px-2 py-1 rounded text-[10px] border text-left transition cursor-pointer ${
+                            className={`px-2 py-1 rounded-sm text-[10px] border text-left transition cursor-pointer ${
                               surveyAnswers[q.id?.toString() || oIdx] === opt
-                                ? 'bg-blue-700 text-white border-blue-700 font-semibold'
+                                ? 'bg-[#004b87] text-white border-[#004b87] font-semibold'
                                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                             }`}
                           >
@@ -411,7 +411,7 @@ export const PortalPage: React.FC = () => {
                         onChange={(e) =>
                           setSurveyAnswers({ ...surveyAnswers, [q.id?.toString() || '']: e.target.value })
                         }
-                        className="w-full px-2 py-1 text-[11px] border border-slate-300 rounded"
+                        className="w-full px-2 py-1 text-[11px] border border-slate-300 rounded-sm"
                       />
                     )}
                   </div>
@@ -430,12 +430,12 @@ export const PortalPage: React.FC = () => {
               value={guestName}
               onChange={(e) => setGuestName(e.target.value)}
               placeholder="vd: Nguyễn Văn A"
-              className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-600"
+              className="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:border-[#004b87] focus:ring-1 focus:ring-[#004b87]"
             />
           </div>
 
           {/* Legal Compliance Box */}
-          <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[10px] text-slate-600 space-y-1">
+          <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-sm text-[10px] text-slate-600 space-y-1">
             <div className="flex items-center gap-1 font-semibold text-slate-800">
               <Lock className="w-3 h-3 text-slate-500" />
               <span>Căn cứ pháp lý & Bảo vệ dữ liệu cá nhân</span>
@@ -451,7 +451,7 @@ export const PortalPage: React.FC = () => {
               type="checkbox"
               checked={consentGiven}
               onChange={(e) => setConsentGiven(e.target.checked)}
-              className="mt-0.5 rounded border-slate-300 text-blue-700 focus:ring-blue-600 w-4 h-4 cursor-pointer"
+              className="mt-0.5 rounded-sm border-slate-300 text-[#004b87] focus:ring-[#004b87] w-4 h-4 cursor-pointer"
             />
             <span className="leading-relaxed">
               Tôi cam kết tuân thủ Quy chế sử dụng mạng Wi-Fi công cộng Thành phố Hải Phòng.
@@ -462,7 +462,7 @@ export const PortalPage: React.FC = () => {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3 px-4 rounded-lg text-white font-bold text-xs tracking-wider uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm bg-red-700 hover:bg-red-800 active:bg-red-900 disabled:opacity-50"
+            className="w-full py-2.5 px-4 rounded-sm text-white font-bold text-xs tracking-wider uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-xs bg-[#a81c1c] hover:bg-[#881313] active:bg-[#731010] disabled:opacity-50"
           >
             {submitting ? (
               <>
@@ -479,7 +479,7 @@ export const PortalPage: React.FC = () => {
         </form>
 
         {/* Footer */}
-        <div className="px-4 py-3 bg-slate-100 border-t border-slate-200 text-center text-[10px] text-slate-500 space-y-0.5">
+        <div className="px-4 py-2.5 bg-slate-100 border-t border-slate-200 text-center text-[10px] text-slate-500 space-y-0.5">
           <div className="font-semibold text-slate-700">Sở Thông tin và Truyền thông Thành phố Hải Phòng</div>
           <div>Hạ tầng viễn thông phối hợp vận hành cùng VNPT Hải Phòng • Hỗ trợ: 1800 1166</div>
         </div>

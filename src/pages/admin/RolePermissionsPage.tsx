@@ -125,9 +125,9 @@ export const RolePermissionsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-sm border border-gray-100 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-lg">
+          <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-sm">
             <ShieldAlert className="w-6 h-6" />
           </div>
           <div>
@@ -141,7 +141,7 @@ export const RolePermissionsPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={fetchPermissions}
-            className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
+            className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-sm border border-gray-200 transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             Làm mới
@@ -149,7 +149,7 @@ export const RolePermissionsPage: React.FC = () => {
           <button
             onClick={handleSaveRole}
             disabled={saving || selectedRole === 'ROLE_SUPER_ADMIN'}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg shadow-sm transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-sm shadow-sm transition-colors"
           >
             <Save className="w-4 h-4" />
             {saving ? 'Đang lưu...' : 'Lưu Quyền Hạn'}
@@ -159,13 +159,13 @@ export const RolePermissionsPage: React.FC = () => {
 
       {/* Notifications */}
       {successMsg && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3 text-emerald-800 text-sm">
+        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-sm flex items-center gap-3 text-emerald-800 text-sm">
           <CheckCircle className="w-5 h-5 flex-shrink-0 text-emerald-600" />
           <span>{successMsg}</span>
         </div>
       )}
       {errorMsg && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-800 text-sm">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-sm flex items-center gap-3 text-red-800 text-sm">
           <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-600" />
           <span>{errorMsg}</span>
         </div>
@@ -177,7 +177,7 @@ export const RolePermissionsPage: React.FC = () => {
           <button
             key={r.key}
             onClick={() => setSelectedRole(r.key)}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border ${
+            className={`px-4 py-2.5 rounded-sm text-sm font-medium transition-colors border ${
               selectedRole === r.key
                 ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
                 : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
@@ -189,7 +189,7 @@ export const RolePermissionsPage: React.FC = () => {
       </div>
 
       {/* Role Details Notice */}
-      <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-xl flex items-start gap-3 text-sm text-blue-900">
+      <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-sm flex items-start gap-3 text-sm text-blue-900">
         <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
         <div>
           <span className="font-semibold">Đang cấu hình: </span>
@@ -203,7 +203,7 @@ export const RolePermissionsPage: React.FC = () => {
       </div>
 
       {/* Matrix Table */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-sm border border-gray-100 shadow-sm overflow-hidden">
         <table className="w-full text-left border-collapse text-sm">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -230,7 +230,7 @@ export const RolePermissionsPage: React.FC = () => {
                       type="button"
                       disabled={isSuper}
                       onClick={() => handleToggle(selectedRole, mod.key, 'canView')}
-                      className={`w-7 h-7 rounded-lg inline-flex items-center justify-center transition-colors ${
+                      className={`w-7 h-7 rounded-sm inline-flex items-center justify-center transition-colors ${
                         perm.canView ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
                       }`}
                     >
@@ -244,7 +244,7 @@ export const RolePermissionsPage: React.FC = () => {
                       type="button"
                       disabled={isSuper}
                       onClick={() => handleToggle(selectedRole, mod.key, 'canCreate')}
-                      className={`w-7 h-7 rounded-lg inline-flex items-center justify-center transition-colors ${
+                      className={`w-7 h-7 rounded-sm inline-flex items-center justify-center transition-colors ${
                         perm.canCreate ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
                       }`}
                     >
@@ -258,7 +258,7 @@ export const RolePermissionsPage: React.FC = () => {
                       type="button"
                       disabled={isSuper}
                       onClick={() => handleToggle(selectedRole, mod.key, 'canEdit')}
-                      className={`w-7 h-7 rounded-lg inline-flex items-center justify-center transition-colors ${
+                      className={`w-7 h-7 rounded-sm inline-flex items-center justify-center transition-colors ${
                         perm.canEdit ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
                       }`}
                     >
@@ -272,7 +272,7 @@ export const RolePermissionsPage: React.FC = () => {
                       type="button"
                       disabled={isSuper}
                       onClick={() => handleToggle(selectedRole, mod.key, 'canDelete')}
-                      className={`w-7 h-7 rounded-lg inline-flex items-center justify-center transition-colors ${
+                      className={`w-7 h-7 rounded-sm inline-flex items-center justify-center transition-colors ${
                         perm.canDelete ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
                       }`}
                     >
@@ -286,7 +286,7 @@ export const RolePermissionsPage: React.FC = () => {
                       type="button"
                       disabled={isSuper}
                       onClick={() => handleToggle(selectedRole, mod.key, 'canApprove')}
-                      className={`w-7 h-7 rounded-lg inline-flex items-center justify-center transition-colors ${
+                      className={`w-7 h-7 rounded-sm inline-flex items-center justify-center transition-colors ${
                         perm.canApprove ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
                       }`}
                     >

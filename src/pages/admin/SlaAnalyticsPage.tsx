@@ -57,7 +57,7 @@ export const SlaAnalyticsPage: React.FC = () => {
         <button
           onClick={loadData}
           disabled={loading}
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 shadow-sm"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           Làm mới số liệu
@@ -68,7 +68,7 @@ export const SlaAnalyticsPage: React.FC = () => {
       {slaMetrics && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
           {/* SLA Compliance Gauge Card */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
+          <div className="bg-white p-5 rounded border border-gray-200 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-wider">
               <span>Độ tuân thủ cam kết SLA</span>
               <Award className="w-4 h-4 text-emerald-600" />
@@ -92,7 +92,7 @@ export const SlaAnalyticsPage: React.FC = () => {
           </div>
 
           {/* MTTR Card */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+          <div className="bg-white p-5 rounded border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-wider">
               <span>Thời gian phục hồi MTTR</span>
               <Clock className="w-4 h-4 text-blue-600" />
@@ -109,7 +109,7 @@ export const SlaAnalyticsPage: React.FC = () => {
           </div>
 
           {/* Resolved Count Card */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+          <div className="bg-white p-5 rounded border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-wider">
               <span>Đã khắc phục thành công</span>
               <CheckCircle className="w-4 h-4 text-teal-600" />
@@ -126,7 +126,7 @@ export const SlaAnalyticsPage: React.FC = () => {
           </div>
 
           {/* Breached SLA Card */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+          <div className="bg-white p-5 rounded border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-wider">
               <span>Số vụ vi phạm hạn SLA</span>
               <AlertTriangle className="w-4 h-4 text-rose-600" />
@@ -146,7 +146,7 @@ export const SlaAnalyticsPage: React.FC = () => {
 
       {/* SLA Benchmarks Matrix */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+        <div className="bg-white p-5 rounded border border-gray-200 shadow-sm">
           <div className="flex items-center gap-2 mb-3 font-semibold text-sm text-gray-900">
             <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
             Mức CRITICAL (Mất kết nối hoàn toàn)
@@ -167,7 +167,7 @@ export const SlaAnalyticsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+        <div className="bg-white p-5 rounded border border-gray-200 shadow-sm">
           <div className="flex items-center gap-2 mb-3 font-semibold text-sm text-gray-900">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
             Mức MAJOR (Suy giảm nghiêm trọng)
@@ -188,7 +188,7 @@ export const SlaAnalyticsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+        <div className="bg-white p-5 rounded border border-gray-200 shadow-sm">
           <div className="flex items-center gap-2 mb-3 font-semibold text-sm text-gray-900">
             <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
             Mức MINOR (Chậm chờn / Lỗi nhẹ)
@@ -211,28 +211,28 @@ export const SlaAnalyticsPage: React.FC = () => {
       </div>
 
       {/* Root Cause Analysis Table */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+      <div className="bg-white rounded border border-gray-200 p-5 shadow-sm">
         <h3 className="font-bold text-gray-900 text-sm mb-3 flex items-center gap-2">
           <PieChart className="w-4 h-4 text-indigo-600" />
           Phân bố Nguyên nhân Sự cố Cốt lõi (Root Cause Analysis - RCA)
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-          <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+          <div className="p-3 bg-amber-50 rounded-sm border border-amber-200">
             <div className="font-semibold text-amber-900">⚡ Mất điện lưới (POWER_OUTAGE)</div>
             <div className="mt-1 text-xs text-amber-700">Tất cả ONT & AP cùng tắt nguồn</div>
             <div className="mt-2 text-xl font-bold text-amber-800">45%</div>
           </div>
-          <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
+          <div className="p-3 bg-blue-50 rounded-sm border border-blue-200">
             <div className="font-semibold text-blue-900">✂️ Đứt cáp quang (FIBER_CUT)</div>
             <div className="mt-1 text-xs text-blue-700">Mất tín hiệu quang, thiết bị có điện</div>
             <div className="mt-2 text-xl font-bold text-blue-800">30%</div>
           </div>
-          <div className="p-3 bg-rose-50 rounded-xl border border-rose-200">
+          <div className="p-3 bg-rose-50 rounded-sm border border-rose-200">
             <div className="font-semibold text-rose-900">🔥 Hỏng phần cứng (HARDWARE)</div>
             <div className="mt-1 text-xs text-rose-700">Nguồn adapter, cổng LAN, anten</div>
             <div className="mt-2 text-xl font-bold text-rose-800">15%</div>
           </div>
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <div className="p-3 bg-slate-50 rounded-sm border border-slate-200">
             <div className="font-semibold text-slate-900">⚙️ Cấu hình / Khác (CONFIG)</div>
             <div className="mt-1 text-xs text-slate-700">Xung đột IP, cổng gateway</div>
             <div className="mt-2 text-xl font-bold text-slate-800">10%</div>

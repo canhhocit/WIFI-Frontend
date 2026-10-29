@@ -48,7 +48,7 @@ export const GovernmentReportPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Action Bar (hidden when printing) */}
-      <div className="print:hidden flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <div className="print:hidden flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
         <div>
           <h1 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
             <Landmark className="w-6 h-6 text-red-700" />
@@ -63,7 +63,7 @@ export const GovernmentReportPage: React.FC = () => {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-800 font-medium"
+            className="text-xs border border-gray-300 rounded-sm px-3 py-2 bg-white text-gray-800 font-medium"
           >
             <option value="MONTH">Kỳ báo cáo: Tháng này</option>
             <option value="PREV_MONTH">Kỳ báo cáo: Tháng trước</option>
@@ -74,7 +74,7 @@ export const GovernmentReportPage: React.FC = () => {
           <button
             onClick={loadReport}
             disabled={loading}
-            className="p-2 text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-lg"
+            className="p-2 text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-sm"
             title="Làm mới"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -82,7 +82,7 @@ export const GovernmentReportPage: React.FC = () => {
 
           <button
             onClick={handlePrint}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 shadow-sm"
           >
             <Printer className="w-4 h-4" />
             In báo cáo
@@ -90,7 +90,7 @@ export const GovernmentReportPage: React.FC = () => {
 
           <button
             onClick={handleExportCsv}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-red-700 hover:bg-red-800 rounded-lg shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-red-700 hover:bg-red-800 rounded-sm shadow-sm"
           >
             <Download className="w-4 h-4" />
             Xuất file CSV
@@ -100,7 +100,7 @@ export const GovernmentReportPage: React.FC = () => {
 
       {/* Main Report Document Canvas */}
       {report && (
-        <div className="bg-white p-8 md:p-12 rounded-2xl border border-gray-300 shadow-sm print:border-none print:shadow-none print:p-0 max-w-5xl mx-auto">
+        <div className="bg-white p-8 md:p-12 rounded border border-gray-300 shadow-sm print:border-none print:shadow-none print:p-0 max-w-5xl mx-auto">
           {/* Official Administrative Header */}
           <div className="flex justify-between items-start text-center pb-6 border-b-2 border-red-800 text-xs text-gray-800 font-serif">
             <div className="w-1/2 text-left">
@@ -139,7 +139,7 @@ export const GovernmentReportPage: React.FC = () => {
             </h3>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-2">
-              <div className="p-3 bg-slate-50 border rounded-xl">
+              <div className="p-3 bg-slate-50 border rounded-sm">
                 <div className="flex items-center justify-between text-gray-500 text-xs">
                   <span>Quy mô điểm phát</span>
                   <Building2 className="w-4 h-4 text-gray-400" />
@@ -152,7 +152,7 @@ export const GovernmentReportPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-3 bg-slate-50 border rounded-xl">
+              <div className="p-3 bg-slate-50 border rounded-sm">
                 <div className="flex items-center justify-between text-gray-500 text-xs">
                   <span>Độ khả dụng mạng</span>
                   <Wifi className="w-4 h-4 text-emerald-600" />
@@ -163,7 +163,7 @@ export const GovernmentReportPage: React.FC = () => {
                 <div className="text-[11px] text-gray-500 mt-0.5">Cam kết theo đề án: &gt; 99.0%</div>
               </div>
 
-              <div className="p-3 bg-slate-50 border rounded-xl">
+              <div className="p-3 bg-slate-50 border rounded-sm">
                 <div className="flex items-center justify-between text-gray-500 text-xs">
                   <span>Lượt người dân truy cập</span>
                   <Users className="w-4 h-4 text-blue-600" />
@@ -174,7 +174,7 @@ export const GovernmentReportPage: React.FC = () => {
                 <div className="text-[11px] text-gray-500 mt-0.5">Phiên đăng nhập thành công</div>
               </div>
 
-              <div className="p-3 bg-slate-50 border rounded-xl">
+              <div className="p-3 bg-slate-50 border rounded-sm">
                 <div className="flex items-center justify-between text-gray-500 text-xs">
                   <span>Dung lượng dữ liệu</span>
                   <HardDrive className="w-4 h-4 text-indigo-600" />
@@ -187,7 +187,7 @@ export const GovernmentReportPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-2">
-              <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl">
+              <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-sm">
                 <div className="text-xs font-semibold text-emerald-900 flex items-center gap-1.5">
                   <Award className="w-4 h-4 text-emerald-600" />
                   Mức độ hài lòng của nhân dân
@@ -200,7 +200,7 @@ export const GovernmentReportPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl">
+              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-sm">
                 <div className="text-xs font-semibold text-blue-900 flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-blue-600" />
                   Tuân thủ cam kết SLA Viễn thông
@@ -213,7 +213,7 @@ export const GovernmentReportPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl">
+              <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-sm">
                 <div className="text-xs font-semibold text-amber-900 flex items-center gap-1.5">
                   <Clock className="w-4 h-4 text-amber-600" />
                   Thời gian phục hồi trung bình (MTTR)
@@ -234,7 +234,7 @@ export const GovernmentReportPage: React.FC = () => {
               II. CHI TIẾT TỔNG HỢP THEO 15 QUẬN / HUYỆN THÀNH PHỐ HẢI PHÒNG
             </h3>
 
-            <div className="overflow-x-auto border border-gray-300 rounded-xl">
+            <div className="overflow-x-auto border border-gray-300 rounded-sm">
               <table className="min-w-full divide-y divide-gray-300 text-xs">
                 <thead className="bg-gray-100 font-serif text-gray-800">
                   <tr>

@@ -70,41 +70,41 @@ export const ExcelImportModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded border border-slate-300 shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+        <div className="px-5 py-3.5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
           <div>
-            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-              <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <FileSpreadsheet className="w-4 h-4 text-[#004b87]" />
               Nhập danh sách 1.584 Điểm phát sóng từ Excel (Screens C08 - C09)
             </h3>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-[11px] text-slate-500 mt-0.5">
               Kiểm tra 5 tiêu chí: Trùng mã, Thiếu trường, Địa bàn hợp lệ, Geo-fence Hải Phòng, Chuẩn MAC
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 font-bold p-1 rounded-lg"
+            className="text-slate-400 hover:text-slate-600 font-bold p-1 rounded-sm cursor-pointer"
           >
             ✕
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-5 overflow-y-auto flex-1">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center gap-2">
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-sm text-xs text-red-700 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />
               {error}
             </div>
           )}
 
           {step === 1 && (
-            <div className="space-y-6">
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+            <div className="space-y-4">
+              <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-sm flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-semibold text-blue-900">1. Tải về file mẫu Excel chuẩn</h4>
-                  <p className="text-xs text-blue-700 mt-0.5">
+                  <h4 className="text-xs font-bold text-blue-900">1. Tải về file mẫu Excel chuẩn</h4>
+                  <p className="text-[11px] text-blue-700 mt-0.5">
                     Mẫu Excel gồm 13 cột bắt buộc với các dữ liệu mẫu của Hồng Bàng, Ngô Quyền, Cát Bà.
                   </p>
                 </div>
@@ -112,16 +112,16 @@ export const ExcelImportModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
                   href={adminApi.getExcelTemplateUrl()}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors shadow-sm"
+                  className="px-3 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white text-xs font-medium rounded-sm flex items-center gap-1.5 transition-colors shadow-xs"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-3.5 h-3.5" />
                   Tải Mẫu Excel (.xlsx)
                 </a>
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">2. Tải lên file đã điền dữ liệu</h4>
-                <div className="border-2 border-dashed border-gray-300 hover:border-emerald-500 rounded-xl p-8 text-center transition-colors">
+                <h4 className="text-xs font-bold text-slate-900 mb-2">2. Tải lên file đã điền dữ liệu</h4>
+                <div className="border-2 border-dashed border-slate-300 hover:border-[#004b87] rounded p-6 text-center transition-colors">
                   <input
                     type="file"
                     accept=".xlsx, .xls"
@@ -130,11 +130,11 @@ export const ExcelImportModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
                     onChange={handleFileChange}
                   />
                   <label htmlFor="excelFileInput" className="cursor-pointer block">
-                    <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-                    <span className="text-sm font-medium text-gray-700 block">
+                    <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                    <span className="text-xs font-semibold text-slate-700 block">
                       {file ? file.name : 'Bấm vào đây để chọn tệp Excel hoặc kéo thả tệp vào đây'}
                     </span>
-                    <span className="text-xs text-gray-400 mt-1 block">
+                    <span className="text-[11px] text-slate-400 mt-0.5 block">
                       Hỗ trợ định dạng .xlsx (Tối đa 1.584 dòng)
                     </span>
                   </label>

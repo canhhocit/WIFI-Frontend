@@ -72,7 +72,7 @@ export const GatewayPage: React.FC = () => {
         </div>
         <button
           onClick={loadGatewayData}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 hover:bg-slate-50 bg-white rounded-lg text-xs font-medium text-slate-700 transition cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 hover:bg-slate-50 bg-white rounded-sm text-xs font-medium text-slate-700 transition cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" /> Làm mới
         </button>
@@ -83,7 +83,7 @@ export const GatewayPage: React.FC = () => {
       {/* Clean Telemetry Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Status */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div className="bg-white p-4 rounded-sm border border-slate-200 shadow-xs">
           <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block mb-1.5">
             Trạng thái hoạt động
           </span>
@@ -96,7 +96,7 @@ export const GatewayPage: React.FC = () => {
         </div>
 
         {/* Network Engine */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div className="bg-white p-4 rounded-sm border border-slate-200 shadow-xs">
           <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block mb-1.5">
             Cơ chế chuyển tiếp
           </span>
@@ -107,7 +107,7 @@ export const GatewayPage: React.FC = () => {
         </div>
 
         {/* Latency */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div className="bg-white p-4 rounded-sm border border-slate-200 shadow-xs">
           <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block mb-1.5">
             Thời gian phản hồi
           </span>
@@ -118,7 +118,7 @@ export const GatewayPage: React.FC = () => {
         </div>
 
         {/* Total Transactions */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div className="bg-white p-4 rounded-sm border border-slate-200 shadow-xs">
           <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block mb-1.5">
             Giao dịch đã xử lý
           </span>
@@ -130,7 +130,7 @@ export const GatewayPage: React.FC = () => {
       </div>
 
       {/* Gateway Transactions Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-sm border border-slate-200 shadow-xs overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Activity className="w-4 h-4 text-slate-700" />

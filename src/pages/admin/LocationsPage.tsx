@@ -248,27 +248,27 @@ export const LocationsPage: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => window.open(adminApi.getExcelExportUrl(), '_blank')}
-            className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-100 bg-white rounded-xl text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
             title="Xuất toàn bộ 1.584 điểm phát ra file Excel"
           >
-            <Download className="w-3.5 h-3.5 text-emerald-600" /> Xuất Excel
+            <Download className="w-3.5 h-3.5 text-emerald-700" /> Xuất Excel
           </button>
           <button
             onClick={() => setIsExcelModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-emerald-600/20 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-sm text-xs font-bold transition shadow-xs cursor-pointer"
             title="Nhập hàng loạt điểm phát từ file Excel"
           >
             <Upload className="w-3.5 h-3.5" /> Nhập Excel 1.584 điểm
           </button>
           <button
             onClick={loadLocations}
-            className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-100 bg-white rounded-xl text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" /> Làm mới
           </button>
           <button
             onClick={handleOpenCreate}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-sky-600/20 cursor-pointer"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Thêm điểm phát
           </button>
@@ -278,16 +278,16 @@ export const LocationsPage: React.FC = () => {
       {error && <AlertBanner type="error" message={error} />}
 
       {/* Search & Admin Unit Filter */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center gap-3">
+      <div className="bg-white p-3.5 rounded border border-slate-300 shadow-xs flex flex-col md:flex-row items-center gap-2.5">
         <div className="relative flex-1 w-full">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && loadLocations()}
             placeholder="Tìm theo tên điểm phát, địa chỉ, mã đường truyền hoặc slug..."
-            className="w-full pl-10 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition"
+            className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] transition font-mono"
           />
         </div>
         {adminUnits.length > 0 && (
@@ -295,7 +295,7 @@ export const LocationsPage: React.FC = () => {
             <select
               value={selectedAdminUnit}
               onChange={(e) => setSelectedAdminUnit(e.target.value)}
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+              className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87]"
             >
               <option value="">-- Tất cả Xã / Phường / Thị trấn --</option>
               {adminUnits.map((u) => (
@@ -308,31 +308,31 @@ export const LocationsPage: React.FC = () => {
         )}
         <button
           onClick={loadLocations}
-          className="w-full md:w-auto px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+          className="w-full md:w-auto px-4 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold transition cursor-pointer"
         >
           Tìm kiếm
         </button>
       </div>
 
       {/* Locations Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div className="bg-white rounded border border-slate-300 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50/70 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3.5 px-4">Tên điểm phát & Slug</th>
-                <th className="py-3.5 px-4">Địa chỉ & Tọa độ GPS</th>
-                <th className="py-3.5 px-4">Nhà mạng & Mã cáp</th>
-                <th className="py-3.5 px-4">Thời lượng & Băng thông</th>
-                <th className="py-3.5 px-4">Trạng thái</th>
-                <th className="py-3.5 px-4 text-right">Thao tác</th>
+              <tr className="bg-slate-50/70 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                <th className="py-3 px-4">Tên điểm phát & Slug</th>
+                <th className="py-3 px-4">Địa chỉ & Tọa độ GPS</th>
+                <th className="py-3 px-4">Nhà mạng & Mã cáp</th>
+                <th className="py-3 px-4">Thời lượng & Băng thông</th>
+                <th className="py-3 px-4">Trạng thái</th>
+                <th className="py-3 px-4 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-sky-600" />
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#004b87]" />
                     Đang tải danh sách điểm phát Wi-Fi...
                   </td>
                 </tr>
@@ -345,70 +345,70 @@ export const LocationsPage: React.FC = () => {
               ) : (
                 filteredLocations.map((loc) => (
                   <tr key={loc.id} className="hover:bg-slate-50/80 transition">
-                    <td className="py-3.5 px-4">
+                    <td className="py-3 px-4">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center flex-shrink-0">
-                          <MapPin className="w-4 h-4" />
+                        <div className="w-7 h-7 rounded-xs bg-slate-100 border border-slate-200 text-[#004b87] flex items-center justify-center flex-shrink-0">
+                          <MapPin className="w-3.5 h-3.5" />
                         </div>
                         <div>
                           <span className="font-bold text-slate-900 block text-xs">{loc.name}</span>
-                          <span className="text-[11px] font-mono text-slate-400 block">/portal?location={loc.slug}</span>
+                          <span className="text-[11px] font-mono text-slate-500 block">/portal?location={loc.slug}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-600 max-w-xs">
+                    <td className="py-3 px-4 text-slate-600 max-w-xs">
                       <div className="truncate font-medium">{loc.address || <span className="text-slate-400 italic">Chưa có địa chỉ</span>}</div>
                       {loc.latitude && loc.longitude ? (
-                        <span className="text-[10px] font-mono text-sky-600 flex items-center gap-1 mt-0.5">
+                        <span className="text-[10px] font-mono text-[#004b87] flex items-center gap-1 mt-0.5">
                           <Globe2 className="w-3 h-3" /> {loc.latitude.toFixed(4)}, {loc.longitude.toFixed(4)}
                         </span>
                       ) : (
-                        <span className="text-[10px] text-amber-500 italic">Chưa gán GPS</span>
+                        <span className="text-[10px] text-amber-600 italic">Chưa gán GPS</span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 text-slate-700">
+                    <td className="py-3 px-4 text-slate-700">
                       <div className="font-bold text-slate-800">{loc.ispName || 'VNPT'}</div>
-                      <div className="text-[11px] font-mono text-slate-400">{loc.circuitCode || 'Chưa gán mã'}</div>
+                      <div className="text-[11px] font-mono text-slate-500">{loc.circuitCode || 'Chưa gán mã'}</div>
                     </td>
-                    <td className="py-3.5 px-4 font-semibold text-slate-700">
+                    <td className="py-3 px-4 font-semibold text-slate-700">
                       <div className="flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5 text-slate-400" /> {loc.sessionDurationMinutes} phút
                       </div>
-                      <div className="flex items-center gap-1 text-[11px] text-emerald-600 mt-0.5">
+                      <div className="flex items-center gap-1 text-[11px] text-emerald-700 mt-0.5">
                         <Signal className="w-3 h-3" /> {loc.maxBandwidthMbps} Mbps
                       </div>
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3 px-4">
                       {loc.active ? (
-                        <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full text-[11px]">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Hoạt động
+                        <span className="inline-flex items-center gap-1 font-semibold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-sm text-[11px]">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Hoạt động
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full text-[11px]">
-                          <XCircle className="w-3 h-3 text-slate-400" /> Tạm dừng
+                        <span className="inline-flex items-center gap-1 font-semibold text-slate-600 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded-sm text-[11px]">
+                          <XCircle className="w-3 h-3 text-slate-500" /> Tạm dừng
                         </span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 text-right space-x-1.5 whitespace-nowrap">
+                    <td className="py-3 px-4 text-right space-x-1 whitespace-nowrap">
                       <a
                         href={`/portal?location=${loc.slug}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg inline-block transition"
+                        className="p-1 text-slate-500 hover:text-[#004b87] hover:bg-slate-100 rounded-sm inline-block transition"
                         title="Mở Cổng khách của điểm này"
                       >
                         <ExternalLink className="w-4 h-4" />
                       </a>
                       <button
                         onClick={() => handleOpenEdit(loc)}
-                        className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition cursor-pointer"
+                        className="p-1 text-slate-500 hover:text-amber-700 hover:bg-amber-50 rounded-sm transition cursor-pointer"
                         title="Chỉnh sửa thông tin"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setDeletingLocation(loc)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                        className="p-1 text-slate-500 hover:text-rose-700 hover:bg-rose-50 rounded-sm transition cursor-pointer"
                         title="Xóa điểm phát"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -442,7 +442,7 @@ export const LocationsPage: React.FC = () => {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Ví dụ: Nhà văn hóa Thôn Lập Lễ"
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87]"
                 required
               />
             </div>
@@ -456,7 +456,7 @@ export const LocationsPage: React.FC = () => {
                 value={formData.slug}
                 onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
                 placeholder="Ví dụ: nvh-thon-lap-le"
-                className="w-full px-3 py-2 text-xs font-mono border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                className="w-full px-3 py-1.5 text-xs font-mono border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87]"
                 required
               />
             </div>
@@ -469,7 +469,7 @@ export const LocationsPage: React.FC = () => {
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               placeholder="Ví dụ: Thôn Lập Lễ, Xã Lập Lễ, Huyện Thủy Nguyên, Hải Phòng"
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+              className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87]"
             />
           </div>
 
@@ -479,7 +479,7 @@ export const LocationsPage: React.FC = () => {
               <select
                 value={formData.adminUnitId}
                 onChange={(e) => setFormData({ ...formData, adminUnitId: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 bg-white"
+                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
               >
                 <option value="">-- Chưa gán địa bàn --</option>
                 {adminUnits.map((u) => (
@@ -497,7 +497,7 @@ export const LocationsPage: React.FC = () => {
                 value={formData.latitude}
                 onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
                 placeholder="20.50 - 21.15"
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-mono"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
               />
             </div>
             <div>
@@ -508,7 +508,7 @@ export const LocationsPage: React.FC = () => {
                 value={formData.longitude}
                 onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
                 placeholder="106.40 - 107.15"
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-mono"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
               />
             </div>
           </div>
@@ -519,7 +519,7 @@ export const LocationsPage: React.FC = () => {
               <select
                 value={formData.ispProvider}
                 onChange={(e) => setFormData({ ...formData, ispProvider: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 bg-white"
+                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
               >
                 <option value="VNPT">VNPT</option>
                 <option value="Viettel">Viettel</option>
@@ -533,7 +533,7 @@ export const LocationsPage: React.FC = () => {
                 value={formData.circuitId}
                 onChange={(e) => setFormData({ ...formData, circuitId: e.target.value })}
                 placeholder="Ví dụ: HP-HBG-00129"
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-mono"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
               />
             </div>
           </div>
@@ -547,7 +547,7 @@ export const LocationsPage: React.FC = () => {
                 max="1440"
                 value={formData.sessionDurationMinutes}
                 onChange={(e) => setFormData({ ...formData, sessionDurationMinutes: Number(e.target.value) })}
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-mono"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
                 required
               />
             </div>
@@ -560,7 +560,7 @@ export const LocationsPage: React.FC = () => {
                 max="500"
                 value={formData.maxBandwidthMbps}
                 onChange={(e) => setFormData({ ...formData, maxBandwidthMbps: Number(e.target.value) })}
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-mono"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
                 required
               />
             </div>
@@ -572,7 +572,7 @@ export const LocationsPage: React.FC = () => {
               type="text"
               value={formData.welcomeMessage}
               onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+              className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87]"
             />
           </div>
 
@@ -584,7 +584,7 @@ export const LocationsPage: React.FC = () => {
               rows={3}
               value={formData.termsAndConditions}
               onChange={(e) => setFormData({ ...formData, termsAndConditions: e.target.value })}
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 leading-relaxed"
+              className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] leading-relaxed"
               required
             />
           </div>
@@ -595,25 +595,25 @@ export const LocationsPage: React.FC = () => {
               type="checkbox"
               checked={formData.active}
               onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-              className="w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500 cursor-pointer"
+              className="w-4 h-4 text-[#004b87] rounded-sm border-slate-300 focus:ring-[#004b87] cursor-pointer"
             />
             <label htmlFor="createActive" className="text-xs font-bold text-slate-700 cursor-pointer">
               Kích hoạt điểm phát Wi-Fi này ngay
             </label>
           </div>
 
-          <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
             <button
               type="button"
               onClick={() => setIsCreateOpen(false)}
-              className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+              className="px-3.5 py-1.5 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-sm text-xs font-bold transition cursor-pointer"
             >
               Hủy
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm shadow-sky-600/20"
+              className="px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
               Lưu điểm phát
@@ -640,7 +640,7 @@ export const LocationsPage: React.FC = () => {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+              className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87]"
               required
             />
           </div>
@@ -651,7 +651,7 @@ export const LocationsPage: React.FC = () => {
               type="text"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+              className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87]"
             />
           </div>
 
@@ -661,7 +661,7 @@ export const LocationsPage: React.FC = () => {
               <select
                 value={formData.adminUnitId}
                 onChange={(e) => setFormData({ ...formData, adminUnitId: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 bg-white"
+                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
               >
                 <option value="">-- Chưa gán địa bàn --</option>
                 {adminUnits.map((u) => (
@@ -678,7 +678,7 @@ export const LocationsPage: React.FC = () => {
                 step="0.000001"
                 value={formData.latitude}
                 onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-mono"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
               />
             </div>
             <div>
@@ -688,7 +688,7 @@ export const LocationsPage: React.FC = () => {
                 step="0.000001"
                 value={formData.longitude}
                 onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-mono"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
               />
             </div>
           </div>
@@ -699,7 +699,7 @@ export const LocationsPage: React.FC = () => {
               <select
                 value={formData.ispProvider}
                 onChange={(e) => setFormData({ ...formData, ispProvider: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 bg-white"
+                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
               >
                 <option value="VNPT">VNPT</option>
                 <option value="Viettel">Viettel</option>
@@ -712,7 +712,7 @@ export const LocationsPage: React.FC = () => {
                 type="text"
                 value={formData.circuitId}
                 onChange={(e) => setFormData({ ...formData, circuitId: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-mono"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
               />
             </div>
           </div>
@@ -726,7 +726,7 @@ export const LocationsPage: React.FC = () => {
                 max="1440"
                 value={formData.sessionDurationMinutes}
                 onChange={(e) => setFormData({ ...formData, sessionDurationMinutes: Number(e.target.value) })}
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-mono"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
                 required
               />
             </div>
@@ -739,7 +739,7 @@ export const LocationsPage: React.FC = () => {
                 max="500"
                 value={formData.maxBandwidthMbps}
                 onChange={(e) => setFormData({ ...formData, maxBandwidthMbps: Number(e.target.value) })}
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-mono"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
                 required
               />
             </div>
@@ -751,7 +751,7 @@ export const LocationsPage: React.FC = () => {
               type="text"
               value={formData.welcomeMessage}
               onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+              className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87]"
             />
           </div>
 
@@ -761,7 +761,7 @@ export const LocationsPage: React.FC = () => {
               rows={3}
               value={formData.termsAndConditions}
               onChange={(e) => setFormData({ ...formData, termsAndConditions: e.target.value })}
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 leading-relaxed"
+              className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] leading-relaxed"
               required
             />
           </div>
@@ -772,25 +772,25 @@ export const LocationsPage: React.FC = () => {
               type="checkbox"
               checked={formData.active}
               onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-              className="w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500 cursor-pointer"
+              className="w-4 h-4 text-[#004b87] rounded-sm border-slate-300 focus:ring-[#004b87] cursor-pointer"
             />
             <label htmlFor="editActive" className="text-xs font-bold text-slate-700 cursor-pointer">
               Đang hoạt động (Kích hoạt cho khách truy cập)
             </label>
           </div>
 
-          <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
             <button
               type="button"
               onClick={() => setEditingLocation(null)}
-              className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+              className="px-3.5 py-1.5 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-sm text-xs font-bold transition cursor-pointer"
             >
               Hủy
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm shadow-sky-600/20"
+              className="px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
               Cập nhật thay đổi
@@ -807,21 +807,21 @@ export const LocationsPage: React.FC = () => {
         maxWidth="sm"
       >
         {deletingLocation && (
-          <div className="space-y-4 text-xs">
+          <div className="space-y-3.5 text-xs">
             <p className="text-slate-600 leading-relaxed">
               Bạn có chắc chắn muốn xóa điểm phát sóng <strong className="text-slate-900 font-bold">{deletingLocation.name}</strong> không? Các phiên truy cập trong quá khứ vẫn sẽ được lưu trữ trong nhật ký.
             </p>
-            <div className="flex justify-end gap-2.5 pt-2">
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
               <button
                 onClick={() => setDeletingLocation(null)}
-                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                className="px-3.5 py-1.5 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-sm text-xs font-bold transition cursor-pointer"
               >
                 Hủy
               </button>
               <button
                 onClick={handleDeleteLocation}
                 disabled={saving}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-sm shadow-rose-600/20"
+                className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-sm text-xs font-bold transition cursor-pointer shadow-xs"
               >
                 {saving ? 'Đang xóa...' : 'Xác nhận xóa'}
               </button>

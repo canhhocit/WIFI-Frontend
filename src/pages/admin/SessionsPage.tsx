@@ -113,14 +113,14 @@ export const SessionsPage: React.FC = () => {
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Phiên Truy Cập Wi-Fi</h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Phiên Truy Cập Wi-Fi</h1>
+          <p className="text-xs text-slate-500 mt-1">
             Tra cứu, kiểm soát phiên người dùng và quản lý quyền truy cập Internet qua cổng Captive.
           </p>
         </div>
         <button
           onClick={loadSessions}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 hover:bg-slate-100 bg-white rounded-xl text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" /> Làm mới dữ liệu
         </button>
@@ -129,22 +129,22 @@ export const SessionsPage: React.FC = () => {
       {error && <AlertBanner type="error" message={error} />}
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row gap-3">
+      <div className="bg-white p-3.5 rounded border border-slate-300 shadow-xs flex flex-col md:flex-row gap-2.5">
         {/* Search */}
         <form onSubmit={handleSearchSubmit} className="flex-1 flex gap-2">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Tìm theo MAC, IP, tên khách hoặc mã token..."
-              className="w-full pl-10 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition"
+              className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] transition font-mono"
             />
           </div>
           <button
             type="submit"
-            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+            className="px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold transition cursor-pointer"
           >
             Tìm kiếm
           </button>
@@ -158,7 +158,7 @@ export const SessionsPage: React.FC = () => {
               setSelectedLocation(e.target.value ? Number(e.target.value) : undefined);
               setPage(0);
             }}
-            className="px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 bg-white text-slate-700 font-medium cursor-pointer"
+            className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white text-slate-700 font-medium cursor-pointer"
           >
             <option value="">Tất cả điểm phát Wi-Fi</option>
             {locations.map((loc) => (
@@ -175,7 +175,7 @@ export const SessionsPage: React.FC = () => {
               setSelectedStatus((e.target.value as SessionStatus) || undefined);
               setPage(0);
             }}
-            className="px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 bg-white text-slate-700 font-medium cursor-pointer"
+            className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white text-slate-700 font-medium cursor-pointer"
           >
             <option value="">Tất cả trạng thái</option>
             <option value="AUTHORIZED">Đang kết nối</option>
@@ -188,11 +188,11 @@ export const SessionsPage: React.FC = () => {
       </div>
 
       {/* Sessions Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div className="bg-white rounded border border-slate-300 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50/70 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <tr className="bg-slate-50/70 border-b border-slate-300 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 <th className="py-3.5 px-4">Thiết bị & IP</th>
                 <th className="py-3.5 px-4">Điểm phát Wi-Fi</th>
                 <th className="py-3.5 px-4">Khách hàng</th>
@@ -206,7 +206,7 @@ export const SessionsPage: React.FC = () => {
               {loading ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-sky-600" />
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#004b87]" />
                     Đang tải danh sách phiên...
                   </td>
                 </tr>
@@ -248,10 +248,10 @@ export const SessionsPage: React.FC = () => {
                     <td className="py-3 px-4 text-slate-600 font-mono text-[11px]">
                       {formatDate(sess.expiresAt)}
                     </td>
-                    <td className="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
+                    <td className="py-2.5 px-4 text-right space-x-1 whitespace-nowrap">
                       <button
                         onClick={() => setDetailSession(sess)}
-                        className="p-1.5 text-slate-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition cursor-pointer"
+                        className="p-1.5 text-slate-500 hover:text-[#004b87] hover:bg-slate-100 rounded-sm transition cursor-pointer"
                         title="Xem chi tiết phiên"
                       >
                         <Eye className="w-4 h-4" />
@@ -263,7 +263,7 @@ export const SessionsPage: React.FC = () => {
                             setRevokeSessionTarget(sess);
                             setRevokeReason('Vi phạm chính sách sử dụng mạng');
                           }}
-                          className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                          className="p-1.5 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-sm transition cursor-pointer"
                           title="Ngắt kết nối mạng ngay"
                         >
                           <Ban className="w-4 h-4" />
@@ -278,7 +278,7 @@ export const SessionsPage: React.FC = () => {
         </div>
 
         {/* Pagination Bar */}
-        <div className="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50/40">
+        <div className="p-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 bg-slate-50/70">
           <span>
             Tổng số: <strong className="font-semibold text-slate-800">{totalElements}</strong> phiên truy cập
           </span>
@@ -289,14 +289,14 @@ export const SessionsPage: React.FC = () => {
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="p-1.5 rounded-lg border border-slate-200 hover:bg-white disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
+              className="p-1 rounded-sm border border-slate-300 hover:bg-white disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
-              className="p-1.5 rounded-lg border border-slate-200 hover:bg-white disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
+              className="p-1 rounded-sm border border-slate-300 hover:bg-white disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -312,56 +312,56 @@ export const SessionsPage: React.FC = () => {
         maxWidth="lg"
       >
         {detailSession && (
-          <div className="space-y-4 text-xs">
-            <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <div className="space-y-3 text-xs">
+            <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-sm border border-slate-200">
               <div>
-                <span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Trạng thái</span>
+                <span className="text-slate-500 block text-[10px] uppercase font-bold tracking-wider">Trạng thái</span>
                 <div className="mt-1">
                   <StatusBadge status={detailSession.status} size="md" />
                 </div>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Điểm phát sóng</span>
-                <span className="font-bold text-slate-800 text-sm mt-0.5 block">{detailSession.locationName}</span>
+                <span className="text-slate-500 block text-[10px] uppercase font-bold tracking-wider">Điểm phát sóng</span>
+                <span className="font-bold text-slate-800 text-xs mt-0.5 block">{detailSession.locationName}</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Địa chỉ MAC</span>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="p-2.5 bg-slate-50 rounded-sm border border-slate-200">
+                <span className="text-slate-500 block text-[10px] uppercase font-bold">Địa chỉ MAC</span>
                 <span className="font-mono font-bold text-slate-800">{detailSession.macAddress}</span>
               </div>
-              <div className="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Địa chỉ IP</span>
+              <div className="p-2.5 bg-slate-50 rounded-sm border border-slate-200">
+                <span className="text-slate-500 block text-[10px] uppercase font-bold">Địa chỉ IP</span>
                 <span className="font-mono font-bold text-slate-800">{detailSession.ipAddress}</span>
               </div>
-              <div className="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Khách hàng</span>
+              <div className="p-2.5 bg-slate-50 rounded-sm border border-slate-200">
+                <span className="text-slate-500 block text-[10px] uppercase font-bold">Khách hàng</span>
                 <span className="font-bold text-slate-800">{detailSession.guestName || 'Khách vãng lai'}</span>
               </div>
-              <div className="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Liên hệ</span>
+              <div className="p-2.5 bg-slate-50 rounded-sm border border-slate-200">
+                <span className="text-slate-500 block text-[10px] uppercase font-bold">Liên hệ</span>
                 <span className="font-medium text-slate-800">{detailSession.guestContact || '—'}</span>
               </div>
-              <div className="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Thời gian bắt đầu</span>
+              <div className="p-2.5 bg-slate-50 rounded-sm border border-slate-200">
+                <span className="text-slate-500 block text-[10px] uppercase font-bold">Thời gian bắt đầu</span>
                 <span className="font-mono text-slate-700">{formatDate(detailSession.authorizedAt || detailSession.createdAt)}</span>
               </div>
-              <div className="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Thời gian hết hạn</span>
+              <div className="p-2.5 bg-slate-50 rounded-sm border border-slate-200">
+                <span className="text-slate-500 block text-[10px] uppercase font-bold">Thời gian hết hạn</span>
                 <span className="font-mono text-slate-700">{formatDate(detailSession.expiresAt)}</span>
               </div>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-              <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1">Mã phiên truy cập (Session Token)</span>
-              <span className="font-mono text-[11px] text-slate-700 break-all select-all block bg-white p-2 rounded-lg border border-slate-200">
+            <div className="p-2.5 bg-slate-50 rounded-sm border border-slate-200">
+              <span className="text-slate-500 block text-[10px] uppercase font-bold mb-1">Mã phiên truy cập (Session Token)</span>
+              <span className="font-mono text-[11px] text-slate-700 break-all select-all block bg-white p-2 rounded-xs border border-slate-300">
                 {detailSession.sessionToken}
               </span>
             </div>
 
             {detailSession.revokeReason && (
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800">
+              <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-sm text-rose-800">
                 <span className="font-bold block text-xs">Lý do ngắt kết nối:</span>
                 <p className="mt-0.5 text-xs">{detailSession.revokeReason}</p>
               </div>
@@ -370,7 +370,7 @@ export const SessionsPage: React.FC = () => {
             <div className="flex justify-end pt-2">
               <button
                 onClick={() => setDetailSession(null)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-sm text-xs font-bold transition cursor-pointer"
               >
                 Đóng
               </button>
@@ -387,27 +387,27 @@ export const SessionsPage: React.FC = () => {
         maxWidth="md"
       >
         {revokeSessionTarget && (
-          <div className="space-y-4 text-xs">
+          <div className="space-y-3 text-xs">
             {revokeError && <AlertBanner type="error" message={revokeError} />}
 
-            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-900 flex items-start gap-2.5">
-              <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-sm text-rose-900 flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold block text-sm">Cảnh báo ngắt truy cập mạng</span>
+                <span className="font-bold block text-xs">Cảnh báo ngắt truy cập mạng</span>
                 <p className="mt-0.5 leading-relaxed text-xs">
-                  Thiết bị <code className="font-mono font-bold">{revokeSessionTarget.macAddress}</code> ({revokeSessionTarget.ipAddress}) tại chi nhánh <span className="font-bold">{revokeSessionTarget.locationName}</span> sẽ bị thu hồi quyền truy cập Internet ngay lập tức.
+                  Thiết bị <code className="font-mono font-bold">{revokeSessionTarget.macAddress}</code> ({revokeSessionTarget.ipAddress}) tại <span className="font-bold">{revokeSessionTarget.locationName}</span> sẽ bị thu hồi quyền truy cập Internet ngay lập tức.
                 </p>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">
                 Lý do ngắt kết nối
               </label>
               <select
                 value={revokeReason}
                 onChange={(e) => setRevokeReason(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 bg-white cursor-pointer font-medium"
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-rose-500 bg-white cursor-pointer font-medium"
               >
                 <option value="Vi phạm chính sách sử dụng mạng">Vi phạm chính sách sử dụng mạng</option>
                 <option value="Hết thời gian cấp phép dịch vụ">Hết thời gian cấp phép dịch vụ</option>
@@ -417,11 +417,11 @@ export const SessionsPage: React.FC = () => {
               </select>
             </div>
 
-            <div className="flex justify-end gap-2.5 pt-3">
+            <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setRevokeSessionTarget(null)}
-                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                className="px-3.5 py-1.5 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-sm text-xs font-bold transition cursor-pointer"
               >
                 Hủy bỏ
               </button>
@@ -429,7 +429,7 @@ export const SessionsPage: React.FC = () => {
                 type="button"
                 onClick={handleConfirmRevoke}
                 disabled={revoking}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm shadow-rose-600/20"
+                className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-sm text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 {revoking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Ban className="w-3.5 h-3.5" />}
                 Xác nhận ngắt kết nối

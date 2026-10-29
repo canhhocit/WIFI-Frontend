@@ -66,8 +66,8 @@ export const AuditPage: React.FC = () => {
     switch (action) {
       case 'ADMIN_LOGIN':
         return (
-          <span className="inline-flex items-center gap-1 font-semibold text-[11px] text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-md">
-            <UserCheck className="w-3 h-3 text-sky-600" /> Đăng nhập Admin
+          <span className="inline-flex items-center gap-1 font-semibold text-[11px] text-[#003865] bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-md">
+            <UserCheck className="w-3 h-3 text-[#004b87]" /> Đăng nhập Admin
           </span>
         );
       case 'SESSION_REVOKE':
@@ -128,7 +128,7 @@ export const AuditPage: React.FC = () => {
         </div>
         <button
           onClick={loadAudit}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 hover:bg-slate-100 bg-white rounded-xl text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 hover:bg-slate-100 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" /> Làm mới nhật ký
         </button>
@@ -137,7 +137,7 @@ export const AuditPage: React.FC = () => {
       {error && <AlertBanner type="error" message={error} />}
 
       {/* Filter */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3">
+      <div className="bg-white p-4 rounded border border-slate-300 shadow-xs flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-slate-400" />
           <span className="text-xs font-bold text-slate-700">Lọc theo loại hành động:</span>
@@ -148,7 +148,7 @@ export const AuditPage: React.FC = () => {
             setSelectedAction(e.target.value);
             setPage(0);
           }}
-          className="px-3.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 bg-white text-slate-700 font-medium cursor-pointer"
+          className="px-3.5 py-2 text-xs border border-slate-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-1 focus:ring-[#004b87] bg-white text-slate-700 font-medium cursor-pointer"
         >
           <option value="">Tất cả các hành động</option>
           <option value="ADMIN_LOGIN">Đăng nhập Quản trị viên (ADMIN_LOGIN)</option>
@@ -163,11 +163,11 @@ export const AuditPage: React.FC = () => {
       </div>
 
       {/* Events Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div className="bg-white rounded border border-slate-300 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50/70 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <tr className="bg-slate-50/70 border-b border-slate-300 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 <th className="py-3.5 px-4">Thời gian</th>
                 <th className="py-3.5 px-4">Loại hành động</th>
                 <th className="py-3.5 px-4">Người thực hiện</th>
@@ -179,7 +179,7 @@ export const AuditPage: React.FC = () => {
               {loading ? (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-slate-400">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-sky-600" />
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#004b87]" />
                     Đang tải nhật ký kiểm toán...
                   </td>
                 </tr>
@@ -226,14 +226,14 @@ export const AuditPage: React.FC = () => {
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="p-1.5 rounded-lg border border-slate-200 hover:bg-white disabled:opacity-40 cursor-pointer"
+              className="p-1.5 rounded-sm border border-slate-200 hover:bg-white disabled:opacity-40 cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
-              className="p-1.5 rounded-lg border border-slate-200 hover:bg-white disabled:opacity-40 cursor-pointer"
+              className="p-1.5 rounded-sm border border-slate-200 hover:bg-white disabled:opacity-40 cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

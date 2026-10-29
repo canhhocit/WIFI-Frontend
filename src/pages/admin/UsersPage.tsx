@@ -190,10 +190,10 @@ export const UsersPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-sm border border-gray-100 shadow-sm">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg">
+            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-sm">
               <Users className="w-6 h-6" />
             </div>
             <div>
@@ -208,14 +208,14 @@ export const UsersPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={fetchData}
-            className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
+            className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-sm border border-gray-200 transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             Làm mới
           </button>
           <button
             onClick={handleOpenCreate}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm transition-colors"
           >
             <UserPlus className="w-4 h-4" />
             Thêm Cán bộ Mới
@@ -225,20 +225,20 @@ export const UsersPage: React.FC = () => {
 
       {/* Notifications */}
       {actionSuccess && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3 text-emerald-800 text-sm">
+        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-sm flex items-center gap-3 text-emerald-800 text-sm">
           <CheckCircle className="w-5 h-5 flex-shrink-0 text-emerald-600" />
           <span>{actionSuccess}</span>
         </div>
       )}
       {actionError && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-800 text-sm">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-sm flex items-center gap-3 text-red-800 text-sm">
           <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-600" />
           <span>{actionError}</span>
         </div>
       )}
 
       {/* Filters & Search */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-sm border border-gray-100 shadow-sm">
         <div className="relative md:col-span-2">
           <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
           <input
@@ -246,7 +246,7 @@ export const UsersPage: React.FC = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Tìm theo tên đăng nhập, họ tên cán bộ, email..."
-            className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
           />
         </div>
 
@@ -254,7 +254,7 @@ export const UsersPage: React.FC = () => {
           <select
             value={selectedRole}
             onChange={(e) => setSelectedRole(e.target.value)}
-            className="w-full py-2 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            className="w-full py-2 px-3 text-sm bg-gray-50 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
           >
             <option value="ALL">-- Tất cả vai trò chính quyền --</option>
             <option value="ROLE_SUPER_ADMIN">Quản trị cấp cao (Toàn quyền)</option>
@@ -267,7 +267,7 @@ export const UsersPage: React.FC = () => {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-sm border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -306,7 +306,7 @@ export const UsersPage: React.FC = () => {
 
                       <td className="py-3.5 px-4">
                         <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${roleConfig.color}`}
+                          className={`inline-flex items-center px-2.5 py-1 rounded-sm text-xs font-medium border ${roleConfig.color}`}
                         >
                           <Shield className="w-3 h-3 mr-1" />
                           {roleConfig.label}
@@ -362,7 +362,7 @@ export const UsersPage: React.FC = () => {
                             <button
                               onClick={() => handleUnlockUser(user)}
                               title="Mở khóa tài khoản (C02)"
-                              className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors border border-amber-200"
+                              className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-sm transition-colors border border-amber-200"
                             >
                               <Unlock className="w-4 h-4" />
                             </button>
@@ -370,14 +370,14 @@ export const UsersPage: React.FC = () => {
                           <button
                             onClick={() => handleOpenEdit(user)}
                             title="Sửa thông tin"
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleToggleStatus(user)}
                             title={user.enabled ? 'Vô hiệu hóa tài khoản' : 'Kích hoạt tài khoản'}
-                            className={`p-1.5 rounded-lg transition-colors ${
+                            className={`p-1.5 rounded-sm transition-colors ${
                               user.enabled ? 'text-gray-400 hover:text-red-600' : 'text-emerald-600 hover:bg-emerald-50'
                             }`}
                           >
@@ -397,7 +397,7 @@ export const UsersPage: React.FC = () => {
       {/* Modal Create / Edit User */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-100">
+          <div className="bg-white rounded-sm shadow-xl w-full max-w-lg overflow-hidden border border-gray-100">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <h3 className="font-bold text-gray-900">
                 {editingUser ? `Cập nhật Cán bộ: ${editingUser.fullName}` : 'Thêm mới Cán bộ Quản trị'}
@@ -420,7 +420,7 @@ export const UsersPage: React.FC = () => {
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     placeholder="vd: canbo_hongbang"
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               )}
@@ -436,7 +436,7 @@ export const UsersPage: React.FC = () => {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="Tối thiểu 6 ký tự"
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -448,7 +448,7 @@ export const UsersPage: React.FC = () => {
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   placeholder="vd: Nguyễn Văn A"
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -461,7 +461,7 @@ export const UsersPage: React.FC = () => {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="canbo@haiphong.gov.vn"
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -472,7 +472,7 @@ export const UsersPage: React.FC = () => {
                     value={formData.phoneNumber}
                     onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                     placeholder="0901234567"
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -482,7 +482,7 @@ export const UsersPage: React.FC = () => {
                 <select
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as AdminRoleType })}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="ROLE_SUPER_ADMIN">ROLE_SUPER_ADMIN - Quản trị cấp cao</option>
                   <option value="ROLE_SOTTTT_ADMIN">ROLE_SOTTTT_ADMIN - Cán bộ Sở TT&TT</option>
@@ -499,7 +499,7 @@ export const UsersPage: React.FC = () => {
                 <select
                   value={formData.adminUnitId}
                   onChange={(e) => setFormData({ ...formData, adminUnitId: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">-- Toàn thành phố (Không giới hạn) --</option>
                   {adminUnits.map((u) => (
@@ -514,13 +514,13 @@ export const UsersPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-sm transition-colors"
                 >
                   Hủy bỏ
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm transition-colors"
                 >
                   {editingUser ? 'Lưu thay đổi' : 'Tạo Cán bộ'}
                 </button>

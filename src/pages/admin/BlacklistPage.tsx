@@ -116,14 +116,14 @@ export const BlacklistPage: React.FC = () => {
           <button
             onClick={loadData}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 shadow-sm"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             Làm mới
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-sm shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Chặn địa chỉ MAC mới
@@ -132,14 +132,14 @@ export const BlacklistPage: React.FC = () => {
       </div>
 
       {actionMessage && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs font-medium flex items-center gap-2">
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-sm text-xs font-medium flex items-center gap-2">
           <CheckCircle className="w-4 h-4 text-emerald-600" />
           {actionMessage}
         </div>
       )}
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white p-3 rounded-sm border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 flex-1">
           <div className="relative min-w-[220px] flex-1 max-w-sm">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -148,11 +148,11 @@ export const BlacklistPage: React.FC = () => {
               placeholder="Tìm theo địa chỉ MAC, lý do chặn, người chặn..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-red-500"
             />
           </div>
 
-          <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5">
+          <div className="inline-flex rounded-sm border border-gray-200 bg-gray-50 p-0.5">
             <button
               onClick={() => setActiveFilter(undefined)}
               className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
@@ -182,7 +182,7 @@ export const BlacklistPage: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+      <div className="bg-white rounded-sm border border-gray-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 text-xs">
             <thead className="bg-gray-50">
@@ -261,7 +261,7 @@ export const BlacklistPage: React.FC = () => {
       {/* Modal Add Blacklist */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-gray-100">
+          <div className="bg-white rounded max-w-md w-full p-6 shadow-xl border border-gray-100">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <h3 className="font-bold text-gray-900 text-base flex items-center gap-2">
                 <ShieldAlert className="w-5 h-5 text-red-600" />
@@ -274,7 +274,7 @@ export const BlacklistPage: React.FC = () => {
 
             <form onSubmit={handleAddBlacklist} className="mt-4 space-y-4 text-xs">
               {formError && (
-                <div className="p-2.5 bg-red-50 border border-red-200 text-red-800 rounded-lg text-xs">
+                <div className="p-2.5 bg-red-50 border border-red-200 text-red-800 rounded-sm text-xs">
                   {formError}
                 </div>
               )}
@@ -289,7 +289,7 @@ export const BlacklistPage: React.FC = () => {
                   placeholder="Ví dụ: AA:BB:CC:DD:EE:01"
                   value={macAddress}
                   onChange={(e) => setMacAddress(e.target.value.toUpperCase())}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs font-mono tracking-wider focus:ring-1 focus:ring-red-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs font-mono tracking-wider focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
@@ -303,7 +303,7 @@ export const BlacklistPage: React.FC = () => {
                   placeholder="Ví dụ: Phát hiện hành vi dò quét cổng và giả lập địa chỉ IP nội bộ tại Nhà văn hóa..."
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-red-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs focus:ring-1 focus:ring-red-500"
                 />
               </div>
 
@@ -311,13 +311,13 @@ export const BlacklistPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-sm hover:bg-gray-50"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium shadow-sm"
+                  className="px-4 py-2 bg-red-600 text-white rounded-sm hover:bg-red-700 font-medium shadow-sm"
                 >
                   Xác nhận chặn vĩnh viễn
                 </button>

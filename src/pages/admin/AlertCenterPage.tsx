@@ -135,14 +135,14 @@ export const AlertCenterPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowSimulateModal(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-sm hover:bg-indigo-100 shadow-sm"
           >
             <Zap className="w-4 h-4 text-indigo-600" />
             Giả lập Telemetry
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-sm shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Thêm quy tắc mới
@@ -151,7 +151,7 @@ export const AlertCenterPage: React.FC = () => {
       </div>
 
       {actionMessage && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs font-medium flex items-center gap-2">
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-sm text-xs font-medium flex items-center gap-2">
           <CheckCircle className="w-4 h-4 text-emerald-600" />
           {actionMessage}
         </div>
@@ -165,7 +165,7 @@ export const AlertCenterPage: React.FC = () => {
             Đang tải danh mục quy tắc cảnh báo...
           </div>
         ) : rules.length === 0 ? (
-          <div className="col-span-full py-12 text-center text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
+          <div className="col-span-full py-12 text-center text-gray-500 bg-white rounded-sm border border-dashed border-gray-300">
             <Bell className="w-10 h-10 mx-auto text-gray-400 mb-2" />
             Chưa có quy tắc cảnh báo nào được cấu hình
           </div>
@@ -179,13 +179,13 @@ export const AlertCenterPage: React.FC = () => {
             return (
               <div
                 key={rule.id}
-                className={`bg-white rounded-xl border p-5 shadow-sm transition-all ${
+                className={`bg-white rounded-sm border p-5 shadow-sm transition-all ${
                   rule.enabled ? 'border-gray-200 hover:shadow-md' : 'border-gray-200 opacity-60 bg-gray-50'
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-100">{icon}</div>
+                    <div className="p-2.5 rounded-sm bg-gray-50 border border-gray-100">{icon}</div>
                     <div>
                       <h3 className="text-sm font-semibold text-gray-900">{rule.name}</h3>
                       <span
@@ -253,7 +253,7 @@ export const AlertCenterPage: React.FC = () => {
       {/* Modal Create Rule */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-gray-100">
+          <div className="bg-white rounded max-w-lg w-full p-6 shadow-xl border border-gray-100">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <h3 className="font-bold text-gray-900 text-base flex items-center gap-2">
                 <Plus className="w-5 h-5 text-indigo-600" />
@@ -273,7 +273,7 @@ export const AlertCenterPage: React.FC = () => {
                   placeholder="Ví dụ: Cảnh báo suy hao quang & độ trễ cao"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs focus:ring-1 focus:ring-indigo-500"
                 />
               </div>
 
@@ -283,7 +283,7 @@ export const AlertCenterPage: React.FC = () => {
                   <select
                     value={metricType}
                     onChange={(e: any) => setMetricType(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                   >
                     <option value="LATENCY">Độ trễ Ping (ms)</option>
                     <option value="PACKET_LOSS">Tỷ lệ mất gói Packet Loss (%)</option>
@@ -300,7 +300,7 @@ export const AlertCenterPage: React.FC = () => {
                     required
                     value={thresholdValue}
                     onChange={(e) => setThresholdValue(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                   />
                 </div>
               </div>
@@ -314,7 +314,7 @@ export const AlertCenterPage: React.FC = () => {
                     min={1}
                     value={durationMinutes}
                     onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                   />
                 </div>
 
@@ -323,7 +323,7 @@ export const AlertCenterPage: React.FC = () => {
                   <select
                     value={severity}
                     onChange={(e: any) => setSeverity(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                   >
                     <option value="WARNING">WARNING (Cảnh báo)</option>
                     <option value="CRITICAL">CRITICAL (Nghiêm trọng)</option>
@@ -337,7 +337,7 @@ export const AlertCenterPage: React.FC = () => {
                   <select
                     value={notificationChannel}
                     onChange={(e: any) => setNotificationChannel(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                   >
                     <option value="TELEGRAM">Telegram Bot</option>
                     <option value="WEBHOOK">Webhook (HTTP POST)</option>
@@ -353,7 +353,7 @@ export const AlertCenterPage: React.FC = () => {
                     placeholder="@chat_id hoặc URL webhook"
                     value={recipientTarget}
                     onChange={(e) => setRecipientTarget(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs font-mono"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs font-mono"
                   />
                 </div>
               </div>
@@ -362,13 +362,13 @@ export const AlertCenterPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-sm hover:bg-gray-50"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-sm hover:bg-indigo-700 font-medium"
                 >
                   Lưu quy tắc
                 </button>
@@ -381,7 +381,7 @@ export const AlertCenterPage: React.FC = () => {
       {/* Modal Simulate Telemetry */}
       {showSimulateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-gray-100">
+          <div className="bg-white rounded max-w-md w-full p-6 shadow-xl border border-gray-100">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <h3 className="font-bold text-gray-900 text-base flex items-center gap-2">
                 <Zap className="w-5 h-5 text-indigo-600" />
@@ -400,7 +400,7 @@ export const AlertCenterPage: React.FC = () => {
                     type="number"
                     value={simDeviceId}
                     onChange={(e) => setSimDeviceId(Number(e.target.value))}
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-1.5 border border-gray-300 rounded-sm"
                   />
                 </div>
                 <div>
@@ -409,7 +409,7 @@ export const AlertCenterPage: React.FC = () => {
                     type="number"
                     value={simLocationId}
                     onChange={(e) => setSimLocationId(Number(e.target.value))}
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-1.5 border border-gray-300 rounded-sm"
                   />
                 </div>
               </div>
@@ -421,7 +421,7 @@ export const AlertCenterPage: React.FC = () => {
                     type="number"
                     value={simLatency}
                     onChange={(e) => setSimLatency(Number(e.target.value))}
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-1.5 border border-gray-300 rounded-sm"
                   />
                 </div>
                 <div>
@@ -430,7 +430,7 @@ export const AlertCenterPage: React.FC = () => {
                     type="number"
                     value={simPacketLoss}
                     onChange={(e) => setSimPacketLoss(Number(e.target.value))}
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-1.5 border border-gray-300 rounded-sm"
                   />
                 </div>
                 <div>
@@ -439,7 +439,7 @@ export const AlertCenterPage: React.FC = () => {
                     type="number"
                     value={simCpu}
                     onChange={(e) => setSimCpu(Number(e.target.value))}
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-1.5 border border-gray-300 rounded-sm"
                   />
                 </div>
               </div>
@@ -458,7 +458,7 @@ export const AlertCenterPage: React.FC = () => {
               </div>
 
               {simResult && (
-                <div className="p-2.5 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-[11px]">
+                <div className="p-2.5 bg-blue-50 border border-blue-200 text-blue-800 rounded-sm text-[11px]">
                   {simResult}
                 </div>
               )}
@@ -467,13 +467,13 @@ export const AlertCenterPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowSimulateModal(false)}
-                  className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg"
+                  className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-sm"
                 >
                   Đóng
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
+                  className="px-4 py-1.5 bg-indigo-600 text-white rounded-sm hover:bg-indigo-700 font-medium"
                 >
                   Gửi đo kiểm
                 </button>

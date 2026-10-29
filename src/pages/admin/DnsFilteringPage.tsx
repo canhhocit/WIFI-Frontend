@@ -100,9 +100,9 @@ export const DnsFilteringPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-sm border border-gray-100 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg">
+          <div className="p-2.5 bg-blue-50 text-blue-600 rounded-sm">
             <Globe className="w-6 h-6" />
           </div>
           <div>
@@ -116,14 +116,14 @@ export const DnsFilteringPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={fetchRules}
-            className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
+            className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-sm border border-gray-200 transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             Làm mới
           </button>
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm transition-colors"
           >
             <Plus className="w-4 h-4" />
             Thêm Tên miền
@@ -133,20 +133,20 @@ export const DnsFilteringPage: React.FC = () => {
 
       {/* Notifications */}
       {successMsg && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3 text-emerald-800 text-sm">
+        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-sm flex items-center gap-3 text-emerald-800 text-sm">
           <CheckCircle className="w-5 h-5 flex-shrink-0 text-emerald-600" />
           <span>{successMsg}</span>
         </div>
       )}
       {errorMsg && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-800 text-sm">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-sm flex items-center gap-3 text-red-800 text-sm">
           <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-600" />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {/* Filters & Search */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-sm border border-gray-100 shadow-sm">
         <div className="relative md:col-span-2">
           <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
           <input
@@ -154,11 +154,11 @@ export const DnsFilteringPage: React.FC = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Tìm theo tên miền (vd: haiphong.gov.vn, bet88.com)..."
-            className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
           />
         </div>
 
-        <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
+        <div className="flex rounded-sm border border-gray-200 bg-gray-50 p-1">
           <button
             onClick={() => setRuleTypeFilter('ALL')}
             className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${
@@ -187,7 +187,7 @@ export const DnsFilteringPage: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-sm border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -232,7 +232,7 @@ export const DnsFilteringPage: React.FC = () => {
 
                       <td className="py-3.5 px-4">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-semibold border ${
                             isWhitelist
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                               : 'bg-red-50 text-red-700 border-red-200'
@@ -263,7 +263,7 @@ export const DnsFilteringPage: React.FC = () => {
                           <button
                             onClick={() => handleToggle(rule)}
                             title={rule.active ? 'Tạm dừng quy tắc' : 'Kích hoạt quy tắc'}
-                            className={`p-1.5 rounded-lg transition-colors ${
+                            className={`p-1.5 rounded-sm transition-colors ${
                               rule.active ? 'text-emerald-600 hover:bg-emerald-50' : 'text-gray-400 hover:text-emerald-600'
                             }`}
                           >
@@ -272,7 +272,7 @@ export const DnsFilteringPage: React.FC = () => {
                           <button
                             onClick={() => handleDelete(rule)}
                             title="Xóa quy tắc tên miền"
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-sm transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -290,7 +290,7 @@ export const DnsFilteringPage: React.FC = () => {
       {/* Modal Add Rule */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-gray-100">
+          <div className="bg-white rounded-sm shadow-xl w-full max-w-md overflow-hidden border border-gray-100">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <h3 className="font-bold text-gray-900">Thêm Quy tắc Lọc Tên miền DNS (Screen B10)</h3>
               <button
@@ -310,7 +310,7 @@ export const DnsFilteringPage: React.FC = () => {
                   value={formData.domainName}
                   onChange={(e) => setFormData({ ...formData, domainName: e.target.value })}
                   placeholder="vd: haiphong.gov.vn hoặc bet88.com"
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                 />
               </div>
 
@@ -321,7 +321,7 @@ export const DnsFilteringPage: React.FC = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, ruleType: e.target.value as 'BLOCKLIST' | 'WHITELIST' })
                   }
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="BLOCKLIST">BLOCKLIST - Chặn truy cập người dân</option>
                   <option value="WHITELIST">WHITELIST - Cho phép thông suốt & Ưu tiên</option>
@@ -333,7 +333,7 @@ export const DnsFilteringPage: React.FC = () => {
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="GAMBLING">Cờ bạc / Cá độ trực tuyến</option>
                   <option value="MALWARE">Mã độc / Lừa đảo người dân</option>
@@ -351,7 +351,7 @@ export const DnsFilteringPage: React.FC = () => {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Ghi chú căn cứ pháp lý hoặc quyết định chặn/cho phép..."
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -359,13 +359,13 @@ export const DnsFilteringPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-sm transition-colors"
                 >
                   Hủy bỏ
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm transition-colors"
                 >
                   Thêm Quy tắc
                 </button>

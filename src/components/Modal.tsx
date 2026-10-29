@@ -42,19 +42,19 @@ export const Modal: React.FC<ModalProps> = ({
         aria-hidden="true"
       />
       <div
-        className={`relative bg-white rounded-2xl shadow-2xl w-full ${maxWidthClasses} overflow-hidden transform transition-all border border-slate-200/90 z-10`}
+        className={`relative bg-white rounded border border-slate-300 shadow-xl w-full ${maxWidthClasses} overflow-hidden transform transition-all z-10`}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-          <h3 className="text-base font-bold text-slate-900 tracking-tight">{title}</h3>
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-slate-50">
+          <h3 className="text-sm font-bold text-slate-900 tracking-tight">{title}</h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-lg hover:bg-slate-100"
+            className="text-slate-400 hover:text-slate-700 transition-colors p-1 rounded-sm hover:bg-slate-200 cursor-pointer"
             aria-label="Đóng cửa sổ"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="px-6 py-5 max-h-[82vh] overflow-y-auto">{children}</div>
+        <div className="px-5 py-4 max-h-[82vh] overflow-y-auto">{children}</div>
       </div>
     </div>
   );

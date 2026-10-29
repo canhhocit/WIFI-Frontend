@@ -133,7 +133,7 @@ export const DevicesPage: React.FC = () => {
   const renderOsIcon = (os?: string) => {
     const lower = (os || '').toLowerCase();
     if (lower.includes('ios') || lower.includes('iphone') || lower.includes('android')) {
-      return <Smartphone className="w-4 h-4 text-sky-600" />;
+      return <Smartphone className="w-4 h-4 text-[#004b87]" />;
     }
     if (lower.includes('mac') || lower.includes('darwin')) {
       return <Laptop className="w-4 h-4 text-slate-700" />;
@@ -146,7 +146,7 @@ export const DevicesPage: React.FC = () => {
       case 'ONT':
         return <Server className="w-4 h-4 text-indigo-600" />;
       case 'ROUTER':
-        return <Router className="w-4 h-4 text-sky-600" />;
+        return <Router className="w-4 h-4 text-[#004b87]" />;
       case 'ACCESS_POINT':
         return <Radio className="w-4 h-4 text-emerald-600" />;
       default:
@@ -166,7 +166,7 @@ export const DevicesPage: React.FC = () => {
         </div>
         <button
           onClick={activeTab === 'CLIENT' ? loadDevices : loadNetworkDevices}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 hover:bg-slate-100 bg-white rounded-xl text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" /> Làm mới dữ liệu
         </button>
@@ -175,12 +175,12 @@ export const DevicesPage: React.FC = () => {
       {error && <AlertBanner type="error" message={error} />}
 
       {/* Tab Switcher */}
-      <div className="flex border-b border-slate-200 gap-2">
+      <div className="flex border-b border-slate-300 gap-2">
         <button
           onClick={() => setActiveTab('CLIENT')}
-          className={`pb-3 px-4 text-xs font-bold transition border-b-2 cursor-pointer ${
+          className={`pb-2.5 px-3.5 text-xs font-bold transition border-b-2 cursor-pointer ${
             activeTab === 'CLIENT'
-              ? 'border-sky-600 text-sky-600'
+              ? 'border-[#004b87] text-[#004b87]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -188,9 +188,9 @@ export const DevicesPage: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('INFRASTRUCTURE')}
-          className={`pb-3 px-4 text-xs font-bold transition border-b-2 cursor-pointer ${
+          className={`pb-2.5 px-3.5 text-xs font-bold transition border-b-2 cursor-pointer ${
             activeTab === 'INFRASTRUCTURE'
-              ? 'border-sky-600 text-sky-600'
+              ? 'border-[#004b87] text-[#004b87]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -201,45 +201,45 @@ export const DevicesPage: React.FC = () => {
       {/* Tab 1: Client Devices */}
       {activeTab === 'CLIENT' && (
         <>
-          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+          <div className="bg-white p-3.5 rounded border border-slate-300 shadow-xs">
             <form onSubmit={handleSearchSubmit} className="flex gap-2">
               <div className="relative flex-1">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Tìm theo MAC, IP, tên máy hoặc thông tin hệ điều hành..."
-                  className="w-full pl-10 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition"
+                  className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] transition font-mono"
                 />
               </div>
               <button
                 type="submit"
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+                className="px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold transition cursor-pointer"
               >
                 Tìm kiếm
               </button>
             </form>
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+          <div className="bg-white rounded border border-slate-300 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-50/70 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="py-3.5 px-4">Địa chỉ MAC & IP</th>
-                    <th className="py-3.5 px-4">Hệ điều hành / Loại máy</th>
-                    <th className="py-3.5 px-4">Lần đầu kết nối</th>
-                    <th className="py-3.5 px-4">Lần cuối hoạt động</th>
-                    <th className="py-3.5 px-4">Trạng thái</th>
-                    <th className="py-3.5 px-4 text-right">Kiểm soát</th>
+                  <tr className="bg-slate-50/70 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    <th className="py-3 px-4">Địa chỉ MAC & IP</th>
+                    <th className="py-3 px-4">Hệ điều hành / Loại máy</th>
+                    <th className="py-3 px-4">Lần đầu kết nối</th>
+                    <th className="py-3 px-4">Lần cuối hoạt động</th>
+                    <th className="py-3 px-4">Trạng thái</th>
+                    <th className="py-3 px-4 text-right">Kiểm soát</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {loading ? (
                     <tr>
                       <td colSpan={6} className="py-12 text-center text-slate-400">
-                        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-sky-600" />
+                        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#004b87]" />
                         Đang tải danh sách thiết bị khách...
                       </td>
                     </tr>
@@ -258,7 +258,7 @@ export const DevicesPage: React.FC = () => {
                         </td>
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                            <div className="w-7 h-7 rounded-sm bg-slate-100 flex items-center justify-center flex-shrink-0">
                               {renderOsIcon(dev.osType)}
                             </div>
                             <div>
@@ -275,23 +275,23 @@ export const DevicesPage: React.FC = () => {
                         </td>
                         <td className="py-3.5 px-4">
                           {dev.blocked ? (
-                            <span className="inline-flex items-center gap-1 font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full text-[11px]">
+                            <span className="inline-flex items-center gap-1 font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-sm text-[11px]">
                               <ShieldAlert className="w-3 h-3 text-rose-500" /> Đã chặn truy cập
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full text-[11px]">
+                            <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-sm text-[11px]">
                               <ShieldCheck className="w-3 h-3 text-emerald-500" /> Được phép
                             </span>
                           )}
                         </td>
-                        <td className="py-3.5 px-4 text-right">
+                        <td className="py-2.5 px-4 text-right">
                           <button
                             onClick={() => handleToggleBlock(dev)}
                             disabled={togglingId === dev.id}
-                            className={`px-3 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer inline-flex items-center gap-1.5 ${
+                            className={`px-2.5 py-1 rounded-sm font-bold text-xs transition cursor-pointer inline-flex items-center gap-1.5 ${
                               dev.blocked
-                                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
-                                : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300'
                             }`}
                           >
                             {togglingId === dev.id ? (
@@ -314,7 +314,7 @@ export const DevicesPage: React.FC = () => {
               </table>
             </div>
 
-            <div className="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50/40">
+            <div className="p-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 bg-slate-50/70">
               <span>
                 Tổng số: <strong className="font-semibold text-slate-800">{totalElements}</strong> thiết bị
               </span>
@@ -325,14 +325,14 @@ export const DevicesPage: React.FC = () => {
                 <button
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
                   disabled={page === 0}
-                  className="p-1.5 rounded-lg border border-slate-200 hover:bg-white disabled:opacity-40 cursor-pointer"
+                  className="p-1 rounded-sm border border-slate-300 hover:bg-white disabled:opacity-40 cursor-pointer"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                   disabled={page >= totalPages - 1}
-                  className="p-1.5 rounded-lg border border-slate-200 hover:bg-white disabled:opacity-40 cursor-pointer"
+                  className="p-1 rounded-sm border border-slate-300 hover:bg-white disabled:opacity-40 cursor-pointer"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -345,7 +345,7 @@ export const DevicesPage: React.FC = () => {
       {/* Tab 2: Infrastructure Devices */}
       {activeTab === 'INFRASTRUCTURE' && (
         <>
-          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap gap-3 items-center">
+          <div className="bg-white p-3.5 rounded border border-slate-300 shadow-xs flex flex-wrap gap-2.5 items-center">
             <div className="w-48">
               <select
                 value={deviceTypeFilter}
@@ -353,7 +353,7 @@ export const DevicesPage: React.FC = () => {
                   setDeviceTypeFilter(e.target.value);
                   setNetPage(0);
                 }}
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87]"
               >
                 <option value="">-- Tất cả loại thiết bị --</option>
                 <option value="ONT">ONT (Modem quang)</option>
@@ -368,7 +368,7 @@ export const DevicesPage: React.FC = () => {
                   setStatusFilter(e.target.value);
                   setNetPage(0);
                 }}
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87]"
               >
                 <option value="">-- Tất cả trạng thái --</option>
                 <option value="ONLINE">Đang hoạt động (ONLINE)</option>
@@ -381,30 +381,30 @@ export const DevicesPage: React.FC = () => {
                 setNetPage(0);
                 loadNetworkDevices();
               }}
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+              className="px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold transition cursor-pointer"
             >
               Lọc thiết bị
             </button>
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+          <div className="bg-white rounded border border-slate-300 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-50/70 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="py-3.5 px-4">Loại & Model</th>
-                    <th className="py-3.5 px-4">Địa chỉ MAC & IP</th>
-                    <th className="py-3.5 px-4">Serial Number</th>
-                    <th className="py-3.5 px-4">Trạng thái kết nối</th>
-                    <th className="py-3.5 px-4">Lần cuối Heartbeat</th>
-                    <th className="py-3.5 px-4 text-right">Thao tác hạ tầng</th>
+                  <tr className="bg-slate-50/70 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    <th className="py-3 px-4">Loại & Model</th>
+                    <th className="py-3 px-4">Địa chỉ MAC & IP</th>
+                    <th className="py-3 px-4">Serial Number</th>
+                    <th className="py-3 px-4">Trạng thái kết nối</th>
+                    <th className="py-3 px-4">Lần cuối Heartbeat</th>
+                    <th className="py-3 px-4 text-right">Thao tác hạ tầng</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {loadingNetDev ? (
                     <tr>
                       <td colSpan={6} className="py-12 text-center text-slate-400">
-                        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-sky-600" />
+                        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#004b87]" />
                         Đang tải danh sách thiết bị hạ tầng...
                       </td>
                     </tr>
@@ -417,9 +417,9 @@ export const DevicesPage: React.FC = () => {
                   ) : (
                     networkDevices.map((nd) => (
                       <tr key={nd.id} className="hover:bg-slate-50/80 transition">
-                        <td className="py-3.5 px-4">
+                        <td className="py-3 px-4">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
+                            <div className="w-7 h-7 rounded-xs bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-600">
                               {renderNetDeviceIcon(nd.deviceType)}
                             </div>
                             <div>
@@ -432,41 +432,41 @@ export const DevicesPage: React.FC = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3.5 px-4 font-mono">
+                        <td className="py-3 px-4 font-mono">
                           <span className="font-bold text-slate-900 block text-xs">{nd.macAddress}</span>
                           <span className="text-slate-400 text-[11px] block">{nd.ipAddress || '—'}</span>
                         </td>
-                        <td className="py-3.5 px-4 font-mono text-slate-700">
+                        <td className="py-3 px-4 font-mono text-slate-700">
                           {nd.serialNumber}
                         </td>
-                        <td className="py-3.5 px-4">
+                        <td className="py-3 px-4">
                           {nd.status === 'ONLINE' ? (
-                            <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full text-[11px]">
-                              <CheckCircle2 className="w-3 h-3 text-emerald-500" /> ONLINE
+                            <span className="inline-flex items-center gap-1 font-semibold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-sm text-[11px]">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> ONLINE
                             </span>
                           ) : nd.status === 'OFFLINE' ? (
-                            <span className="inline-flex items-center gap-1 font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full text-[11px]">
-                              <XCircle className="w-3 h-3 text-rose-500" /> OFFLINE
+                            <span className="inline-flex items-center gap-1 font-semibold text-rose-800 bg-rose-50 border border-rose-300 px-2 py-0.5 rounded-sm text-[11px]">
+                              <XCircle className="w-3 h-3 text-rose-600" /> OFFLINE
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full text-[11px]">
+                            <span className="inline-flex items-center gap-1 font-semibold text-amber-800 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-sm text-[11px]">
                               {nd.status}
                             </span>
                           )}
                         </td>
-                        <td className="py-3.5 px-4 text-slate-500 font-mono text-[11px]">
+                        <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">
                           {formatDate(nd.lastSeenAt)}
                         </td>
-                        <td className="py-3.5 px-4 text-right">
+                        <td className="py-3 px-4 text-right">
                           <button
                             onClick={() => {
                               setSelectedDeviceForSwap(nd);
                               setSwapModalOpen(true);
                             }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-sm text-xs font-semibold transition cursor-pointer"
                             title="Hoán đổi phần cứng thay thế khi hỏng hóc tại cơ sở"
                           >
-                            <Repeat className="w-3.5 h-3.5 text-amber-600" /> Thay thế thiết bị
+                            <Repeat className="w-3.5 h-3.5 text-amber-700" /> Thay thế thiết bị
                           </button>
                         </td>
                       </tr>
@@ -476,7 +476,7 @@ export const DevicesPage: React.FC = () => {
               </table>
             </div>
 
-            <div className="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50/40">
+            <div className="p-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 bg-slate-50/70">
               <span>
                 Tổng số: <strong className="font-semibold text-slate-800">{netTotalElements}</strong> thiết bị mạng
               </span>
@@ -487,14 +487,14 @@ export const DevicesPage: React.FC = () => {
                 <button
                   onClick={() => setNetPage((p) => Math.max(0, p - 1))}
                   disabled={netPage === 0}
-                  className="p-1.5 rounded-lg border border-slate-200 hover:bg-white disabled:opacity-40 cursor-pointer"
+                  className="p-1 rounded-sm border border-slate-300 hover:bg-white disabled:opacity-40 cursor-pointer"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setNetPage((p) => Math.min(netTotalPages - 1, p + 1))}
                   disabled={netPage >= netTotalPages - 1}
-                  className="p-1.5 rounded-lg border border-slate-200 hover:bg-white disabled:opacity-40 cursor-pointer"
+                  className="p-1 rounded-sm border border-slate-300 hover:bg-white disabled:opacity-40 cursor-pointer"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>

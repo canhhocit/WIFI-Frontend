@@ -100,7 +100,7 @@ export const GisMapPage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1">
+          <div className="inline-flex rounded-sm border border-gray-200 bg-white p-1">
             <button
               onClick={() => setViewMode('map')}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
@@ -121,7 +121,7 @@ export const GisMapPage: React.FC = () => {
           <button
             onClick={loadData}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 shadow-sm"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             Làm mới
@@ -131,7 +131,7 @@ export const GisMapPage: React.FC = () => {
 
       {/* KPI Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between text-gray-500 text-xs font-medium">
             <span>Tổng điểm phát</span>
             <MapPin className="w-4 h-4 text-gray-400" />
@@ -140,7 +140,7 @@ export const GisMapPage: React.FC = () => {
           <div className="text-xs text-gray-500 mt-0.5">Nhà văn hóa / Công cộng</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between text-emerald-600 text-xs font-medium">
             <span>Hoạt động tốt (Online)</span>
             <Wifi className="w-4 h-4 text-emerald-500" />
@@ -151,7 +151,7 @@ export const GisMapPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between text-amber-600 text-xs font-medium">
             <span>Cảnh báo (Degraded)</span>
             <AlertTriangle className="w-4 h-4 text-amber-500" />
@@ -160,7 +160,7 @@ export const GisMapPage: React.FC = () => {
           <div className="text-xs text-amber-600/80 mt-0.5">Mất kết nối 1 phần thiết bị</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between text-red-600 text-xs font-medium">
             <span>Mất kết nối (Offline)</span>
             <WifiOff className="w-4 h-4 text-red-500" />
@@ -169,7 +169,7 @@ export const GisMapPage: React.FC = () => {
           <div className="text-xs text-red-600/80 mt-0.5">Cần kỹ thuật kiểm tra</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between text-blue-600 text-xs font-medium">
             <span>Phiên truy cập đang chạy</span>
             <Users className="w-4 h-4 text-blue-500" />
@@ -180,7 +180,7 @@ export const GisMapPage: React.FC = () => {
       </div>
 
       {/* Filter and Control Bar */}
-      <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white p-3 rounded-sm border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 flex-1">
           {/* Search Box */}
           <div className="relative min-w-[200px] flex-1 max-w-xs">
@@ -190,7 +190,7 @@ export const GisMapPage: React.FC = () => {
               placeholder="Tìm theo tên, mã NVH, địa chỉ..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
@@ -198,7 +198,7 @@ export const GisMapPage: React.FC = () => {
           <select
             value={selectedDistrict}
             onChange={(e) => setSelectedDistrict(e.target.value)}
-            className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="text-xs border border-gray-300 rounded-sm px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="ALL">-- Tất cả Quận/Huyện TP Hải Phòng --</option>
             {districts.map((d) => (
@@ -212,7 +212,7 @@ export const GisMapPage: React.FC = () => {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="text-xs border border-gray-300 rounded-sm px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="ALL">-- Tất cả trạng thái --</option>
             <option value="ONLINE">🟢 Hoạt động tốt (Online)</option>
@@ -225,7 +225,7 @@ export const GisMapPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setHeatmapEnabled(!heatmapEnabled)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-sm border transition-colors ${
               heatmapEnabled
                 ? 'bg-amber-500 text-white border-amber-600'
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
@@ -236,7 +236,7 @@ export const GisMapPage: React.FC = () => {
           </button>
 
           {viewMode === 'map' && (
-            <div className="inline-flex rounded-lg border border-gray-300 bg-white">
+            <div className="inline-flex rounded-sm border border-gray-300 bg-white">
               <button
                 onClick={() => setZoomLevel((z) => Math.min(2.5, z + 0.25))}
                 className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-l-lg border-r border-gray-200"
@@ -258,7 +258,7 @@ export const GisMapPage: React.FC = () => {
 
       {/* Main Map / List Display */}
       {viewMode === 'map' ? (
-        <div className="relative bg-slate-900 rounded-2xl border border-gray-300 shadow-inner overflow-hidden min-h-[580px] h-[650px] flex items-center justify-center">
+        <div className="relative bg-slate-900 rounded border border-gray-300 shadow-inner overflow-hidden min-h-[580px] h-[650px] flex items-center justify-center">
           {/* Map Vector Grid & Sea styling */}
           <div
             className="absolute inset-0 opacity-20 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"
@@ -368,7 +368,7 @@ export const GisMapPage: React.FC = () => {
           </div>
 
           {/* Interactive Map Legend */}
-          <div className="absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-xl p-3 text-xs text-slate-200 shadow-xl pointer-events-auto">
+          <div className="absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-sm p-3 text-xs text-slate-200 shadow-xl pointer-events-auto">
             <div className="font-semibold text-white mb-2 flex items-center gap-1.5">
               <Radio className="w-3.5 h-3.5 text-blue-400" />
               Chú thích bản đồ GIS
@@ -391,7 +391,7 @@ export const GisMapPage: React.FC = () => {
 
           {/* Location Detail Popover when Pin Clicked */}
           {selectedPin && (
-            <div className="absolute top-4 right-4 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 p-4 z-40 animate-in fade-in slide-in-from-right-4">
+            <div className="absolute top-4 right-4 w-80 bg-white rounded-sm shadow-2xl border border-gray-200 p-4 z-40 animate-in fade-in slide-in-from-right-4">
               <div className="flex items-start justify-between">
                 <div>
                   <span
@@ -414,7 +414,7 @@ export const GisMapPage: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setSelectedPin(null)}
-                  className="text-gray-400 hover:text-gray-600 p-1 rounded-lg"
+                  className="text-gray-400 hover:text-gray-600 p-1 rounded-sm"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -454,14 +454,14 @@ export const GisMapPage: React.FC = () => {
               <div className="mt-3 flex items-center gap-2">
                 <button
                   onClick={() => navigate(`/admin/locations/${selectedPin.id}`)}
-                  className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-medium rounded-lg"
+                  className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-medium rounded-sm"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   Xem chi tiết
                 </button>
                 <button
                   onClick={() => navigate(`/admin/incidents?createLocationId=${selectedPin.id}`)}
-                  className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-red-600 text-white hover:bg-red-700 text-xs font-medium rounded-lg shadow-sm"
+                  className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-red-600 text-white hover:bg-red-700 text-xs font-medium rounded-sm shadow-sm"
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
                   Tạo vé sự cố
@@ -472,7 +472,7 @@ export const GisMapPage: React.FC = () => {
         </div>
       ) : (
         /* List Mode View */
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div className="bg-white rounded-sm border border-gray-200 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 text-xs">
               <thead className="bg-gray-50">

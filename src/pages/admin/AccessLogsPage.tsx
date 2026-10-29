@@ -133,7 +133,7 @@ export const AccessLogsPage: React.FC = () => {
           <button
             onClick={() => loadLogs(page)}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 shadow-sm"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             Làm mới
@@ -141,7 +141,7 @@ export const AccessLogsPage: React.FC = () => {
           <button
             onClick={exportCsv}
             disabled={logs.length === 0}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 rounded-lg shadow-sm"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 rounded-sm shadow-sm"
           >
             <Download className="w-4 h-4" />
             Xuất dữ liệu điều tra (CSV)
@@ -150,7 +150,7 @@ export const AccessLogsPage: React.FC = () => {
       </div>
 
       {/* Compliance Notice Banner */}
-      <div className="p-4 bg-indigo-50/70 border border-indigo-200 rounded-2xl flex items-start gap-3">
+      <div className="p-4 bg-indigo-50/70 border border-indigo-200 rounded flex items-start gap-3">
         <ShieldCheck className="w-5 h-5 text-indigo-700 shrink-0 mt-0.5" />
         <div className="text-xs text-indigo-900">
           <span className="font-bold">Quy chuẩn An ninh dữ liệu quốc gia:</span> Toàn bộ bản ghi truy cập tại 1.584 Nhà văn hóa được mã hóa và bảo lưu tự động đúng <span className="font-semibold underline">365 ngày</span> kể từ thời điểm thiết bị kết nối mạng. Hệ thống tự động tiến hành thanh lọc các bản ghi hết thời hạn lưu trữ vào lúc 03:00 UTC hằng đêm.
@@ -160,7 +160,7 @@ export const AccessLogsPage: React.FC = () => {
       {/* Filters Form */}
       <form
         onSubmit={handleSearch}
-        className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm grid grid-cols-1 md:grid-cols-5 gap-3 text-xs"
+        className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm grid grid-cols-1 md:grid-cols-5 gap-3 text-xs"
       >
         <div>
           <label className="block font-medium text-gray-700 mb-1">Địa chỉ MAC</label>
@@ -169,7 +169,7 @@ export const AccessLogsPage: React.FC = () => {
             placeholder="Tìm theo MAC..."
             value={clientMac}
             onChange={(e) => setClientMac(e.target.value)}
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg font-mono"
+            className="w-full px-3 py-1.5 border border-gray-300 rounded-sm font-mono"
           />
         </div>
 
@@ -178,7 +178,7 @@ export const AccessLogsPage: React.FC = () => {
           <select
             value={locationId}
             onChange={(e) => setLocationId(e.target.value)}
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg bg-white"
+            className="w-full px-3 py-1.5 border border-gray-300 rounded-sm bg-white"
           >
             <option value="ALL">-- Tất cả điểm phát --</option>
             {locations.map((loc) => (
@@ -195,7 +195,7 @@ export const AccessLogsPage: React.FC = () => {
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg"
+            className="w-full px-3 py-1.5 border border-gray-300 rounded-sm"
           />
         </div>
 
@@ -205,14 +205,14 @@ export const AccessLogsPage: React.FC = () => {
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg"
+            className="w-full px-3 py-1.5 border border-gray-300 rounded-sm"
           />
         </div>
 
         <div className="flex items-end gap-2">
           <button
             type="submit"
-            className="w-full py-1.5 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium flex items-center justify-center gap-1.5 shadow-sm"
+            className="w-full py-1.5 px-4 bg-indigo-600 text-white rounded-sm hover:bg-indigo-700 font-medium flex items-center justify-center gap-1.5 shadow-sm"
           >
             <Search className="w-3.5 h-3.5" />
             Tra cứu
@@ -221,7 +221,7 @@ export const AccessLogsPage: React.FC = () => {
       </form>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+      <div className="bg-white rounded-sm border border-gray-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 text-xs">
             <thead className="bg-gray-50">

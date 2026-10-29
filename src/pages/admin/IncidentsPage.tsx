@@ -211,14 +211,14 @@ export const IncidentsPage: React.FC = () => {
           <button
             onClick={loadData}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 shadow-sm"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             Làm mới
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-sm"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-sm shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Báo cáo sự cố mới
@@ -229,25 +229,25 @@ export const IncidentsPage: React.FC = () => {
       {/* SLA Metrics Cards */}
       {slaMetrics && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+          <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
             <div className="text-xs text-gray-500 font-medium">Tổng số phiếu sự cố</div>
             <div className="mt-1 text-2xl font-bold text-gray-900">{slaMetrics.totalTickets}</div>
             <div className="text-xs text-gray-500 mt-0.5">{slaMetrics.openTickets} đang xử lý</div>
           </div>
 
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+          <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
             <div className="text-xs text-emerald-600 font-medium">Đã hoàn thành khắc phục</div>
             <div className="mt-1 text-2xl font-bold text-emerald-600">{slaMetrics.resolvedTickets}</div>
             <div className="text-xs text-emerald-600/80 mt-0.5">Đã phục hồi Internet</div>
           </div>
 
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+          <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
             <div className="text-xs text-rose-600 font-medium">Vi phạm hạn cam kết SLA</div>
             <div className="mt-1 text-2xl font-bold text-rose-600">{slaMetrics.slaBreachedCount}</div>
             <div className="text-xs text-rose-600/80 mt-0.5">Cần ưu tiên xử lý khẩn cấp</div>
           </div>
 
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+          <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
             <div className="text-xs text-blue-600 font-medium">Tỷ lệ tuân thủ SLA</div>
             <div className="mt-1 text-2xl font-bold text-blue-600">{slaMetrics.slaComplianceRatePercent}%</div>
             <div className="text-xs text-blue-600/80 mt-0.5">MTTR trung bình: {slaMetrics.averageResolutionHours} giờ</div>
@@ -256,7 +256,7 @@ export const IncidentsPage: React.FC = () => {
       )}
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white p-3 rounded-sm border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 flex-1">
           <div className="relative min-w-[220px] flex-1 max-w-sm">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -265,14 +265,14 @@ export const IncidentsPage: React.FC = () => {
               placeholder="Tìm theo mã SC-..., tên sự cố, địa điểm, kỹ thuật viên..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-rose-500"
+              className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-rose-500"
             />
           </div>
 
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white text-gray-700"
+            className="text-xs border border-gray-300 rounded-sm px-2.5 py-1.5 bg-white text-gray-700"
           >
             <option value="ALL">-- Tất cả trạng thái --</option>
             <option value="OPEN">Mới tiếp nhận (OPEN)</option>
@@ -285,7 +285,7 @@ export const IncidentsPage: React.FC = () => {
           <select
             value={selectedSeverity}
             onChange={(e) => setSelectedSeverity(e.target.value)}
-            className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white text-gray-700"
+            className="text-xs border border-gray-300 rounded-sm px-2.5 py-1.5 bg-white text-gray-700"
           >
             <option value="ALL">-- Mức độ khẩn cấp --</option>
             <option value="CRITICAL">🔴 CRITICAL (SLA 4h)</option>
@@ -296,7 +296,7 @@ export const IncidentsPage: React.FC = () => {
       </div>
 
       {/* Incidents Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+      <div className="bg-white rounded-sm border border-gray-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 text-xs">
             <thead className="bg-gray-50">
@@ -435,7 +435,7 @@ export const IncidentsPage: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setSelectedIncident(null)}
-                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg"
+                  className="text-gray-400 hover:text-gray-600 p-1.5 rounded-sm"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -471,7 +471,7 @@ export const IncidentsPage: React.FC = () => {
                   </div>
                 )}
                 {selectedIncident.resolutionSummary && (
-                  <div className="p-3 bg-gray-50 border rounded-lg mt-2">
+                  <div className="p-3 bg-gray-50 border rounded-sm mt-2">
                     <div className="font-medium text-gray-700 mb-1">Nội dung khắc phục:</div>
                     <div className="text-gray-600">{selectedIncident.resolutionSummary}</div>
                   </div>
@@ -503,7 +503,7 @@ export const IncidentsPage: React.FC = () => {
             <div className="pt-4 border-t border-gray-100 flex gap-2">
               <button
                 onClick={() => setSelectedIncident(null)}
-                className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg"
+                className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-sm"
               >
                 Đóng
               </button>
@@ -515,7 +515,7 @@ export const IncidentsPage: React.FC = () => {
       {/* Modal Create Incident */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-gray-100">
+          <div className="bg-white rounded max-w-lg w-full p-6 shadow-xl border border-gray-100">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <h3 className="font-bold text-gray-900 text-base flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-rose-600" />
@@ -532,7 +532,7 @@ export const IncidentsPage: React.FC = () => {
                 <select
                   value={createLocationId}
                   onChange={(e) => setCreateLocationId(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                 >
                   {locations.map((loc) => (
                     <option key={loc.id} value={loc.id}>
@@ -550,7 +550,7 @@ export const IncidentsPage: React.FC = () => {
                   placeholder="Ví dụ: Mất hoàn toàn tín hiệu kết nối Internet ONT tại NVH"
                   value={createTitle}
                   onChange={(e) => setCreateTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                 />
               </div>
 
@@ -561,7 +561,7 @@ export const IncidentsPage: React.FC = () => {
                   placeholder="Mô tả hiện tượng, báo cáo của người dân hoặc kết quả đo kiểm sơ bộ..."
                   value={createDescription}
                   onChange={(e) => setCreateDescription(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                 />
               </div>
 
@@ -571,7 +571,7 @@ export const IncidentsPage: React.FC = () => {
                   <select
                     value={createSeverity}
                     onChange={(e: any) => setCreateSeverity(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs font-medium"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs font-medium"
                   >
                     <option value="CRITICAL">CRITICAL - SLA 4h (Mất toàn bộ)</option>
                     <option value="MAJOR">MAJOR - SLA 8h (Suy giảm nghiêm trọng)</option>
@@ -586,7 +586,7 @@ export const IncidentsPage: React.FC = () => {
                     placeholder="Tên kỹ thuật viên (tùy chọn)"
                     value={createAssignedTo}
                     onChange={(e) => setCreateAssignedTo(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                   />
                 </div>
               </div>
@@ -595,13 +595,13 @@ export const IncidentsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-sm hover:bg-gray-50"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 font-medium shadow-sm"
+                  className="px-4 py-2 bg-rose-600 text-white rounded-sm hover:bg-rose-700 font-medium shadow-sm"
                 >
                   Phát hành phiếu sự cố
                 </button>
@@ -614,7 +614,7 @@ export const IncidentsPage: React.FC = () => {
       {/* Modal Assign Incident */}
       {showAssignModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-gray-100">
+          <div className="bg-white rounded max-w-md w-full p-6 shadow-xl border border-gray-100">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <h3 className="font-bold text-gray-900 text-base flex items-center gap-2">
                 <UserCheck className="w-5 h-5 text-blue-600" />
@@ -633,7 +633,7 @@ export const IncidentsPage: React.FC = () => {
                   required
                   value={assigneeName}
                   onChange={(e) => setAssigneeName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                 />
               </div>
 
@@ -643,7 +643,7 @@ export const IncidentsPage: React.FC = () => {
                   type="text"
                   value={assignGroup}
                   onChange={(e) => setAssignGroup(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                 />
               </div>
 
@@ -654,7 +654,7 @@ export const IncidentsPage: React.FC = () => {
                   placeholder="Yêu cầu kiểm tra ODF quang và nguồn điện NVH trước 12h..."
                   value={assignNote}
                   onChange={(e) => setAssignNote(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                 />
               </div>
 
@@ -662,13 +662,13 @@ export const IncidentsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAssignModal(false)}
-                  className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg"
+                  className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-sm"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                  className="px-4 py-1.5 bg-blue-600 text-white rounded-sm hover:bg-blue-700 font-medium"
                 >
                   Xác nhận điều phối
                 </button>
@@ -681,7 +681,7 @@ export const IncidentsPage: React.FC = () => {
       {/* Modal Resolve Incident */}
       {showResolveModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-gray-100">
+          <div className="bg-white rounded max-w-md w-full p-6 shadow-xl border border-gray-100">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <h3 className="font-bold text-gray-900 text-base flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600" />
@@ -698,7 +698,7 @@ export const IncidentsPage: React.FC = () => {
                 <select
                   value={rootCauseCategory}
                   onChange={(e: any) => setRootCauseCategory(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs font-semibold"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs font-semibold"
                 >
                   <option value="POWER_OUTAGE">⚡ Mất nguồn điện lưới (POWER_OUTAGE)</option>
                   <option value="FIBER_CUT">✂️ Đứt cáp quang viễn thông (FIBER_CUT)</option>
@@ -716,7 +716,7 @@ export const IncidentsPage: React.FC = () => {
                   placeholder="Ví dụ: Đã hàn nối lại mối cáp quang trụ điện số 12, đo suy hao quang đạt -18dBm, tín hiệu Wi-Fi đã phát ổn định."
                   value={resolutionSummary}
                   onChange={(e) => setResolutionSummary(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
                 />
               </div>
 
@@ -724,13 +724,13 @@ export const IncidentsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowResolveModal(false)}
-                  className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg"
+                  className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-sm"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium"
+                  className="px-4 py-1.5 bg-emerald-600 text-white rounded-sm hover:bg-emerald-700 font-medium"
                 >
                   Xác nhận hoàn thành
                 </button>
