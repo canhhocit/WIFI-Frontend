@@ -16,7 +16,11 @@ import {
   Circle,
   Palette,
   Megaphone,
-  ClipboardList
+  ClipboardList,
+  Map,
+  BellRing,
+  ShieldAlert,
+  ShieldCheck,
 } from 'lucide-react';
 import { authApi } from '../../api/authApi';
 import { adminApi } from '../../api/adminApi';
@@ -61,10 +65,14 @@ export const AdminLayout: React.FC = () => {
     { to: '/admin', label: 'Tổng quan', icon: LayoutDashboard, end: true },
     { to: '/admin/sessions', label: 'Phiên truy cập', icon: Users },
     { to: '/admin/locations', label: '1.584 Điểm phát', icon: MapPin },
+    { to: '/admin/gis', label: 'Bản đồ số GIS', icon: Map },
     { to: '/admin/devices', label: 'Thiết bị & Hạ tầng', icon: Smartphone },
     { to: '/admin/portal-builder', label: 'Trình dựng Cổng chào', icon: Palette },
     { to: '/admin/campaigns', label: 'Chiến dịch truyền thông', icon: Megaphone },
     { to: '/admin/surveys', label: 'Khảo sát ý kiến', icon: ClipboardList },
+    { to: '/admin/alerts', label: 'Cảnh báo & Đo kiểm', icon: BellRing },
+    { to: '/admin/incidents', label: 'Sự cố & Điều phối', icon: ShieldAlert },
+    { to: '/admin/sla', label: 'Cam kết SLA & MTTR', icon: ShieldCheck },
     { to: '/admin/analytics', label: 'Báo cáo & Thống kê', icon: BarChart3 },
     { to: '/admin/audit', label: 'Nhật ký hệ thống', icon: ScrollText },
     { to: '/admin/gateway', label: 'Chẩn đoán Gateway', icon: Radio },

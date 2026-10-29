@@ -23,6 +23,15 @@ import {
   SurveyDto,
   SurveyResponseDto,
   PortalTemplateDto,
+  TelemetryMetricDto,
+  IngestTelemetryRequest,
+  AlertRuleDto,
+  IncidentTicketDto,
+  CreateIncidentRequest,
+  AssignIncidentRequest,
+  ResolveIncidentRequest,
+  SlaMetricsDto,
+  GisLocationPinDto,
 } from '../types/models';
 
 export const adminApi = {
@@ -307,5 +316,81 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  },
+
+  // GIS Map Pins
+  getGisLocations: () => {
+    return request<GisLocationPinDto[]>('/v1/admin/gis/locations');
+  },
+
+  // Telemetry & Alert Rules
+  getTelemetryLatest: (params: { locationId?: number; deviceId?: number; limit?: number }) => {
+    const sp = new URLSearchParams();
+    if (params.locationId) sp.append('locationId', params.locationId.toString());
+    if (params.deviceId) sp.append('deviceId', params.deviceId.toString());
+    if (params.limit) sp.append('limit', params.limit.toString());
+    return request<TelemetryMetricDto[]>(`/v1/admin/telemetry/latest?${sp.toString()}`);
+  },
+
+  ingestTelemetry: (data: IngestTelemetryRequest) => {
+    return request<TelemetryMetricDto>('/v1/admin/telemetry/ingest', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  getAlertRules: () => {
+    return request<AlertRuleDto[]>('/v1/admin/alerts/rules');
+  },
+
+  createAlertRule: (data: Partial<AlertRuleDto>) => {
+    return request<AlertRuleDto>('/v1/admin/alerts/rules', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  toggleAlertRule: (id: number) => {
+    return request<AlertRuleDto>(`/v1/admin/alerts/rules/${id}/toggle`, {
+      method: 'PUT',
+    });
+  },
+
+  // Incidents & SLA
+  getIncidents: (params: { status?: string; page?: number; size?: number }) => {
+    const sp = new URLSearchParams();
+    if (params.status) sp.append('status', params.status);
+    if (params.page !== undefined) sp.append('page', params.page.toString());
+    if (params.size !== undefined) sp.append('size', params.size.toString());
+    return request<PageResponse<IncidentTicketDto>>(`/v1/admin/incidents?${sp.toString()}`);
+  },
+
+  getIncidentById: (id: number) => {
+    return request<IncidentTicketDto>(`/v1/admin/incidents/${id}`);
+  },
+
+  createIncident: (data: CreateIncidentRequest) => {
+    return request<IncidentTicketDto>('/v1/admin/incidents', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  assignIncident: (id: number, data: AssignIncidentRequest) => {
+    return request<IncidentTicketDto>(`/v1/admin/incidents/${id}/assign`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  resolveIncident: (id: number, data: ResolveIncidentRequest) => {
+    return request<IncidentTicketDto>(`/v1/admin/incidents/${id}/resolve`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  getSlaMetrics: () => {
+    return request<SlaMetricsDto>('/v1/admin/incidents/sla/metrics');
   },
 };

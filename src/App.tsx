@@ -14,6 +14,10 @@ import { GatewayPage } from './pages/admin/GatewayPage';
 import { PortalBuilderPage } from './pages/admin/PortalBuilderPage';
 import { CampaignsPage } from './pages/admin/CampaignsPage';
 import { SurveysPage } from './pages/admin/SurveysPage';
+import { GisMapPage } from './pages/admin/GisMapPage';
+import { AlertCenterPage } from './pages/admin/AlertCenterPage';
+import { IncidentsPage } from './pages/admin/IncidentsPage';
+import { SlaAnalyticsPage } from './pages/admin/SlaAnalyticsPage';
 
 export const App: React.FC = () => {
   return (
@@ -34,6 +38,10 @@ export const App: React.FC = () => {
         <Route path="portal-builder" element={<PortalBuilderPage />} />
         <Route path="campaigns" element={<CampaignsPage />} />
         <Route path="surveys" element={<SurveysPage />} />
+        <Route path="gis" element={<GisMapPage />} />
+        <Route path="alerts" element={<AlertCenterPage />} />
+        <Route path="incidents" element={<IncidentsPage />} />
+        <Route path="sla" element={<SlaAnalyticsPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="gateway" element={<GatewayPage />} />

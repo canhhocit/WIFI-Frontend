@@ -444,3 +444,131 @@ export interface OtpResultDto {
   expiresInSeconds?: number;
   bypassOtpUntil?: string;
 }
+
+// ================= Phase 4: Telemetry, Alert Matrix, Incidents & GIS =================
+
+export interface TelemetryMetricDto {
+  id: number;
+  deviceId: number;
+  locationId: number;
+  cpuUsagePercent: number;
+  memoryUsagePercent: number;
+  pingLatencyMs: number;
+  packetLossPercent: number;
+  connectedClients: number;
+  rxBytesDelta: number;
+  txBytesDelta: number;
+  online: boolean;
+  recordedAt: string;
+}
+
+export interface IngestTelemetryRequest {
+  deviceId: number;
+  locationId: number;
+  cpuUsagePercent: number;
+  memoryUsagePercent: number;
+  pingLatencyMs: number;
+  packetLossPercent: number;
+  connectedClients: number;
+  rxBytesDelta: number;
+  txBytesDelta: number;
+  online: boolean;
+}
+
+export interface AlertRuleDto {
+  id: number;
+  name: string;
+  metricType: 'CPU' | 'MEMORY' | 'LATENCY' | 'PACKET_LOSS' | 'OFFLINE';
+  thresholdValue: number;
+  durationMinutes: number;
+  severity: 'WARNING' | 'CRITICAL';
+  notificationChannel: 'EMAIL' | 'SMS' | 'TELEGRAM' | 'WEBHOOK';
+  recipientTarget?: string;
+  enabled: boolean;
+}
+
+export type IncidentSeverity = 'CRITICAL' | 'MAJOR' | 'MINOR';
+export type IncidentStatus = 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+export type RootCauseCategory = 'POWER_OUTAGE' | 'FIBER_CUT' | 'HARDWARE_FAILURE' | 'CONFIG_ERROR' | 'UNKNOWN';
+
+export interface IncidentTicketDto {
+  id: number;
+  ticketCode: string;
+  locationId: number;
+  locationName?: string;
+  deviceId?: number;
+  deviceMac?: string;
+  title: string;
+  description?: string;
+  severity: IncidentSeverity;
+  status: IncidentStatus;
+  assignedTo?: string;
+  assignedGroup?: string;
+  reportedAt: string;
+  slaDeadline: string;
+  resolvedAt?: string;
+  resolutionSummary?: string;
+  rootCauseCategory?: RootCauseCategory;
+  slaBreached: boolean;
+  updates?: IncidentUpdateDto[];
+}
+
+export interface IncidentUpdateDto {
+  id: number;
+  ticketId: number;
+  updatedBy: string;
+  previousStatus?: string;
+  newStatus?: string;
+  note: string;
+  attachmentUrl?: string;
+  createdAt: string;
+}
+
+export interface CreateIncidentRequest {
+  locationId: number;
+  deviceId?: number;
+  title: string;
+  description?: string;
+  severity: IncidentSeverity;
+  assignedTo?: string;
+  assignedGroup?: string;
+}
+
+export interface AssignIncidentRequest {
+  assignedTo: string;
+  assignedGroup?: string;
+  note?: string;
+}
+
+export interface ResolveIncidentRequest {
+  resolutionSummary: string;
+  rootCauseCategory: RootCauseCategory;
+}
+
+export interface SlaMetricsDto {
+  totalTickets: number;
+  openTickets: number;
+  resolvedTickets: number;
+  slaBreachedCount: number;
+  slaComplianceRatePercent: number;
+  averageResolutionHours: number;
+}
+
+export interface GisLocationPinDto {
+  id: number;
+  slug: string;
+  name: string;
+  locationCode?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  adminUnitId?: number;
+  adminUnitName?: string;
+  districtName?: string;
+  active: boolean;
+  status: 'ONLINE' | 'OFFLINE' | 'DEGRADED';
+  totalDevices: number;
+  onlineDevices: number;
+  activeSessionsCount: number;
+  openIncidentsCount: number;
+}
