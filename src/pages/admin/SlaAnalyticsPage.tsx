@@ -242,3 +242,4 @@ export const SlaAnalyticsPage: React.FC = () => {
     </div>
   );
 };
+

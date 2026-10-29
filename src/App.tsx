@@ -23,6 +23,10 @@ import { BlacklistPage } from './pages/admin/BlacklistPage';
 import { AccessLogsPage } from './pages/admin/AccessLogsPage';
 import { RadiusGatewayPage } from './pages/admin/RadiusGatewayPage';
 import { GovernmentReportPage } from './pages/admin/GovernmentReportPage';
+import { UsersPage } from './pages/admin/UsersPage';
+import { RolePermissionsPage } from './pages/admin/RolePermissionsPage';
+import { DnsFilteringPage } from './pages/admin/DnsFilteringPage';
+import { SystemSettingsPage } from './pages/admin/SystemSettingsPage';
 
 export const App: React.FC = () => {
   return (
@@ -52,6 +56,10 @@ export const App: React.FC = () => {
         <Route path="access-logs" element={<AccessLogsPage />} />
         <Route path="radius-gateway" element={<RadiusGatewayPage />} />
         <Route path="government-report" element={<GovernmentReportPage />} />
+        <Route path="dns-filtering" element={<DnsFilteringPage />} />
+        <Route path="users" element={<UsersPage />} />
+        <Route path="role-permissions" element={<RolePermissionsPage />} />
+        <Route path="system-settings" element={<SystemSettingsPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="gateway" element={<GatewayPage />} />

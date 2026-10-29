@@ -231,6 +231,12 @@ export interface AdminUserDto {
   fullName: string;
   role: string;
   enabled: boolean;
+  adminUnitId?: number;
+  adminUnitName?: string;
+  phoneNumber?: string;
+  failedLoginAttempts?: number;
+  lockedUntil?: string;
+  locked?: boolean;
   createdAt: string;
 }
 
@@ -680,4 +686,82 @@ export interface GovernmentReportDto {
   telecomSlaComplianceRate: number;
   averageResolutionHours: number;
   districtBreakdown: DistrictStatDto[];
+}
+
+
+// ================= Users, Roles, DNS & System Settings =================
+
+export type AdminRoleType = 'ROLE_SUPER_ADMIN' | 'ROLE_ADMIN' | 'ROLE_SOTTTT_ADMIN' | 'ROLE_DISTRICT_OFFICER' | 'ROLE_COMMUNE_OFFICER' | 'ROLE_VNPT_ENGINEER';
+
+export interface CreateAdminUserRequest {
+  username: string;
+  password: string;
+  email: string;
+  fullName: string;
+  role: AdminRoleType;
+  adminUnitId?: number;
+  phoneNumber?: string;
+}
+
+export interface UpdateAdminUserRequest {
+  fullName: string;
+  email: string;
+  role: AdminRoleType;
+  adminUnitId?: number;
+  phoneNumber?: string;
+  newPassword?: string;
+  enabled?: boolean;
+}
+
+export interface DnsDomainRuleDto {
+  id: number;
+  domainName: string;
+  ruleType: 'BLOCKLIST' | 'WHITELIST';
+  category?: string;
+  description?: string;
+  active: boolean;
+  createdAt?: string;
+}
+
+export interface CreateDnsDomainRuleRequest {
+  domainName: string;
+  ruleType: 'BLOCKLIST' | 'WHITELIST';
+  category?: string;
+  description?: string;
+  active?: boolean;
+}
+
+export interface SystemSettingDto {
+  id: number;
+  settingKey: string;
+  settingValue: string;
+  description?: string;
+  category?: string;
+  updatedAt?: string;
+}
+
+export interface UpdateSystemSettingRequest {
+  settingValue: string;
+  description?: string;
+}
+
+export interface RolePermissionDto {
+  id: number;
+  roleName: string;
+  moduleName: string;
+  canView: boolean;
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+  canApprove: boolean;
+}
+
+export interface UpdateRolePermissionRequest {
+  roleName: string;
+  moduleName: string;
+  canView: boolean;
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+  canApprove: boolean;
 }

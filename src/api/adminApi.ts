@@ -41,6 +41,15 @@ import {
   CreateRadiusClientRequest,
   GovernmentReportDto,
   DistrictStatDto,
+  AdminUserDto,
+  CreateAdminUserRequest,
+  UpdateAdminUserRequest,
+  DnsDomainRuleDto,
+  CreateDnsDomainRuleRequest,
+  SystemSettingDto,
+  UpdateSystemSettingRequest,
+  RolePermissionDto,
+  UpdateRolePermissionRequest,
 } from '../types/models';
 
 export const adminApi = {
@@ -476,5 +485,103 @@ export const adminApi = {
   // Government Administrative Reports (Sở TT&TT / UBND TP Hải Phòng)
   getGovernmentReportSummary: (period = 'MONTH') => {
     return request<GovernmentReportDto>(`/v1/admin/reports/government/summary?period=${encodeURIComponent(period)}`);
+  },
+
+  // Administrative Users Management (Screens C03, C04)
+  getUsers: (params?: { search?: string; page?: number; size?: number }) => {
+    const sp = new URLSearchParams();
+    if (params?.search) sp.append('search', params.search);
+    if (params?.page !== undefined) sp.append('page', params.page.toString());
+    if (params?.size !== undefined) sp.append('size', params.size.toString());
+    return request<PageResponse<AdminUserDto>>(`/v1/admin/users?${sp.toString()}`);
+  },
+
+  getUserById: (id: number) => {
+    return request<AdminUserDto>(`/v1/admin/users/${id}`);
+  },
+
+  createUser: (data: CreateAdminUserRequest) => {
+    return request<AdminUserDto>('/v1/admin/users', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateUser: (id: number, data: UpdateAdminUserRequest) => {
+    return request<AdminUserDto>(`/v1/admin/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  toggleUserStatus: (id: number) => {
+    return request<AdminUserDto>(`/v1/admin/users/${id}/toggle-status`, {
+      method: 'PATCH',
+    });
+  },
+
+  unlockUser: (id: number) => {
+    return request<AdminUserDto>(`/v1/admin/users/${id}/unlock`, {
+      method: 'PATCH',
+    });
+  },
+
+  deleteUser: (id: number) => {
+    return request<void>(`/v1/admin/users/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // DNS Domain Rules (Screen B10)
+  getDnsRules: (params?: { ruleType?: string; search?: string; page?: number; size?: number }) => {
+    const sp = new URLSearchParams();
+    if (params?.ruleType) sp.append('ruleType', params.ruleType);
+    if (params?.search) sp.append('search', params.search);
+    if (params?.page !== undefined) sp.append('page', params.page.toString());
+    if (params?.size !== undefined) sp.append('size', params.size.toString());
+    return request<PageResponse<DnsDomainRuleDto>>(`/v1/admin/dns-domains?${sp.toString()}`);
+  },
+
+  createDnsRule: (data: CreateDnsDomainRuleRequest) => {
+    return request<DnsDomainRuleDto>('/v1/admin/dns-domains', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  toggleDnsRule: (id: number) => {
+    return request<DnsDomainRuleDto>(`/v1/admin/dns-domains/${id}/toggle`, {
+      method: 'PATCH',
+    });
+  },
+
+  deleteDnsRule: (id: number) => {
+    return request<void>(`/v1/admin/dns-domains/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // System Settings (Screen C06)
+  getSystemSettings: () => {
+    return request<SystemSettingDto[]>('/v1/admin/system/settings');
+  },
+
+  updateSystemSetting: (key: string, data: UpdateSystemSettingRequest) => {
+    return request<SystemSettingDto>(`/v1/admin/system/settings/${encodeURIComponent(key)}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Role Permissions Matrix (Screen C05)
+  getRolePermissions: () => {
+    return request<RolePermissionDto[]>('/v1/admin/roles/permissions');
+  },
+
+  updateRolePermission: (data: UpdateRolePermissionRequest) => {
+    return request<RolePermissionDto>('/v1/admin/roles/permissions', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   },
 };

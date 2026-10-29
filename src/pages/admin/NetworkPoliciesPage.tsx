@@ -343,3 +343,4 @@ export const NetworkPoliciesPage: React.FC = () => {
     </div>
   );
 };
+

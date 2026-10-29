@@ -26,6 +26,10 @@ import {
   Lock,
   Server,
   Landmark,
+  Globe,
+  UserCheck,
+  KeyRound,
+  Settings,
 } from 'lucide-react';
 import { authApi } from '../../api/authApi';
 import { adminApi } from '../../api/adminApi';
@@ -83,6 +87,10 @@ export const AdminLayout: React.FC = () => {
     { to: '/admin/access-logs', label: 'Nhật ký 12 tháng', icon: Lock },
     { to: '/admin/radius-gateway', label: 'RADIUS & OPNsense', icon: Server },
     { to: '/admin/government-report', label: 'Báo cáo Sở TT&TT', icon: Landmark },
+    { to: '/admin/dns-filtering', label: 'Bộ lọc DNS & DVC', icon: Globe },
+    { to: '/admin/users', label: 'Cán bộ & Địa bàn', icon: UserCheck },
+    { to: '/admin/role-permissions', label: 'Ma trận quyền hạn', icon: KeyRound },
+    { to: '/admin/system-settings', label: 'Cấu hình hệ thống', icon: Settings },
     { to: '/admin/analytics', label: 'Báo cáo & Thống kê', icon: BarChart3 },
     { to: '/admin/audit', label: 'Nhật ký hệ thống', icon: ScrollText },
     { to: '/admin/gateway', label: 'Chẩn đoán Gateway', icon: Radio },
