@@ -55,7 +55,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/admin/gis', label: 'Bản đồ số GIS 1.584 Điểm', icon: Map },
       { to: '/admin/locations', label: 'Danh bạ Nhà văn hóa', icon: MapPin },
       { to: '/admin/devices', label: 'Thiết bị & AP Gateway', icon: Smartphone },
-      { to: '/admin/sessions', label: 'Quản lý phiên người dân', icon: Users },
+      { to: '/admin/sessions', label: 'Quản lý phiên truy cập', icon: Users },
     ],
   },
   {
@@ -187,9 +187,9 @@ export const AdminLayout: React.FC = () => {
               <div className="text-[10px] font-bold text-yellow-400 uppercase tracking-widest leading-none">
                 UBND TP. HẢI PHÒNG
               </div>
-              <h1 className="text-xs font-bold text-white tracking-tight leading-snug mt-1 truncate">
+              {/* <h1 className="text-xs font-bold text-white tracking-tight leading-snug mt-1 truncate">
                 Sở Thông Tin & Truyền Thông
-              </h1>
+              </h1> */}
               <div className="text-[10px] text-slate-400 font-medium truncate">
                 Cổng Quản Trị Wi-Fi Công Cộng
               </div>
