@@ -22,6 +22,7 @@ import { NetworkPoliciesPage } from './pages/admin/NetworkPoliciesPage';
 import { BlacklistPage } from './pages/admin/BlacklistPage';
 import { AccessLogsPage } from './pages/admin/AccessLogsPage';
 import { RadiusGatewayPage } from './pages/admin/RadiusGatewayPage';
+import { GovernmentReportPage } from './pages/admin/GovernmentReportPage';
 
 export const App: React.FC = () => {
   return (
@@ -50,6 +51,7 @@ export const App: React.FC = () => {
         <Route path="blacklist" element={<BlacklistPage />} />
         <Route path="access-logs" element={<AccessLogsPage />} />
         <Route path="radius-gateway" element={<RadiusGatewayPage />} />
+        <Route path="government-report" element={<GovernmentReportPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="gateway" element={<GatewayPage />} />

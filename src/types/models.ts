@@ -650,3 +650,34 @@ export interface CreateRadiusClientRequest {
   description?: string;
   enabled?: boolean;
 }
+
+// ================= Phase 6: Government Reporting (Sở TT&TT / UBND TP Hải Phòng) =================
+
+export interface DistrictStatDto {
+  districtId: number;
+  districtName: string;
+  totalLocations: number;
+  onlineLocations: number;
+  availabilityPercent: number;
+  totalSessions: number;
+  totalDataGb: number;
+  totalIncidents: number;
+  slaCompliancePercent: number;
+}
+
+export interface GovernmentReportDto {
+  reportPeriod: string;
+  cityTitle: string;
+  authorityName: string;
+  generatedAt: string;
+  totalTargetLocations: number;
+  activeLocations: number;
+  networkAvailabilityRate: number;
+  totalCitizenSessions: number;
+  totalDataServedTb: number;
+  citizenSatisfactionRate: number;
+  totalIncidentsReported: number;
+  telecomSlaComplianceRate: number;
+  averageResolutionHours: number;
+  districtBreakdown: DistrictStatDto[];
+}

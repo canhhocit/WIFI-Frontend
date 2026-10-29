@@ -39,6 +39,8 @@ import {
   AccessLogRetentionDto,
   RadiusClientDto,
   CreateRadiusClientRequest,
+  GovernmentReportDto,
+  DistrictStatDto,
 } from '../types/models';
 
 export const adminApi = {
@@ -469,5 +471,10 @@ export const adminApi = {
     return request<RadiusClientDto>(`/v1/admin/radius-clients/${id}/toggle`, {
       method: 'PUT',
     });
+  },
+
+  // Government Administrative Reports (Sở TT&TT / UBND TP Hải Phòng)
+  getGovernmentReportSummary: (period = 'MONTH') => {
+    return request<GovernmentReportDto>(`/v1/admin/reports/government/summary?period=${encodeURIComponent(period)}`);
   },
 };
