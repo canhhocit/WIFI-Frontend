@@ -130,21 +130,27 @@ export const PortalStatusPage: React.FC = () => {
   const isAuthorized = session?.status === 'AUTHORIZED';
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900">
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm max-w-sm w-full overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-slate-100 via-blue-50/25 to-slate-100 flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900">
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xl shadow-slate-200/50 max-w-sm w-full overflow-hidden">
+        {/* Subtle Government Ribbon Line */}
+        <div className="h-1 bg-gradient-to-r from-red-600 via-amber-400 to-blue-700 w-full" />
+
         {/* Status Header */}
         <div className="p-6 pb-5 border-b border-slate-100 text-center">
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 border ${
             isAuthorized 
-              ? 'bg-emerald-50 text-emerald-600 border-emerald-100/60' 
+              ? 'bg-emerald-50 text-emerald-600 border-emerald-200 shadow-xs' 
               : 'bg-slate-100 text-slate-600 border-slate-200'
           }`}>
             {isAuthorized ? <CheckCircle2 className="w-6 h-6" /> : <LogOut className="w-6 h-6" />}
           </div>
-          <h1 className="text-lg font-bold tracking-tight text-slate-900">
+          <div className="text-[10px] font-bold tracking-widest text-blue-900 uppercase">
+            UBND THÀNH PHỐ HẢI PHÒNG
+          </div>
+          <h1 className="text-base font-extrabold tracking-tight text-slate-900 mt-0.5">
             {isAuthorized ? 'Đã Kết Nối Internet Thành Công' : 'Đã Ngắt Kết Nối Mạng'}
           </h1>
-          <p className="text-xs text-slate-600 mt-1">Hệ thống Wi-Fi Công cộng TP Hải Phòng</p>
+          <p className="text-xs text-slate-500 mt-0.5">Mạng Wi-Fi Nhà văn hóa cơ sở</p>
           
           <div className="mt-3 flex justify-center">
             <StatusBadge status={session?.status || 'PENDING'} size="sm" />
@@ -154,16 +160,19 @@ export const PortalStatusPage: React.FC = () => {
         <div className="p-5 space-y-4">
           {/* Active Countdown Card */}
           {isAuthorized ? (
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center">
-              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block mb-1">
+            <div className="bg-slate-50/90 border border-slate-200 rounded-xl p-4 text-center">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">
                 Thời gian truy cập còn lại
               </span>
-              <div className="font-mono text-3xl font-bold text-slate-900 tracking-tight">
+              <div className="font-mono text-3xl font-extrabold text-slate-900 tracking-tight">
                 {formatRemainingTime(remainingSec)}
+              </div>
+              <div className="text-[10.5px] text-emerald-700 font-medium mt-1">
+                Tốc độ tối đa: {session?.maxBandwidthMbps || 15} Mbps
               </div>
             </div>
           ) : (
-            <div className="bg-amber-50 border border-amber-200/80 rounded-lg p-3 text-center">
+            <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-3 text-center">
               <span className="text-xs font-semibold text-amber-800 block">
                 {session?.status === 'EXPIRED' ? 'Phiên truy cập đã hết thời lượng' : 'Đã ngắt kết nối Wi-Fi'}
               </span>
@@ -174,40 +183,46 @@ export const PortalStatusPage: React.FC = () => {
           )}
 
           {/* Real Session Metadata */}
-          <div className="bg-slate-50 border border-slate-150 rounded-lg p-3 text-[11px] text-slate-600 space-y-1.5">
-            <div className="flex justify-between items-center">
+          <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 text-[11px] text-slate-600 space-y-1.5 font-mono">
+            <div className="flex justify-between items-center font-sans">
               <span className="text-slate-400">Địa chỉ IP:</span>
-              <span className="font-mono text-slate-800 font-medium">{session?.ipAddress}</span>
+              <span className="font-mono text-slate-800 font-semibold">{session?.ipAddress}</span>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center font-sans">
               <span className="text-slate-400">Địa chỉ MAC:</span>
-              <span className="font-mono text-slate-800 font-medium">{session?.macAddress}</span>
+              <span className="font-mono text-slate-800 font-semibold">{session?.macAddress}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">Tốc độ mạng:</span>
-              <span className="font-mono text-slate-800 font-medium">{session?.maxBandwidthMbps} Mbps</span>
-            </div>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center font-sans">
               <span className="text-slate-400">Mã phiên:</span>
-              <span className="font-mono text-slate-800 font-medium text-[10px] truncate max-w-[140px]">{session?.sessionToken}</span>
+              <span className="font-mono text-slate-700 text-[10px] truncate max-w-[150px]">{session?.sessionToken}</span>
             </div>
           </div>
 
-          {/* Action button */}
+          {/* Action buttons */}
           {isAuthorized ? (
-            <button
-              onClick={handleDisconnect}
-              disabled={disconnecting}
-              className="w-full py-2 px-3 border border-slate-200 hover:bg-slate-50 active:bg-slate-100 text-slate-700 rounded-lg text-xs font-medium transition cursor-pointer"
-            >
-              {disconnecting ? 'Đang ngắt kết nối...' : 'Ngắt kết nối Wi-Fi'}
-            </button>
+            <div className="space-y-2">
+              <a
+                href="https://dichvucong.haiphong.gov.vn"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-2.5 px-3 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
+              >
+                <span>Cổng Dịch vụ công TP. Hải Phòng</span>
+              </a>
+              <button
+                onClick={handleDisconnect}
+                disabled={disconnecting}
+                className="w-full py-2 px-3 border border-slate-300 hover:bg-slate-100 active:bg-slate-200 text-slate-600 rounded-lg text-xs font-medium transition cursor-pointer"
+              >
+                {disconnecting ? 'Đang ngắt kết nối...' : 'Ngắt kết nối Wi-Fi'}
+              </button>
+            </div>
           ) : (
             <button
               onClick={() => navigate('/portal')}
-              className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-medium transition flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full py-2.5 px-4 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> Kết nối lại
+              <ArrowLeft className="w-3.5 h-3.5" /> Kết nối lại mạng
             </button>
           )}
         </div>

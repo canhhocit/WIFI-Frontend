@@ -11,6 +11,20 @@ export default {
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       colors: {
+        gov: {
+          navy: '#0c2340',
+          'navy-dark': '#07172b',
+          'navy-hover': '#13355e',
+          'navy-border': '#18365a',
+          blue: '#025492',
+          'blue-hover': '#014476',
+          'blue-light': '#e8f2fa',
+          red: '#b91c1c',
+          'red-dark': '#991b1b',
+          'red-light': '#fef2f2',
+          gold: '#c28b1e',
+          'gold-light': '#fef9ee',
+        },
         brand: {
           50: '#f0f9ff',
           100: '#e0f2fe',

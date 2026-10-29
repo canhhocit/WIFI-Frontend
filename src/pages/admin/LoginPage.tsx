@@ -33,44 +33,44 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Decorative Grid */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-35 pointer-events-none" />
+    <div className="min-h-screen bg-gradient-to-b from-[#f0f4f9] via-[#f8fafc] to-[#eef2f7] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Subtle Government Geometric Pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:24px_24px] opacity-40 pointer-events-none" />
 
       <div className="relative w-full max-w-md">
         {/* National Emblem & Department Banner */}
-        <div className="text-center mb-6 space-y-1.5">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-red-700 text-yellow-300 font-bold text-xl shadow-lg shadow-red-900/30 border border-yellow-400/30 mb-2">
+        <div className="text-center mb-6 space-y-1">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-red-700 text-yellow-300 font-bold text-xl shadow-md border border-yellow-300/40 mb-2">
             ★
           </div>
-          <div className="text-[11px] font-bold tracking-widest text-yellow-400 uppercase">
+          <div className="text-[11px] font-bold tracking-widest text-slate-800 uppercase">
             Cộng Hòa Xã Hội Chủ Nghĩa Việt Nam
           </div>
-          <div className="text-[10px] text-slate-300 italic">
+          <div className="text-[10.5px] text-slate-600 italic">
             Độc lập - Tự do - Hạnh phúc
           </div>
-          <div className="h-px w-24 bg-red-600/60 mx-auto my-2" />
-          <h2 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+          <div className="h-0.5 w-24 bg-gradient-to-r from-red-600 via-amber-400 to-red-600 mx-auto my-2 rounded-full" />
+          <h2 className="text-xs font-bold text-blue-900 uppercase tracking-wider">
             Ủy Ban Nhân Dân Thành Phố Hải Phòng
           </h2>
-          <h1 className="text-base font-extrabold text-white tracking-tight">
+          <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
             Cổng Quản Trị Hệ Thống Wi-Fi Công Cộng
           </h1>
-          <p className="text-[11px] text-slate-400">
-            Hạ tầng quản lý 1.584 điểm Nhà văn hóa & Trung tâm văn hóa cơ sở
+          <p className="text-[11px] text-slate-500">
+            Hạ tầng điều hành 1.584 điểm Nhà văn hóa & Trung tâm văn hóa cơ sở
           </p>
         </div>
 
         {/* Main Login Card */}
-        <div className="bg-white rounded-xl shadow-2xl overflow-hidden border border-slate-200">
-          <div className="px-6 py-4 bg-slate-50 border-b border-slate-150 flex items-center justify-between">
+        <div className="bg-white rounded-2xl shadow-xl shadow-slate-300/40 overflow-hidden border border-slate-200/90">
+          <div className="px-6 py-4 bg-slate-50/90 border-b border-slate-200 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-blue-700" />
               <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                 Xác thực Cán bộ Quản trị
               </span>
             </div>
-            <span className="text-[10px] font-mono font-medium text-slate-600 bg-slate-200/80 px-2 py-0.5 rounded">
+            <span className="text-[10px] font-mono font-semibold text-blue-800 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
               Bảo mật 2FA & RBAC
             </span>
           </div>
@@ -86,7 +86,7 @@ export const LoginPage: React.FC = () => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-slate-900 font-mono transition"
+                className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-slate-900 font-mono transition shadow-xs"
                 placeholder="vd: admin hoặc canbo_haiphong"
                 required
               />
@@ -103,7 +103,7 @@ export const LoginPage: React.FC = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-slate-900 transition"
+                className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-slate-900 transition shadow-xs"
                 placeholder="••••••••"
                 required
               />
@@ -112,7 +112,7 @@ export const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white rounded-lg text-xs font-bold tracking-wide transition flex items-center justify-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
+              className="w-full py-2.5 px-4 bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white rounded-lg text-xs font-bold tracking-wide transition flex items-center justify-center gap-2 shadow-sm cursor-pointer disabled:opacity-50 uppercase"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
               ĐĂNG NHẬP HỆ THỐNG

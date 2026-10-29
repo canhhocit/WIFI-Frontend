@@ -209,21 +209,24 @@ export const PortalPage: React.FC = () => {
   const survey = portalData?.activeSurvey;
 
   return (
-    <div className="min-h-screen bg-slate-100/90 flex flex-col items-center justify-center p-3 sm:p-5 text-slate-900">
-      <div className="bg-white rounded-xl border border-slate-250 shadow-md max-w-md w-full overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-slate-100 via-blue-50/30 to-slate-100 flex flex-col items-center justify-center p-3 sm:p-5 text-slate-900">
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xl shadow-slate-200/60 max-w-md w-full overflow-hidden">
         {/* Official Header */}
-        <div className="bg-red-800 text-white text-center p-4 pt-5 border-b border-red-900 relative">
+        <div className="bg-gradient-to-b from-[#991b1b] to-[#881313] text-white text-center p-4 pt-5 border-b border-[#7f1d1d] relative">
+          <div className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-yellow-400/20 text-yellow-300 font-bold text-xs mb-1.5 border border-yellow-300/40">
+            ★
+          </div>
           <div className="text-[10px] font-bold tracking-widest text-yellow-300 uppercase">
             Cộng Hòa Xã Hội Chủ Nghĩa Việt Nam
           </div>
           <div className="text-[10px] text-red-100 italic">
             Độc lập - Tự do - Hạnh phúc
           </div>
-          <div className="h-px w-20 bg-yellow-400/50 mx-auto my-2" />
+          <div className="h-px w-20 bg-yellow-400/50 mx-auto my-1.5" />
           <div className="text-[10px] font-bold uppercase tracking-wider text-yellow-300">
             Ủy Ban Nhân Dân Thành Phố Hải Phòng
           </div>
-          <h1 className="text-sm font-extrabold tracking-tight mt-0.5 uppercase">
+          <h1 className="text-sm font-extrabold tracking-tight mt-0.5 uppercase text-white">
             Cổng Truy Cập Wi-Fi Nhà Văn Hóa Cơ Sở
           </h1>
         </div>
