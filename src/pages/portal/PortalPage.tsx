@@ -13,7 +13,8 @@ import {
   ClipboardList,
   Check,
   Send,
-  Sparkles
+  Info,
+  Lock,
 } from 'lucide-react';
 import { portalApi } from '../../api/portalApi';
 import { PortalInitResponse, SurveyQuestionDto } from '../../types/models';
@@ -130,11 +131,10 @@ export const PortalPage: React.FC = () => {
     if (!portalData) return;
 
     if (!consentGiven) {
-      setError('Vui lòng đánh dấu đồng ý với Điều khoản để tiếp tục.');
+      setError('Vui lòng đánh dấu đồng ý với Quy chế sử dụng mạng để tiếp tục.');
       return;
     }
 
-    // If OTP is required and not yet verified or remembered
     if (portalData.otpRequired && !otpVerified && !portalData.macRemembered) {
       setError('Vui lòng xác thực số điện thoại qua OTP trước khi truy cập mạng.');
       return;
@@ -142,47 +142,32 @@ export const PortalPage: React.FC = () => {
 
     setSubmitting(true);
     setError(null);
+    setSuccessInfo(null);
 
     try {
-      // If active survey present and not submitted yet, submit survey answers
-      if (portalData.activeSurvey && !surveySubmitted && Object.keys(surveyAnswers).length > 0) {
+      // If survey answers exist, submit survey in parallel
+      if (portalData.activeSurvey && Object.keys(surveyAnswers).length > 0 && !surveySubmitted) {
         try {
           await portalApi.submitSurvey(portalData.activeSurvey.id, {
             locationId: portalData.location.id,
-            clientMac: macAddress || portalData.clientMacHint,
+            clientMac: macAddress || portalData.clientMacHint || '02:42:ac:11:00:01',
             answers: surveyAnswers,
           });
           setSurveySubmitted(true);
-        } catch (_) {
-          // Non-blocking survey submission
-        }
+        } catch (_) {}
       }
 
-      const resp = await portalApi.login({
+      const session = await portalApi.login({
         locationSlug: portalData.location.slug,
-        macAddress: macAddress || portalData.clientMacHint,
+        macAddress: macAddress || portalData.clientMacHint || '02:42:ac:11:00:01',
         guestName: guestName.trim() || undefined,
         guestContact: phoneNumber.trim() || undefined,
         consentGiven: true,
       });
 
-      if (resp.status === 'AUTHORIZED') {
-        // Trigger gateway physical unblock hook if running under MyPublicWiFi
-        try {
-          fetch(`http://${window.location.hostname}/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: '_action=TOCLogin',
-            mode: 'no-cors',
-          }).catch(() => {});
-        } catch (_) {}
-
-        navigate(`/portal/status/${resp.sessionToken}`);
-      } else {
-        setError(resp.message || 'Cổng chuyển tiếp chưa cấp quyền truy cập. Vui lòng thử lại.');
-      }
+      navigate(`/portal/status/${session.sessionToken}`);
     } catch (err: any) {
-      setError(err?.message || 'Kết nối mạng thất bại. Vui lòng kiểm tra lại thiết bị.');
+      setError(err?.message || 'Xác thực truy cập không thành công. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);
     }
@@ -190,147 +175,126 @@ export const PortalPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 text-center max-w-xs w-full shadow-sm">
-          <Loader2 className="w-6 h-6 animate-spin text-sky-600 mx-auto mb-2" />
-          <p className="text-xs text-slate-500 font-medium">Đang tải cổng chào Wi-Fi...</p>
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white">
+        <div className="w-12 h-12 rounded-xl bg-red-700 text-yellow-300 font-bold flex items-center justify-center text-xl shadow-lg mb-4">
+          ★
         </div>
+        <Loader2 className="w-6 h-6 animate-spin text-blue-400 mb-2" />
+        <p className="text-xs text-slate-300 font-medium">Đang kết nối cổng dịch vụ Wi-Fi Nhà văn hóa...</p>
       </div>
     );
   }
 
   if (error && !portalData) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 text-center max-w-sm w-full shadow-sm">
-          <div className="w-10 h-10 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+        <div className="bg-white p-6 rounded-xl border border-slate-300 text-center max-w-sm w-full shadow-md">
+          <div className="w-10 h-10 bg-red-50 text-red-600 rounded-lg flex items-center justify-center mx-auto mb-3">
             <Wifi className="w-5 h-5" />
           </div>
-          <h2 className="text-base font-bold text-slate-900 mb-1">Không thể tải Cổng Wi-Fi</h2>
-          <p className="text-xs text-slate-500 mb-4">{error}</p>
+          <h2 className="text-sm font-bold text-slate-900 mb-1">Không thể tải Cổng Wi-Fi</h2>
+          <p className="text-xs text-slate-600 mb-4">{error}</p>
           <button
             onClick={loadPortal}
-            className="w-full py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+            className="w-full py-2 px-3 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold transition cursor-pointer"
           >
-            Thử lại
+            Thử lại kết nối
           </button>
         </div>
       </div>
     );
   }
 
-  const tmpl = portalData?.portalTemplate;
-  const themeColor = tmpl?.themeColor || '#0284c7';
-  const bgColor = tmpl?.backgroundColor || '#f8fafc';
   const campaign = portalData?.activeCampaign;
   const survey = portalData?.activeSurvey;
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 transition-colors"
-      style={{ backgroundColor: bgColor }}
-    >
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl max-w-md w-full overflow-hidden">
-        {/* Dynamic Header */}
-        <div className="p-6 pb-4 border-b border-slate-100 text-center relative">
-          {tmpl?.logoUrl ? (
-            <img src={tmpl.logoUrl} alt="Logo" className="h-12 mx-auto mb-3 object-contain" />
-          ) : (
-            <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 text-white shadow-md font-bold text-lg"
-              style={{ backgroundColor: themeColor }}
-            >
-              <Wifi className="w-6 h-6" />
-            </div>
-          )}
-
-          <h1 className="text-lg font-bold tracking-tight text-slate-900 leading-snug">
-            {tmpl?.title || 'Cổng Thông Tin Wi-Fi Nhà Văn Hóa'}
+    <div className="min-h-screen bg-slate-100/90 flex flex-col items-center justify-center p-3 sm:p-5 text-slate-900">
+      <div className="bg-white rounded-xl border border-slate-250 shadow-md max-w-md w-full overflow-hidden">
+        {/* Official Header */}
+        <div className="bg-red-800 text-white text-center p-4 pt-5 border-b border-red-900 relative">
+          <div className="text-[10px] font-bold tracking-widest text-yellow-300 uppercase">
+            Cộng Hòa Xã Hội Chủ Nghĩa Việt Nam
+          </div>
+          <div className="text-[10px] text-red-100 italic">
+            Độc lập - Tự do - Hạnh phúc
+          </div>
+          <div className="h-px w-20 bg-yellow-400/50 mx-auto my-2" />
+          <div className="text-[10px] font-bold uppercase tracking-wider text-yellow-300">
+            Ủy Ban Nhân Dân Thành Phố Hải Phòng
+          </div>
+          <h1 className="text-sm font-extrabold tracking-tight mt-0.5 uppercase">
+            Cổng Truy Cập Wi-Fi Nhà Văn Hóa Cơ Sở
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            {tmpl?.welcomeText || portalData?.location.welcomeMessage || 'Chào mừng quý khách đến với mạng Wi-Fi công cộng'}
-          </p>
+        </div>
 
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-[11px] text-slate-600">
-            {portalData?.location.name && (
-              <span className="inline-flex items-center gap-1 bg-slate-100 px-2.5 py-1 rounded-lg font-medium text-slate-700">
-                <MapPin className="w-3 h-3 text-slate-500" />
-                {portalData.location.name}
-              </span>
-            )}
-            <span className="bg-slate-100 px-2.5 py-1 rounded-lg">
-              Phiên: <strong>{portalData?.location.sessionDurationMinutes || 120} phút</strong>
-            </span>
-            <span className="bg-slate-100 px-2.5 py-1 rounded-lg">
-              Tốc độ: <strong>{portalData?.location.maxBandwidthMbps || 20} Mbps</strong>
-            </span>
+        {/* Location & Speed Meta Strip */}
+        <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-[11px] text-slate-700">
+          <div className="flex items-center gap-1.5 font-semibold truncate mr-2">
+            <MapPin className="w-3.5 h-3.5 text-red-600 flex-shrink-0" />
+            <span className="truncate">{portalData?.location.name || 'Nhà văn hóa Hải Phòng'}</span>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0 font-mono text-[10px] text-slate-500">
+            <span>{portalData?.location.sessionDurationMinutes || 120}p</span>
+            <span>•</span>
+            <span>{portalData?.location.maxBandwidthMbps || 20} Mbps</span>
           </div>
         </div>
 
-        {/* Active Policy / Media Campaign Banner */}
+        {/* Media Campaign / Government Notice */}
         {campaign && (
-          <div className="border-b border-slate-100 bg-amber-50/60 p-4 space-y-2">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-800 uppercase tracking-wider">
-              <Megaphone className="w-3.5 h-3.5 text-amber-600" /> Bản Tin & Tuyên Truyền Chính Sách Số
+          <div className="border-b border-slate-200 bg-amber-50/50 p-3.5 space-y-1.5">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-900 uppercase tracking-wider">
+              <Megaphone className="w-3 h-3 text-amber-700" /> Tuyên Truyền Chính Sách Số
             </div>
             {campaign.bannerUrl && (
-              <div className="rounded-xl overflow-hidden border border-amber-200/60 shadow-xs max-h-36 bg-white">
+              <div className="rounded-lg overflow-hidden border border-amber-200 max-h-32 bg-white">
                 <img src={campaign.bannerUrl} alt="" className="w-full h-full object-cover" />
               </div>
             )}
-            <h3 className="text-xs font-bold text-slate-900">{campaign.title}</h3>
+            <div className="text-xs font-bold text-slate-900">{campaign.title}</div>
             {campaign.description && (
-              <p className="text-[11px] text-slate-600 leading-relaxed whitespace-pre-line">{campaign.description}</p>
+              <p className="text-[11px] text-slate-600 leading-relaxed">{campaign.description}</p>
             )}
             {campaign.actionUrl && (
               <a
                 href={campaign.actionUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-amber-300 text-amber-900 rounded-lg text-[11px] font-bold hover:bg-amber-100 transition shadow-xs"
+                className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-amber-300 text-amber-900 rounded text-[10px] font-bold hover:bg-amber-100 transition shadow-xs"
               >
-                <span>Xem chi tiết cổng dịch vụ</span>
-                <ExternalLink className="w-3 h-3 text-amber-600" />
+                <span>Xem Cổng DVC Hải Phòng</span>
+                <ExternalLink className="w-3 h-3 text-amber-700" />
               </a>
             )}
           </div>
         )}
 
-        {/* Form Container */}
+        {/* Portal Connect Form */}
         <form onSubmit={handleConnect} className="p-5 space-y-4 text-xs">
           {error && <AlertBanner type="error" message={error} />}
           {successInfo && <AlertBanner type="success" message={successInfo} />}
 
-          {/* Device & MAC Network Info */}
-          <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 text-[11px] text-slate-600 space-y-1">
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">Địa chỉ IP:</span>
-              <span className="font-mono text-slate-800 font-semibold">{portalData?.clientIp}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">Địa chỉ MAC:</span>
-              <span className="font-mono text-slate-800 font-semibold">{macAddress || portalData?.clientMacHint}</span>
-            </div>
-          </div>
-
-          {/* OTP / 30-Day Remember Section (Screen B02, B03) */}
+          {/* OTP Section */}
           {portalData?.macRemembered || otpVerified ? (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2.5 text-emerald-800 text-[11px] font-semibold">
-              <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center gap-2.5 text-emerald-800 text-[11px]">
+              <ShieldCheck className="w-5 h-5 text-emerald-700 flex-shrink-0" />
               <div>
-                <span>Thiết bị của bạn đã được xác thực an toàn (Ghi nhớ đăng nhập 30 ngày).</span>
-                <span className="block text-[10px] text-emerald-600 font-normal mt-0.5">
+                <span className="font-bold">Thiết bị đã xác thực bảo mật (Ghi nhớ 30 ngày).</span>
+                <span className="block text-[10px] text-emerald-600">
                   Không cần nhập lại mã OTP cho các lần kết nối tiếp theo.
                 </span>
               </div>
             </div>
           ) : (
-            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                  <Smartphone className="w-3.5 h-3.5 text-sky-600" /> Xác Thực Số Điện Thoại (OTP)
+                  <Smartphone className="w-3.5 h-3.5 text-blue-700" /> Xác thực số điện thoại
                 </span>
-                <span className="text-[10px] text-slate-400">Quy định TP Hải Phòng</span>
+                <span className="text-[10px] font-mono text-slate-500 bg-slate-200/70 px-1.5 py-0.5 rounded">
+                  SMS Brandname
+                </span>
               </div>
 
               {!otpSent ? (
@@ -339,17 +303,17 @@ export const PortalPage: React.FC = () => {
                     type="tel"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="Nhập số điện thoại (VD: 0912345678)"
-                    className="flex-1 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                    placeholder="Nhập SĐT (VD: 0912345678)"
+                    className="flex-1 px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-600 font-mono"
                   />
                   <button
                     type="button"
                     onClick={handleSendOtp}
                     disabled={submitting}
-                    className="px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                    className="px-3.5 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
                   >
-                    {submitting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
-                    Gửi OTP
+                    {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    Gửi mã
                   </button>
                 </div>
               ) : (
@@ -360,34 +324,34 @@ export const PortalPage: React.FC = () => {
                       maxLength={6}
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value)}
-                      placeholder="Nhập mã 6 chữ số"
-                      className="flex-1 px-3 py-2 text-xs font-mono tracking-widest text-center bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 font-bold"
+                      placeholder="Nhập 6 số OTP"
+                      className="flex-1 px-3 py-2 text-xs font-mono tracking-widest text-center bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-600 font-bold"
                     />
                     <button
                       type="button"
                       onClick={handleVerifyOtp}
                       disabled={submitting}
-                      className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition cursor-pointer disabled:opacity-50"
+                      className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
                     >
-                      Xác thực
+                      Xác nhận
                     </button>
                   </div>
                   {otpHint && (
-                    <div className="text-[10px] font-mono text-sky-700 bg-sky-50 p-1.5 rounded-lg border border-sky-100">
-                      💡 Mã xác thực mô phỏng dùng thử nghiệm: <strong>{otpHint}</strong>
+                    <div className="text-[10px] font-mono text-blue-900 bg-blue-50 p-1.5 rounded border border-blue-200">
+                      Mã thử nghiệm mô phỏng: <strong>{otpHint}</strong>
                     </div>
                   )}
-                  <div className="flex justify-between items-center text-[10px] text-slate-400">
-                    <span>Mã có hiệu lực trong 5 phút</span>
+                  <div className="flex justify-between items-center text-[10px] text-slate-500">
+                    <span>Mã OTP hết hạn sau 5 phút</span>
                     {otpTimer > 0 ? (
                       <span>Gửi lại sau {otpTimer}s</span>
                     ) : (
                       <button
                         type="button"
                         onClick={handleSendOtp}
-                        className="text-sky-600 font-bold hover:underline cursor-pointer"
+                        className="text-blue-700 font-semibold hover:underline cursor-pointer"
                       >
-                        Gửi lại mã mới
+                        Gửi lại mã
                       </button>
                     )}
                   </div>
@@ -396,15 +360,15 @@ export const PortalPage: React.FC = () => {
             </div>
           )}
 
-          {/* Interactive Smart Survey Section (Screen B06, B07) */}
+          {/* Smart Citizen Survey */}
           {survey && survey.questions && survey.questions.length > 0 && (
-            <div className="p-3.5 bg-purple-50/70 border border-purple-200/80 rounded-xl space-y-2.5">
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-purple-900 text-xs flex items-center gap-1.5">
-                  <ClipboardList className="w-3.5 h-3.5 text-purple-600" /> {survey.title}
+                <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                  <ClipboardList className="w-3.5 h-3.5 text-blue-700" /> {survey.title}
                 </span>
-                <span className="text-[10px] bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full font-bold">
-                  Khảo sát nhanh
+                <span className="text-[10px] text-blue-800 bg-blue-50 px-1.5 py-0.5 rounded font-medium border border-blue-200">
+                  Lấy ý kiến
                 </span>
               </div>
 
@@ -415,10 +379,10 @@ export const PortalPage: React.FC = () => {
                 } catch (_) {}
 
                 return (
-                  <div key={q.id} className="p-2.5 bg-white rounded-lg border border-purple-100 space-y-1.5">
-                    <p className="font-semibold text-slate-800 text-[11px]">{q.questionText}</p>
+                  <div key={q.id} className="p-2 bg-white rounded border border-slate-200 space-y-1">
+                    <p className="font-medium text-slate-800 text-[11px]">{q.questionText}</p>
                     {options.length > 0 ? (
-                      <div className="grid grid-cols-2 gap-1.5">
+                      <div className="grid grid-cols-2 gap-1">
                         {options.map((opt, oIdx) => (
                           <button
                             key={oIdx}
@@ -426,10 +390,10 @@ export const PortalPage: React.FC = () => {
                             onClick={() =>
                               setSurveyAnswers({ ...surveyAnswers, [q.id?.toString() || oIdx]: opt })
                             }
-                            className={`px-2 py-1.5 rounded-lg text-[10px] font-medium border text-left transition cursor-pointer ${
+                            className={`px-2 py-1 rounded text-[10px] border text-left transition cursor-pointer ${
                               surveyAnswers[q.id?.toString() || oIdx] === opt
-                                ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
-                                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-purple-50'
+                                ? 'bg-blue-700 text-white border-blue-700 font-semibold'
+                                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                             }`}
                           >
                             {opt}
@@ -439,12 +403,12 @@ export const PortalPage: React.FC = () => {
                     ) : (
                       <input
                         type="text"
-                        placeholder="Nhập ý kiến của bạn..."
+                        placeholder="Nhập ý kiến..."
                         value={surveyAnswers[q.id?.toString() || ''] || ''}
                         onChange={(e) =>
                           setSurveyAnswers({ ...surveyAnswers, [q.id?.toString() || '']: e.target.value })
                         }
-                        className="w-full px-2.5 py-1 text-[11px] border border-slate-200 rounded-lg"
+                        className="w-full px-2 py-1 text-[11px] border border-slate-300 rounded"
                       />
                     )}
                   </div>
@@ -453,53 +417,68 @@ export const PortalPage: React.FC = () => {
             </div>
           )}
 
-          {/* Guest Name (Optional) */}
+          {/* Citizen Name (Optional) */}
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 mb-1">
-              Họ tên công dân / Tên thiết bị <span className="text-slate-400 font-normal">(Tùy chọn)</span>
+            <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Họ tên công dân <span className="text-slate-400 font-normal lowercase">(không bắt buộc)</span>
             </label>
             <input
               type="text"
               value={guestName}
               onChange={(e) => setGuestName(e.target.value)}
-              placeholder="Ví dụ: Nguyễn Văn A"
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 bg-white"
+              placeholder="vd: Nguyễn Văn A"
+              className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-600"
             />
           </div>
 
+          {/* Legal Compliance Box */}
+          <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-[10px] text-slate-600 space-y-1">
+            <div className="flex items-center gap-1 font-semibold text-slate-800">
+              <Lock className="w-3 h-3 text-slate-500" />
+              <span>Căn cứ pháp lý & Bảo vệ dữ liệu cá nhân</span>
+            </div>
+            <p className="leading-relaxed text-slate-500">
+              Mạng Wi-Fi công cộng tuân thủ Luật An ninh mạng & Nghị định 13/2023/NĐ-CP. Nghiêm cấm sử dụng mạng cho các mục đích vi phạm pháp luật, phát tán nội dung xấu độc hoặc cờ bạc trực tuyến.
+            </p>
+          </div>
+
           {/* Consent Checkbox */}
-          <label className="flex items-start gap-2.5 cursor-pointer select-none text-[11px] text-slate-600 pt-1">
+          <label className="flex items-start gap-2 cursor-pointer select-none text-[11px] text-slate-700 pt-0.5">
             <input
               type="checkbox"
               checked={consentGiven}
               onChange={(e) => setConsentGiven(e.target.checked)}
-              className="mt-0.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500 w-4 h-4 cursor-pointer"
+              className="mt-0.5 rounded border-slate-300 text-blue-700 focus:ring-blue-600 w-4 h-4 cursor-pointer"
             />
             <span className="leading-relaxed">
-              Tôi cam kết tuân thủ quy tắc ứng xử trên không gian mạng và Quy định sử dụng Wi-Fi công cộng TP Hải Phòng.
+              Tôi cam kết tuân thủ Quy chế sử dụng mạng Wi-Fi công cộng Thành phố Hải Phòng.
             </span>
           </label>
 
-          {/* Connect Action Button */}
+          {/* Connect Button */}
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3 px-4 rounded-xl text-white font-bold text-xs tracking-wide transition flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-sky-600/20 disabled:opacity-50"
-            style={{ backgroundColor: themeColor }}
+            className="w-full py-3 px-4 rounded-lg text-white font-bold text-xs tracking-wider uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm bg-red-700 hover:bg-red-800 active:bg-red-900 disabled:opacity-50"
           >
             {submitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Đang kết nối vào mạng Wi-Fi...</span>
+                <span>Đang cấp quyền truy cập Internet...</span>
               </>
             ) : (
-              <span>{tmpl?.buttonText || 'Bắt Đầu Kết Nối Wi-Fi'}</span>
+              <>
+                <Wifi className="w-4 h-4" />
+                <span>Bắt Đầu Kết Nối Wi-Fi Miễn Phí</span>
+              </>
             )}
           </button>
         </form>
 
-        <div className="p-3 bg-slate-50 border-t border-slate-100 text-center text-[10px] text-slate-400">
-          Hệ thống Quản lý Wi-Fi Công cộng TP. Hải Phòng • 1.584 Điểm phát
+        {/* Footer */}
+        <div className="px-4 py-3 bg-slate-100 border-t border-slate-200 text-center text-[10px] text-slate-500 space-y-0.5">
+          <div className="font-semibold text-slate-700">Sở Thông tin và Truyền thông Thành phố Hải Phòng</div>
+          <div>Hạ tầng viễn thông phối hợp vận hành cùng VNPT Hải Phòng • Hỗ trợ: 1800 1166</div>
         </div>
       </div>
     </div>

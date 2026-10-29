@@ -30,10 +30,68 @@ import {
   UserCheck,
   KeyRound,
   Settings,
+  Activity,
+  Clock,
 } from 'lucide-react';
 import { authApi } from '../../api/authApi';
 import { adminApi } from '../../api/adminApi';
 import { AdminUserDto, GatewayStatusDto } from '../../types/models';
+
+interface NavGroup {
+  groupTitle: string;
+  items: Array<{
+    to: string;
+    label: string;
+    icon: any;
+    end?: boolean;
+  }>;
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    groupTitle: 'HẠ TẦNG & ĐIỂM PHÁT SÓNG',
+    items: [
+      { to: '/admin', label: 'Tổng quan điều hành', icon: LayoutDashboard, end: true },
+      { to: '/admin/gis', label: 'Bản đồ số GIS 1.584 Điểm', icon: Map },
+      { to: '/admin/locations', label: 'Danh bạ Nhà văn hóa', icon: MapPin },
+      { to: '/admin/devices', label: 'Thiết bị & AP Gateway', icon: Smartphone },
+      { to: '/admin/sessions', label: 'Quản lý phiên người dân', icon: Users },
+    ],
+  },
+  {
+    groupTitle: 'GIÁM SÁT MẠNG & SỰ CỐ SLA',
+    items: [
+      { to: '/admin/alerts', label: 'Đo kiểm & Cảnh báo', icon: BellRing },
+      { to: '/admin/incidents', label: 'Xử lý sự cố viễn thông', icon: ShieldAlert },
+      { to: '/admin/sla', label: 'Cam kết SLA & MTTR', icon: ShieldCheck },
+      { to: '/admin/network-policies', label: 'Chính sách QoS băng thông', icon: Gauge },
+      { to: '/admin/blacklist', label: 'Danh sách cấm MAC', icon: Ban },
+      { to: '/admin/access-logs', label: 'Nhật ký 12 tháng pháp lý', icon: Lock },
+      { to: '/admin/radius-gateway', label: 'RADIUS & OPNsense', icon: Server },
+    ],
+  },
+  {
+    groupTitle: 'CỔNG CHÀO & TRUYỀN THÔNG SỐ',
+    items: [
+      { to: '/admin/portal-builder', label: 'Trình dựng Cổng chào', icon: Palette },
+      { to: '/admin/campaigns', label: 'Chiến dịch tuyên truyền', icon: Megaphone },
+      { to: '/admin/surveys', label: 'Khảo sát ý kiến nhân dân', icon: ClipboardList },
+      { to: '/admin/dns-filtering', label: 'Bộ lọc tên miền DNS & DVC', icon: Globe },
+    ],
+  },
+  {
+    groupTitle: 'QUẢN TRỊ CHÍNH QUYỀN & HỆ THỐNG',
+    items: [
+      { to: '/admin/government-report', label: 'Báo cáo Sở TT&TT / UBND', icon: Landmark },
+      { to: '/admin/users', label: 'Cán bộ 5 cấp & Địa bàn', icon: UserCheck },
+      { to: '/admin/role-permissions', label: 'Ma trận phân quyền RBAC', icon: KeyRound },
+      { to: '/admin/system-settings', label: 'Cấu hình tham số hệ thống', icon: Settings },
+      { to: '/admin/analytics', label: 'Thống kê & Báo cáo', icon: BarChart3 },
+      { to: '/admin/audit', label: 'Nhật ký kiểm toán an toàn', icon: ScrollText },
+      { to: '/admin/gateway', label: 'Chẩn đoán kết nối Gateway', icon: Radio },
+    ],
+  },
+];
 
 export const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -41,6 +99,7 @@ export const AdminLayout: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<AdminUserDto | null>(authApi.getCurrentUser());
   const [gatewayStatus, setGatewayStatus] = useState<GatewayStatusDto | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString('vi-VN'));
 
   useEffect(() => {
     if (!authApi.isAuthenticated()) {
@@ -48,7 +107,6 @@ export const AdminLayout: React.FC = () => {
       return;
     }
 
-    // Refresh user profile and gateway status
     authApi.getMe()
       .then(setCurrentUser)
       .catch(() => navigate('/admin/login'));
@@ -57,12 +115,18 @@ export const AdminLayout: React.FC = () => {
       .then(setGatewayStatus)
       .catch(console.error);
 
-    // Periodic gateway status poll every 30s
-    const interval = setInterval(() => {
+    const gatewayTimer = setInterval(() => {
       adminApi.getGatewayStatus().then(setGatewayStatus).catch(() => {});
     }, 30000);
 
-    return () => clearInterval(interval);
+    const clockTimer = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString('vi-VN'));
+    }, 1000);
+
+    return () => {
+      clearInterval(gatewayTimer);
+      clearInterval(clockTimer);
+    };
   }, [navigate]);
 
   const handleLogout = () => {
@@ -70,39 +134,34 @@ export const AdminLayout: React.FC = () => {
     navigate('/admin/login');
   };
 
-  const navItems = [
-    { to: '/admin', label: 'Tổng quan', icon: LayoutDashboard, end: true },
-    { to: '/admin/sessions', label: 'Phiên truy cập', icon: Users },
-    { to: '/admin/locations', label: '1.584 Điểm phát', icon: MapPin },
-    { to: '/admin/gis', label: 'Bản đồ số GIS', icon: Map },
-    { to: '/admin/devices', label: 'Thiết bị & Hạ tầng', icon: Smartphone },
-    { to: '/admin/portal-builder', label: 'Trình dựng Cổng chào', icon: Palette },
-    { to: '/admin/campaigns', label: 'Chiến dịch truyền thông', icon: Megaphone },
-    { to: '/admin/surveys', label: 'Khảo sát ý kiến', icon: ClipboardList },
-    { to: '/admin/alerts', label: 'Cảnh báo & Đo kiểm', icon: BellRing },
-    { to: '/admin/incidents', label: 'Sự cố & Điều phối', icon: ShieldAlert },
-    { to: '/admin/sla', label: 'Cam kết SLA & MTTR', icon: ShieldCheck },
-    { to: '/admin/network-policies', label: 'Chính sách QoS', icon: Gauge },
-    { to: '/admin/blacklist', label: 'Danh sách cấm MAC', icon: Ban },
-    { to: '/admin/access-logs', label: 'Nhật ký 12 tháng', icon: Lock },
-    { to: '/admin/radius-gateway', label: 'RADIUS & OPNsense', icon: Server },
-    { to: '/admin/government-report', label: 'Báo cáo Sở TT&TT', icon: Landmark },
-    { to: '/admin/dns-filtering', label: 'Bộ lọc DNS & DVC', icon: Globe },
-    { to: '/admin/users', label: 'Cán bộ & Địa bàn', icon: UserCheck },
-    { to: '/admin/role-permissions', label: 'Ma trận quyền hạn', icon: KeyRound },
-    { to: '/admin/system-settings', label: 'Cấu hình hệ thống', icon: Settings },
-    { to: '/admin/analytics', label: 'Báo cáo & Thống kê', icon: BarChart3 },
-    { to: '/admin/audit', label: 'Nhật ký hệ thống', icon: ScrollText },
-    { to: '/admin/gateway', label: 'Chẩn đoán Gateway', icon: Radio },
-  ];
+  const getRoleBadge = (role?: string) => {
+    switch (role) {
+      case 'ROLE_SUPER_ADMIN':
+        return { label: 'Quản trị Tối cao', color: 'bg-purple-900/60 text-purple-200 border-purple-700/50' };
+      case 'ROLE_SOTTTT_ADMIN':
+        return { label: 'Sở TT&TT Hải Phòng', color: 'bg-blue-900/60 text-blue-200 border-blue-700/50' };
+      case 'ROLE_DISTRICT_OFFICER':
+        return { label: 'Cán bộ Quận/Huyện', color: 'bg-emerald-900/60 text-emerald-200 border-emerald-700/50' };
+      case 'ROLE_COMMUNE_OFFICER':
+        return { label: 'Cán bộ Phường/Xã', color: 'bg-teal-900/60 text-teal-200 border-teal-700/50' };
+      case 'ROLE_VNPT_ENGINEER':
+        return { label: 'Kỹ sư VNPT', color: 'bg-amber-900/60 text-amber-200 border-amber-700/50' };
+      default:
+        return { label: 'Cán bộ Vận hành', color: 'bg-slate-800 text-slate-300 border-slate-700' };
+    }
+  };
+
+  const roleInfo = getRoleBadge(currentUser?.role);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
-      {/* Mobile Header */}
+    <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row font-sans">
+      {/* Mobile Top Header */}
       <div className="md:hidden bg-slate-950 text-white px-4 py-3 flex items-center justify-between border-b border-slate-800 sticky top-0 z-40">
         <div className="flex items-center gap-2.5">
-          <Shield className="w-5 h-5 text-sky-400" />
-          <span className="font-bold text-sm">Quản Trị Wi-Fi Portal</span>
+          <div className="w-7 h-7 rounded bg-red-700 text-yellow-300 font-bold flex items-center justify-center text-xs">
+            ★
+          </div>
+          <span className="font-bold text-xs uppercase tracking-wide">Wi-Fi Hải Phòng • Admin</span>
         </div>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -113,95 +172,149 @@ export const AdminLayout: React.FC = () => {
       </div>
 
       {/* Sidebar Navigation */}
-      <aside className={`
-        fixed md:sticky top-0 left-0 z-30 h-screen w-64 bg-slate-950 text-slate-300 flex flex-col border-r border-slate-800/80 transition-transform duration-200 ease-in-out
-        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-      `}>
-        {/* Sidebar Brand Header */}
-        <div className="p-5 border-b border-slate-800/80 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center">
-            <Radio className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-sm font-bold text-white tracking-tight leading-tight">Wi-Fi Chùa</h1>
-            <span className="text-[11px] text-slate-400 font-medium">Hệ Thống Quản Trị</span>
-          </div>
-        </div>
-
-        {/* Gateway Health Indicator */}
-        <div className="px-5 py-3 border-b border-slate-800/80 bg-slate-900/40">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-400 font-medium text-[11px]">Hệ thống mạng</span>
-            <div className="flex items-center gap-1.5 font-mono text-[11px]">
-              <Circle className="w-2 h-2 fill-current text-emerald-400" />
-              <span className="text-emerald-400 font-semibold">Trực tuyến</span>
+      <aside
+        className={`fixed md:sticky top-0 left-0 z-30 h-screen w-72 bg-slate-950 text-slate-300 flex flex-col border-r border-slate-800 transition-transform duration-200 ease-in-out ${
+          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
+        {/* Department / Brand Banner */}
+        <div className="p-4 border-b border-slate-800/90 bg-slate-950/60">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-red-700 border border-yellow-400/40 text-yellow-300 flex items-center justify-center font-bold text-sm shadow-md flex-shrink-0">
+              ★ HP
+            </div>
+            <div className="overflow-hidden">
+              <div className="text-[10px] font-bold text-yellow-400 uppercase tracking-widest leading-none">
+                UBND TP. HẢI PHÒNG
+              </div>
+              <h1 className="text-xs font-bold text-white tracking-tight leading-snug mt-1 truncate">
+                Sở Thông Tin & Truyền Thông
+              </h1>
+              <div className="text-[10px] text-slate-400 font-medium truncate">
+                Cổng Quản Trị Wi-Fi Công Cộng
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Navigation Links */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = item.end ? location.pathname === item.to : location.pathname.startsWith(item.to);
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
-                  isActive
-                    ? 'bg-sky-600 text-white font-bold shadow-md shadow-sky-600/20'
-                    : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                {item.label}
-              </NavLink>
-            );
-          })}
+        {/* Real-time Gateway Telemetry Status Strip */}
+        <div className="px-4 py-2.5 border-b border-slate-800/80 bg-slate-900/60 flex items-center justify-between text-[11px]">
+          <div className="flex items-center gap-1.5 font-medium text-slate-400">
+            <Activity className="w-3.5 h-3.5 text-blue-400" />
+            <span>Gateway OPNsense</span>
+          </div>
+          <div className="flex items-center gap-1.5 font-mono">
+            <Circle className="w-2 h-2 fill-current text-emerald-400 animate-pulse" />
+            <span className="text-emerald-400 font-semibold text-[10px]">Trực tuyến (24/7)</span>
+          </div>
+        </div>
+
+        {/* Categorized Nav Groups */}
+        <nav className="flex-1 px-3 py-3 space-y-4 overflow-y-auto custom-scrollbar">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.groupTitle} className="space-y-1">
+              <div className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                {group.groupTitle}
+              </div>
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = item.end
+                    ? location.pathname === item.to
+                    : location.pathname.startsWith(item.to);
+                  return (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      end={item.end}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition ${
+                        isActive
+                          ? 'bg-blue-700 text-white font-semibold shadow-sm'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                      <span className="truncate">{item.label}</span>
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
-        {/* Quick link to Portal */}
-        <div className="p-3 border-t border-slate-800/80">
+        {/* Direct Link to Guest Portal */}
+        <div className="p-3 border-t border-slate-800/80 bg-slate-950">
           <a
             href="/portal"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-900 transition"
+            className="flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-900 border border-slate-800/80 transition"
           >
-            <span className="flex items-center gap-2">
-              <ExternalLink className="w-3.5 h-3.5" />
-              Mở Cổng khách (Portal)
+            <span className="flex items-center gap-2 text-[11px]">
+              <ExternalLink className="w-3.5 h-3.5 text-blue-400" />
+              Mở Cổng chào Người dân
             </span>
+            <span className="text-[10px] font-mono text-slate-400">/portal</span>
           </a>
         </div>
 
-        {/* Current User & Logout */}
-        <div className="p-4 border-t border-slate-800/80 bg-slate-950 flex items-center justify-between">
-          <div className="truncate pr-2">
-            <span className="block text-xs font-bold text-slate-200 truncate">
-              {currentUser?.fullName || currentUser?.username || 'Quản trị viên'}
-            </span>
-            <span className="block text-[10px] text-slate-400 font-mono truncate">
-              {currentUser?.email || 'admin@captive.local'}
-            </span>
+        {/* User Profile & Logout */}
+        <div className="p-3.5 border-t border-slate-800/90 bg-slate-950 flex items-center justify-between gap-2">
+          <div className="truncate pr-1">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-slate-200 truncate">
+                {currentUser?.fullName || currentUser?.username || 'Cán bộ Quản trị'}
+              </span>
+            </div>
+            <div className="text-[10px] text-slate-400 font-mono truncate mt-0.5">
+              {currentUser?.email || 'admin@haiphong.gov.vn'}
+            </div>
           </div>
           <button
             onClick={handleLogout}
-            title="Đăng xuất"
-            className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-slate-900 transition cursor-pointer"
+            title="Đăng xuất an toàn"
+            className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-900 border border-transparent hover:border-red-900/30 transition cursor-pointer flex-shrink-0"
           >
             <LogOut className="w-4 h-4" />
           </button>
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-        <Outlet />
-      </main>
+      {/* Main Content Container with Top Bar */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Desktop Top Header Bar */}
+        <header className="hidden md:flex h-14 bg-white border-b border-slate-200/90 px-6 items-center justify-between shadow-xs">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-slate-500">Trung tâm Điều hành:</span>
+            <span className="text-xs font-bold text-slate-800">
+              Mạng Wi-Fi Công cộng 1.584 Nhà Văn Hóa Hải Phòng
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {/* Clock UTC+7 */}
+            <div className="flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-md font-mono">
+              <Clock className="w-3.5 h-3.5 text-slate-400" />
+              <span>{currentTime} (GMT+7)</span>
+            </div>
+
+            {/* Officer Role Badge */}
+            <div
+              className={`text-[11px] font-semibold px-2.5 py-1 rounded-md border flex items-center gap-1.5 ${roleInfo.color}`}
+            >
+              <Shield className="w-3 h-3" />
+              <span>{roleInfo.label}</span>
+            </div>
+          </div>
+        </header>
+
+        {/* Page Body */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-7 overflow-y-auto bg-slate-100/70">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };

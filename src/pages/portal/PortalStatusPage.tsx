@@ -141,10 +141,10 @@ export const PortalStatusPage: React.FC = () => {
           }`}>
             {isAuthorized ? <CheckCircle2 className="w-6 h-6" /> : <LogOut className="w-6 h-6" />}
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">
-            {isAuthorized ? 'Đã kết nối Internet' : 'Đã ngắt kết nối'}
+          <h1 className="text-lg font-bold tracking-tight text-slate-900">
+            {isAuthorized ? 'Đã Kết Nối Internet Thành Công' : 'Đã Ngắt Kết Nối Mạng'}
           </h1>
-          <p className="text-xs text-slate-500 mt-1">Mạng: Wi-Fi Chùa</p>
+          <p className="text-xs text-slate-600 mt-1">Hệ thống Wi-Fi Công cộng TP Hải Phòng</p>
           
           <div className="mt-3 flex justify-center">
             <StatusBadge status={session?.status || 'PENDING'} size="sm" />
@@ -212,8 +212,8 @@ export const PortalStatusPage: React.FC = () => {
           )}
         </div>
 
-        <div className="p-3 bg-slate-50 border-t border-slate-100 text-center text-[10px] text-slate-400">
-          Wi-Fi Chùa System • Đang kết nối trực tiếp
+        <div className="p-3 bg-slate-50 border-t border-slate-100 text-center text-[10px] text-slate-500">
+          Sở Thông tin và Truyền thông Hải Phòng • 1.584 Điểm Nhà văn hóa
         </div>
       </div>
     </div>
