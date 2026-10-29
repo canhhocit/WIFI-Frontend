@@ -32,6 +32,13 @@ import {
   ResolveIncidentRequest,
   SlaMetricsDto,
   GisLocationPinDto,
+  NetworkBandwidthPolicyDto,
+  CreatePolicyRequest,
+  MacBlacklistDto,
+  CreateBlacklistRequest,
+  AccessLogRetentionDto,
+  RadiusClientDto,
+  CreateRadiusClientRequest,
 } from '../types/models';
 
 export const adminApi = {
@@ -392,5 +399,75 @@ export const adminApi = {
 
   getSlaMetrics: () => {
     return request<SlaMetricsDto>('/v1/admin/incidents/sla/metrics');
+  },
+
+  // Bandwidth QoS Policies
+  getNetworkPolicies: () => {
+    return request<NetworkBandwidthPolicyDto[]>('/v1/admin/network-policies');
+  },
+
+  createNetworkPolicy: (data: CreatePolicyRequest) => {
+    return request<NetworkBandwidthPolicyDto>('/v1/admin/network-policies', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  toggleNetworkPolicy: (id: number) => {
+    return request<NetworkBandwidthPolicyDto>(`/v1/admin/network-policies/${id}/toggle`, {
+      method: 'PUT',
+    });
+  },
+
+  // MAC Blacklist
+  getBlacklist: (params: { active?: boolean; page?: number; size?: number }) => {
+    const sp = new URLSearchParams();
+    if (params.active !== undefined) sp.append('active', params.active.toString());
+    if (params.page !== undefined) sp.append('page', params.page.toString());
+    if (params.size !== undefined) sp.append('size', params.size.toString());
+    return request<PageResponse<MacBlacklistDto>>(`/v1/admin/blacklist?${sp.toString()}`);
+  },
+
+  addToBlacklist: (data: CreateBlacklistRequest) => {
+    return request<MacBlacklistDto>('/v1/admin/blacklist', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  unblockMac: (id: number) => {
+    return request<MacBlacklistDto>(`/v1/admin/blacklist/${id}/unblock`, {
+      method: 'PUT',
+    });
+  },
+
+  // Legal 12-Month Access Logs
+  searchAccessLogs: (params: { clientMac?: string; locationId?: number; startDate?: string; endDate?: string; page?: number; size?: number }) => {
+    const sp = new URLSearchParams();
+    if (params.clientMac) sp.append('clientMac', params.clientMac);
+    if (params.locationId) sp.append('locationId', params.locationId.toString());
+    if (params.startDate) sp.append('startDate', params.startDate);
+    if (params.endDate) sp.append('endDate', params.endDate);
+    if (params.page !== undefined) sp.append('page', params.page.toString());
+    if (params.size !== undefined) sp.append('size', params.size.toString());
+    return request<PageResponse<AccessLogRetentionDto>>(`/v1/admin/access-logs?${sp.toString()}`);
+  },
+
+  // RADIUS Gateway Clients
+  getRadiusClients: () => {
+    return request<RadiusClientDto[]>('/v1/admin/radius-clients');
+  },
+
+  createRadiusClient: (data: CreateRadiusClientRequest) => {
+    return request<RadiusClientDto>('/v1/admin/radius-clients', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  toggleRadiusClient: (id: number) => {
+    return request<RadiusClientDto>(`/v1/admin/radius-clients/${id}/toggle`, {
+      method: 'PUT',
+    });
   },
 };

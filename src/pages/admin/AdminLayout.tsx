@@ -21,6 +21,10 @@ import {
   BellRing,
   ShieldAlert,
   ShieldCheck,
+  Gauge,
+  Ban,
+  Lock,
+  Server,
 } from 'lucide-react';
 import { authApi } from '../../api/authApi';
 import { adminApi } from '../../api/adminApi';
@@ -73,6 +77,10 @@ export const AdminLayout: React.FC = () => {
     { to: '/admin/alerts', label: 'Cảnh báo & Đo kiểm', icon: BellRing },
     { to: '/admin/incidents', label: 'Sự cố & Điều phối', icon: ShieldAlert },
     { to: '/admin/sla', label: 'Cam kết SLA & MTTR', icon: ShieldCheck },
+    { to: '/admin/network-policies', label: 'Chính sách QoS', icon: Gauge },
+    { to: '/admin/blacklist', label: 'Danh sách cấm MAC', icon: Ban },
+    { to: '/admin/access-logs', label: 'Nhật ký 12 tháng', icon: Lock },
+    { to: '/admin/radius-gateway', label: 'RADIUS & OPNsense', icon: Server },
     { to: '/admin/analytics', label: 'Báo cáo & Thống kê', icon: BarChart3 },
     { to: '/admin/audit', label: 'Nhật ký hệ thống', icon: ScrollText },
     { to: '/admin/gateway', label: 'Chẩn đoán Gateway', icon: Radio },

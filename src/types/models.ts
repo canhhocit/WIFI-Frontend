@@ -572,3 +572,81 @@ export interface GisLocationPinDto {
   activeSessionsCount: number;
   openIncidentsCount: number;
 }
+
+// ================= Phase 5: QoS Policies, Blacklist, 12-Month Access Logs & RADIUS =================
+
+export interface NetworkBandwidthPolicyDto {
+  id: number;
+  name: string;
+  description?: string;
+  downloadSpeedKbps: number;
+  uploadSpeedKbps: number;
+  maxSessionSeconds: number;
+  quotaMb?: number;
+  priority: number;
+  active: boolean;
+}
+
+export interface CreatePolicyRequest {
+  name: string;
+  description?: string;
+  downloadSpeedKbps: number;
+  uploadSpeedKbps: number;
+  maxSessionSeconds: number;
+  quotaMb?: number;
+  priority?: number;
+  active?: boolean;
+}
+
+export interface MacBlacklistDto {
+  id: number;
+  macAddress: string;
+  reason: string;
+  blockedBy: string;
+  blockedAt: string;
+  active: boolean;
+}
+
+export interface CreateBlacklistRequest {
+  macAddress: string;
+  reason: string;
+}
+
+export interface AccessLogRetentionDto {
+  id: number;
+  sessionId?: number;
+  sessionToken?: string;
+  clientMac: string;
+  clientIp: string;
+  locationId?: number;
+  locationName?: string;
+  phoneNumber?: string;
+  authenticatedAt: string;
+  disconnectedAt?: string;
+  durationSeconds: number;
+  bytesIn: number;
+  bytesOut: number;
+  terminationReason: string;
+  retainedUntil: string;
+  createdAt: string;
+}
+
+export interface RadiusClientDto {
+  id: number;
+  clientName: string;
+  ipAddress: string;
+  sharedSecret: string;
+  nasIdentifier?: string;
+  description?: string;
+  enabled: boolean;
+  createdAt: string;
+}
+
+export interface CreateRadiusClientRequest {
+  clientName: string;
+  ipAddress: string;
+  sharedSecret: string;
+  nasIdentifier?: string;
+  description?: string;
+  enabled?: boolean;
+}

@@ -18,6 +18,10 @@ import { GisMapPage } from './pages/admin/GisMapPage';
 import { AlertCenterPage } from './pages/admin/AlertCenterPage';
 import { IncidentsPage } from './pages/admin/IncidentsPage';
 import { SlaAnalyticsPage } from './pages/admin/SlaAnalyticsPage';
+import { NetworkPoliciesPage } from './pages/admin/NetworkPoliciesPage';
+import { BlacklistPage } from './pages/admin/BlacklistPage';
+import { AccessLogsPage } from './pages/admin/AccessLogsPage';
+import { RadiusGatewayPage } from './pages/admin/RadiusGatewayPage';
 
 export const App: React.FC = () => {
   return (
@@ -42,6 +46,10 @@ export const App: React.FC = () => {
         <Route path="alerts" element={<AlertCenterPage />} />
         <Route path="incidents" element={<IncidentsPage />} />
         <Route path="sla" element={<SlaAnalyticsPage />} />
+        <Route path="network-policies" element={<NetworkPoliciesPage />} />
+        <Route path="blacklist" element={<BlacklistPage />} />
+        <Route path="access-logs" element={<AccessLogsPage />} />
+        <Route path="radius-gateway" element={<RadiusGatewayPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="gateway" element={<GatewayPage />} />
