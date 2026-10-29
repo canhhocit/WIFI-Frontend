@@ -35,14 +35,16 @@ import {
 } from 'lucide-react';
 import { authApi } from '../../api/authApi';
 import { adminApi } from '../../api/adminApi';
-import { AdminUserDto, GatewayStatusDto } from '../../types/models';
+import { AdminUserDto, GatewayStatusDto, RolePermissionDto } from '../../types/models';
+
+type RbacModule = 'LOCATIONS' | 'DEVICES' | 'CAMPAIGNS' | 'INCIDENTS' | 'USERS' | 'SETTINGS';
 
 interface NavItem {
   to: string;
   label: string;
   icon: any;
   end?: boolean;
-  allowedRoles?: string[];
+  module?: RbacModule;
 }
 
 interface NavGroup {
@@ -59,16 +61,16 @@ const NAV_GROUPS: NavGroup[] = [
         to: '/admin/gis',
         label: 'Bản đồ số GIS 1.584 Điểm',
         icon: Map,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_DISTRICT_OFFICER', 'ROLE_VNPT_ENGINEER'],
+        module: 'LOCATIONS',
       },
-      { to: '/admin/locations', label: 'Danh bạ Nhà văn hóa', icon: MapPin },
+      { to: '/admin/locations', label: 'Danh bạ Nhà văn hóa', icon: MapPin, module: 'LOCATIONS' },
       {
         to: '/admin/devices',
         label: 'Thiết bị & AP Gateway',
         icon: Smartphone,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_VNPT_ENGINEER'],
+        module: 'DEVICES',
       },
-      { to: '/admin/sessions', label: 'Quản lý phiên truy cập', icon: Users },
+      { to: '/admin/sessions', label: 'Quản lý phiên truy cập', icon: Users, module: 'LOCATIONS' },
     ],
   },
   {
@@ -78,38 +80,38 @@ const NAV_GROUPS: NavGroup[] = [
         to: '/admin/alerts',
         label: 'Đo kiểm & Cảnh báo',
         icon: BellRing,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_DISTRICT_OFFICER', 'ROLE_VNPT_ENGINEER'],
+        module: 'INCIDENTS',
       },
-      { to: '/admin/incidents', label: 'Xử lý sự cố viễn thông', icon: ShieldAlert },
+      { to: '/admin/incidents', label: 'Xử lý sự cố viễn thông', icon: ShieldAlert, module: 'INCIDENTS' },
       {
         to: '/admin/sla',
         label: 'Cam kết SLA & MTTR',
         icon: ShieldCheck,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_VNPT_ENGINEER'],
+        module: 'INCIDENTS',
       },
       {
         to: '/admin/network-policies',
         label: 'Chính sách QoS băng thông',
         icon: Gauge,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_VNPT_ENGINEER'],
+        module: 'INCIDENTS',
       },
       {
         to: '/admin/blacklist',
         label: 'Danh sách cấm MAC',
         icon: Ban,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_VNPT_ENGINEER'],
+        module: 'INCIDENTS',
       },
       {
         to: '/admin/access-logs',
         label: 'Nhật ký 12 tháng pháp lý',
         icon: Lock,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN'],
+        module: 'INCIDENTS',
       },
       {
         to: '/admin/radius-gateway',
         label: 'RADIUS & OPNsense',
         icon: Server,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_VNPT_ENGINEER'],
+        module: 'DEVICES',
       },
     ],
   },
@@ -120,25 +122,25 @@ const NAV_GROUPS: NavGroup[] = [
         to: '/admin/portal-builder',
         label: 'Trình dựng Cổng chào',
         icon: Palette,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN'],
+        module: 'CAMPAIGNS',
       },
       {
         to: '/admin/campaigns',
         label: 'Chiến dịch tuyên truyền',
         icon: Megaphone,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_DISTRICT_OFFICER'],
+        module: 'CAMPAIGNS',
       },
       {
         to: '/admin/surveys',
         label: 'Khảo sát ý kiến nhân dân',
         icon: ClipboardList,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_DISTRICT_OFFICER', 'ROLE_COMMUNE_OFFICER'],
+        module: 'CAMPAIGNS',
       },
       {
         to: '/admin/dns-filtering',
         label: 'Bộ lọc tên miền DNS & DVC',
         icon: Globe,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN'],
+        module: 'CAMPAIGNS',
       },
     ],
   },
@@ -149,38 +151,38 @@ const NAV_GROUPS: NavGroup[] = [
         to: '/admin/government-report',
         label: 'Báo cáo Sở TT&TT / UBND',
         icon: Landmark,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN', 'ROLE_DISTRICT_OFFICER'],
+        module: 'SETTINGS',
       },
       {
         to: '/admin/users',
         label: 'Cán bộ 5 cấp & Địa bàn',
         icon: UserCheck,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN'],
+        module: 'USERS',
       },
       {
         to: '/admin/role-permissions',
         label: 'Ma trận phân quyền RBAC',
         icon: KeyRound,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN'],
+        module: 'USERS',
       },
       {
         to: '/admin/system-settings',
         label: 'Cấu hình tham số hệ thống',
         icon: Settings,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN'],
+        module: 'SETTINGS',
       },
-      { to: '/admin/analytics', label: 'Thống kê & Báo cáo', icon: BarChart3 },
+      { to: '/admin/analytics', label: 'Thống kê & Báo cáo', icon: BarChart3, module: 'SETTINGS' },
       {
         to: '/admin/audit',
         label: 'Nhật ký kiểm toán an toàn',
         icon: ScrollText,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_SOTTTT_ADMIN'],
+        module: 'USERS',
       },
       {
         to: '/admin/gateway',
         label: 'Chẩn đoán kết nối Gateway',
         icon: Radio,
-        allowedRoles: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'ROLE_VNPT_ENGINEER'],
+        module: 'DEVICES',
       },
     ],
   },
@@ -193,6 +195,14 @@ export const AdminLayout: React.FC = () => {
   const [gatewayStatus, setGatewayStatus] = useState<GatewayStatusDto | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString('vi-VN'));
+  const [permissions, setPermissions] = useState<RolePermissionDto[]>(() => {
+    try {
+      const cached = localStorage.getItem('wifi_rbac_permissions');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
 
   useEffect(() => {
     if (!authApi.isAuthenticated()) {
@@ -208,6 +218,26 @@ export const AdminLayout: React.FC = () => {
       .then(setGatewayStatus)
       .catch(console.error);
 
+    const loadPermissions = async () => {
+      try {
+        const perms = await adminApi.getRolePermissions();
+        if (perms && Array.isArray(perms)) {
+          setPermissions(perms);
+          localStorage.setItem('wifi_rbac_permissions', JSON.stringify(perms));
+        }
+      } catch (err) {
+        console.warn('Could not load dynamic role permissions:', err);
+      }
+    };
+
+    loadPermissions();
+
+    const handlePermissionsUpdated = () => {
+      loadPermissions();
+    };
+
+    window.addEventListener('rbac-permissions-updated', handlePermissionsUpdated);
+
     const gatewayTimer = setInterval(() => {
       adminApi.getGatewayStatus().then(setGatewayStatus).catch(() => {});
     }, 30000);
@@ -217,6 +247,7 @@ export const AdminLayout: React.FC = () => {
     }, 1000);
 
     return () => {
+      window.removeEventListener('rbac-permissions-updated', handlePermissionsUpdated);
       clearInterval(gatewayTimer);
       clearInterval(clockTimer);
     };
@@ -272,13 +303,40 @@ export const AdminLayout: React.FC = () => {
   const roleInfo = getRoleBadge(currentUser?.role);
   const userRole = currentUser?.role || 'ROLE_SUPER_ADMIN';
 
-  // Dynamically filter navigation items based on current officer's RBAC role
+  // Check if current user has permission to view a specific module
+  const hasModulePermission = (module?: RbacModule): boolean => {
+    if (!module) return true;
+    if (userRole === 'ROLE_SUPER_ADMIN' || userRole === 'ROLE_ADMIN') return true;
+
+    if (permissions && permissions.length > 0) {
+      const match = permissions.find((p) => p.roleName === userRole && p.moduleName === module);
+      if (match) {
+        return Boolean(match.canView);
+      }
+    }
+
+    // Default fallback if permissions have not synced from server yet
+    switch (module) {
+      case 'LOCATIONS':
+        return true;
+      case 'DEVICES':
+        return userRole === 'ROLE_VNPT_ENGINEER' || userRole === 'ROLE_SOTTTT_ADMIN';
+      case 'CAMPAIGNS':
+        return userRole === 'ROLE_SOTTTT_ADMIN' || userRole === 'ROLE_DISTRICT_OFFICER' || userRole === 'ROLE_COMMUNE_OFFICER';
+      case 'INCIDENTS':
+        return userRole === 'ROLE_VNPT_ENGINEER' || userRole === 'ROLE_SOTTTT_ADMIN' || userRole === 'ROLE_DISTRICT_OFFICER';
+      case 'USERS':
+        return userRole === 'ROLE_SOTTTT_ADMIN';
+      case 'SETTINGS':
+        return userRole === 'ROLE_SOTTTT_ADMIN' || userRole === 'ROLE_DISTRICT_OFFICER';
+      default:
+        return true;
+    }
+  };
+
+  // Dynamically filter navigation items based on current officer's RBAC role permissions
   const filteredNavGroups = NAV_GROUPS.map((group) => {
-    const visibleItems = group.items.filter((item) => {
-      if (!item.allowedRoles) return true;
-      if (userRole === 'ROLE_SUPER_ADMIN' || userRole === 'ROLE_ADMIN') return true;
-      return item.allowedRoles.includes(userRole);
-    });
+    const visibleItems = group.items.filter((item) => hasModulePermission(item.module));
     return {
       ...group,
       items: visibleItems,
@@ -294,8 +352,7 @@ export const AdminLayout: React.FC = () => {
           ? location.pathname === item.to
           : location.pathname === item.to || location.pathname.startsWith(`${item.to}/`);
         if (matches) {
-          if (!item.allowedRoles) return true;
-          return item.allowedRoles.includes(userRole);
+          return hasModulePermission(item.module);
         }
       }
     }

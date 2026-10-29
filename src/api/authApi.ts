@@ -21,6 +21,7 @@ export const authApi = {
   logout: () => {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
+    localStorage.removeItem('wifi_rbac_permissions');
   },
 
   isAuthenticated: (): boolean => {

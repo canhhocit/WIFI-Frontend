@@ -293,11 +293,9 @@ export const PortalPage: React.FC = () => {
             <div className="p-3 bg-slate-50 border border-slate-200 rounded-sm space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                  <Smartphone className="w-3.5 h-3.5 text-[#004b87]" /> Xác thực số điện thoại
+                  <Smartphone className="w-3.5 h-3.5 text-[#004b87]" /> Xác thực số điện thoại <div className="text-red-600">(*)</div>
                 </span>
-                <span className="text-[10px] font-mono text-slate-600 bg-slate-200/80 px-1.5 py-0.5 rounded-sm">
-                  SMS Brandname
-                </span>
+                
               </div>
 
               {!otpSent ? (
@@ -306,7 +304,7 @@ export const PortalPage: React.FC = () => {
                     type="tel"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="Nhập SĐT (VD: 0912345678)"
+                    placeholder="Nhập SĐT "
                     className="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:border-[#004b87] focus:ring-1 focus:ring-[#004b87] font-mono"
                   />
                   <button
@@ -423,13 +421,13 @@ export const PortalPage: React.FC = () => {
           {/* Citizen Name (Optional) */}
           <div>
             <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Họ tên công dân <span className="text-slate-400 font-normal lowercase">(không bắt buộc)</span>
+              Họ tên <span className="text-slate-400 font-normal lowercase"></span>
             </label>
             <input
               type="text"
               value={guestName}
               onChange={(e) => setGuestName(e.target.value)}
-              placeholder="vd: Nguyễn Văn A"
+              placeholder="Tên của bạn"
               className="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:border-[#004b87] focus:ring-1 focus:ring-[#004b87]"
             />
           </div>
@@ -481,7 +479,7 @@ export const PortalPage: React.FC = () => {
         {/* Footer */}
         <div className="px-4 py-2.5 bg-slate-100 border-t border-slate-200 text-center text-[10px] text-slate-500 space-y-0.5">
           <div className="font-semibold text-slate-700">Sở Thông tin và Truyền thông Thành phố Hải Phòng</div>
-          <div>Hạ tầng viễn thông phối hợp vận hành cùng VNPT Hải Phòng • Hỗ trợ: 1800 1166</div>
+          <div>Hạ tầng viễn thông phối hợp vận hành cùng Viettel • Hỗ trợ: 1800 1166</div>
         </div>
       </div>
     </div>

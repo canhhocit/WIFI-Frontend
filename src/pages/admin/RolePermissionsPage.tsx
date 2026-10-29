@@ -42,7 +42,12 @@ export const RolePermissionsPage: React.FC = () => {
     try {
       setLoading(true);
       const data = await adminApi.getRolePermissions();
-      setPermissions(data || []);
+      if (data && Array.isArray(data)) {
+        setPermissions(data);
+        localStorage.setItem('wifi_rbac_permissions', JSON.stringify(data));
+      } else {
+        setPermissions([]);
+      }
     } catch (err: any) {
       setErrorMsg(err.message || 'Lỗi khi tải ma trận phân quyền');
     } finally {
@@ -115,6 +120,14 @@ export const RolePermissionsPage: React.FC = () => {
         });
       }
       setSuccessMsg(`Cập nhật thành công quyền hạn cho vai trò: ${selectedRole}`);
+
+      // Re-fetch updated permissions from server, persist to localStorage, and trigger menu re-render
+      const updatedPerms = await adminApi.getRolePermissions();
+      if (updatedPerms && Array.isArray(updatedPerms)) {
+        setPermissions(updatedPerms);
+        localStorage.setItem('wifi_rbac_permissions', JSON.stringify(updatedPerms));
+        window.dispatchEvent(new Event('rbac-permissions-updated'));
+      }
     } catch (err: any) {
       setErrorMsg(err.message || 'Lỗi khi lưu ma trận phân quyền');
     } finally {
