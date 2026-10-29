@@ -213,7 +213,7 @@ export const PortalPage: React.FC = () => {
       <div className="bg-white rounded border border-slate-300 shadow-sm max-w-md w-full overflow-hidden">
         {/* Official Header */}
         <div className="bg-[#a81c1c] text-white text-center p-4 border-b border-[#881313] relative">
-          <div className="inline-flex items-center justify-center w-7 h-7 rounded bg-red-800 text-yellow-300 font-bold text-xs mb-1.5 border border-amber-300/40 shadow-xs">
+          <div className="inline-flex items-center justify-center w-7 h-7 aspect-square rounded-sm bg-red-800 text-yellow-300 font-bold text-xs mb-1.5 border border-amber-300/40 shadow-xs">
             ★
           </div>
           <div className="text-[10px] font-bold tracking-widest text-yellow-300 uppercase">

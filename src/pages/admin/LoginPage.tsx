@@ -37,7 +37,7 @@ export const LoginPage: React.FC = () => {
       <div className="w-full max-w-md">
         {/* National Emblem & Department Banner */}
         <div className="text-center mb-5 space-y-1">
-          <div className="inline-flex items-center justify-center w-11 h-11 rounded bg-red-700 text-yellow-300 font-bold text-lg border border-amber-300/40 mb-1.5 shadow-xs">
+          <div className="inline-flex items-center justify-center w-14 h-14 aspect-square rounded-sm bg-[#a81c1c] text-yellow-300 font-bold text-base border border-amber-300/40 mb-1.5 shadow-xs">
             ★ HP
           </div>
           <div className="text-[11px] font-bold tracking-widest text-slate-800 uppercase">

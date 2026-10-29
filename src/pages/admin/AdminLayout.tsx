@@ -180,7 +180,7 @@ export const AdminLayout: React.FC = () => {
         {/* Department / Brand Banner */}
         <div className="p-4 border-b border-[#18365a] bg-[#091a30]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded bg-[#a81c1c] border border-yellow-400/50 text-yellow-300 flex items-center justify-center font-bold text-sm shadow-xs flex-shrink-0">
+            <div className="w-9 h-9 aspect-square rounded-sm bg-[#a81c1c] border border-yellow-400/50 text-yellow-300 flex items-center justify-center font-bold text-sm shadow-xs flex-shrink-0">
               ★ HP
             </div>
             <div className="overflow-hidden">
