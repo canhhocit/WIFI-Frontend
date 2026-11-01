@@ -231,13 +231,17 @@ export const PortalPage: React.FC = () => {
     campaign?.bannerUrl ||
     portalData?.location.promoBannerUrl ||
     '/banners/haiphong_culture_house.jpg';
+  const backgroundWallpaperUrl =
+    portalData?.location.backgroundImageUrl ||
+    portalData?.portalTemplate?.backgroundImageUrl ||
+    '/banners/haiphong_city_bg.jpg';
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center p-3 sm:p-5 text-slate-900 font-sans">
       {/* Official City Architectural Wallpaper Background */}
       <div
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/banners/haiphong_city_bg.jpg')" }}
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
+        style={{ backgroundImage: `url('${backgroundWallpaperUrl}')` }}
       />
       {/* GovTech Dark Overlay with Restrained Glassmorphism */}
       <div className="fixed inset-0 bg-gradient-to-b from-slate-950/80 via-slate-900/75 to-slate-950/85 backdrop-blur-[2px]" />

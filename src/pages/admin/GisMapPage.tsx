@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { adminApi } from '../../api/adminApi';
 import { GisLocationPinDto, AdminUnitDto } from '../../types/models';
+import { LeafletGisMap } from '../../components/gis/LeafletGisMap';
 import {
   MapPin,
   Wifi,
@@ -10,8 +11,6 @@ import {
   Search,
   Filter,
   Layers,
-  ZoomIn,
-  ZoomOut,
   RefreshCw,
   ExternalLink,
   PlusCircle,
@@ -30,7 +29,6 @@ export const GisMapPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedPin, setSelectedPin] = useState<GisLocationPinDto | null>(null);
   const [heatmapEnabled, setHeatmapEnabled] = useState<boolean>(false);
-  const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
 
@@ -75,16 +73,6 @@ export const GisMapPage: React.FC = () => {
     const activeSessions = pins.reduce((acc, p) => acc + (p.activeSessionsCount || 0), 0);
     return { total, online, degraded, offline, activeSessions };
   }, [pins]);
-
-  // Hải Phòng Bounding Box: minLat: 20.65, maxLat: 21.05, minLng: 106.50, maxLng: 107.15
-  const projectCoordinates = (lat?: number, lng?: number) => {
-    if (!lat || !lng) return { x: 50, y: 50 };
-    const minLat = 20.65, maxLat = 21.05;
-    const minLng = 106.50, maxLng = 107.15;
-    const x = Math.max(5, Math.min(95, ((lng - minLng) / (maxLng - minLng)) * 100));
-    const y = Math.max(5, Math.min(95, (1 - (lat - minLat) / (maxLat - minLat)) * 100));
-    return { x, y };
-  };
 
   return (
     <div className="space-y-6">
@@ -234,138 +222,20 @@ export const GisMapPage: React.FC = () => {
             <Layers className="w-3.5 h-3.5" />
             {heatmapEnabled ? 'Tắt Heatmap' : 'Bật Heatmap mật độ'}
           </button>
-
-          {viewMode === 'map' && (
-            <div className="inline-flex rounded-sm border border-gray-300 bg-white">
-              <button
-                onClick={() => setZoomLevel((z) => Math.min(2.5, z + 0.25))}
-                className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-l-lg border-r border-gray-200"
-                title="Phóng to"
-              >
-                <ZoomIn className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setZoomLevel((z) => Math.max(0.75, z - 0.25))}
-                className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-r-lg"
-                title="Thu nhỏ"
-              >
-                <ZoomOut className="w-4 h-4" />
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
       {/* Main Map / List Display */}
       {viewMode === 'map' ? (
-        <div className="relative bg-slate-900 rounded border border-gray-300 shadow-inner overflow-hidden min-h-[580px] h-[650px] flex items-center justify-center">
-          {/* Map Vector Grid & Sea styling */}
-          <div
-            className="absolute inset-0 opacity-20 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"
+        <div className="relative bg-slate-900 rounded border border-gray-300 shadow-inner overflow-hidden min-h-[580px] h-[650px]">
+          {/* Real Interactive Leaflet GIS Map with Multi-tile support */}
+          <LeafletGisMap
+            pins={filteredPins}
+            selectedPin={selectedPin}
+            onSelectPin={setSelectedPin}
+            heatmapEnabled={heatmapEnabled}
+            selectedDistrict={selectedDistrict}
           />
-
-          {/* Interactive Zoomable Map Canvas */}
-          <div
-            className="relative w-full h-full transition-transform duration-300 ease-out flex items-center justify-center"
-            style={{ transform: `scale(${zoomLevel})` }}
-          >
-            {/* Hai Phong Stylized Region Map Outline */}
-            <svg
-              className="absolute w-[90%] h-[90%] opacity-40 pointer-events-none"
-              viewBox="0 0 1000 800"
-              fill="none"
-              stroke="#0284c7"
-              strokeWidth="2"
-            >
-              {/* Mainland Hai Phong Path Contour */}
-              <path
-                d="M 220 280 Q 320 200 480 230 T 680 320 Q 740 450 620 620 T 360 680 Q 210 590 200 420 Z"
-                fill="#0369a1"
-                fillOpacity="0.15"
-                strokeDasharray="4 4"
-              />
-              {/* Cat Ba Island outline */}
-              <path
-                d="M 750 420 Q 840 400 860 480 T 790 560 Q 740 520 750 420 Z"
-                fill="#0284c7"
-                fillOpacity="0.2"
-              />
-              {/* Bach Long Vi Island outline */}
-              <circle cx="890" cy="710" r="14" fill="#0284c7" fillOpacity="0.3" stroke="#38bdf8" />
-              <text x="880" y="740" fill="#94a3b8" fontSize="12" fontFamily="sans-serif">
-                Bạch Long Vĩ
-              </text>
-              <text x="780" y="390" fill="#94a3b8" fontSize="12" fontFamily="sans-serif">
-                H. Đảo Cát Hải
-              </text>
-              <text x="440" y="440" fill="#e2e8f0" fontSize="18" fontWeight="600" opacity="0.4">
-                THÀNH PHỐ HẢI PHÒNG
-              </text>
-            </svg>
-
-            {/* Heatmap Layer if activated */}
-            {heatmapEnabled && (
-              <div className="absolute inset-0 pointer-events-none">
-                {filteredPins.map((pin) => {
-                  const pos = projectCoordinates(pin.latitude, pin.longitude);
-                  const intensity = Math.min(1, Math.max(0.3, pin.activeSessionsCount / 50));
-                  return (
-                    <div
-                      key={`heat-${pin.id}`}
-                      className="absolute rounded-full blur-xl pointer-events-none transform -translate-x-1/2 -translate-y-1/2"
-                      style={{
-                        left: `${pos.x}%`,
-                        top: `${pos.y}%`,
-                        width: `${60 + pin.activeSessionsCount * 2}px`,
-                        height: `${60 + pin.activeSessionsCount * 2}px`,
-                        backgroundColor: `rgba(245, 158, 11, ${intensity * 0.4})`,
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Location Pin Markers */}
-            {filteredPins.map((pin) => {
-              const pos = projectCoordinates(pin.latitude, pin.longitude);
-              const isSelected = selectedPin?.id === pin.id;
-
-              let markerColor = 'bg-emerald-500 border-emerald-300';
-              let pulseColor = 'bg-emerald-400';
-              if (pin.status === 'OFFLINE') {
-                markerColor = 'bg-rose-600 border-rose-300';
-                pulseColor = 'bg-rose-500';
-              } else if (pin.status === 'DEGRADED') {
-                markerColor = 'bg-amber-500 border-amber-300';
-                pulseColor = 'bg-amber-400';
-              }
-
-              return (
-                <div
-                  key={pin.id}
-                  onClick={() => setSelectedPin(pin)}
-                  className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10 transition-transform ${
-                    isSelected ? 'scale-150 z-30' : 'hover:scale-125'
-                  }`}
-                  style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-                >
-                  {/* Pulse Effect for degraded or offline */}
-                  {pin.status !== 'ONLINE' && (
-                    <span
-                      className={`absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping ${pulseColor}`}
-                    />
-                  )}
-                  <div
-                    className={`w-4 h-4 rounded-full border-2 shadow-lg flex items-center justify-center text-[8px] font-bold text-white ${markerColor}`}
-                    title={`${pin.name} (${pin.status})`}
-                  >
-                    {pin.activeSessionsCount > 0 ? pin.activeSessionsCount : ''}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
 
           {/* Interactive Map Legend */}
           <div className="absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-sm p-3 text-xs text-slate-200 shadow-xl pointer-events-auto">

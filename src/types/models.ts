@@ -13,6 +13,7 @@ export interface LocationDto {
   promoTitle?: string;
   promoContent?: string;
   promoBannerUrl?: string;
+  backgroundImageUrl?: string;
   promoActionUrl?: string;
   adminUnitId?: number;
   adminUnitName?: string;
@@ -110,6 +111,7 @@ export interface CreateLocationRequest {
   promoTitle?: string;
   promoContent?: string;
   promoBannerUrl?: string;
+  backgroundImageUrl?: string;
   promoActionUrl?: string;
   active: boolean;
 }
@@ -133,6 +135,7 @@ export interface UpdateLocationRequest {
   promoTitle?: string;
   promoContent?: string;
   promoBannerUrl?: string;
+  backgroundImageUrl?: string;
   promoActionUrl?: string;
   active?: boolean;
 }
@@ -422,6 +425,7 @@ export interface PortalTemplateDto {
   templateType: 'DEFAULT' | 'CULTURAL' | 'BANNER_SURVEY' | 'VIDEO_AD';
   themeColor: string;
   backgroundColor: string;
+  backgroundImageUrl?: string;
   logoUrl?: string;
   bannerUrl?: string;
   title: string;

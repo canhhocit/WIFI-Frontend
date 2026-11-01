@@ -59,6 +59,7 @@ export const LocationsPage: React.FC = () => {
     promoTitle: '',
     promoContent: '',
     promoBannerUrl: '',
+    backgroundImageUrl: '',
     promoActionUrl: '',
     active: true,
   });
@@ -108,6 +109,7 @@ export const LocationsPage: React.FC = () => {
       promoTitle: '',
       promoContent: '',
       promoBannerUrl: '',
+      backgroundImageUrl: '',
       promoActionUrl: '',
       active: true,
     });
@@ -134,6 +136,7 @@ export const LocationsPage: React.FC = () => {
       promoTitle: loc.promoTitle || '',
       promoContent: loc.promoContent || '',
       promoBannerUrl: loc.promoBannerUrl || '',
+      backgroundImageUrl: loc.backgroundImageUrl || '',
       promoActionUrl: loc.promoActionUrl || '',
       active: loc.active,
     });
@@ -163,6 +166,7 @@ export const LocationsPage: React.FC = () => {
         promoTitle: formData.promoTitle.trim() || undefined,
         promoContent: formData.promoContent.trim() || undefined,
         promoBannerUrl: formData.promoBannerUrl.trim() || undefined,
+        backgroundImageUrl: formData.backgroundImageUrl.trim() || undefined,
         promoActionUrl: formData.promoActionUrl.trim() || undefined,
         active: formData.active,
       };
@@ -201,6 +205,7 @@ export const LocationsPage: React.FC = () => {
         promoTitle: formData.promoTitle.trim() || undefined,
         promoContent: formData.promoContent.trim() || undefined,
         promoBannerUrl: formData.promoBannerUrl.trim() || undefined,
+        backgroundImageUrl: formData.backgroundImageUrl.trim() || undefined,
         promoActionUrl: formData.promoActionUrl.trim() || undefined,
         active: formData.active,
       };
@@ -602,7 +607,15 @@ export const LocationsPage: React.FC = () => {
               value={formData.promoBannerUrl}
               onChange={(url) => setFormData({ ...formData, promoBannerUrl: url })}
               label="Ảnh thực tế riêng của Nhà văn hóa (Banner)"
-              helperText="Tải ảnh Nhà văn hóa từ máy tính hoặc nhập liên kết URL ảnh"
+              helperText="Tải ảnh cổng hoặc hội trường Nhà văn hóa từ máy tính hoặc nhập liên kết ảnh"
+              category="banners"
+            />
+
+            <ImageUploadInput
+              value={formData.backgroundImageUrl}
+              onChange={(url) => setFormData({ ...formData, backgroundImageUrl: url })}
+              label="Hình nền Cổng chào riêng của điểm này (Background Wallpaper)"
+              helperText="Tải ảnh nền từ máy tính hoặc dán URL (để trống nếu dùng nền chung toàn TP)"
               category="banners"
             />
 
@@ -823,7 +836,15 @@ export const LocationsPage: React.FC = () => {
               value={formData.promoBannerUrl}
               onChange={(url) => setFormData({ ...formData, promoBannerUrl: url })}
               label="Ảnh thực tế riêng của Nhà văn hóa (Banner)"
-              helperText="Tải ảnh Nhà văn hóa từ máy tính hoặc nhập liên kết URL ảnh"
+              helperText="Tải ảnh cổng hoặc hội trường Nhà văn hóa từ máy tính hoặc nhập liên kết ảnh"
+              category="banners"
+            />
+
+            <ImageUploadInput
+              value={formData.backgroundImageUrl}
+              onChange={(url) => setFormData({ ...formData, backgroundImageUrl: url })}
+              label="Hình nền Cổng chào riêng của điểm này (Background Wallpaper)"
+              helperText="Tải ảnh nền từ máy tính hoặc dán URL (để trống nếu dùng nền chung toàn TP)"
               category="banners"
             />
 
