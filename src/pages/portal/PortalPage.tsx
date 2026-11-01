@@ -183,20 +183,32 @@ export const PortalPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white">
-        <div className="w-12 h-12 rounded-xs bg-[#a81c1c] text-yellow-300 font-bold flex items-center justify-center text-xl shadow-lg mb-4 border border-yellow-400/30">
-          ★
+      <div className="relative min-h-screen flex flex-col items-center justify-center p-4 text-white">
+        <div
+          className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/banners/haiphong_city_bg.jpg')" }}
+        />
+        <div className="fixed inset-0 bg-gradient-to-b from-slate-950/85 via-slate-900/80 to-slate-950/90 backdrop-blur-[2px]" />
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="w-12 h-12 rounded-sm bg-[#a81c1c] text-yellow-300 font-bold flex items-center justify-center text-xl shadow-lg mb-4 border border-yellow-400/30">
+            ★
+          </div>
+          <Loader2 className="w-6 h-6 animate-spin text-amber-300 mb-2" />
+          <p className="text-xs text-slate-200 font-medium tracking-wide">Đang tải Cổng Wi-Fi Nhà văn hóa Hải Phòng...</p>
         </div>
-        <Loader2 className="w-6 h-6 animate-spin text-blue-400 mb-2" />
-        <p className="text-xs text-slate-300 font-medium">Đang tải Cổng Wi-Fi Nhà văn hóa Hải Phòng...</p>
       </div>
     );
   }
 
   if (error && !portalData) {
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
-        <div className="bg-white p-6 rounded border border-slate-300 text-center max-w-sm w-full shadow-sm">
+      <div className="relative min-h-screen flex items-center justify-center p-4">
+        <div
+          className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/banners/haiphong_city_bg.jpg')" }}
+        />
+        <div className="fixed inset-0 bg-gradient-to-b from-slate-950/85 via-slate-900/80 to-slate-950/90 backdrop-blur-[2px]" />
+        <div className="relative z-10 bg-white p-6 rounded-lg border border-slate-300/80 text-center max-w-sm w-full shadow-2xl">
           <div className="w-10 h-10 bg-red-50 text-red-600 rounded flex items-center justify-center mx-auto mb-3">
             <Wifi className="w-5 h-5" />
           </div>
@@ -221,8 +233,16 @@ export const PortalPage: React.FC = () => {
     '/banners/haiphong_culture_house.jpg';
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-3 sm:p-5 text-slate-900 font-sans">
-      <div className="bg-white rounded border border-slate-300 shadow-md max-w-md w-full overflow-hidden">
+    <div className="relative min-h-screen flex flex-col items-center justify-center p-3 sm:p-5 text-slate-900 font-sans">
+      {/* Official City Architectural Wallpaper Background */}
+      <div
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/banners/haiphong_city_bg.jpg')" }}
+      />
+      {/* GovTech Dark Overlay with Restrained Glassmorphism */}
+      <div className="fixed inset-0 bg-gradient-to-b from-slate-950/80 via-slate-900/75 to-slate-950/85 backdrop-blur-[2px]" />
+
+      <div className="relative z-10 bg-white rounded-lg border border-slate-300/80 shadow-2xl max-w-md w-full overflow-hidden">
         {/* Official Government Header */}
         <div className="bg-[#a81c1c] text-white text-center p-4 border-b border-[#881313] relative">
           <div className="inline-flex items-center justify-center w-7 h-7 aspect-square rounded-sm bg-red-800 text-yellow-300 font-bold text-xs mb-1.5 border border-amber-300/40 shadow-xs">
@@ -507,6 +527,43 @@ export const PortalPage: React.FC = () => {
         <div className="px-4 py-2.5 bg-slate-100 border-t border-slate-200 text-center text-[10px] text-slate-500 space-y-0.5">
           <div className="font-semibold text-slate-700">Sở Thông tin và Truyền thông Thành phố Hải Phòng</div>
           <div>Hạ tầng viễn thông phối hợp vận hành cùng VNPT Hải Phòng • Hỗ trợ: 1800 1166</div>
+        </div>
+      </div>
+
+      {/* Demo: Bộ chuyển nhanh giao diện các Nhà văn hóa */}
+      <div className="relative z-10 mt-3 max-w-md w-full bg-slate-900/90 backdrop-blur-md rounded-lg p-2.5 border border-white/20 text-white shadow-xl">
+        <div className="flex items-center justify-between mb-1.5 px-0.5">
+          <span className="text-[10.5px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
+            <MapPin className="w-3.5 h-3.5 text-amber-300" /> Trải nghiệm hình ảnh & thông tin từng điểm:
+          </span>
+          <span className="text-[9.5px] text-slate-400 font-mono">1.584 Nhà văn hóa</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          {[
+            { slug: 'hp-hb-nvh01', name: 'Hồng Bàng', sub: 'TDP số 1' },
+            { slug: 'hp-nq-nvh02', name: 'Ngô Quyền', sub: 'KDC Máy Tơ' },
+            { slug: 'hp-ch-nvh03', name: 'Cát Hải', sub: 'TT Cát Bà' },
+            { slug: 'hp-tn-nvh04', name: 'Thủy Nguyên', sub: 'TT Núi Đèo' },
+          ].map((item) => {
+            const isActive =
+              portalData?.location.slug === item.slug ||
+              (!locationParam && item.slug === 'hp-hb-nvh01');
+            return (
+              <button
+                key={item.slug}
+                type="button"
+                onClick={() => navigate(`/portal?location=${item.slug}`)}
+                className={`px-2 py-1.5 rounded text-center transition cursor-pointer flex flex-col items-center justify-center border ${
+                  isActive
+                    ? 'bg-[#004b87] text-white border-blue-400 font-bold shadow-md ring-1 ring-blue-300'
+                    : 'bg-white/10 hover:bg-white/20 text-slate-200 border-white/10 hover:border-white/25 text-[11px]'
+                }`}
+              >
+                <span className="text-xs font-semibold leading-tight">{item.name}</span>
+                <span className="text-[9px] opacity-75">{item.sub}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

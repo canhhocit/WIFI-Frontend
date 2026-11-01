@@ -113,8 +113,13 @@ export const PortalStatusPage: React.FC = () => {
 
   if (error && !session) {
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 font-sans">
-        <div className="bg-white p-6 rounded border border-slate-300 text-center max-w-sm w-full shadow-sm">
+      <div className="relative min-h-screen flex items-center justify-center p-4 font-sans">
+        <div
+          className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/banners/haiphong_city_bg.jpg')" }}
+        />
+        <div className="fixed inset-0 bg-gradient-to-b from-slate-950/85 via-slate-900/80 to-slate-950/90 backdrop-blur-[2px]" />
+        <div className="relative z-10 bg-white p-6 rounded-lg border border-slate-300 text-center max-w-sm w-full shadow-2xl">
           <AlertCircle className="w-10 h-10 text-red-600 mx-auto mb-2" />
           <h2 className="text-base font-bold text-slate-900 mb-1">Không tìm thấy phiên</h2>
           <p className="text-xs text-slate-500 mb-4">{error}</p>
@@ -134,8 +139,13 @@ export const PortalStatusPage: React.FC = () => {
   // If session is disconnected or expired, show status summary card
   if (!isAuthorized) {
     return (
-      <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4 text-slate-900 font-sans">
-        <div className="bg-white rounded border border-slate-300 shadow-sm max-w-sm w-full overflow-hidden">
+      <div className="relative min-h-screen flex flex-col items-center justify-center p-4 text-slate-900 font-sans">
+        <div
+          className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/banners/haiphong_city_bg.jpg')" }}
+        />
+        <div className="fixed inset-0 bg-gradient-to-b from-slate-950/85 via-slate-900/80 to-slate-950/90 backdrop-blur-[2px]" />
+        <div className="relative z-10 bg-white rounded-lg border border-slate-300 shadow-2xl max-w-sm w-full overflow-hidden">
           <div className="h-1 bg-[#a81c1c] w-full" />
           <div className="p-6 text-center space-y-3">
             <div className="w-12 h-12 rounded bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center mx-auto">

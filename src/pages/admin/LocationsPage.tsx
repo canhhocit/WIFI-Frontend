@@ -394,10 +394,11 @@ export const LocationsPage: React.FC = () => {
                         href={`/portal?location=${loc.slug}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="p-1 text-slate-500 hover:text-[#004b87] hover:bg-slate-100 rounded-sm inline-block transition"
-                        title="Mở Cổng khách của điểm này"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#004b87] bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition mr-1"
+                        title="Xem trang chào người dân của điểm này"
                       >
-                        <ExternalLink className="w-4 h-4" />
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Xem Cổng chào</span>
                       </a>
                       <button
                         onClick={() => handleOpenEdit(loc)}
