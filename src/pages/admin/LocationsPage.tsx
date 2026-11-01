@@ -590,6 +590,58 @@ export const LocationsPage: React.FC = () => {
             />
           </div>
 
+          {/* Tùy biến hình ảnh & nội dung riêng cho điểm này */}
+          <div className="p-3 bg-blue-50/60 border border-blue-200/80 rounded-sm space-y-3">
+            <div className="font-bold text-[#004b87] text-xs flex items-center justify-between border-b border-blue-200 pb-1.5">
+              <span>Nội Dung & Hình Ảnh Hiển Thị Riêng Cho Điểm Này</span>
+              <span className="text-[10px] text-slate-500 font-normal">Tùy biến từng Nhà văn hóa</span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                URL Hình ảnh riêng của điểm (Banner / Ảnh chụp Nhà văn hóa)
+              </label>
+              <input
+                type="text"
+                value={formData.promoBannerUrl}
+                onChange={(e) => setFormData({ ...formData, promoBannerUrl: e.target.value })}
+                placeholder="Ví dụ: /banners/haiphong_culture_house.jpg hoặc https://..."
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] bg-white"
+              />
+              <p className="text-[10.5px] text-slate-500 mt-0.5">
+                Ảnh đại diện thực tế riêng của Nhà văn hóa này sẽ hiển thị trên Cổng chào.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Tiêu đề thông báo / Bảng tin riêng của thôn / tổ dân phố
+                </label>
+                <input
+                  type="text"
+                  value={formData.promoTitle}
+                  onChange={(e) => setFormData({ ...formData, promoTitle: e.target.value })}
+                  placeholder="Ví dụ: Chuyển đổi số cộng đồng - Phường Hoàng Văn Thụ"
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] bg-white font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Nội dung thông tin / Bảng tin chuyển đổi số địa phương
+                </label>
+                <textarea
+                  rows={2}
+                  value={formData.promoContent}
+                  onChange={(e) => setFormData({ ...formData, promoContent: e.target.value })}
+                  placeholder="Ví dụ: Tổ công nghệ số cộng đồng trực hỗ trợ người dân kích hoạt VNeID mức 2 và nộp hồ sơ dịch vụ công trực tuyến từ 8h - 17h..."
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] bg-white leading-relaxed"
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="flex items-center gap-2 pt-1">
             <input
               id="createActive"
@@ -765,6 +817,58 @@ export const LocationsPage: React.FC = () => {
               className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] leading-relaxed"
               required
             />
+          </div>
+
+          {/* Tùy biến hình ảnh & nội dung riêng cho điểm này */}
+          <div className="p-3 bg-blue-50/60 border border-blue-200/80 rounded-sm space-y-3">
+            <div className="font-bold text-[#004b87] text-xs flex items-center justify-between border-b border-blue-200 pb-1.5">
+              <span>Nội Dung & Hình Ảnh Hiển Thị Riêng Cho Điểm Này</span>
+              <span className="text-[10px] text-slate-500 font-normal">Tùy biến từng Nhà văn hóa</span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                URL Hình ảnh riêng của điểm (Banner / Ảnh chụp Nhà văn hóa)
+              </label>
+              <input
+                type="text"
+                value={formData.promoBannerUrl}
+                onChange={(e) => setFormData({ ...formData, promoBannerUrl: e.target.value })}
+                placeholder="Ví dụ: /banners/haiphong_culture_house.jpg hoặc https://..."
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] bg-white"
+              />
+              <p className="text-[10.5px] text-slate-500 mt-0.5">
+                Ảnh đại diện thực tế riêng của Nhà văn hóa này sẽ hiển thị trên Cổng chào.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Tiêu đề thông báo / Bảng tin riêng của thôn / tổ dân phố
+                </label>
+                <input
+                  type="text"
+                  value={formData.promoTitle}
+                  onChange={(e) => setFormData({ ...formData, promoTitle: e.target.value })}
+                  placeholder="Ví dụ: Chuyển đổi số cộng đồng - Phường Hoàng Văn Thụ"
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] bg-white font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Nội dung thông tin / Bảng tin chuyển đổi số địa phương
+                </label>
+                <textarea
+                  rows={2}
+                  value={formData.promoContent}
+                  onChange={(e) => setFormData({ ...formData, promoContent: e.target.value })}
+                  placeholder="Ví dụ: Tổ công nghệ số cộng đồng trực hỗ trợ người dân kích hoạt VNeID mức 2 và nộp hồ sơ dịch vụ công trực tuyến từ 8h - 17h..."
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] bg-white leading-relaxed"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-2 pt-1">

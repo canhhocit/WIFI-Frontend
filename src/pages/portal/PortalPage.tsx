@@ -276,32 +276,68 @@ export const PortalPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Featured Local Imagery Block (Hình ảnh địa phương đặc trưng) */}
+        {/* 1. KHỐI NỘI DUNG THÔNG TIN HIỂN THỊ ĐẦU TIÊN (Content-First) */}
+        <div className="p-4 bg-gradient-to-b from-amber-50/60 via-white to-slate-50 border-b border-slate-200 space-y-3">
+          {/* Lời chào mừng chính thức của điểm phát */}
+          <div>
+            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xs bg-[#a81c1c] text-yellow-300 text-[10px] font-bold uppercase tracking-wider mb-1">
+              <Sparkles className="w-3 h-3" />
+              <span>Chính quyền số cơ sở</span>
+            </div>
+            <h2 className="text-sm font-extrabold text-slate-900 leading-snug">
+              {portalData?.location.welcomeMessage || `Chào mừng Nhân dân đến với ${portalData?.location.name || 'Nhà văn hóa'}`}
+            </h2>
+            <p className="text-[11px] text-slate-600 flex items-center gap-1 mt-1">
+              <MapPin className="w-3 h-3 text-[#a81c1c] flex-shrink-0" />
+              <span>{portalData?.location.address || 'Thành phố Hải Phòng'}</span>
+            </p>
+          </div>
+
+          {/* Bảng tin tuyên truyền & Chuyển đổi số riêng của điểm */}
+          {(portalData?.location.promoTitle || portalData?.location.promoContent) && (
+            <div className="p-3 bg-white rounded border border-amber-300/80 shadow-xs space-y-1.5">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-[#a81c1c]">
+                <Megaphone className="w-3.5 h-3.5 text-[#a81c1c] flex-shrink-0" />
+                <span>{portalData.location.promoTitle || 'Bản Tin Chuyển Đổi Số Địa Phương'}</span>
+              </div>
+              {portalData.location.promoContent && (
+                <p className="text-[11.5px] text-slate-700 leading-relaxed font-sans">
+                  {portalData.location.promoContent}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Hướng dẫn Dịch vụ hành chính công Thành phố */}
+          <div className="p-2.5 bg-blue-50/80 rounded border border-blue-200/80 flex items-start gap-2 text-slate-700">
+            <Landmark className="w-4 h-4 text-[#004b87] flex-shrink-0 mt-0.5" />
+            <div className="text-[11px] leading-relaxed">
+              <span className="font-bold text-[#004b87]">Dịch vụ công trực tuyến:</span> Sau khi kết nối Wi-Fi, hệ thống sẽ mở trực tiếp <strong>Cổng Dịch vụ công TP Hải Phòng</strong> để bà con tra cứu hồ sơ và nộp thủ tục hành chính miễn phí.
+            </div>
+          </div>
+        </div>
+
+        {/* 2. KHỐI HÌNH ẢNH MINH HỌA NHÀ VĂN HÓA (Hiển thị sau phần nội dung) */}
         <div className="relative border-b border-slate-200 bg-slate-900 overflow-hidden">
           <img
             src={localBannerUrl}
-            alt="Nhà văn hóa Hải Phòng"
-            className="w-full h-44 sm:h-48 object-cover opacity-90 transition hover:scale-102 duration-300"
+            alt={portalData?.location.name || 'Nhà văn hóa Hải Phòng'}
+            className="w-full h-36 sm:h-40 object-cover opacity-90 transition hover:scale-102 duration-300"
             onError={(e) => {
-              // Fallback to central landmark if image fails
               (e.currentTarget as HTMLImageElement).src = '/banners/central.jpg';
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent flex flex-col justify-end p-3.5 text-white">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs bg-[#a81c1c]/90 text-yellow-300 text-[10px] font-bold uppercase tracking-wider w-fit border border-yellow-400/30">
-              <Sparkles className="w-3 h-3" />
-              <span>Hạ tầng Chuyển đổi số 1.584 Nhà văn hóa</span>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent flex flex-col justify-end p-3 text-white">
+            <div className="text-xs font-bold text-white drop-shadow-sm flex items-center justify-between">
+              <span>Ảnh thực tế: {portalData?.location.name}</span>
+              <span className="text-[9.5px] px-1.5 py-0.5 bg-emerald-700/90 text-emerald-100 rounded font-semibold">Trực tuyến</span>
             </div>
-            <div className="text-xs sm:text-sm font-bold text-white mt-1 drop-shadow-sm">
-              {portalData?.location.name || 'Điểm Wi-Fi Công Cộng Hải Phòng'}
-            </div>
-            <div className="text-[10.5px] text-slate-200 drop-shadow-xs flex items-center gap-1 mt-0.5">
-              <span>Địa bàn:</span>
-              <span className="font-semibold text-yellow-200">
-                {portalData?.location.adminUnitName || portalData?.location.address || 'Thành phố Hải Phòng'}
-              </span>
+            <div className="text-[10px] text-slate-200 drop-shadow-xs flex items-center gap-1.5 mt-0.5 font-mono">
+              <span>Nhà mạng: <strong className="text-yellow-300">{portalData?.location.ispName || 'VNPT'}</strong></span>
               <span>•</span>
-              <span className="text-emerald-300 font-medium">Miễn phí 100%</span>
+              <span>Băng thông: <strong className="text-emerald-300">{portalData?.location.maxBandwidthMbps || 20} Mbps</strong></span>
+              <span>•</span>
+              <span className="text-yellow-200">Miễn phí 100%</span>
             </div>
           </div>
         </div>
@@ -323,17 +359,6 @@ export const PortalPage: React.FC = () => {
         <form onSubmit={handleConnect} className="p-4 sm:p-5 space-y-3.5 text-xs">
           {error && <AlertBanner type="error" message={error} />}
           {successInfo && <AlertBanner type="success" message={successInfo} />}
-
-          {/* Value Proposition Box */}
-          <div className="p-3 bg-blue-50/70 border border-blue-200/80 rounded-sm space-y-1.5">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-[#004b87]">
-              <Landmark className="w-4 h-4 text-[#004b87] flex-shrink-0" />
-              <span>Trang Hành chính công & Dịch vụ số Hải Phòng</span>
-            </div>
-            <p className="text-[11px] text-slate-600 leading-relaxed">
-              Sau khi kết nối Wi-Fi thành công, hệ thống sẽ mở trực tiếp <strong>Cổng Dịch vụ công Thành phố Hải Phòng</strong> để bà con tra cứu hồ sơ, nộp thủ tục hành chính trực tuyến và cập nhật tin tức.
-            </p>
-          </div>
 
           {/* Legal Compliance Checkbox */}
           <div className="space-y-1.5 pt-0.5">
