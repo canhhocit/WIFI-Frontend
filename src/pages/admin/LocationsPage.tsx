@@ -21,6 +21,7 @@ import { LocationDto, CreateLocationRequest, UpdateLocationRequest, AdminUnitDto
 import { Modal } from '../../components/Modal';
 import { AlertBanner } from '../../components/AlertBanner';
 import { ExcelImportModal } from '../../components/ExcelImportModal';
+import { ImageUploadInput } from '../../components/ImageUploadInput';
 
 export const LocationsPage: React.FC = () => {
   const [locations, setLocations] = useState<LocationDto[]>([]);
@@ -597,21 +598,13 @@ export const LocationsPage: React.FC = () => {
               <span className="text-[10px] text-slate-500 font-normal">Tùy biến từng Nhà văn hóa</span>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                URL Hình ảnh riêng của điểm (Banner / Ảnh chụp Nhà văn hóa)
-              </label>
-              <input
-                type="text"
-                value={formData.promoBannerUrl}
-                onChange={(e) => setFormData({ ...formData, promoBannerUrl: e.target.value })}
-                placeholder="Ví dụ: /banners/haiphong_culture_house.jpg hoặc https://..."
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] bg-white"
-              />
-              <p className="text-[10.5px] text-slate-500 mt-0.5">
-                Ảnh đại diện thực tế riêng của Nhà văn hóa này sẽ hiển thị trên Cổng chào.
-              </p>
-            </div>
+            <ImageUploadInput
+              value={formData.promoBannerUrl}
+              onChange={(url) => setFormData({ ...formData, promoBannerUrl: url })}
+              label="Ảnh thực tế riêng của Nhà văn hóa (Banner)"
+              helperText="Tải ảnh Nhà văn hóa từ máy tính hoặc nhập liên kết URL ảnh"
+              category="banners"
+            />
 
             <div className="grid grid-cols-1 gap-2">
               <div>
@@ -826,21 +819,13 @@ export const LocationsPage: React.FC = () => {
               <span className="text-[10px] text-slate-500 font-normal">Tùy biến từng Nhà văn hóa</span>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                URL Hình ảnh riêng của điểm (Banner / Ảnh chụp Nhà văn hóa)
-              </label>
-              <input
-                type="text"
-                value={formData.promoBannerUrl}
-                onChange={(e) => setFormData({ ...formData, promoBannerUrl: e.target.value })}
-                placeholder="Ví dụ: /banners/haiphong_culture_house.jpg hoặc https://..."
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] bg-white"
-              />
-              <p className="text-[10.5px] text-slate-500 mt-0.5">
-                Ảnh đại diện thực tế riêng của Nhà văn hóa này sẽ hiển thị trên Cổng chào.
-              </p>
-            </div>
+            <ImageUploadInput
+              value={formData.promoBannerUrl}
+              onChange={(url) => setFormData({ ...formData, promoBannerUrl: url })}
+              label="Ảnh thực tế riêng của Nhà văn hóa (Banner)"
+              helperText="Tải ảnh Nhà văn hóa từ máy tính hoặc nhập liên kết URL ảnh"
+              category="banners"
+            />
 
             <div className="grid grid-cols-1 gap-2">
               <div>

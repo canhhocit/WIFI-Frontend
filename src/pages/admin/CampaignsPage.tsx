@@ -20,6 +20,7 @@ import { adminApi } from '../../api/adminApi';
 import { CampaignDto, CreateCampaignRequest, AdminUnitDto, LocationDto } from '../../types/models';
 import { Modal } from '../../components/Modal';
 import { AlertBanner } from '../../components/AlertBanner';
+import { ImageUploadInput } from '../../components/ImageUploadInput';
 
 export const CampaignsPage: React.FC = () => {
   const [campaigns, setCampaigns] = useState<CampaignDto[]>([]);
@@ -349,27 +350,25 @@ export const CampaignsPage: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">URL Ảnh Banner quảng bá</label>
-              <input
-                type="text"
-                value={formData.bannerUrl || ''}
-                onChange={(e) => setFormData({ ...formData, bannerUrl: e.target.value })}
-                placeholder="https://... hoặc /banners/vneid.jpg"
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Link chuyển hướng khi bấm (Action URL)</label>
-              <input
-                type="text"
-                value={formData.actionUrl || ''}
-                onChange={(e) => setFormData({ ...formData, actionUrl: e.target.value })}
-                placeholder="Ví dụ: https://dichvucong.gov.vn"
-                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm"
-              />
-            </div>
+          <div>
+            <ImageUploadInput
+              value={formData.bannerUrl || ''}
+              onChange={(url) => setFormData({ ...formData, bannerUrl: url })}
+              label="Ảnh Banner chiến dịch tuyên truyền"
+              helperText="Tải banner từ máy tính hoặc nhập liên kết ảnh"
+              category="campaigns"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Link chuyển hướng khi bấm (Action URL)</label>
+            <input
+              type="text"
+              value={formData.actionUrl || ''}
+              onChange={(e) => setFormData({ ...formData, actionUrl: e.target.value })}
+              placeholder="Ví dụ: https://dichvucong.gov.vn"
+              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm"
+            />
           </div>
 
           <div className="grid grid-cols-3 gap-3">

@@ -584,4 +584,18 @@ export const adminApi = {
       body: JSON.stringify(data),
     });
   },
+
+  // Media / Image Upload
+  uploadImage: (file: File, category = 'banners') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('category', category);
+    return request<{ url: string; fileName: string; originalName: string; fileSize: number; contentType: string }>(
+      '/admin/uploads',
+      {
+        method: 'POST',
+        body: formData,
+      }
+    );
+  },
 };

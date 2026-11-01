@@ -15,6 +15,7 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { PortalTemplateDto } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
+import { ImageUploadInput } from '../../components/ImageUploadInput';
 
 export const PortalBuilderPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -200,27 +201,22 @@ export const PortalBuilderPage: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">URL Biểu trưng (Logo)</label>
-                  <input
-                    type="text"
-                    value={template.logoUrl || ''}
-                    onChange={(e) => setTemplate({ ...template, logoUrl: e.target.value })}
-                    placeholder="https://... hoặc /logo.png"
-                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">URL Banner đầu trang</label>
-                  <input
-                    type="text"
-                    value={template.bannerUrl || ''}
-                    onChange={(e) => setTemplate({ ...template, bannerUrl: e.target.value })}
-                    placeholder="https://... hoặc /banner.jpg"
-                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm"
-                  />
-                </div>
+              <div className="space-y-4 pt-1">
+                <ImageUploadInput
+                  value={template.bannerUrl || ''}
+                  onChange={(url) => setTemplate({ ...template, bannerUrl: url })}
+                  label="Hình ảnh Banner đầu trang (Hiển thị chung toàn TP)"
+                  helperText="Tải banner từ máy tính hoặc nhập liên kết ảnh"
+                  category="banners"
+                />
+
+                <ImageUploadInput
+                  value={template.logoUrl || ''}
+                  onChange={(url) => setTemplate({ ...template, logoUrl: url })}
+                  label="Biểu trưng chính thức (Logo)"
+                  helperText="Tải logo từ máy tính hoặc nhập liên kết ảnh"
+                  category="logos"
+                />
               </div>
 
               <div>
