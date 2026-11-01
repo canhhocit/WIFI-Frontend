@@ -104,15 +104,15 @@ export const GovernmentReportPage: React.FC = () => {
           {/* Official Administrative Header */}
           <div className="flex justify-between items-start text-center pb-6 border-b-2 border-red-800 text-xs text-gray-800 font-serif">
             <div className="w-1/2 text-left">
-              <div className="font-bold uppercase tracking-wider">{report.cityTitle}</div>
-              <div className="font-extrabold uppercase text-red-800 text-sm mt-0.5">{report.authorityName}</div>
+              <div className="font-bold uppercase tracking-wide text-xs">{report.cityTitle}</div>
+              <div className="font-bold uppercase text-red-800 text-xs sm:text-sm mt-1">{report.authorityName}</div>
               <div className="text-[11px] text-gray-600 mt-1">Số: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /BC-STTTT-CNTT</div>
             </div>
 
             <div className="w-1/2 text-right">
-              <div className="font-bold uppercase">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
-              <div className="font-bold underline mt-0.5">Độc lập - Tự do - Hạnh phúc</div>
-              <div className="text-[11px] text-gray-500 italic mt-2">
+              <div className="font-bold uppercase tracking-wide text-xs">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+              <div className="font-bold underline text-xs mt-0.5">Độc lập - Tự do - Hạnh phúc</div>
+              <div className="text-[11px] text-gray-600 italic mt-1.5">
                 Hải Phòng, ngày {new Date(report.generatedAt).getDate()} tháng{' '}
                 {new Date(report.generatedAt).getMonth() + 1} năm {new Date(report.generatedAt).getFullYear()}
               </div>
@@ -121,10 +121,10 @@ export const GovernmentReportPage: React.FC = () => {
 
           {/* Document Title */}
           <div className="text-center my-8">
-            <h2 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight uppercase font-serif">
+            <h2 className="text-lg md:text-2xl font-bold text-gray-900 tracking-wide uppercase font-serif">
               Báo Cáo Kỹ Thuật & Vận Hành Hệ Thống Mạng Wi-Fi Công Cộng
             </h2>
-            <p className="text-sm font-semibold text-red-800 mt-1">
+            <p className="text-sm font-semibold text-red-800 mt-1.5 font-sans">
               Phục vụ chuyển đổi số và đời sống văn hóa nhân dân tại 1.584 Nhà văn hóa thôn, tổ dân phố
             </p>
             <p className="text-xs text-gray-500 italic mt-1 font-mono">

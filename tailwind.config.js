@@ -9,6 +9,7 @@ export default {
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        serif: ['"Times New Roman"', 'Times', '"Noto Serif"', 'serif'],
       },
       colors: {
         gov: {
