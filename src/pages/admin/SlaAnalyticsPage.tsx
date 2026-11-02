@@ -46,12 +46,8 @@ export const SlaAnalyticsPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            <ShieldCheck className="w-7 h-7 text-emerald-600" />
             Báo cáo Đánh giá Chỉ số SLA & Thời gian Phục hồi MTTR
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Báo cáo đánh giá chất lượng cung cấp dịch vụ Internet công cộng và đo lường cam kết thời gian đáp ứng
-          </p>
         </div>
 
         <button

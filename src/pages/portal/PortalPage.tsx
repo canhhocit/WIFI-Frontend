@@ -565,7 +565,6 @@ export const PortalPage: React.FC = () => {
           <span className="text-[10.5px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
             <MapPin className="w-3.5 h-3.5 text-amber-300" /> Trải nghiệm hình ảnh & thông tin từng điểm:
           </span>
-          <span className="text-[9.5px] text-slate-400 font-mono">1.584 Nhà văn hóa</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
           {[

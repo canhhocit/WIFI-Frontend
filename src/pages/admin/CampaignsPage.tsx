@@ -160,9 +160,6 @@ export const CampaignsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Chiến Dịch Truyền Thông & Chính Sách Số</h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Quản lý banner, video tuyên truyền chính quyền điện tử và quy trình phê duyệt 2 bước trước khi phát sóng ra 1.584 điểm phát.
-          </p>
         </div>
         <div className="flex items-center gap-2">
           <button

@@ -14,7 +14,7 @@ import { adminApi } from '../../api/adminApi';
 import { RolePermissionDto } from '../../types/models';
 
 const MODULES = [
-  { key: 'LOCATIONS', label: '1. Điểm phát Wi-Fi (1.584 Điểm Nhà văn hóa)' },
+  { key: 'LOCATIONS', label: '1. Điểm phát Wi-Fi' },
   { key: 'DEVICES', label: '2. Thiết bị phần cứng & AP (OPNsense/Aruba/Ruckus)' },
   { key: 'CAMPAIGNS', label: '3. Chiến dịch truyền thông & Khảo sát ý kiến' },
   { key: 'INCIDENTS', label: '4. Sự cố mạng, Cảnh báo viễn thông & SLA' },

@@ -246,7 +246,7 @@ export const LocationsPage: React.FC = () => {
       {/* Title & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Hệ Thống 1.584 Điểm Phát Wi-Fi</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Hệ Thống Điểm Phát Wi-Fi</h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Quản lý mạng lưới Nhà văn hóa, cấu hình băng thông, định vị tọa độ GPS và địa bàn hành chính TP Hải Phòng.
           </p>
@@ -255,16 +255,16 @@ export const LocationsPage: React.FC = () => {
           <button
             onClick={() => window.open(adminApi.getExcelExportUrl(), '_blank')}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
-            title="Xuất toàn bộ 1.584 điểm phát ra file Excel"
+            title="Xuất toàn bộ điểm phát ra file Excel"
           >
-            <Download className="w-3.5 h-3.5 text-emerald-700" /> Xuất Excel
+            <Upload className="w-3.5 h-3.5 text-emerald-700" /> Xuất Excel
           </button>
           <button
             onClick={() => setIsExcelModalOpen(true)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-sm text-xs font-bold transition shadow-xs cursor-pointer"
             title="Nhập hàng loạt điểm phát từ file Excel"
           >
-            <Upload className="w-3.5 h-3.5" /> Nhập Excel 1.584 điểm
+            <Download className="w-3.5 h-3.5" /> Nhập Excel các điểm
           </button>
           <button
             onClick={loadLocations}

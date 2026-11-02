@@ -65,7 +65,7 @@ export const PortalBuilderPage: React.FC = () => {
     try {
       const saved = await adminApi.savePortalTemplate(template);
       setTemplate(saved);
-      setSuccessMsg('Đã lưu và áp dụng giao diện Cổng chào thành công trên toàn hệ thống 1.584 điểm phát!');
+      setSuccessMsg('Đã lưu và áp dụng giao diện Cổng chào thành công trên toàn hệ thống!');
     } catch (err: any) {
       setError(err?.message || 'Không thể lưu cấu hình giao diện.');
     } finally {

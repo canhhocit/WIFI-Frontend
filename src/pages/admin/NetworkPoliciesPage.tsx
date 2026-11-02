@@ -90,12 +90,8 @@ export const NetworkPoliciesPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            <Gauge className="w-7 h-7 text-blue-600" />
             Chính sách Điều tiết Băng thông QoS & Giới hạn Phiên
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Kiểm soát tốc độ tải xuống / tải lên (Download/Upload Throttling) và thời lượng kết nối cho từng nhóm điểm phát
-          </p>
         </div>
 
         <div className="flex items-center gap-2">

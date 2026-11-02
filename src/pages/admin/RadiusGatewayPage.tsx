@@ -101,12 +101,8 @@ export const RadiusGatewayPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            <Radio className="w-7 h-7 text-teal-600" />
             Cấu hình Gateway OPNsense & RADIUS NAS Clients
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Quản trị các máy chủ truy nhập mạng (Network Access Server - NAS), chia sẻ Shared Secret và kết nối OPNsense API
-          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -156,7 +152,7 @@ export const RadiusGatewayPage: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2 text-xs font-mono">
-              <span className="text-slate-400">Phiên bản:</span>
+              <span className="text-slate-400">Dữ liệu mock</span>
               <span className="bg-slate-800 px-2.5 py-1 rounded border border-slate-700 text-teal-300">
                 {gatewayStatus.version || '24.7-RELEASE'}
               </span>

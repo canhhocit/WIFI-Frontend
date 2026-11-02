@@ -115,7 +115,6 @@ export const SessionsPage: React.FC = () => {
         <div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight">Phiên Truy Cập Wi-Fi</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Tra cứu, kiểm soát phiên người dùng và quản lý quyền truy cập Internet qua cổng Captive.
           </p>
         </div>
         <button
@@ -138,7 +137,7 @@ export const SessionsPage: React.FC = () => {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Tìm theo MAC, IP, tên khách hoặc mã token..."
+              placeholder="Tìm theo MAC, IP, tên khách..."
               className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] transition font-mono"
             />
           </div>

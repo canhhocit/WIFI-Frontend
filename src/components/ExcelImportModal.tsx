@@ -76,7 +76,7 @@ export const ExcelImportModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
           <div>
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <FileSpreadsheet className="w-4 h-4 text-[#004b87]" />
-              Nhập danh sách 1.584 Điểm phát sóng từ Excel (Screens C08 - C09)
+              Nhập danh sách Điểm phát sóng từ Excel
             </h3>
             <p className="text-[11px] text-slate-500 mt-0.5">
               Kiểm tra 5 tiêu chí: Trùng mã, Thiếu trường, Địa bàn hợp lệ, Geo-fence Hải Phòng, Chuẩn MAC
@@ -135,7 +135,7 @@ export const ExcelImportModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
                       {file ? file.name : 'Bấm vào đây để chọn tệp Excel hoặc kéo thả tệp vào đây'}
                     </span>
                     <span className="text-[11px] text-slate-400 mt-0.5 block">
-                      Hỗ trợ định dạng .xlsx (Tối đa 1.584 dòng)
+                      Hỗ trợ định dạng .xlsx
                     </span>
                   </label>
                 </div>

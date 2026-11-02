@@ -59,7 +59,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/admin', label: 'Tổng quan điều hành', icon: LayoutDashboard, end: true },
       {
         to: '/admin/gis',
-        label: 'Bản đồ số GIS 1.584 Điểm',
+        label: 'Bản đồ số GIS',
         icon: Map,
         module: 'LOCATIONS',
       },
@@ -263,7 +263,7 @@ export const AdminLayout: React.FC = () => {
       case 'ROLE_SUPER_ADMIN':
       case 'ROLE_ADMIN':
         return {
-          label: 'Quản trị Tối cao',
+          label: 'Quản trị hệ thống',
           scope: 'Toàn quyền Hệ thống',
           color: 'bg-slate-800 text-slate-100 border-slate-600',
         };
@@ -409,11 +409,11 @@ export const AdminLayout: React.FC = () => {
         <div className="px-4 py-2 border-b border-[#18365a] bg-[#071628] flex items-center justify-between text-[11px]">
           <div className="flex items-center gap-1.5 font-medium text-slate-300">
             <Activity className="w-3.5 h-3.5 text-blue-400" />
-            <span>Gateway OPNsense</span>
+            <span>Menu</span>
           </div>
           <div className="flex items-center gap-1.5 font-mono">
             <Circle className="w-2 h-2 fill-current text-emerald-400 animate-pulse" />
-            <span className="text-emerald-400 font-semibold text-[10px]">Trực tuyến (24/7)</span>
+            {/* <span className="text-emerald-400 font-semibold text-[10px]">Trực tuyến (24/7)</span> */}
           </div>
         </div>
 
@@ -497,7 +497,7 @@ export const AdminLayout: React.FC = () => {
           <div className="flex items-center gap-3">
             <span className="text-xs font-semibold text-slate-500">Trung tâm Điều hành:</span>
             <span className="text-xs font-bold text-slate-800">
-              Mạng Wi-Fi Công cộng 1.584 Nhà Văn Hóa Hải Phòng
+              Mạng Wi-Fi Công cộng tỉnh Hải Phòng
             </span>
           </div>
 

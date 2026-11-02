@@ -161,7 +161,7 @@ export const DevicesPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Quản Lý Thiết Bị & Hạ Tầng</h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Theo dõi thiết bị khách truy cập (Blacklist MAC) và phần cứng mạng tại 1.584 điểm (ONT, Router, AP, hoán đổi thiết bị).
+            Theo dõi thiết bị khách truy cập (Blacklist MAC) và phần cứng mạng (ONT, Router, AP, hoán đổi thiết bị).
           </p>
         </div>
         <button

@@ -134,20 +134,20 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
       // Color coding
       let bgHex = '#10b981'; // emerald
       let pulseHex = '#34d399';
-      let statusText = '🟢 Hoạt động tốt';
+      let statusText = 'Hoạt động tốt';
       let statusBg = '#ecfdf5';
       let statusColor = '#065f46';
 
       if (pin.status === 'OFFLINE') {
         bgHex = '#e11d48'; // rose
         pulseHex = '#f43f5e';
-        statusText = '🔴 Mất mạng';
+        statusText = 'Mất mạng';
         statusBg = '#fff1f2';
         statusColor = '#9f1239';
       } else if (pin.status === 'DEGRADED') {
         bgHex = '#f59e0b'; // amber
         pulseHex = '#fbbf24';
-        statusText = '🟡 Suy giảm';
+        statusText = 'Suy giảm';
         statusBg = '#fffbeb';
         statusColor = '#92400e';
       }
@@ -199,7 +199,7 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
               ${statusText}
             </span>
             <span style="background: #eff6ff; color: #1e40af; padding: 2px 7px; border-radius: 4px; font-weight: 700;">
-              👥 ${pin.activeSessionsCount || 0} phiên
+              ${pin.activeSessionsCount || 0} phiên
             </span>
           </div>
           <div style="margin-top: 8px; display: flex; gap: 4px;">
@@ -274,3 +274,4 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
     </div>
   );
 };
+

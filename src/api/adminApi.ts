@@ -204,7 +204,6 @@ export const adminApi = {
     });
   },
 
-  // Excel Batch Import / Export 1.584 Locations
   validateLocationsExcel: async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);

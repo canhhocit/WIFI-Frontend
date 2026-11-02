@@ -199,12 +199,8 @@ export const IncidentsPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            <ShieldAlert className="w-7 h-7 text-rose-600" />
-            Hệ thống Quản lý Sự cố Kỹ thuật & Cam kết SLA
+            Quản lý Sự cố Kỹ thuật
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Quy trình tiếp nhận, điều phối kỹ thuật viên VNPT/Viettel và tự động phân loại nguyên nhân đứt cáp / mất điện
-          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -315,7 +311,7 @@ export const IncidentsPage: React.FC = () => {
               {filteredIncidents.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
-                    Không có phiếu sự cố nào phù hợp
+                    Không có phiếu sự cố nào 
                   </td>
                 </tr>
               ) : (

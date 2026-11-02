@@ -12,7 +12,8 @@ import {
   Filter,
   RefreshCw,
   MapPin,
-  Lock
+  Lock,
+  Upload
 } from 'lucide-react';
 
 export const AccessLogsPage: React.FC = () => {
@@ -121,12 +122,8 @@ export const AccessLogsPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            <Lock className="w-7 h-7 text-indigo-600" />
-            Nhật Ký Truy Cập Pháp Lý 12 Tháng (Compliance Access Logs)
+            Nhật Ký Truy Cập Pháp Lý 12 Tháng 
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Lưu trữ siêu dữ liệu phiên truy cập theo quy định của Luật An ninh mạng & Nghị định 72/2013/NĐ-CP
-          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -143,19 +140,13 @@ export const AccessLogsPage: React.FC = () => {
             disabled={logs.length === 0}
             className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 rounded-sm shadow-sm"
           >
-            <Download className="w-4 h-4" />
-            Xuất dữ liệu điều tra (CSV)
+            <Upload className="w-4 h-4" />
+            Xuất dữ liệu (CSV)
           </button>
         </div>
       </div>
 
-      {/* Compliance Notice Banner */}
-      <div className="p-4 bg-indigo-50/70 border border-indigo-200 rounded flex items-start gap-3">
-        <ShieldCheck className="w-5 h-5 text-indigo-700 shrink-0 mt-0.5" />
-        <div className="text-xs text-indigo-900">
-          <span className="font-bold">Quy chuẩn An ninh dữ liệu quốc gia:</span> Toàn bộ bản ghi truy cập tại 1.584 Nhà văn hóa được mã hóa và bảo lưu tự động đúng <span className="font-semibold underline">365 ngày</span> kể từ thời điểm thiết bị kết nối mạng. Hệ thống tự động tiến hành thanh lọc các bản ghi hết thời hạn lưu trữ vào lúc 03:00 UTC hằng đêm.
-        </div>
-      </div>
+      
 
       {/* Filters Form */}
       <form

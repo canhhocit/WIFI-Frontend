@@ -55,7 +55,7 @@ export const GovernmentReportPage: React.FC = () => {
             Báo Cáo Hành Chính Sở TT&TT / UBND Thành Phố Hải Phòng
           </h1>
           <p className="text-xs text-gray-500 mt-0.5">
-            Mẫu báo cáo tiến độ và chất lượng khai thác mạng Wi-Fi công cộng tại 1.584 Nhà văn hóa
+            Mẫu báo cáo tiến độ và chất lượng khai thác mạng Wi-Fi công cộng 
           </p>
         </div>
 
@@ -125,7 +125,7 @@ export const GovernmentReportPage: React.FC = () => {
               Báo Cáo Kỹ Thuật & Vận Hành Hệ Thống Mạng Wi-Fi Công Cộng
             </h2>
             <p className="text-sm font-semibold text-red-800 mt-1.5 font-sans">
-              Phục vụ chuyển đổi số và đời sống văn hóa nhân dân tại 1.584 Nhà văn hóa thôn, tổ dân phố
+              Phục vụ chuyển đổi số và đời sống văn hóa nhân dân tại các địa điểm công cộng
             </p>
             <p className="text-xs text-gray-500 italic mt-1 font-mono">
               (Kỳ báo cáo: {report.reportPeriod} - Dữ liệu thực thi thời gian thực)

@@ -81,11 +81,9 @@ export const GisMapPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
             <MapPin className="w-7 h-7 text-blue-600" />
-            Bản đồ Số GIS & Trạng thái 1.584 Điểm phát Wi-Fi
+            Bản đồ Số GIS và và các điểm phát sóng wifi
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Hệ thống giám sát định vị không gian địa lý Hải Phòng, mật độ phiên và tình trạng kết nối thời gian thực
-          </p>
+          
         </div>
         <div className="flex items-center gap-2">
           <div className="inline-flex rounded-sm border border-gray-200 bg-white p-1">
@@ -125,12 +123,11 @@ export const GisMapPage: React.FC = () => {
             <MapPin className="w-4 h-4 text-gray-400" />
           </div>
           <div className="mt-2 text-2xl font-bold text-gray-900">{stats.total}</div>
-          <div className="text-xs text-gray-500 mt-0.5">Nhà văn hóa / Công cộng</div>
         </div>
 
         <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between text-emerald-600 text-xs font-medium">
-            <span>Hoạt động tốt (Online)</span>
+            <span>Hoạt động</span>
             <Wifi className="w-4 h-4 text-emerald-500" />
           </div>
           <div className="mt-2 text-2xl font-bold text-emerald-600">{stats.online}</div>
@@ -141,11 +138,10 @@ export const GisMapPage: React.FC = () => {
 
         <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between text-amber-600 text-xs font-medium">
-            <span>Cảnh báo (Degraded)</span>
+            <span>Cảnh báo </span>
             <AlertTriangle className="w-4 h-4 text-amber-500" />
           </div>
           <div className="mt-2 text-2xl font-bold text-amber-600">{stats.degraded}</div>
-          <div className="text-xs text-amber-600/80 mt-0.5">Mất kết nối 1 phần thiết bị</div>
         </div>
 
         <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
@@ -154,7 +150,6 @@ export const GisMapPage: React.FC = () => {
             <WifiOff className="w-4 h-4 text-red-500" />
           </div>
           <div className="mt-2 text-2xl font-bold text-red-600">{stats.offline}</div>
-          <div className="text-xs text-red-600/80 mt-0.5">Cần kỹ thuật kiểm tra</div>
         </div>
 
         <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
@@ -163,7 +158,6 @@ export const GisMapPage: React.FC = () => {
             <Users className="w-4 h-4 text-blue-500" />
           </div>
           <div className="mt-2 text-2xl font-bold text-blue-600">{stats.activeSessions}</div>
-          <div className="text-xs text-blue-600/80 mt-0.5">Người dân đang online</div>
         </div>
       </div>
 
@@ -203,9 +197,9 @@ export const GisMapPage: React.FC = () => {
             className="text-xs border border-gray-300 rounded-sm px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="ALL">-- Tất cả trạng thái --</option>
-            <option value="ONLINE">🟢 Hoạt động tốt (Online)</option>
-            <option value="DEGRADED">🟡 Cảnh báo / Suy giảm (Degraded)</option>
-            <option value="OFFLINE">🔴 Mất kết nối (Offline)</option>
+            <option value="ONLINE">Hoạt động tốt (Online)</option>
+            <option value="DEGRADED">Cảnh báo / Suy giảm (Degraded)</option>
+            <option value="OFFLINE">Mất kết nối (Offline)</option>
           </select>
         </div>
 
@@ -274,10 +268,10 @@ export const GisMapPage: React.FC = () => {
                     }`}
                   >
                     {selectedPin.status === 'ONLINE'
-                      ? '🟢 Hoạt động tốt'
+                      ? 'Hoạt động tốt'
                       : selectedPin.status === 'DEGRADED'
-                      ? '🟡 Suy giảm kết nối'
-                      : '🔴 Mất tín hiệu'}
+                      ? 'Suy giảm kết nối'
+                      : 'Mất tín hiệu'}
                   </span>
                   <h3 className="font-bold text-gray-900 text-sm mt-1">{selectedPin.name}</h3>
                   <p className="text-xs text-gray-500 font-mono mt-0.5">Mã: {selectedPin.locationCode || 'N/A'}</p>
@@ -381,7 +375,7 @@ export const GisMapPage: React.FC = () => {
                               : 'bg-red-100 text-red-800'
                           }`}
                         >
-                          {pin.status === 'ONLINE' ? '🟢 Online' : pin.status === 'DEGRADED' ? '🟡 Degraded' : '🔴 Offline'}
+                          {pin.status === 'ONLINE' ? 'Online' : pin.status === 'DEGRADED' ? 'Degraded' : 'Offline'}
                         </span>
                       </td>
                       <td className="px-4 py-3 font-medium text-gray-700">
