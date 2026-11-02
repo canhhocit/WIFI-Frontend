@@ -174,7 +174,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/admin/analytics', label: 'Thống kê & Báo cáo', icon: BarChart3, module: 'SETTINGS' },
       {
         to: '/admin/audit',
-        label: 'Nhật ký kiểm toán an toàn',
+        label: 'Nhật ký hệ thống',
         icon: ScrollText,
         module: 'USERS',
       },

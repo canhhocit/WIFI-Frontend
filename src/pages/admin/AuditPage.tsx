@@ -67,7 +67,13 @@ export const AuditPage: React.FC = () => {
       case 'ADMIN_LOGIN':
         return (
           <span className="inline-flex items-center gap-1 font-semibold text-[11px] text-[#003865] bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-md">
-            <UserCheck className="w-3 h-3 text-[#004b87]" /> Đăng nhập Admin
+            <UserCheck className="w-3 h-3 text-[#004b87]" /> Đăng nhập
+          </span>
+        );
+      case 'ADMIN_LOGOUT':
+        return (
+          <span className="inline-flex items-center gap-1 font-semibold text-[11px] text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
+            Đăng xuất
           </span>
         );
       case 'SESSION_REVOKE':
@@ -107,6 +113,44 @@ export const AuditPage: React.FC = () => {
             <ShieldCheck className="w-3 h-3 text-emerald-600" /> Mở chặn thiết bị
           </span>
         );
+      case 'CAMPAIGN_CREATE':
+      case 'CAMPAIGN_APPROVE':
+      case 'CAMPAIGN_REJECT':
+        return (
+          <span className="inline-flex items-center gap-1 font-semibold text-[11px] text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-md">
+            Chiến dịch tuyên truyền
+          </span>
+        );
+      case 'ROLE_PERMISSION_UPDATE':
+        return (
+          <span className="inline-flex items-center gap-1 font-semibold text-[11px] text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-md">
+            Phân quyền RBAC
+          </span>
+        );
+      case 'SYSTEM_SETTING_UPDATE':
+        return (
+          <span className="inline-flex items-center gap-1 font-semibold text-[11px] text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">
+            Cấu hình tham số
+          </span>
+        );
+      case 'DNS_RULE_CREATE':
+      case 'DNS_RULE_UPDATE':
+      case 'DNS_RULE_DELETE':
+      case 'DNS_RULE_TOGGLE':
+        return (
+          <span className="inline-flex items-center gap-1 font-semibold text-[11px] text-teal-700 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-md">
+            Bộ lọc tên miền DNS
+          </span>
+        );
+      case 'USER_CREATE':
+      case 'USER_UPDATE':
+      case 'USER_LOCK':
+      case 'USER_UNLOCK':
+        return (
+          <span className="inline-flex items-center gap-1 font-semibold text-[11px] text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-md">
+            Tài khoản cán bộ
+          </span>
+        );
       default:
         return (
           <span className="font-mono text-[11px] font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
@@ -122,9 +166,6 @@ export const AuditPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Nhật Ký Kiểm Toán Hệ Thống</h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Ghi nhận bất biến mọi thao tác quản trị, đăng nhập và các sự kiện can thiệp mạng.
-          </p>
         </div>
         <button
           onClick={loadAudit}
@@ -151,14 +192,24 @@ export const AuditPage: React.FC = () => {
           className="px-3.5 py-2 text-xs border border-slate-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-1 focus:ring-[#004b87] bg-white text-slate-700 font-medium cursor-pointer"
         >
           <option value="">Tất cả các hành động</option>
-          <option value="ADMIN_LOGIN">Đăng nhập Quản trị viên (ADMIN_LOGIN)</option>
-          <option value="SESSION_REVOKE">Ngắt kết nối phiên (SESSION_REVOKE)</option>
+          <option value="ADMIN_LOGIN">Đăng nhập Cán bộ / Admin (ADMIN_LOGIN)</option>
+          <option value="ADMIN_LOGOUT">Đăng xuất (ADMIN_LOGOUT)</option>
+          <option value="SESSION_REVOKE">Ngắt kết nối phiên khách (SESSION_REVOKE)</option>
           <option value="GATEWAY_TOGGLE">Cấu hình Gateway (GATEWAY_TOGGLE)</option>
-          <option value="LOCATION_CREATE">Tạo điểm phát (LOCATION_CREATE)</option>
-          <option value="LOCATION_UPDATE">Cập nhật điểm phát (LOCATION_UPDATE)</option>
-          <option value="LOCATION_DELETE">Xóa điểm phát (LOCATION_DELETE)</option>
-          <option value="DEVICE_BLOCK">Chặn thiết bị (DEVICE_BLOCK)</option>
-          <option value="DEVICE_UNBLOCK">Mở chặn thiết bị (DEVICE_UNBLOCK)</option>
+          <option value="LOCATION_CREATE">Tạo điểm phát Wi-Fi (LOCATION_CREATE)</option>
+          <option value="LOCATION_UPDATE">Cập nhật điểm phát Wi-Fi (LOCATION_UPDATE)</option>
+          <option value="LOCATION_DELETE">Xóa điểm phát Wi-Fi (LOCATION_DELETE)</option>
+          <option value="DEVICE_BLOCK">Chặn thiết bị MAC (DEVICE_BLOCK)</option>
+          <option value="DEVICE_UNBLOCK">Mở chặn thiết bị MAC (DEVICE_UNBLOCK)</option>
+          <option value="CAMPAIGN_CREATE">Tạo chiến dịch truyền thông (CAMPAIGN_CREATE)</option>
+          <option value="CAMPAIGN_APPROVE">Phê duyệt chiến dịch (CAMPAIGN_APPROVE)</option>
+          <option value="ROLE_PERMISSION_UPDATE">Cập nhật ma trận phân quyền (ROLE_PERMISSION_UPDATE)</option>
+          <option value="SYSTEM_SETTING_UPDATE">Cập nhật tham số hệ thống (SYSTEM_SETTING_UPDATE)</option>
+          <option value="DNS_RULE_CREATE">Tạo quy tắc DNS (DNS_RULE_CREATE)</option>
+          <option value="DNS_RULE_UPDATE">Cập nhật quy tắc DNS (DNS_RULE_UPDATE)</option>
+          <option value="USER_CREATE">Tạo tài khoản cán bộ (USER_CREATE)</option>
+          <option value="USER_UPDATE">Cập nhật tài khoản cán bộ (USER_UPDATE)</option>
+          <option value="USER_UNLOCK">Mở khóa tài khoản (USER_UNLOCK)</option>
         </select>
       </div>
 

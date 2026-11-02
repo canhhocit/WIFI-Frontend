@@ -14,7 +14,10 @@ import {
   Calendar,
   Layers,
   MapPin,
-  AlertTriangle
+  AlertTriangle,
+  Edit3,
+  Trash2,
+  Save,
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { CampaignDto, CreateCampaignRequest, AdminUnitDto, LocationDto } from '../../types/models';
@@ -30,6 +33,7 @@ export const CampaignsPage: React.FC = () => {
 
   // Modal State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<CampaignDto | null>(null);
   const [actionCampaign, setActionCampaign] = useState<{ c: CampaignDto; action: 'APPROVE' | 'REJECT' } | null>(null);
   const [actionComment, setActionComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -80,6 +84,51 @@ export const CampaignsPage: React.FC = () => {
       alert(err?.message || 'Lỗi khi tạo chiến dịch');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const openEdit = (c: CampaignDto) => {
+    setEditingCampaign(c);
+    setFormData({
+      title: c.title,
+      description: c.description || '',
+      bannerUrl: c.bannerUrl || '',
+      videoUrl: c.videoUrl || '',
+      actionUrl: c.actionUrl || '',
+      targetAdminUnitId: c.targetAdminUnitId,
+      targetLocationId: c.targetLocationId,
+      priority: c.priority || 1,
+      startTime: c.startTime ? new Date(c.startTime).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
+      endTime: c.endTime ? new Date(c.endTime).toISOString().slice(0, 16) : new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 16),
+    });
+  };
+
+  const handleUpdateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCampaign) return;
+    setSubmitting(true);
+    try {
+      await adminApi.updateCampaign(editingCampaign.id, {
+        ...formData,
+        startTime: new Date(formData.startTime).toISOString(),
+        endTime: new Date(formData.endTime).toISOString(),
+      });
+      setEditingCampaign(null);
+      loadCampaigns();
+    } catch (err: any) {
+      alert(err?.message || 'Lỗi khi cập nhật chiến dịch');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteCampaign = async (id: number) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa chiến dịch này không? Thao tác không thể hoàn tác.')) return;
+    try {
+      await adminApi.deleteCampaign(id);
+      loadCampaigns();
+    } catch (err: any) {
+      alert(err?.message || 'Lỗi khi xóa chiến dịch');
     }
   };
 
@@ -278,13 +327,29 @@ export const CampaignsPage: React.FC = () => {
                     </td>
                     <td className="py-3.5 px-4 text-right space-x-1.5 whitespace-nowrap">
                       {(c.status === 'DRAFT' || c.status === 'REJECTED') && (
-                        <button
-                          onClick={() => handleSubmitForApproval(c.id)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-[#003865] border border-sky-200 rounded-sm text-xs font-bold transition cursor-pointer"
-                          title="Trình duyệt chiến dịch lên cấp thẩm quyền"
-                        >
-                          <Send className="w-3.5 h-3.5" /> Gửi duyệt
-                        </button>
+                        <>
+                          <button
+                            onClick={() => openEdit(c)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-sm text-xs font-semibold transition cursor-pointer"
+                            title="Chỉnh sửa nội dung chiến dịch"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" /> Sửa
+                          </button>
+                          <button
+                            onClick={() => handleSubmitForApproval(c.id)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-[#003865] border border-sky-200 rounded-sm text-xs font-bold transition cursor-pointer"
+                            title="Trình duyệt chiến dịch lên cấp thẩm quyền"
+                          >
+                            <Send className="w-3.5 h-3.5" /> Gửi duyệt
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCampaign(c.id)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-sm text-xs font-semibold transition cursor-pointer"
+                            title="Xóa chiến dịch"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Xóa
+                          </button>
+                        </>
                       )}
 
                       {c.status === 'PENDING_APPROVAL' && (
@@ -304,6 +369,16 @@ export const CampaignsPage: React.FC = () => {
                             <ThumbsDown className="w-3.5 h-3.5" /> Từ chối
                           </button>
                         </>
+                      )}
+
+                      {c.status === 'APPROVED' && (
+                        <button
+                          onClick={() => handleDeleteCampaign(c.id)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-sm text-xs font-semibold transition cursor-pointer"
+                          title="Gỡ bỏ / Xóa chiến dịch"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Xóa
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -417,6 +492,112 @@ export const CampaignsPage: React.FC = () => {
             >
               {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
               Lưu bản nháp chiến dịch
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal Edit Campaign */}
+      <Modal
+        isOpen={!!editingCampaign}
+        onClose={() => setEditingCampaign(null)}
+        title={`Chỉnh Sửa Chiến Dịch: ${editingCampaign?.title}`}
+        maxWidth="lg"
+      >
+        <form onSubmit={handleUpdateSubmit} className="space-y-4 text-xs">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Tiêu đề chiến dịch <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-1 focus:ring-[#004b87]"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Mô tả thông điệp chính sách</label>
+            <textarea
+              rows={3}
+              value={formData.description || ''}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm"
+            />
+          </div>
+
+          <div>
+            <ImageUploadInput
+              value={formData.bannerUrl || ''}
+              onChange={(url) => setFormData({ ...formData, bannerUrl: url })}
+              label="Ảnh Banner chiến dịch tuyên truyền"
+              helperText="Tải banner từ máy tính hoặc nhập liên kết ảnh"
+              category="campaigns"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Link chuyển hướng khi bấm (Action URL)</label>
+            <input
+              type="text"
+              value={formData.actionUrl || ''}
+              onChange={(e) => setFormData({ ...formData, actionUrl: e.target.value })}
+              placeholder="Ví dụ: https://dichvucong.gov.vn"
+              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm"
+            />
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Thời gian bắt đầu</label>
+              <input
+                type="datetime-local"
+                value={formData.startTime}
+                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm font-mono"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Thời gian kết thúc</label>
+              <input
+                type="datetime-local"
+                value={formData.endTime}
+                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm font-mono"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Độ ưu tiên (Priority)</label>
+              <input
+                type="number"
+                min="1"
+                max="10"
+                value={formData.priority}
+                onChange={(e) => setFormData({ ...formData, priority: Number(e.target.value) })}
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm font-mono"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setEditingCampaign(null)}
+              className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-sm text-xs font-bold transition cursor-pointer"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-4 py-2 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm shadow-sky-600/20"
+            >
+              {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              Lưu thay đổi chiến dịch
             </button>
           </div>
         </form>

@@ -135,14 +135,43 @@ export const SurveysPage: React.FC = () => {
     }
   };
 
+  const handleToggleSurvey = async (s: SurveyDto) => {
+    try {
+      await adminApi.toggleSurvey(s.id);
+      loadSurveys();
+    } catch (err: any) {
+      alert(err?.message || 'Lỗi khi đổi trạng thái bài khảo sát');
+    }
+  };
+
+  const handleDeleteSurvey = async (s: SurveyDto) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa bài khảo sát "${s.title}" cùng toàn bộ dữ liệu phản hồi liên quan?`)) {
+      return;
+    }
+    try {
+      await adminApi.deleteSurvey(s.id);
+      loadSurveys();
+    } catch (err: any) {
+      alert(err?.message || 'Lỗi khi xóa bài khảo sát');
+    }
+  };
+
+  const handleExportResponses = async (surveyId: number) => {
+    try {
+      await adminApi.exportSurveyResponsesCsv(surveyId);
+    } catch (err: any) {
+      alert(err?.message || 'Lỗi khi xuất file phản hồi CSV');
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Động Cơ Khảo Sát Rẽ Nhánh (Survey Engine)</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Khảo Sát Ý Kiến Nhân Dân Về Dịch Vụ Số & Mạng Wi-Fi</h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Thiết kế phiếu thăm dò ý kiến nhân dân, kiểm soát định ngạch (Quota), thu thập mức độ hài lòng về hạ tầng số.
+            Thiết kế phiếu thăm dò ý kiến nhân dân, kiểm soát định ngạch (Quota), thu thập mức độ hài lòng về hạ tầng mạng công cộng Hải Phòng.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -238,12 +267,33 @@ export const SurveysPage: React.FC = () => {
                         {s.createdAt ? new Date(s.createdAt).toLocaleDateString('vi-VN') : '—'}
                       </td>
                       <td className="py-3.5 px-4 text-right">
-                        <button
-                          onClick={() => handleViewResponses(s)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-sm text-xs font-bold transition cursor-pointer"
-                        >
-                          <Eye className="w-3.5 h-3.5" /> Xem phản hồi ({s.currentResponsesCount})
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleViewResponses(s)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-sm text-xs font-bold transition cursor-pointer"
+                            title="Xem chi tiết các phản hồi"
+                          >
+                            <Eye className="w-3.5 h-3.5" /> Phản hồi ({s.currentResponsesCount})
+                          </button>
+                          <button
+                            onClick={() => handleToggleSurvey(s)}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-sm text-xs font-bold transition cursor-pointer border ${
+                              s.active
+                                ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'
+                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'
+                            }`}
+                            title={s.active ? 'Đóng khảo sát này' : 'Mở lại khảo sát'}
+                          >
+                            {s.active ? 'Tạm đóng' : 'Mở lại'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSurvey(s)}
+                            className="inline-flex items-center p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-sm transition cursor-pointer"
+                            title="Xóa bài khảo sát này"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

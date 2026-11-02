@@ -124,12 +124,8 @@ export const AlertCenterPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            <BellRing className="w-7 h-7 text-indigo-600" />
             Trung tâm Cảnh báo Ngưỡng & Ma trận Viễn thông
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Thiết lập ngưỡng sai số mạng, độ trễ viễn thông và cơ chế kích hoạt gửi tin nhắn Telegram / Webhook tức thời
-          </p>
         </div>
 
         <div className="flex items-center gap-2">

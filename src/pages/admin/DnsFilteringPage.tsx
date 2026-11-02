@@ -12,6 +12,7 @@ import {
   ToggleLeft,
   ToggleRight,
   ExternalLink,
+  Edit3,
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { DnsDomainRuleDto, CreateDnsDomainRuleRequest } from '../../types/models';
@@ -24,8 +25,9 @@ export const DnsFilteringPage: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Modal create
+  // Modal create & edit
   const [showModal, setShowModal] = useState(false);
+  const [editingRule, setEditingRule] = useState<DnsDomainRuleDto | null>(null);
   const [formData, setFormData] = useState<CreateDnsDomainRuleRequest>({
     domainName: '',
     ruleType: 'BLOCKLIST',
@@ -33,6 +35,15 @@ export const DnsFilteringPage: React.FC = () => {
     description: '',
     active: true,
   });
+
+  const CATEGORY_MAP: Record<string, { label: string; color: string }> = {
+    GAMBLING: { label: 'Cờ bạc / Cá độ', color: 'bg-red-50 text-red-700 border-red-200' },
+    MALWARE: { label: 'Mã độc / Lừa đảo', color: 'bg-rose-50 text-rose-700 border-rose-200' },
+    ADULT: { label: 'Nội dung đồi trụy', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+    GOV_PORTAL: { label: 'Cổng TTĐT TP', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+    PUBLIC_SERVICE: { label: 'Dịch vụ công', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    OTHER: { label: 'Khác', color: 'bg-slate-100 text-slate-700 border-slate-200' },
+  };
 
   const fetchRules = async () => {
     try {
@@ -97,6 +108,32 @@ export const DnsFilteringPage: React.FC = () => {
     }
   };
 
+  const openEditModal = (rule: DnsDomainRuleDto) => {
+    setEditingRule(rule);
+    setFormData({
+      domainName: rule.domainName,
+      ruleType: rule.ruleType,
+      category: rule.category || 'OTHER',
+      description: rule.description || '',
+      active: rule.active,
+    });
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRule) return;
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    try {
+      await adminApi.updateDnsRule(editingRule.id, formData);
+      setSuccessMsg(`Cập nhật quy tắc tên miền '${formData.domainName}' thành công.`);
+      setEditingRule(null);
+      fetchRules();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Lỗi khi cập nhật quy tắc DNS');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -106,9 +143,9 @@ export const DnsFilteringPage: React.FC = () => {
             <Globe className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Bộ lọc Tên miền DNS & Whitelist Dịch vụ công (Screen B10)</h1>
+            <h1 className="text-xl font-bold text-gray-900">Bộ lọc Tên miền DNS & Whitelist Dịch vụ công</h1>
             <p className="text-sm text-gray-500">
-              Chặn truy cập trang web cờ bạc, đồi trụy, mã độc & Ưu tiên thông suốt Cổng DVC Hải Phòng và Quốc gia
+              Chặn truy cập trang web cờ bạc, mã độc & Ưu tiên thông suốt Cổng DVC Hải Phòng và Quốc gia
             </p>
           </div>
         </div>
@@ -243,7 +280,14 @@ export const DnsFilteringPage: React.FC = () => {
                       </td>
 
                       <td className="py-3.5 px-4 text-xs font-medium text-gray-600">
-                        <span className="px-2 py-1 bg-gray-100 rounded text-gray-700">{rule.category || 'CHUNG'}</span>
+                        {(() => {
+                          const catInfo = CATEGORY_MAP[rule.category || 'OTHER'] || { label: rule.category || 'Khác', color: 'bg-slate-100 text-slate-700 border-slate-200' };
+                          return (
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border ${catInfo.color}`}>
+                              {catInfo.label}
+                            </span>
+                          );
+                        })()}
                       </td>
 
                       <td className="py-3.5 px-4 text-xs text-gray-600">{rule.description || '---'}</td>
@@ -259,11 +303,18 @@ export const DnsFilteringPage: React.FC = () => {
                       </td>
 
                       <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => openEditModal(rule)}
+                            title="Chỉnh sửa quy tắc"
+                            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-sm transition-colors cursor-pointer"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => handleToggle(rule)}
                             title={rule.active ? 'Tạm dừng quy tắc' : 'Kích hoạt quy tắc'}
-                            className={`p-1.5 rounded-sm transition-colors ${
+                            className={`p-1.5 rounded-sm transition-colors cursor-pointer ${
                               rule.active ? 'text-emerald-600 hover:bg-emerald-50' : 'text-gray-400 hover:text-emerald-600'
                             }`}
                           >
@@ -272,7 +323,7 @@ export const DnsFilteringPage: React.FC = () => {
                           <button
                             onClick={() => handleDelete(rule)}
                             title="Xóa quy tắc tên miền"
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-sm transition-colors"
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-sm transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -287,21 +338,26 @@ export const DnsFilteringPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal Add Rule */}
-      {showModal && (
+      {/* Modal Add / Edit Rule */}
+      {(showModal || editingRule) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-sm shadow-xl w-full max-w-md overflow-hidden border border-gray-100">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-bold text-gray-900">Thêm Quy tắc Lọc Tên miền DNS (Screen B10)</h3>
+              <h3 className="font-bold text-gray-900">
+                {editingRule ? 'Chỉnh Sửa Quy Tắc Lọc DNS' : 'Thêm Quy Tắc Lọc Tên Miền DNS'}
+              </h3>
               <button
-                onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+                onClick={() => {
+                  setShowModal(false);
+                  setEditingRule(null);
+                }}
+                className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
               >
                 &times;
               </button>
             </div>
 
-            <form onSubmit={handleCreate} className="p-6 space-y-4">
+            <form onSubmit={editingRule ? handleUpdate : handleCreate} className="p-6 space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Tên miền (FQDN) *</label>
                 <input
@@ -358,16 +414,19 @@ export const DnsFilteringPage: React.FC = () => {
               <div className="pt-4 border-t border-gray-100 flex items-center justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-sm transition-colors"
+                  onClick={() => {
+                    setShowModal(false);
+                    setEditingRule(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-sm transition-colors cursor-pointer"
                 >
                   Hủy bỏ
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm transition-colors cursor-pointer"
                 >
-                  Thêm Quy tắc
+                  {editingRule ? 'Lưu Thay Đổi' : 'Thêm Quy Tắc'}
                 </button>
               </div>
             </form>

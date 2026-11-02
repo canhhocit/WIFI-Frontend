@@ -21,6 +21,9 @@ export const GovernmentReportPage: React.FC = () => {
   const [period, setPeriod] = useState<string>('MONTH');
   const [loading, setLoading] = useState<boolean>(true);
 
+  const [exporting, setExporting] = useState<boolean>(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
   const loadReport = async () => {
     setLoading(true);
     try {
@@ -41,8 +44,16 @@ export const GovernmentReportPage: React.FC = () => {
     window.print();
   };
 
-  const handleExportCsv = () => {
-    window.open(`/api/v1/admin/reports/government/export/csv?period=${encodeURIComponent(period)}`, '_blank');
+  const handleExportCsv = async () => {
+    setExporting(true);
+    setExportError(null);
+    try {
+      await adminApi.exportGovernmentReportCsv(period);
+    } catch (err: any) {
+      setExportError(err?.message || 'Lỗi khi xuất file báo cáo CSV');
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -90,13 +101,20 @@ export const GovernmentReportPage: React.FC = () => {
 
           <button
             onClick={handleExportCsv}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-red-700 hover:bg-red-800 rounded-sm shadow-sm"
+            disabled={exporting}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-red-700 hover:bg-red-800 disabled:opacity-50 rounded-sm shadow-sm cursor-pointer"
           >
-            <Download className="w-4 h-4" />
-            Xuất file CSV
+            <Download className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
+            {exporting ? 'Đang xuất file...' : 'Xuất file CSV'}
           </button>
         </div>
       </div>
+
+      {exportError && (
+        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-sm">
+          {exportError}
+        </div>
+      )}
 
       {/* Main Report Document Canvas */}
       {report && (

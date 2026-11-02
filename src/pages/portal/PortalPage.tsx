@@ -263,7 +263,7 @@ export const PortalPage: React.FC = () => {
             Ủy Ban Nhân Dân Thành Phố Hải Phòng
           </div>
           <h1 className="text-sm font-extrabold tracking-tight mt-0.5 uppercase text-white">
-            Cổng Truy Cập Wi-Fi Nhà Văn Hóa Cơ Sở
+            Cổng Truy Cập Wi-Fi
           </h1>
         </div>
 
@@ -555,7 +555,7 @@ export const PortalPage: React.FC = () => {
         {/* Footer */}
         <div className="px-4 py-2.5 bg-slate-100 border-t border-slate-200 text-center text-[10px] text-slate-500 space-y-0.5">
           <div className="font-semibold text-slate-700">Sở Thông tin và Truyền thông Thành phố Hải Phòng</div>
-          <div>Hạ tầng viễn thông phối hợp vận hành cùng VNPT Hải Phòng • Hỗ trợ: 1800 1166</div>
+          <div>Hạ tầng viễn thông phối hợp vận hành cùng Viettel</div>
         </div>
       </div>
 

@@ -160,9 +160,7 @@ export const DevicesPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Quản Lý Thiết Bị & Hạ Tầng</h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Theo dõi thiết bị khách truy cập (Blacklist MAC) và phần cứng mạng (ONT, Router, AP, hoán đổi thiết bị).
-          </p>
+          
         </div>
         <button
           onClick={activeTab === 'CLIENT' ? loadDevices : loadNetworkDevices}
@@ -504,7 +502,6 @@ export const DevicesPage: React.FC = () => {
         </>
       )}
 
-      {/* Hardware Replacement Modal (Screen A10) */}
       <DeviceSwapModal
         isOpen={swapModalOpen}
         onClose={() => {

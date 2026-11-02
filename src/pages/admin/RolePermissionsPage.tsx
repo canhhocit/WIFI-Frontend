@@ -15,25 +15,25 @@ import { RolePermissionDto } from '../../types/models';
 
 const MODULES = [
   { key: 'LOCATIONS', label: '1. Điểm phát Wi-Fi' },
-  { key: 'DEVICES', label: '2. Thiết bị phần cứng & AP (OPNsense/Aruba/Ruckus)' },
+  { key: 'DEVICES', label: '2. Thiết bị phần cứng & AP' },
   { key: 'CAMPAIGNS', label: '3. Chiến dịch truyền thông & Khảo sát ý kiến' },
   { key: 'INCIDENTS', label: '4. Sự cố mạng, Cảnh báo viễn thông & SLA' },
   { key: 'USERS', label: '5. Quản lý cán bộ & Tài khoản phân quyền' },
-  { key: 'SETTINGS', label: '6. Cấu hình hệ thống (NTP, Quét phiên, DNS, QoS)' },
+  { key: 'SETTINGS', label: '6. Cấu hình hệ thống' },
 ];
 
 const ROLES = [
-  { key: 'ROLE_SUPER_ADMIN', label: 'Quản trị cấp cao (Toàn quyền)', color: 'text-purple-700 bg-purple-50' },
+  { key: 'ROLE_SUPER_ADMIN', label: 'Quản trị hệ thống', color: 'text-purple-700 bg-purple-50' },
   { key: 'ROLE_SOTTTT_ADMIN', label: 'Cán bộ Sở TT&TT Hải Phòng', color: 'text-blue-700 bg-blue-50' },
   { key: 'ROLE_DISTRICT_OFFICER', label: 'Cán bộ UBND Quận / Huyện', color: 'text-emerald-700 bg-emerald-50' },
   { key: 'ROLE_COMMUNE_OFFICER', label: 'Cán bộ UBND Xã / Phường', color: 'text-teal-700 bg-teal-50' },
-  { key: 'ROLE_VNPT_ENGINEER', label: 'Kỹ sư Kỹ thuật VNPT Hải Phòng', color: 'text-amber-700 bg-amber-50' },
+  { key: 'ROLE_VNPT_ENGINEER', label: 'Kỹ sư Kỹ thuật Hải Phòng', color: 'text-amber-700 bg-amber-50' },
 ];
 
 export const RolePermissionsPage: React.FC = () => {
   const [permissions, setPermissions] = useState<RolePermissionDto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState(false);  
   const [selectedRole, setSelectedRole] = useState('ROLE_SOTTTT_ADMIN');
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -107,9 +107,9 @@ export const RolePermissionsPage: React.FC = () => {
       setErrorMsg(null);
       setSuccessMsg(null);
 
-      const rolePerms = MODULES.map((m) => getPerm(selectedRole, m.key));
-      for (const p of rolePerms) {
-        await adminApi.updateRolePermission({
+      const rolePerms = MODULES.map((m) => {
+        const p = getPerm(selectedRole, m.key);
+        return {
           roleName: selectedRole,
           moduleName: p.moduleName,
           canView: p.canView,
@@ -117,8 +117,10 @@ export const RolePermissionsPage: React.FC = () => {
           canEdit: p.canEdit,
           canDelete: p.canDelete,
           canApprove: p.canApprove,
-        });
-      }
+        };
+      });
+
+      await adminApi.updateRolePermissionsBatch(rolePerms);
       setSuccessMsg(`Cập nhật thành công quyền hạn cho vai trò: ${selectedRole}`);
 
       // Re-fetch updated permissions from server, persist to localStorage, and trigger menu re-render
@@ -140,14 +142,9 @@ export const RolePermissionsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-sm border border-gray-100 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-sm">
-            <ShieldAlert className="w-6 h-6" />
-          </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Ma trận Phân quyền Vai trò Chính quyền (Screen C05)</h1>
-            <p className="text-sm text-gray-500">
-              Kiểm soát chi tiết quyền Xem, Thêm, Sửa, Xóa và Duyệt nội dung theo 5 vai trò chính quyền Hải Phòng
-            </p>
+            <h1 className="text-xl font-bold text-gray-900">Ma trận Phân quyền</h1>
+          
           </div>
         </div>
 
@@ -202,14 +199,13 @@ export const RolePermissionsPage: React.FC = () => {
       </div>
 
       {/* Role Details Notice */}
-      <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-sm flex items-start gap-3 text-sm text-blue-900">
-        <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+      <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-sm flex items-start gap-3 text-sm text-yellow-700">
         <div>
-          <span className="font-semibold">Đang cấu hình: </span>
+          <span className="font-bold">Đang cấu hình cho: </span>
           {ROLES.find((r) => r.key === selectedRole)?.label}
           {selectedRole === 'ROLE_SUPER_ADMIN' && (
             <span className="ml-2 text-xs font-semibold text-purple-700 bg-purple-100 px-2 py-0.5 rounded">
-              Vai trò Quản trị cấp cao luôn mặc định có tất cả quyền hạn
+              Vai trò Quản trị cấp cao mặc định có tất cả quyền hạn
             </span>
           )}
         </div>

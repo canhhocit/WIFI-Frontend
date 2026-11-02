@@ -294,6 +294,19 @@ export const adminApi = {
     });
   },
 
+  updateCampaign: (id: number, data: CreateCampaignRequest) => {
+    return request<CampaignDto>(`/v1/admin/campaigns/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteCampaign: (id: number) => {
+    return request<void>(`/v1/admin/campaigns/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
   // Surveys
   getSurveys: (params: { active?: boolean; page?: number; size?: number }) => {
     const sp = new URLSearchParams();
@@ -313,6 +326,37 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  },
+
+  toggleSurvey: (id: number) => {
+    return request<SurveyDto>(`/v1/admin/surveys/${id}/toggle`, {
+      method: 'PATCH',
+    });
+  },
+
+  deleteSurvey: (id: number) => {
+    return request<void>(`/v1/admin/surveys/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  exportSurveyResponsesCsv: async (id: number) => {
+    const token = localStorage.getItem('admin_token');
+    const res = await fetch(`/api/v1/admin/surveys/${id}/export/csv`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    if (!res.ok) throw new Error('Không thể xuất báo cáo kết quả khảo sát');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Ket_qua_khao_sat_${id}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   },
 
   getSurveyResponses: (id: number, page = 0, size = 20) => {
@@ -486,7 +530,25 @@ export const adminApi = {
     return request<GovernmentReportDto>(`/v1/admin/reports/government/summary?period=${encodeURIComponent(period)}`);
   },
 
-  // Administrative Users Management (Screens C03, C04)
+  exportGovernmentReportCsv: async (period = 'MONTH') => {
+    const token = localStorage.getItem('admin_token');
+    const res = await fetch(`/api/v1/admin/reports/government/export/csv?period=${encodeURIComponent(period)}`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    if (!res.ok) throw new Error('Không thể xuất báo cáo hành chính UBND / Sở TT&TT');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Bao_cao_UBND_So_TTTT_Hai_Phong_${period}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  },
+
   getUsers: (params?: { search?: string; page?: number; size?: number }) => {
     const sp = new URLSearchParams();
     if (params?.search) sp.append('search', params.search);
@@ -531,7 +593,6 @@ export const adminApi = {
     });
   },
 
-  // DNS Domain Rules (Screen B10)
   getDnsRules: (params?: { ruleType?: string; search?: string; page?: number; size?: number }) => {
     const sp = new URLSearchParams();
     if (params?.ruleType) sp.append('ruleType', params.ruleType);
@@ -548,6 +609,13 @@ export const adminApi = {
     });
   },
 
+  updateDnsRule: (id: number, data: CreateDnsDomainRuleRequest) => {
+    return request<DnsDomainRuleDto>(`/v1/admin/dns-domains/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
   toggleDnsRule: (id: number) => {
     return request<DnsDomainRuleDto>(`/v1/admin/dns-domains/${id}/toggle`, {
       method: 'PATCH',
@@ -560,7 +628,6 @@ export const adminApi = {
     });
   },
 
-  // System Settings (Screen C06)
   getSystemSettings: () => {
     return request<SystemSettingDto[]>('/v1/admin/system/settings');
   },
@@ -572,13 +639,19 @@ export const adminApi = {
     });
   },
 
-  // Role Permissions Matrix (Screen C05)
   getRolePermissions: () => {
     return request<RolePermissionDto[]>('/v1/admin/roles/permissions');
   },
 
   updateRolePermission: (data: UpdateRolePermissionRequest) => {
     return request<RolePermissionDto>('/v1/admin/roles/permissions', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateRolePermissionsBatch: (data: UpdateRolePermissionRequest[]) => {
+    return request<RolePermissionDto[]>('/v1/admin/roles/permissions/batch', {
       method: 'PUT',
       body: JSON.stringify(data),
     });

@@ -11,17 +11,36 @@ import {
   CheckCircle,
   AlertTriangle,
   Info,
+  Plus,
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { SystemSettingDto } from '../../types/models';
 
+const FRIENDLY_NAMES: Record<string, { title: string; unit?: string }> = {
+  'network.ntp.server': { title: 'Máy chủ đồng bộ thời gian NTP', unit: 'FQDN / IP' },
+  'session.guest.default_timeout_minutes': { title: 'Thời lượng mặc định một phiên Wi-Fi', unit: 'phút' },
+  'session.guest.max_bandwidth_mbps': { title: 'Băng thông tối đa mỗi thiết bị công dân', unit: 'Mbps' },
+  'security.admin.max_failed_attempts': { title: 'Số lần đăng nhập sai tối đa trước khi khóa tài khoản', unit: 'lần sai' },
+  'security.admin.lockout_duration_minutes': { title: 'Thời gian tạm khóa tài khoản cán bộ', unit: 'phút' },
+  'telco.otp.default_gateway': { title: 'Đầu mối cổng gửi OTP SMS Brandname', unit: 'Nhà mạng' },
+  'gateway.health_check_interval_seconds': { title: 'Chu kỳ kiểm tra trạng thái trạm phát Gateway', unit: 'giây' },
+};
+
 export const SystemSettingsPage: React.FC = () => {
   const [settings, setSettings] = useState<SystemSettingDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState<string>('ALL');
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // New setting modal
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newKey, setNewKey] = useState('');
+  const [newValue, setNewValue] = useState('');
+  const [newCategory, setNewCategory] = useState('NETWORK');
+  const [newDescription, setNewDescription] = useState('');
 
   const fetchSettings = async () => {
     try {
@@ -72,6 +91,27 @@ export const SystemSettingsPage: React.FC = () => {
     }
   };
 
+  const handleCreateNewSetting = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newKey.trim()) return;
+    try {
+      setErrorMsg(null);
+      setSuccessMsg(null);
+      await adminApi.updateSystemSetting(newKey.trim(), {
+        settingValue: newValue.trim(),
+        description: newDescription.trim() || undefined,
+      });
+      setSuccessMsg(`Thêm mới tham số '${newKey}' thành công.`);
+      setShowAddModal(false);
+      setNewKey('');
+      setNewValue('');
+      setNewDescription('');
+      fetchSettings();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Không thể tạo mới tham số');
+    }
+  };
+
   const getCategoryIcon = (category?: string) => {
     switch (category) {
       case 'NETWORK':
@@ -89,29 +129,42 @@ export const SystemSettingsPage: React.FC = () => {
     }
   };
 
+  const filteredSettings = activeCategory === 'ALL'
+    ? settings
+    : settings.filter((s) => s.category === activeCategory);
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-sm border border-gray-100 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-gray-100 text-gray-700 rounded-sm">
+          <div className="p-2.5 bg-blue-50 text-blue-600 rounded-sm">
             <Settings className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Cấu hình Hệ thống Chung (Screen C06)</h1>
+            <h1 className="text-xl font-bold text-gray-900">Cấu Hình Tham Số Hệ Thống</h1>
             <p className="text-sm text-gray-500">
-              Quản trị tham số toàn hệ thống: Đồng bộ NTP, Chu kỳ quét phiên, Bảo mật khóa tài khoản & Brandname SMS
+              Quản lý các thông số vận hành cốt lõi: thời lượng phiên truy cập, bảo mật đăng nhập, máy chủ NTP & viễn thông
             </p>
           </div>
         </div>
 
-        <button
-          onClick={fetchSettings}
-          className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-sm border border-gray-200 transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Làm mới
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchSettings}
+            className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-sm border border-gray-200 transition-colors cursor-pointer"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Làm mới
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm transition-colors cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            Thêm Tham Số
+          </button>
+        </div>
       </div>
 
       {/* Notifications */}
@@ -128,6 +181,30 @@ export const SystemSettingsPage: React.FC = () => {
         </div>
       )}
 
+      {/* Category Tabs */}
+      <div className="flex flex-wrap gap-1 bg-white p-1.5 rounded-sm border border-gray-200 shadow-xs">
+        {[
+          { key: 'ALL', label: 'Tất cả tham số' },
+          { key: 'NETWORK', label: 'Mạng & NTP' },
+          { key: 'SESSION', label: 'Phiên truy cập Wi-Fi' },
+          { key: 'SECURITY', label: 'Bảo mật & Khóa tài khoản' },
+          { key: 'TELCO', label: 'Viễn thông & Brandname' },
+          { key: 'GATEWAY', label: 'Gateway & Tường lửa' },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveCategory(tab.key)}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-sm transition cursor-pointer ${
+              activeCategory === tab.key
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Settings Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {loading ? (
@@ -135,69 +212,143 @@ export const SystemSettingsPage: React.FC = () => {
             <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
             Đang nạp cấu hình hệ thống...
           </div>
+        ) : filteredSettings.length === 0 ? (
+          <div className="col-span-2 py-8 text-center text-gray-400 bg-white rounded-sm border border-gray-200">
+            Không có tham số nào thuộc phân nhóm này.
+          </div>
         ) : (
-          settings.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white p-6 rounded-sm border border-gray-100 shadow-sm flex flex-col justify-between space-y-4 hover:border-gray-200 transition-all"
-            >
-              <div>
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-2 bg-gray-50 rounded-sm">{getCategoryIcon(item.category)}</div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 font-mono text-sm">{item.settingKey}</h3>
-                      <span className="text-[10px] font-semibold tracking-wider text-gray-400 uppercase">
-                        Phân nhóm: {item.category || 'GENERAL'}
-                      </span>
+          filteredSettings.map((item) => {
+            const friendly = FRIENDLY_NAMES[item.settingKey];
+            return (
+              <div
+                key={item.id}
+                className="bg-white p-5 rounded-sm border border-gray-200 shadow-xs flex flex-col justify-between space-y-4 hover:border-blue-300 transition-all"
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 bg-gray-50 rounded-sm border border-slate-100">{getCategoryIcon(item.category)}</div>
+                      <div>
+                        <h3 className="font-bold text-gray-900 text-sm">
+                          {friendly ? friendly.title : item.settingKey}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="font-mono text-[11px] text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200">
+                            {item.settingKey}
+                          </span>
+                          {friendly?.unit && (
+                            <span className="text-[10px] text-slate-500 font-medium">
+                              Đơn vị: <strong className="text-slate-700">{friendly.unit}</strong>
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
+                  </div>
+
+                  <p className="text-xs text-gray-600 mb-3">{item.description || 'Không có mô tả chi tiết'}</p>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">
+                      Giá trị cấu hình {friendly?.unit ? `(${friendly.unit})` : ''}
+                    </label>
+                    <input
+                      type="text"
+                      value={formData[item.settingKey] ?? ''}
+                      onChange={(e) => handleChange(item.settingKey, e.target.value)}
+                      className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                    />
                   </div>
                 </div>
 
-                <p className="text-xs text-gray-600 mb-4">{item.description || 'Không có mô tả chi tiết'}</p>
-
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Giá trị hiện tại</label>
-                  <input
-                    type="text"
-                    value={formData[item.settingKey] ?? ''}
-                    onChange={(e) => handleChange(item.settingKey, e.target.value)}
-                    className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-                  />
+                <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+                  <span className="text-[11px] text-gray-400">
+                    Cập nhật: {item.updatedAt ? new Date(item.updatedAt).toLocaleString('vi-VN') : 'Mặc định'}
+                  </span>
+                  <button
+                    onClick={() => handleSaveSetting(item)}
+                    disabled={savingKey === item.settingKey}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-sm shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    {savingKey === item.settingKey ? 'Đang lưu...' : 'Lưu Thay Đổi'}
+                  </button>
                 </div>
               </div>
-
-              <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
-                <span className="text-[11px] text-gray-400">
-                  Cập nhật: {item.updatedAt ? new Date(item.updatedAt).toLocaleString('vi-VN') : 'Mặc định'}
-                </span>
-                <button
-                  onClick={() => handleSaveSetting(item)}
-                  disabled={savingKey === item.settingKey}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-sm shadow-sm transition-colors"
-                >
-                  <Save className="w-3.5 h-3.5" />
-                  {savingKey === item.settingKey ? 'Đang lưu...' : 'Lưu giá trị'}
-                </button>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
-      {/* Guidelines Box */}
-      <div className="p-4 bg-gray-50 border border-gray-200 rounded-sm flex items-start gap-3 text-xs text-gray-600">
-        <Info className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <p className="font-semibold text-gray-700">Lưu ý quản trị hạ tầng (Sở TT&TT & VNPT Hải Phòng):</p>
-          <p>
-            - Tham số <strong>session_scan_interval_sec</strong> điều khiển chu kỳ luồng Background Daemon quét và thu hồi phiên người dân hết hạn.
-          </p>
-          <p>
-            - Tham số <strong>max_failed_logins</strong> và <strong>account_lockout_duration_min</strong> kích hoạt cơ chế khóa tài khoản cán bộ cấp phường/quận khi có dấu hiệu tấn công dò mật khẩu (Screen C02).
-          </p>
+      {/* Modal Add Parameter */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-sm shadow-xl w-full max-w-md overflow-hidden border border-gray-100">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-bold text-gray-900">Thêm Tham Số Hệ Thống Mới</h3>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateNewSetting} className="p-6 space-y-4 text-xs">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Mã tham số (Key) *</label>
+                <input
+                  type="text"
+                  required
+                  value={newKey}
+                  onChange={(e) => setNewKey(e.target.value)}
+                  placeholder="vd: session.max_concurrent_users"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Giá trị tham số *</label>
+                <input
+                  type="text"
+                  required
+                  value={newValue}
+                  onChange={(e) => setNewValue(e.target.value)}
+                  placeholder="vd: 500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Mô tả mục đích sử dụng</label>
+                <textarea
+                  rows={2}
+                  value={newDescription}
+                  onChange={(e) => setNewDescription(e.target.value)}
+                  placeholder="Giải thích tác động và ý nghĩa của tham số..."
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-gray-100 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-sm transition-colors cursor-pointer"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm transition-colors cursor-pointer"
+                >
+                  Lưu Tham Số
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

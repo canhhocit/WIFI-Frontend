@@ -55,9 +55,6 @@ export const AnalyticsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Báo Cáo & Thống Kê Lưu Lượng</h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Tổng hợp dữ liệu kết nối mạng theo từng điểm phát sóng và xu hướng truy cập theo dòng thời gian.
-          </p>
         </div>
         <button
           onClick={loadData}

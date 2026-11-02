@@ -66,9 +66,6 @@ export const GatewayPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight">Trạng Thái Trạm Phát Wi-Fi (Gateway)</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Giám sát trực tiếp luồng cấp quyền truy cập mạng và kết nối từ các thiết bị khách.
-          </p>
         </div>
         <button
           onClick={loadGatewayData}

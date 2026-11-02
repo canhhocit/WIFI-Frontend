@@ -182,6 +182,23 @@ export const UsersPage: React.FC = () => {
     }
   };
 
+  const handleDeleteUser = async (user: AdminUserDto) => {
+    if (user.username === 'admin') {
+      alert('Không thể xóa tài khoản Quản trị viên tối cao (admin)!');
+      return;
+    }
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa tài khoản cán bộ '${user.fullName}' (@${user.username})? Thao tác không thể hoàn tác.`)) {
+      return;
+    }
+    try {
+      await adminApi.deleteUser(user.id);
+      setActionSuccess(`Đã xóa tài khoản cán bộ ${user.fullName} thành công.`);
+      fetchData();
+    } catch (err: any) {
+      setActionError(err.message || 'Lỗi khi xóa tài khoản');
+    }
+  };
+
   const filteredUsers = users.filter((u) => {
     if (selectedRole !== 'ALL' && u.role !== selectedRole) return false;
     return true;
@@ -276,7 +293,7 @@ export const UsersPage: React.FC = () => {
                 <th className="py-3 px-4">Vai trò chính quyền</th>
                 <th className="py-3 px-4">Địa bàn phụ trách</th>
                 <th className="py-3 px-4">Liên hệ</th>
-                <th className="py-3 px-4 text-center">Trạng thái khóa (C02)</th>
+                <th className="py-3 px-4 text-center">Trạng thái khóa</th>
                 <th className="py-3 px-4 text-right">Thao tác</th>
               </tr>
             </thead>
@@ -357,32 +374,41 @@ export const UsersPage: React.FC = () => {
                       </td>
 
                       <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
                           {user.locked && (
                             <button
                               onClick={() => handleUnlockUser(user)}
-                              title="Mở khóa tài khoản (C02)"
-                              className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-sm transition-colors border border-amber-200"
+                              title="Mở khóa tài khoản cán bộ"
+                              className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-sm transition-colors border border-amber-200 cursor-pointer"
                             >
                               <Unlock className="w-4 h-4" />
                             </button>
                           )}
                           <button
                             onClick={() => handleOpenEdit(user)}
-                            title="Sửa thông tin"
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors"
+                            title="Sửa thông tin cán bộ"
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors cursor-pointer"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleToggleStatus(user)}
                             title={user.enabled ? 'Vô hiệu hóa tài khoản' : 'Kích hoạt tài khoản'}
-                            className={`p-1.5 rounded-sm transition-colors ${
-                              user.enabled ? 'text-gray-400 hover:text-red-600' : 'text-emerald-600 hover:bg-emerald-50'
+                            className={`p-1.5 rounded-sm transition-colors cursor-pointer ${
+                              user.enabled ? 'text-gray-400 hover:text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'
                             }`}
                           >
                             {user.enabled ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
                           </button>
+                          {user.username !== 'admin' && (
+                            <button
+                              onClick={() => handleDeleteUser(user)}
+                              title="Xóa tài khoản cán bộ"
+                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-sm transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

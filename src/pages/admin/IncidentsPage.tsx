@@ -113,7 +113,7 @@ export const IncidentsPage: React.FC = () => {
         description: createDescription,
         severity: createSeverity,
         assignedTo: createAssignedTo || undefined,
-        assignedGroup: createAssignedTo ? 'Đội kỹ thuật VNPT Hải Phòng' : undefined,
+        assignedGroup: createAssignedTo ? 'Đội kỹ thuật Viettel' : undefined,
       };
       const created = await adminApi.createIncident(payload);
       setIncidents((prev) => [created, ...prev]);
