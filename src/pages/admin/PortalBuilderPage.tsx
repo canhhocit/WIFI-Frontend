@@ -195,7 +195,7 @@ export const PortalBuilderPage: React.FC = () => {
       setToast({
         show: true,
         title: 'Cập nhật thành công',
-        message: `Đã lưu tùy biến giao diện cho điểm: ${updated.name}`,
+        message: `Đã lưu giao diện cho: ${updated.name}`,
         type: 'success',
       });
     } catch (err: any) {
@@ -260,9 +260,6 @@ export const PortalBuilderPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Trình Dựng & Tùy Biến Cổng Chào Wi-Fi</h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Thiết kế giao diện Cổng chào chung toàn thành phố hoặc cá nhân hóa hình ảnh, lời chào, bản tin cho từng Nhà văn hóa / khu vực.
-          </p>
         </div>
         <div className="flex items-center gap-2">
           <a
@@ -432,11 +429,9 @@ export const PortalBuilderPage: React.FC = () => {
                     <div className="p-3.5 bg-slate-50 rounded-sm border border-slate-200 space-y-2">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
                         <span className="w-5 h-5 rounded-full bg-[#004b87] text-white flex items-center justify-center text-[11px] font-bold">1</span>
-                        <span>Hình nền lớn toàn màn hình (Background Wallpaper)</span>
+                        <span>Hình nền </span>
                       </div>
-                      <p className="text-[11px] text-slate-500">
-                        Bao phủ toàn bộ không gian phía sau khung đăng nhập (ảnh phong cảnh Cầu Hoàng Văn Thụ, trung tâm TP...).
-                      </p>
+                      
                       <ImageUploadInput
                         value={template.backgroundImageUrl || ''}
                         onChange={(url) => setTemplate({ ...template, backgroundImageUrl: url })}
@@ -446,7 +441,7 @@ export const PortalBuilderPage: React.FC = () => {
                       />
                       <div className="pt-2">
                         <span className="text-[11px] font-semibold text-slate-600 block mb-1.5">
-                          Gợi ý hình nền biểu tượng Hải Phòng:
+                          Gợi ý nhanh:
                         </span>
                         <div className="flex flex-wrap gap-2 text-[11px]">
                           <button
@@ -458,7 +453,7 @@ export const PortalBuilderPage: React.FC = () => {
                                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                             }`}
                           >
-                            🌉 Cầu Hoàng Văn Thụ (Đêm)
+                            Cầu Hoàng Văn Thụ 
                           </button>
                           <button
                             type="button"
@@ -469,7 +464,7 @@ export const PortalBuilderPage: React.FC = () => {
                                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                             }`}
                           >
-                            🏛️ Nhà văn hóa Hải Phòng
+                            Nhà văn hóa Hải Phòng
                           </button>
                           <button
                             type="button"
@@ -480,7 +475,7 @@ export const PortalBuilderPage: React.FC = () => {
                                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                             }`}
                           >
-                            🏙️ Trung tâm Thành phố
+                            Trung tâm Thành phố
                           </button>
                         </div>
                       </div>
@@ -490,11 +485,9 @@ export const PortalBuilderPage: React.FC = () => {
                     <div className="p-3.5 bg-slate-50 rounded-sm border border-slate-200 space-y-2">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
                         <span className="w-5 h-5 rounded-full bg-[#004b87] text-white flex items-center justify-center text-[11px] font-bold">2</span>
-                        <span>Ảnh Banner minh họa (Nằm trong thẻ chào mừng)</span>
+                        <span>Ảnh Banner </span>
                       </div>
-                      <p className="text-[11px] text-slate-500">
-                        Ảnh chữ nhật hiển thị ở giữa thẻ thông tin phía trên nút kết nối (ảnh cổng Nhà văn hóa, biểu ngữ tuyên truyền...).
-                      </p>
+                      
                       <ImageUploadInput
                         value={template.bannerUrl || ''}
                         onChange={(url) => setTemplate({ ...template, bannerUrl: url })}
@@ -508,16 +501,14 @@ export const PortalBuilderPage: React.FC = () => {
                     <div className="p-3.5 bg-slate-50 rounded-sm border border-slate-200 space-y-2">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
                         <span className="w-5 h-5 rounded-full bg-[#004b87] text-white flex items-center justify-center text-[11px] font-bold">3</span>
-                        <span>Biểu trưng chính thức / Logo (Huy hiệu TP hoặc cơ quan)</span>
+                        <span>Logo</span>
                       </div>
-                      <p className="text-[11px] text-slate-500">
-                        Logo đặt ở đầu tiêu đề Cổng chào (khuyến nghị dùng ảnh PNG tách nền trong suốt).
-                      </p>
+                      
                       <ImageUploadInput
                         value={template.logoUrl || ''}
                         onChange={(url) => setTemplate({ ...template, logoUrl: url })}
                         label="Tải logo hoặc dán URL:"
-                        helperText="Tải logo từ máy tính hoặc nhập liên kết ảnh"
+                        helperText="Tải logo từ máy hoặc nhập liên kết ảnh"
                         category="logos"
                       />
                     </div>
@@ -536,9 +527,7 @@ export const PortalBuilderPage: React.FC = () => {
 
                 {/* Sticky Action Footer */}
                 <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between rounded-b flex-shrink-0">
-                  <span className="text-[11px] text-slate-500 hidden sm:inline">
-                    Cập nhật áp dụng cho các điểm phát Wi-Fi chung toàn TP
-                  </span>
+                 
                   <button
                     type="submit"
                     disabled={saving}
@@ -554,17 +543,14 @@ export const PortalBuilderPage: React.FC = () => {
               <form onSubmit={handleSaveLocation} className="flex flex-col h-full overflow-hidden text-xs">
                 {/* Fixed Header */}
                 <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-white z-10 font-bold text-slate-800 text-sm flex-shrink-0">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-[#a81c1c]" />
-                    <span>Tùy Biến Cổng Chào Theo Nhà Văn Hóa</span>
-                  </div>
+                 
                   <button
                     type="button"
                     onClick={handleResetLocationCustomization}
                     className="text-[11px] text-slate-500 hover:text-slate-800 flex items-center gap-1 font-semibold cursor-pointer"
                     title="Xóa cấu hình riêng để dùng lại ảnh và nội dung mẫu chung toàn thành phố"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" /> Dùng lại mẫu chung TP
+                    <RotateCcw className="w-3.5 h-3.5" /> Dùng lại mẫu chung
                   </button>
                 </div>
 
@@ -573,7 +559,7 @@ export const PortalBuilderPage: React.FC = () => {
                   {/* Location Picker */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Chọn Nhà văn hóa / Điểm phát sóng cần chỉnh sửa:
+                      Chọn điểm phát sóng cần chỉnh sửa:
                     </label>
                     <select
                       value={selectedLocationId || ''}
@@ -608,7 +594,7 @@ export const PortalBuilderPage: React.FC = () => {
                   {/* Welcome Message for this location */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Lời chào mừng riêng của Nhà văn hóa này:
+                      Lời chào riêng:
                     </label>
                     <input
                       type="text"
@@ -617,23 +603,21 @@ export const PortalBuilderPage: React.FC = () => {
                       placeholder={`Ví dụ: Chào mừng Nhân dân đến với ${selectedLocation?.name || 'Nhà văn hóa'}`}
                       className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                     />
-                    <p className="text-[10.5px] text-slate-400 mt-1">Để trống nếu muốn dùng câu chào mừng chung của Thành phố.</p>
+                    <p className="text-[10.5px] text-slate-400 mt-1">Để trống nếu muốn dùng câu chung</p>
                   </div>
 
                   {/* Banner Photo for this specific location */}
                   <div className="p-3.5 bg-blue-50/60 rounded-sm border border-blue-200/80 space-y-2">
                     <div className="flex items-center gap-1.5 text-xs font-bold text-[#004b87]">
                       <Image className="w-4 h-4" />
-                      <span>Ảnh Banner thực tế riêng của Nhà văn hóa này</span>
+                      <span>Ảnh Banner</span>
                     </div>
-                    <p className="text-[11px] text-slate-500">
-                      Ảnh chụp cổng chính hoặc hội trường Nhà văn hóa thôn / tổ dân phố để công dân dễ nhận biết.
-                    </p>
+               
                     <ImageUploadInput
                       value={locFormData.promoBannerUrl}
                       onChange={(url) => setLocFormData({ ...locFormData, promoBannerUrl: url })}
-                      label="Tải ảnh thực tế Nhà văn hóa hoặc dán URL:"
-                      helperText="Tải từ máy tính hoặc để trống để kế thừa Banner chung toàn TP"
+                      label="Tải ảnh hoặc dán URL:"
+                      helperText="Tải từ máy hoặc để trống để dùng ảnh chung"
                       category="banners"
                     />
                   </div>
@@ -642,10 +626,10 @@ export const PortalBuilderPage: React.FC = () => {
                   <div className="p-3.5 bg-slate-50 rounded-sm border border-slate-200 space-y-2">
                     <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
                       <Palette className="w-4 h-4 text-[#004b87]" />
-                      <span>Hình nền Cổng chào riêng của điểm này (Tùy chọn)</span>
+                      <span>Hình nền riêng (Tùy chọn)</span>
                     </div>
                     <p className="text-[11px] text-slate-500">
-                      Ảnh nền lớn bao quanh màn hình riêng cho điểm này (Để trống nếu muốn dùng nền chung toàn TP).
+                      Ảnh nền(Để trống nếu muốn dùng nền chung)
                     </p>
                     <ImageUploadInput
                       value={locFormData.backgroundImageUrl}
@@ -660,7 +644,7 @@ export const PortalBuilderPage: React.FC = () => {
                   <div className="p-3.5 bg-amber-50/60 rounded-sm border border-amber-200 space-y-3">
                     <div className="flex items-center gap-1.5 text-xs font-bold text-[#a81c1c]">
                       <Megaphone className="w-4 h-4" />
-                      <span>Bản Tin Chuyển Đổi Số & Lịch Sinh Hoạt Riêng Của Thôn / TDP</span>
+                      <span>Bản Tin</span>
                     </div>
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 mb-1">
@@ -676,7 +660,7 @@ export const PortalBuilderPage: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                        Nội dung thông báo cho bà con:
+                        Nội dung thông báo:
                       </label>
                       <textarea
                         rows={2}
@@ -712,7 +696,7 @@ export const PortalBuilderPage: React.FC = () => {
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#a81c1c] hover:bg-[#881313] text-white rounded-sm text-xs font-bold transition shadow-sm shadow-red-700/20 cursor-pointer ml-auto flex-shrink-0"
                   >
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Lưu Tùy Biến Cho Nhà Văn Hóa Này
+                    Lưu
                   </button>
                 </div>
               </form>
