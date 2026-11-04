@@ -497,7 +497,7 @@ export const LocationsPage: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Vĩ độ (Latitude) Hải Phòng</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Vĩ độ</label>
               <input
                 type="number"
                 step="0.000001"
@@ -508,7 +508,7 @@ export const LocationsPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Kinh độ (Longitude) Hải Phòng</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Kinh độ</label>
               <input
                 type="number"
                 step="0.000001"
@@ -585,7 +585,7 @@ export const LocationsPage: React.FC = () => {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Điều khoản & Quy định sử dụng dịch vụ <span className="text-red-500">*</span>
+              Điều khoản & Quy định <span className="text-red-500">*</span>
             </label>
             <textarea
               rows={3}
@@ -606,23 +606,23 @@ export const LocationsPage: React.FC = () => {
             <ImageUploadInput
               value={formData.promoBannerUrl}
               onChange={(url) => setFormData({ ...formData, promoBannerUrl: url })}
-              label="Ảnh thực tế riêng của Nhà văn hóa (Banner)"
-              helperText="Tải ảnh cổng hoặc hội trường Nhà văn hóa từ máy tính hoặc nhập liên kết ảnh"
+              label="Ảnh Banner"
+              helperText="Tải ảnh từ máy hoặc nhập liên kết ảnh"
               category="banners"
             />
 
             <ImageUploadInput
               value={formData.backgroundImageUrl}
               onChange={(url) => setFormData({ ...formData, backgroundImageUrl: url })}
-              label="Hình nền Cổng chào riêng của điểm này (Background Wallpaper)"
-              helperText="Tải ảnh nền từ máy tính hoặc dán URL (để trống nếu dùng nền chung toàn TP)"
+              label="Hình nền riêng của điểm này"
+              helperText="Tải ảnh từ máy hoặc dán URL (để trống nếu dùng nền chung)"
               category="banners"
             />
 
             <div className="grid grid-cols-1 gap-2">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Tiêu đề thông báo / Bảng tin riêng của thôn / tổ dân phố
+                  Tiêu đề thông báo 
                 </label>
                 <input
                   type="text"
@@ -635,7 +635,7 @@ export const LocationsPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Nội dung thông tin / Bảng tin chuyển đổi số địa phương
+                  Nội dung thông tin
                 </label>
                 <textarea
                   rows={2}
@@ -657,7 +657,7 @@ export const LocationsPage: React.FC = () => {
               className="w-4 h-4 text-[#004b87] rounded-sm border-slate-300 focus:ring-[#004b87] cursor-pointer"
             />
             <label htmlFor="createActive" className="text-xs font-bold text-slate-700 cursor-pointer">
-              Kích hoạt điểm phát Wi-Fi này ngay
+              Kích hoạt điểm phát ngay
             </label>
           </div>
 
@@ -828,30 +828,29 @@ export const LocationsPage: React.FC = () => {
           {/* Tùy biến hình ảnh & nội dung riêng cho điểm này */}
           <div className="p-3 bg-blue-50/60 border border-blue-200/80 rounded-sm space-y-3">
             <div className="font-bold text-[#004b87] text-xs flex items-center justify-between border-b border-blue-200 pb-1.5">
-              <span>Nội Dung & Hình Ảnh Hiển Thị Riêng Cho Điểm Này</span>
-              <span className="text-[10px] text-slate-500 font-normal">Tùy biến từng Nhà văn hóa</span>
+              <span>Nội Dung & Hình Ảnh Hiển Thị</span>
             </div>
 
             <ImageUploadInput
               value={formData.promoBannerUrl}
               onChange={(url) => setFormData({ ...formData, promoBannerUrl: url })}
-              label="Ảnh thực tế riêng của Nhà văn hóa (Banner)"
-              helperText="Tải ảnh cổng hoặc hội trường Nhà văn hóa từ máy tính hoặc nhập liên kết ảnh"
+              label="Ảnh Banner"
+              helperText="Tải từ máy hoặc nhập liên kết ảnh"
               category="banners"
             />
 
             <ImageUploadInput
               value={formData.backgroundImageUrl}
               onChange={(url) => setFormData({ ...formData, backgroundImageUrl: url })}
-              label="Hình nền Cổng chào riêng của điểm này (Background Wallpaper)"
-              helperText="Tải ảnh nền từ máy tính hoặc dán URL (để trống nếu dùng nền chung toàn TP)"
+              label="Hình nền riêng của điểm này "
+              helperText="Tải ảnh nền từ máy tính hoặc dán URL (để trống nếu dùng nền chung)"
               category="banners"
             />
 
             <div className="grid grid-cols-1 gap-2">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Tiêu đề thông báo / Bảng tin riêng của thôn / tổ dân phố
+                  Tiêu đề thông báo
                 </label>
                 <input
                   type="text"
@@ -864,7 +863,7 @@ export const LocationsPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Nội dung thông tin / Bảng tin chuyển đổi số địa phương
+                  Nội dung thông tin 
                 </label>
                 <textarea
                   rows={2}
@@ -886,7 +885,7 @@ export const LocationsPage: React.FC = () => {
               className="w-4 h-4 text-[#004b87] rounded-sm border-slate-300 focus:ring-[#004b87] cursor-pointer"
             />
             <label htmlFor="editActive" className="text-xs font-bold text-slate-700 cursor-pointer">
-              Đang hoạt động (Kích hoạt cho khách truy cập)
+              Đang hoạt động
             </label>
           </div>
 
