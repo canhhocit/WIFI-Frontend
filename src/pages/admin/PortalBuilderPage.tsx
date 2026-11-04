@@ -24,12 +24,25 @@ import { adminApi } from '../../api/adminApi';
 import { PortalTemplateDto, LocationDto } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
 import { ImageUploadInput } from '../../components/ImageUploadInput';
+import { Toast } from '../../components/Toast';
 
 export const PortalBuilderPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Bottom-Right Corner Toast Notification State
+  const [toast, setToast] = useState<{
+    show: boolean;
+    title?: string;
+    message: string;
+    type?: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    show: false,
+    title: undefined,
+    message: '',
+    type: 'success',
+  });
 
   // Scope: 'GLOBAL' (Toàn thành phố) or 'LOCATION' (Từng Nhà văn hóa cụ thể)
   const [scope, setScope] = useState<'GLOBAL' | 'LOCATION'>('GLOBAL');
@@ -122,14 +135,25 @@ export const PortalBuilderPage: React.FC = () => {
   const handleSaveGlobalTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setSuccessMsg(null);
     setError(null);
     try {
       const saved = await adminApi.savePortalTemplate(template);
       setTemplate(saved);
-      setSuccessMsg('Đã lưu và xuất bản mẫu giao diện Cổng chào toàn thành phố thành công!');
+      setToast({
+        show: true,
+        title: 'Lưu thành công',
+        message: 'Đã lưu và xuất bản mẫu giao diện Cổng chào toàn thành phố!',
+        type: 'success',
+      });
     } catch (err: any) {
-      setError(err?.message || 'Không thể lưu cấu hình giao diện.');
+      const msg = err?.message || 'Không thể lưu cấu hình giao diện.';
+      setError(msg);
+      setToast({
+        show: true,
+        title: 'Lỗi lưu cấu hình',
+        message: msg,
+        type: 'error',
+      });
     } finally {
       setSaving(false);
     }
@@ -139,7 +163,6 @@ export const PortalBuilderPage: React.FC = () => {
     e.preventDefault();
     if (!selectedLocation) return;
     setSaving(true);
-    setSuccessMsg(null);
     setError(null);
     try {
       const updated = await adminApi.updateLocation(selectedLocation.id, {
@@ -166,9 +189,21 @@ export const PortalBuilderPage: React.FC = () => {
 
       setSelectedLocation(updated);
       setLocations((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
-      setSuccessMsg(`Đã lưu tùy biến giao diện riêng thành công cho điểm: ${updated.name}`);
+      setToast({
+        show: true,
+        title: 'Cập nhật thành công',
+        message: `Đã lưu tùy biến giao diện cho điểm: ${updated.name}`,
+        type: 'success',
+      });
     } catch (err: any) {
-      setError(err?.message || 'Không thể lưu tùy biến điểm phát sóng.');
+      const msg = err?.message || 'Không thể lưu tùy biến điểm phát sóng.';
+      setError(msg);
+      setToast({
+        show: true,
+        title: 'Lỗi lưu tùy biến',
+        message: msg,
+        type: 'error',
+      });
     } finally {
       setSaving(false);
     }
@@ -182,6 +217,12 @@ export const PortalBuilderPage: React.FC = () => {
       promoBannerUrl: '',
       backgroundImageUrl: '',
       promoActionUrl: '',
+    });
+    setToast({
+      show: true,
+      title: 'Đã hoàn tác cấu hình riêng',
+      message: 'Đã xóa thiết lập riêng. Vui lòng bấm Lưu để điểm này dùng mẫu chung TP.',
+      type: 'info',
     });
   };
 
@@ -283,7 +324,6 @@ export const PortalBuilderPage: React.FC = () => {
       </div>
 
       {error && <AlertBanner type="error" message={error} />}
-      {successMsg && <AlertBanner type="success" message={successMsg} />}
 
       {loading ? (
         <div className="bg-white p-12 rounded border border-slate-200 text-center text-slate-400">
@@ -807,6 +847,16 @@ export const PortalBuilderPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Bottom-Right Corner Toast Notification */}
+      <Toast
+        show={toast.show}
+        title={toast.title}
+        message={toast.message}
+        type={toast.type}
+        duration={3000}
+        onClose={() => setToast((prev) => ({ ...prev, show: false }))}
+      />
     </div>
   );
 };
