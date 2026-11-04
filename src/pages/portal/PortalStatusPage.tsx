@@ -17,6 +17,10 @@ import {
   ShieldCheck,
   AlertCircle,
   HelpCircle,
+  MapPin,
+  Sparkles,
+  Megaphone,
+  ChevronRight,
 } from 'lucide-react';
 import { portalApi } from '../../api/portalApi';
 import { GuestSessionStatusResponse } from '../../types/models';
@@ -30,8 +34,6 @@ export const PortalStatusPage: React.FC = () => {
   const [disconnecting, setDisconnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [remainingSec, setRemainingSec] = useState<number>(0);
-  const [iframeLoading, setIframeLoading] = useState(true);
-  const [iframeError, setIframeError] = useState(false);
 
   const timerRef = useRef<any>(null);
 
@@ -297,51 +299,244 @@ export const PortalStatusPage: React.FC = () => {
         </div>
       </nav>
 
-      {/* 3. Main Embedded Public Administration Page View */}
-      <main className="flex-1 relative flex flex-col w-full bg-slate-100">
-        {/* Iframe Loading Overlay */}
-        {iframeLoading && (
-          <div className="absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center p-6 text-center space-y-3">
-            <Loader2 className="w-8 h-8 animate-spin text-[#004b87]" />
-            <div className="space-y-1">
-              <h2 className="text-sm font-bold text-slate-800">
-                Đang nạp Cổng Dịch vụ công trực tuyến Thành phố Hải Phòng...
+      {/* 3. Main Post-Connection GovTech Citizen Hub */}
+      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Hero Success & Session Telemetry Card */}
+        <div className="bg-white rounded-lg border border-slate-200/90 shadow-sm overflow-hidden">
+          <div className="h-1.5 bg-gradient-to-r from-emerald-500 via-[#004b87] to-blue-600" />
+          <div className="p-5 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 flex-shrink-0 shadow-xs">
+                  <ShieldCheck className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold tracking-wide uppercase mb-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    Đã cấp quyền truy cập Internet thành công
+                  </div>
+                  <h1 className="text-base sm:text-lg font-extrabold text-slate-900 leading-snug">
+                    Chào mừng Nhân dân đến với Wi-Fi Công cộng TP. Hải Phòng
+                  </h1>
+                  <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
+                    <MapPin className="w-3.5 h-3.5 text-[#a81c1c] flex-shrink-0" />
+                    <span>Điểm phát sóng: <strong>{session.locationName || 'Nhà văn hóa thôn, tổ dân phố Hải Phòng'}</strong></span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Countdown & Speed pill */}
+              <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2 bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded border sm:border-0 border-slate-200">
+                <div className="text-left sm:text-right">
+                  <span className="text-[10.5px] font-medium text-slate-400 block">Thời gian phiên mạng còn:</span>
+                  <span className="text-base sm:text-lg font-mono font-extrabold text-[#004b87]">
+                    {formatRemainingTime(remainingSec)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-[11px] font-mono text-slate-600">
+                  <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+                    {session.maxBandwidthMbps || 20} Mbps
+                  </span>
+                  <span className="text-slate-400">• Miễn phí 100%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions Bar */}
+            <div className="pt-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 font-mono">
+                <span>IP: <strong className="text-slate-700">{session.ipAddress}</strong></span>
+                <span>•</span>
+                <span>MAC: <strong className="text-slate-700">{session.macAddress}</strong></span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <a
+                  href="https://dichvucong.haiphong.gov.vn"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#004b87] hover:bg-[#003865] text-white rounded text-xs font-bold transition shadow-sm cursor-pointer"
+                >
+                  <Globe className="w-4 h-4 text-yellow-300" />
+                  <span>Mở Cổng Dịch Vụ Công Hải Phòng</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-blue-200" />
+                </a>
+                <a
+                  href="https://google.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-semibold transition border border-slate-200 cursor-pointer"
+                >
+                  <span>Lướt Web tự do</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 4 Public Administrative Services Grid */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#a81c1c]" />
+                Dịch Vụ Công Trực Tuyến & Tiện Ích Số Hải Phòng
               </h2>
-              <p className="text-xs text-slate-500">
-                Địa chỉ truy cập: <span className="font-mono text-[#004b87]">https://dichvucong.haiphong.gov.vn</span>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Bà con có thể thực hiện thủ tục hành chính, tra cứu hồ sơ hoàn toàn miễn phí tại Nhà văn hóa
               </p>
             </div>
           </div>
-        )}
 
-        {/* Embedded Iframe */}
-        <iframe
-          src="https://dichvucong.haiphong.gov.vn/"
-          title="Cổng Dịch vụ công Thành phố Hải Phòng"
-          className="w-full flex-1 border-none min-h-[calc(100vh-80px)] bg-white"
-          onLoad={() => setIframeLoading(false)}
-          onError={() => {
-            setIframeLoading(false);
-            setIframeError(true);
-          }}
-        />
-
-        {/* Fallback Banner for restricted browsers */}
-        {iframeError && (
-          <div className="p-4 bg-amber-50 border-t border-amber-200 text-center text-xs text-amber-800 space-y-2">
-            <p>Trình duyệt của bạn có cài đặt bảo mật chặn hiển thị trang lồng khung.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            {/* 1. Tra cứu hồ sơ */}
             <a
-              href="https://dichvucong.haiphong.gov.vn"
+              href="https://dichvucong.haiphong.gov.vn/dichvucong/tracuu"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 px-4 py-2 bg-[#004b87] hover:bg-[#003865] text-white rounded text-xs font-bold transition shadow-xs"
+              className="p-4 bg-white rounded-lg border border-slate-200 hover:border-blue-400 hover:shadow-md transition group flex flex-col justify-between"
             >
-              <span>Truy cập Cổng Dịch vụ công TP. Hải Phòng (Toàn màn hình)</span>
-              <ExternalLink className="w-4 h-4 text-blue-200" />
+              <div className="space-y-2">
+                <div className="w-10 h-10 rounded bg-blue-50 text-[#004b87] flex items-center justify-center group-hover:scale-105 transition">
+                  <Search className="w-5 h-5" />
+                </div>
+                <h3 className="text-xs font-bold text-slate-900 group-hover:text-[#004b87] transition flex items-center justify-between">
+                  <span>Tra Cứu Tiến Độ Hồ Sơ</span>
+                  <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-[#004b87]" />
+                </h3>
+                <p className="text-[11.5px] text-slate-500 leading-relaxed">
+                  Nhập mã số biên nhận Một cửa điện tử để theo dõi tiến độ xử lý thủ tục hành chính mọi lúc.
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#004b87] mt-3 pt-2 border-t border-slate-100">
+                Tra cứu ngay <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </a>
+
+            {/* 2. Nộp hồ sơ trực tuyến */}
+            <a
+              href="https://dichvucong.haiphong.gov.vn/dichvucong/dichvu"
+              target="_blank"
+              rel="noreferrer"
+              className="p-4 bg-white rounded-lg border border-slate-200 hover:border-blue-400 hover:shadow-md transition group flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <div className="w-10 h-10 rounded bg-indigo-50 text-indigo-700 flex items-center justify-center group-hover:scale-105 transition">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <h3 className="text-xs font-bold text-slate-900 group-hover:text-indigo-700 transition flex items-center justify-between">
+                  <span>Nộp Hồ Sơ Trực Tuyến</span>
+                  <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-indigo-700" />
+                </h3>
+                <p className="text-[11.5px] text-slate-500 leading-relaxed">
+                  Hơn 1.800 dịch vụ công toàn trình cấp Tỉnh, Huyện, Xã. Nộp hồ sơ tại nhà không cần xếp hàng.
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 mt-3 pt-2 border-t border-slate-100">
+                Xem danh mục DVC <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </a>
+
+            {/* 3. Cư trú & VNeID */}
+            <a
+              href="https://dichvucong.dancuquocgia.gov.vn/"
+              target="_blank"
+              rel="noreferrer"
+              className="p-4 bg-white rounded-lg border border-slate-200 hover:border-emerald-400 hover:shadow-md transition group flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <div className="w-10 h-10 rounded bg-emerald-50 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition">
+                  <Building className="w-5 h-5" />
+                </div>
+                <h3 className="text-xs font-bold text-slate-900 group-hover:text-emerald-700 transition flex items-center justify-between">
+                  <span>Cư Trú & Hộ Tịch (VNeID)</span>
+                  <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-emerald-700" />
+                </h3>
+                <p className="text-[11.5px] text-slate-500 leading-relaxed">
+                  Đăng ký thường trú, tạm trú, thông báo lưu trú, khai sinh và cấp căn cước công dân trực tuyến.
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 mt-3 pt-2 border-t border-slate-100">
+                Cổng Dân cư Quốc gia <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </a>
+
+            {/* 4. Thanh toán trực tuyến */}
+            <a
+              href="https://dichvucong.haiphong.gov.vn/dichvucong/thanhtoan"
+              target="_blank"
+              rel="noreferrer"
+              className="p-4 bg-white rounded-lg border border-slate-200 hover:border-amber-400 hover:shadow-md transition group flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <div className="w-10 h-10 rounded bg-amber-50 text-amber-700 flex items-center justify-center group-hover:scale-105 transition">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <h3 className="text-xs font-bold text-slate-900 group-hover:text-amber-700 transition flex items-center justify-between">
+                  <span>Thanh Toán Lệ Phí Trực Tuyến</span>
+                  <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-amber-700" />
+                </h3>
+                <p className="text-[11.5px] text-slate-500 leading-relaxed">
+                  Thanh toán phí/lệ phí TTHC, thuế đất, biên lai điện tử qua ngân hàng và ví điện tử không tiền mặt.
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 mt-3 pt-2 border-t border-slate-100">
+                Cổng Thanh toán DVC <ChevronRight className="w-3.5 h-3.5" />
+              </span>
             </a>
           </div>
-        )}
+        </div>
+
+        {/* Policy Awareness & Digital Citizen Guidelines */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          {/* Box 1: Digital Transformation Guideline */}
+          <div className="p-4 bg-white rounded-lg border border-slate-200 space-y-2.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-[#a81c1c] uppercase">
+              <Megaphone className="w-4 h-4 text-[#a81c1c] flex-shrink-0" />
+              <span>Hướng Dẫn Chuyển Đổi Số Cơ Sở</span>
+            </div>
+            <p className="text-xs text-slate-700 leading-relaxed">
+              Tổ công nghệ số cộng đồng và Đoàn Thanh niên luôn túc trực tại Nhà văn hóa để hướng dẫn bà con:
+            </p>
+            <ul className="text-[11.5px] text-slate-600 space-y-1.5 list-disc list-inside">
+              <li>Kích hoạt tài khoản định danh điện tử mức độ 2 trên ứng dụng <strong>VNeID</strong>.</li>
+              <li>Cài đặt ứng dụng <strong>Hải Phòng Smart</strong> để phản ánh hiện trường và nhận cảnh báo đô thị.</li>
+              <li>Tạo chữ ký số cá nhân miễn phí phục vụ ký số hồ sơ hành chính công trực tuyến.</li>
+            </ul>
+          </div>
+
+          {/* Box 2: Cyber Safety & Hotlines */}
+          <div className="p-4 bg-white rounded-lg border border-slate-200 space-y-2.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-[#004b87] uppercase">
+              <HelpCircle className="w-4 h-4 text-[#004b87] flex-shrink-0" />
+              <span>Đường Dây Nóng Hỗ Trợ Kỹ Thuật & TTHC</span>
+            </div>
+            <div className="space-y-2 text-xs text-slate-700">
+              <div className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-100">
+                <span className="font-semibold text-slate-800">Tổng đài Dịch vụ công TP. Hải Phòng:</span>
+                <span className="font-mono font-bold text-[#004b87]">0225.1022</span>
+              </div>
+              <div className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-100">
+                <span className="font-semibold text-slate-800">Hỗ trợ kỹ thuật mạng Wi-Fi (VNPT Hải Phòng):</span>
+                <span className="font-mono font-bold text-emerald-700">1800.1166</span>
+              </div>
+              <p className="text-[11px] text-slate-500 italic">
+                * Mạng Wi-Fi công cộng tuân thủ các quy tắc an toàn thông tin theo Nghị định 13/2023/NĐ-CP của Chính phủ.
+              </p>
+            </div>
+          </div>
+        </div>
       </main>
+
+      {/* Footer */}
+      <footer className="mt-auto bg-slate-900 text-slate-400 text-center py-4 px-3 text-[11px] border-t border-slate-800 space-y-1">
+        <div className="font-semibold text-slate-200">
+          ỦY BAN NHÂN DÂN THÀNH PHỐ HẢI PHÒNG • SỞ THÔNG TIN VÀ TRUYỀN THÔNG
+        </div>
+        <div>
+          Hệ thống Quản lý Mạng Wi-Fi Công cộng & Cổng Dịch Vụ Công Số Nhà Văn Hóa
+        </div>
+      </footer>
     </div>
   );
 };

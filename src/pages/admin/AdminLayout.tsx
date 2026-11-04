@@ -505,14 +505,13 @@ export const AdminLayout: React.FC = () => {
             {/* Clock UTC+7 */}
             <div className="flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-300 px-2.5 py-1 rounded-sm font-mono">
               <Clock className="w-3.5 h-3.5 text-slate-400" />
-              <span>{currentTime} (GMT+7)</span>
+              <span>{currentTime} </span>
             </div>
 
             {/* Officer Role Badge */}
             <div
               className={`text-[11px] font-semibold px-2.5 py-1 rounded-sm border flex items-center gap-1.5 ${roleInfo.color}`}
             >
-              <Shield className="w-3 h-3" />
               <span>{roleInfo.label}</span>
             </div>
           </div>

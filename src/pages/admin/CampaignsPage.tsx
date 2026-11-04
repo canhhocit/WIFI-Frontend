@@ -177,19 +177,19 @@ export const CampaignsPage: React.FC = () => {
       case 'DRAFT':
         return (
           <span className="inline-flex items-center gap-1 font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-sm text-[11px]">
-            <Clock className="w-3 h-3 text-slate-400" /> Bản nháp (DRAFT)
+            <Clock className="w-3 h-3 text-slate-400" /> Nháp
           </span>
         );
       case 'PENDING_APPROVAL':
         return (
           <span className="inline-flex items-center gap-1 font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-sm text-[11px]">
-            <Clock className="w-3 h-3 text-amber-500 animate-pulse" /> Chờ phê duyệt
+            <Clock className="w-3 h-3 text-amber-500 animate-pulse" /> Chờ duyệt
           </span>
         );
       case 'APPROVED':
         return (
           <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-sm text-[11px]">
-            <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Đã phê duyệt phát sóng
+            <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Đã duyệt
           </span>
         );
       case 'REJECTED':
@@ -257,12 +257,12 @@ export const CampaignsPage: React.FC = () => {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50/70 border-b border-slate-300 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3.5 px-4">Tên chiến dịch & Banner</th>
+                <th className="py-3.5 px-4">Tên</th>
                 <th className="py-3.5 px-4">Thời gian phát sóng</th>
                 <th className="py-3.5 px-4">Độ ưu tiên</th>
-                <th className="py-3.5 px-4">Trạng thái phê duyệt</th>
-                <th className="py-3.5 px-4">Người khởi tạo / Duyệt</th>
-                <th className="py-3.5 px-4 text-right">Quy trình duyệt</th>
+                <th className="py-3.5 px-4">Trạng thái</th>
+                <th className="py-3.5 px-4">Người khởi tạo /Duyệt</th>
+                <th className="py-3.5 px-4 text-right">Hành động</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
