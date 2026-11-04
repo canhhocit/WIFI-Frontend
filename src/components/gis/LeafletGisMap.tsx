@@ -92,13 +92,25 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
     markersLayerRef.current = markersLayer;
     heatmapLayerRef.current = heatmapLayer;
 
+    // Invalidate map size to prevent gray tiles and layout miscalculation
+    const t1 = setTimeout(() => { map.invalidateSize(); }, 150);
+    const t2 = setTimeout(() => { map.invalidateSize(); }, 500);
+    const handleResize = () => { map.invalidateSize(); };
+    window.addEventListener('resize', handleResize);
+
     // Cleanup on unmount
     return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener('resize', handleResize);
       map.remove();
       mapRef.current = null;
       markersLayerRef.current = null;
       heatmapLayerRef.current = null;
       markersMapRef.current.clear();
+      if (mapContainerRef.current) {
+        delete (mapContainerRef.current as any)._leaflet_id;
+      }
     };
   }, []);
 
@@ -119,9 +131,14 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
     markersLayerRef.current.clearLayers();
     markersMapRef.current.clear();
 
-    pins.forEach((pin) => {
-      if (typeof pin.latitude !== 'number' || typeof pin.longitude !== 'number') return;
+    const validCoords: [number, number][] = [];
 
+    pins.forEach((pin) => {
+      const lat = typeof pin.latitude === 'number' ? pin.latitude : parseFloat(String(pin.latitude));
+      const lng = typeof pin.longitude === 'number' ? pin.longitude : parseFloat(String(pin.longitude));
+      if (isNaN(lat) || isNaN(lng)) return;
+
+      validCoords.push([lat, lng]);
       const isSelected = selectedPin?.id === pin.id;
 
       // Color coding
@@ -173,7 +190,7 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
         popupAnchor: [0, -20],
       });
 
-      const marker = L.marker([pin.latitude, pin.longitude], { icon: customIcon });
+      const marker = L.marker([lat, lng], { icon: customIcon });
 
       // Rich GovTech Popup
       const popupHtml = `
@@ -212,7 +229,16 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
       marker.addTo(markersLayerRef.current!);
       markersMapRef.current.set(pin.id, marker);
     });
-  }, [pins, selectedPin, onSelectPin]);
+
+    // Auto fit bounds to visible pins if ALL district is selected and user hasn't selected a single pin
+    if (selectedDistrict === 'ALL' && !selectedPin && validCoords.length > 0) {
+      try {
+        mapRef.current.fitBounds(L.latLngBounds(validCoords), { padding: [50, 50], maxZoom: 13 });
+      } catch (err) {
+        // Silently ignore if container has zero size
+      }
+    }
+  }, [pins, selectedPin, onSelectPin, selectedDistrict]);
 
   // 4. Render Heatmap Density Layer when enabled
   useEffect(() => {
@@ -223,7 +249,9 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
     if (!heatmapEnabled) return;
 
     pins.forEach((pin) => {
-      if (typeof pin.latitude !== 'number' || typeof pin.longitude !== 'number') return;
+      const lat = typeof pin.latitude === 'number' ? pin.latitude : parseFloat(String(pin.latitude));
+      const lng = typeof pin.longitude === 'number' ? pin.longitude : parseFloat(String(pin.longitude));
+      if (isNaN(lat) || isNaN(lng)) return;
 
       const sessions = pin.activeSessionsCount || 0;
       // Graduated radius and color based on active sessions
@@ -239,7 +267,7 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
         fillColor = '#fbbf24';
       }
 
-      const circle = L.circle([pin.latitude, pin.longitude], {
+      const circle = L.circle([lat, lng], {
         radius: radiusMeters,
         color: circleColor,
         fillColor: fillColor,
@@ -255,8 +283,10 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
   useEffect(() => {
     if (!selectedPin || !mapRef.current) return;
     const marker = markersMapRef.current.get(selectedPin.id);
-    if (marker && selectedPin.latitude && selectedPin.longitude) {
-      mapRef.current.panTo([selectedPin.latitude, selectedPin.longitude], { animate: true, duration: 0.8 });
+    const lat = typeof selectedPin.latitude === 'number' ? selectedPin.latitude : parseFloat(String(selectedPin.latitude));
+    const lng = typeof selectedPin.longitude === 'number' ? selectedPin.longitude : parseFloat(String(selectedPin.longitude));
+    if (marker && !isNaN(lat) && !isNaN(lng)) {
+      mapRef.current.setView([lat, lng], 15, { animate: true });
       marker.openPopup();
     }
   }, [selectedPin]);

@@ -25,10 +25,23 @@ import { ExcelImportModal } from '../../components/ExcelImportModal';
 import { ImageUploadInput } from '../../components/ImageUploadInput';
 import { DISTRICT_CENTERS } from '../../components/gis/LeafletGisMap';
 
+const toSlug = (text: string) => {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+};
+
 export const LocationsPage: React.FC = () => {
   const navigate = useNavigate();
   const [locations, setLocations] = useState<LocationDto[]>([]);
+  const [districts, setDistricts] = useState<AdminUnitDto[]>([]);
   const [adminUnits, setAdminUnits] = useState<AdminUnitDto[]>([]);
+  const [selectedDistrictId, setSelectedDistrictId] = useState<string>('');
+  const [createdNotification, setCreatedNotification] = useState<{ id: number; name: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedAdminUnit, setSelectedAdminUnit] = useState<string>('');
@@ -87,14 +100,19 @@ export const LocationsPage: React.FC = () => {
 
   const loadAdminUnits = async () => {
     try {
-      const units = await adminApi.getAdminByLevel(3);
-      setAdminUnits(units);
+      const [distList, commList] = await Promise.all([
+        adminApi.getAdminByLevel(2), // 15 Quận / Huyện Hải Phòng
+        adminApi.getAdminByLevel(3), // Xã / Phường
+      ]);
+      setDistricts(distList);
+      setAdminUnits(commList);
     } catch {
       // Silently fail or keep empty if no admin units yet
     }
   };
 
   const handleOpenCreate = () => {
+    setSelectedDistrictId('');
     setFormData({
       slug: '',
       name: '',
@@ -122,6 +140,17 @@ export const LocationsPage: React.FC = () => {
 
   const handleOpenEdit = (loc: LocationDto) => {
     setEditingLocation(loc);
+    let dId = '';
+    if (loc.adminUnitId) {
+      const commune = adminUnits.find((u) => u.id === loc.adminUnitId);
+      if (commune && commune.parentId) {
+        dId = String(commune.parentId);
+      } else {
+        const dist = districts.find((d) => d.id === loc.adminUnitId);
+        if (dist) dId = String(dist.id);
+      }
+    }
+    setSelectedDistrictId(dId);
     setFormData({
       slug: loc.slug,
       name: loc.name,
@@ -174,8 +203,9 @@ export const LocationsPage: React.FC = () => {
         active: formData.active,
       };
 
-      await adminApi.createLocation(payload);
+      const created = await adminApi.createLocation(payload);
       setIsCreateOpen(false);
+      setCreatedNotification({ id: created.id, name: created.name });
       loadLocations();
     } catch (err: any) {
       setFormError(err?.message || 'Không thể tạo điểm phát Wi-Fi mới.');
@@ -323,6 +353,34 @@ export const LocationsPage: React.FC = () => {
         </button>
       </div>
 
+      {createdNotification && (
+        <div className="bg-emerald-50 border border-emerald-300 rounded-sm p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-900 shadow-sm animate-in fade-in">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <div>
+              <span className="font-bold text-emerald-950">Đã lưu thành công điểm phát Wi-Fi: </span>
+              <span className="font-semibold text-emerald-800">{createdNotification.name}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate(`/admin/gis-map?selectLocation=${createdNotification.id}`)}
+              className="px-3 py-1.5 bg-emerald-600 text-white rounded font-medium hover:bg-emerald-700 transition flex items-center gap-1.5 shadow-xs cursor-pointer text-xs"
+            >
+              <MapPin className="w-3.5 h-3.5" />
+              Xem ngay trên Bản đồ GIS ↗
+            </button>
+            <button
+              onClick={() => setCreatedNotification(null)}
+              className="text-emerald-700 hover:text-emerald-950 p-1.5 rounded hover:bg-emerald-100 transition cursor-pointer font-bold"
+              title="Đóng thông báo"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Locations Table */}
       <div className="bg-white rounded border border-slate-300 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
@@ -456,7 +514,14 @@ export const LocationsPage: React.FC = () => {
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData((prev) => ({
+                    ...prev,
+                    name: val,
+                    slug: prev.slug === '' || prev.slug === toSlug(prev.name) ? toSlug(val) : prev.slug,
+                  }));
+                }}
                 placeholder="Ví dụ: Nhà văn hóa Thôn Lập Lễ"
                 className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87]"
                 required
@@ -489,38 +554,69 @@ export const LocationsPage: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Quận / Huyện TP Hải Phòng <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={selectedDistrictId}
+                onChange={(e) => {
+                  const dId = e.target.value;
+                  setSelectedDistrictId(dId);
+                  const dist = districts.find((d) => String(d.id) === dId);
+                  let newLat = formData.latitude;
+                  let newLng = formData.longitude;
+                  if (dist && DISTRICT_CENTERS[dist.name]) {
+                    newLat = String(DISTRICT_CENTERS[dist.name].lat);
+                    newLng = String(DISTRICT_CENTERS[dist.name].lng);
+                  }
+                  // Default adminUnitId to district ID if commune not chosen yet
+                  setFormData((prev) => ({
+                    ...prev,
+                    adminUnitId: dId || '',
+                    latitude: newLat,
+                    longitude: newLng,
+                  }));
+                }}
+                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white font-medium"
+              >
+                <option value="">-- Chọn Quận / Huyện --</option>
+                {districts.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Xã / Phường trực thuộc</label>
               <select
                 value={formData.adminUnitId}
                 onChange={(e) => {
                   const unitId = e.target.value;
-                  const selectedUnit = adminUnits.find((u) => String(u.id) === unitId);
-                  let newLat = formData.latitude;
-                  let newLng = formData.longitude;
-                  // If coordinates are at default or empty, auto-populate district center coordinates
-                  if (selectedUnit?.parentName && (newLat === '20.8449' || !newLat || newLat === '')) {
-                    const center = DISTRICT_CENTERS[selectedUnit.parentName];
-                    if (center) {
-                      newLat = String(center.lat);
-                      newLng = String(center.lng);
-                    }
-                  }
-                  setFormData({ ...formData, adminUnitId: unitId, latitude: newLat, longitude: newLng });
+                  setFormData((prev) => ({ ...prev, adminUnitId: unitId || selectedDistrictId }));
                 }}
                 className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
               >
-                <option value="">-- Chưa gán địa bàn --</option>
-                {adminUnits.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} {u.parentName ? `— ${u.parentName}` : ''}
-                  </option>
-                ))}
+                <option value={selectedDistrictId || ''}>
+                  {selectedDistrictId ? '-- Trực thuộc Quận/Huyện (mặc định) --' : '-- Chọn Quận/Huyện trước --'}
+                </option>
+                {adminUnits
+                  .filter((u) => !selectedDistrictId || String(u.parentId) === selectedDistrictId)
+                  .map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
               </select>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Vĩ độ</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Vĩ độ (Latitude)</label>
               <input
                 type="number"
                 step="0.000001"
@@ -531,7 +627,7 @@ export const LocationsPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Kinh độ</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Kinh độ (Longitude)</label>
               <input
                 type="number"
                 step="0.000001"
@@ -725,36 +821,66 @@ export const LocationsPage: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Quận / Huyện TP Hải Phòng <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={selectedDistrictId}
+                onChange={(e) => {
+                  const dId = e.target.value;
+                  setSelectedDistrictId(dId);
+                  const dist = districts.find((d) => String(d.id) === dId);
+                  let newLat = formData.latitude;
+                  let newLng = formData.longitude;
+                  if (dist && DISTRICT_CENTERS[dist.name]) {
+                    newLat = String(DISTRICT_CENTERS[dist.name].lat);
+                    newLng = String(DISTRICT_CENTERS[dist.name].lng);
+                  }
+                  setFormData((prev) => ({
+                    ...prev,
+                    adminUnitId: dId || '',
+                    latitude: newLat,
+                    longitude: newLng,
+                  }));
+                }}
+                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white font-medium"
+              >
+                <option value="">-- Chọn Quận / Huyện --</option>
+                {districts.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Xã / Phường trực thuộc</label>
               <select
                 value={formData.adminUnitId}
                 onChange={(e) => {
                   const unitId = e.target.value;
-                  const selectedUnit = adminUnits.find((u) => String(u.id) === unitId);
-                  let newLat = formData.latitude;
-                  let newLng = formData.longitude;
-                  // If coordinates are at default or empty, auto-populate district center coordinates
-                  if (selectedUnit?.parentName && (newLat === '20.8449' || !newLat || newLat === '')) {
-                    const center = DISTRICT_CENTERS[selectedUnit.parentName];
-                    if (center) {
-                      newLat = String(center.lat);
-                      newLng = String(center.lng);
-                    }
-                  }
-                  setFormData({ ...formData, adminUnitId: unitId, latitude: newLat, longitude: newLng });
+                  setFormData((prev) => ({ ...prev, adminUnitId: unitId || selectedDistrictId }));
                 }}
                 className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
               >
-                <option value="">-- Chưa gán địa bàn --</option>
-                {adminUnits.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} {u.parentName ? `— ${u.parentName}` : ''}
-                  </option>
-                ))}
+                <option value={selectedDistrictId || ''}>
+                  {selectedDistrictId ? '-- Trực thuộc Quận/Huyện (mặc định) --' : '-- Chọn Quận/Huyện trước --'}
+                </option>
+                {adminUnits
+                  .filter((u) => !selectedDistrictId || String(u.parentId) === selectedDistrictId)
+                  .map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
               </select>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Vĩ độ GPS</label>
               <input

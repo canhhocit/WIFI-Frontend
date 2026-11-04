@@ -16,6 +16,8 @@ export async function request<T>(endpoint: string, options: RequestInit = {}): P
   const token = localStorage.getItem('admin_token');
 
   const headers: Record<string, string> = {
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
     ...(options.headers as Record<string, string>),
   };
 
@@ -31,13 +33,14 @@ export async function request<T>(endpoint: string, options: RequestInit = {}): P
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
 
   const response = await fetch(url, {
+    cache: 'no-store',
     ...options,
     headers,
   });
 
   if (response.status === 401) {
     // If unauthorized on admin endpoint, clear stale token
-    if (endpoint.startsWith('/admin') || endpoint.startsWith('/auth/me')) {
+    if (endpoint.startsWith('/admin') || endpoint.startsWith('/v1/admin') || endpoint.startsWith('/auth/me')) {
       localStorage.removeItem('admin_token');
       localStorage.removeItem('admin_user');
       if (!window.location.pathname.includes('/admin/login')) {
