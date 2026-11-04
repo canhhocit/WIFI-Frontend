@@ -12,7 +12,7 @@ interface LeafletGisMapProps {
 }
 
 // Center coordinates for Hai Phong and its 15 administrative districts
-const DISTRICT_CENTERS: Record<string, { lat: number; lng: number; zoom: number }> = {
+export const DISTRICT_CENTERS: Record<string, { lat: number; lng: number; zoom: number }> = {
   ALL: { lat: 20.8449, lng: 106.6881, zoom: 11 },
   'Quận Hồng Bàng': { lat: 20.8651, lng: 106.6838, zoom: 14 },
   'Quận Ngô Quyền': { lat: 20.8580, lng: 106.7000, zoom: 14 },

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   MapPin,
   Plus,
@@ -22,8 +23,10 @@ import { Modal } from '../../components/Modal';
 import { AlertBanner } from '../../components/AlertBanner';
 import { ExcelImportModal } from '../../components/ExcelImportModal';
 import { ImageUploadInput } from '../../components/ImageUploadInput';
+import { DISTRICT_CENTERS } from '../../components/gis/LeafletGisMap';
 
 export const LocationsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [locations, setLocations] = useState<LocationDto[]>([]);
   const [adminUnits, setAdminUnits] = useState<AdminUnitDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -407,6 +410,13 @@ export const LocationsPage: React.FC = () => {
                         <span>Xem Cổng chào</span>
                       </a>
                       <button
+                        onClick={() => navigate(`/admin/gis-map?selectLocation=${loc.id}`)}
+                        className="p-1 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded-sm transition cursor-pointer"
+                        title="Xem vị trí trên Bản đồ GIS"
+                      >
+                        <MapPin className="w-4 h-4 text-blue-600" />
+                      </button>
+                      <button
                         onClick={() => handleOpenEdit(loc)}
                         className="p-1 text-slate-500 hover:text-amber-700 hover:bg-amber-50 rounded-sm transition cursor-pointer"
                         title="Chỉnh sửa thông tin"
@@ -485,13 +495,27 @@ export const LocationsPage: React.FC = () => {
               <label className="block text-xs font-bold text-slate-700 mb-1">Xã / Phường trực thuộc</label>
               <select
                 value={formData.adminUnitId}
-                onChange={(e) => setFormData({ ...formData, adminUnitId: e.target.value })}
+                onChange={(e) => {
+                  const unitId = e.target.value;
+                  const selectedUnit = adminUnits.find((u) => String(u.id) === unitId);
+                  let newLat = formData.latitude;
+                  let newLng = formData.longitude;
+                  // If coordinates are at default or empty, auto-populate district center coordinates
+                  if (selectedUnit?.parentName && (newLat === '20.8449' || !newLat || newLat === '')) {
+                    const center = DISTRICT_CENTERS[selectedUnit.parentName];
+                    if (center) {
+                      newLat = String(center.lat);
+                      newLng = String(center.lng);
+                    }
+                  }
+                  setFormData({ ...formData, adminUnitId: unitId, latitude: newLat, longitude: newLng });
+                }}
                 className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
               >
                 <option value="">-- Chưa gán địa bàn --</option>
                 {adminUnits.map((u) => (
                   <option key={u.id} value={u.id}>
-                    {u.name}
+                    {u.name} {u.parentName ? `— ${u.parentName}` : ''}
                   </option>
                 ))}
               </select>
@@ -719,13 +743,27 @@ export const LocationsPage: React.FC = () => {
               <label className="block text-xs font-bold text-slate-700 mb-1">Xã / Phường trực thuộc</label>
               <select
                 value={formData.adminUnitId}
-                onChange={(e) => setFormData({ ...formData, adminUnitId: e.target.value })}
+                onChange={(e) => {
+                  const unitId = e.target.value;
+                  const selectedUnit = adminUnits.find((u) => String(u.id) === unitId);
+                  let newLat = formData.latitude;
+                  let newLng = formData.longitude;
+                  // If coordinates are at default or empty, auto-populate district center coordinates
+                  if (selectedUnit?.parentName && (newLat === '20.8449' || !newLat || newLat === '')) {
+                    const center = DISTRICT_CENTERS[selectedUnit.parentName];
+                    if (center) {
+                      newLat = String(center.lat);
+                      newLng = String(center.lng);
+                    }
+                  }
+                  setFormData({ ...formData, adminUnitId: unitId, latitude: newLat, longitude: newLng });
+                }}
                 className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
               >
                 <option value="">-- Chưa gán địa bàn --</option>
                 {adminUnits.map((u) => (
                   <option key={u.id} value={u.id}>
-                    {u.name}
+                    {u.name} {u.parentName ? `— ${u.parentName}` : ''}
                   </option>
                 ))}
               </select>

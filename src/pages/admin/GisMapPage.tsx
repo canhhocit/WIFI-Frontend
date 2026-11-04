@@ -21,10 +21,11 @@ import {
   NotepadTextDashed,
   NotebookTabs
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export const GisMapPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [pins, setPins] = useState<GisLocationPinDto[]>([]);
   const [districts, setDistricts] = useState<AdminUnitDto[]>([]);
   const [selectedDistrict, setSelectedDistrict] = useState<string>('ALL');
@@ -34,6 +35,7 @@ export const GisMapPage: React.FC = () => {
   const [heatmapEnabled, setHeatmapEnabled] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+  const [lastSynced, setLastSynced] = useState<string>('');
 
   const loadData = async () => {
     setLoading(true);
@@ -44,6 +46,18 @@ export const GisMapPage: React.FC = () => {
       ]);
       setPins(pinsData);
       setDistricts(districtsData);
+      setLastSynced(new Date().toLocaleTimeString('vi-VN'));
+
+      const selectLocationId = searchParams.get('selectLocation');
+      if (selectLocationId) {
+        const target = pinsData.find((p) => String(p.id) === selectLocationId);
+        if (target) {
+          setSelectedPin(target);
+          if (target.districtName) {
+            setSelectedDistrict(target.districtName);
+          }
+        }
+      }
     } catch (err) {
       console.error('Failed to load GIS data:', err);
     } finally {
@@ -53,16 +67,26 @@ export const GisMapPage: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+    const handleFocus = () => {
+      loadData();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [searchParams]);
 
   const filteredPins = useMemo(() => {
     return pins.filter((p) => {
-      const matchDistrict = selectedDistrict === 'ALL' || p.districtName === selectedDistrict;
+      const matchDistrict =
+        selectedDistrict === 'ALL' ||
+        p.districtName === selectedDistrict ||
+        (p.adminUnitName && p.adminUnitName.toLowerCase().includes(selectedDistrict.toLowerCase())) ||
+        (p.address && p.address.toLowerCase().includes(selectedDistrict.toLowerCase()));
       const matchStatus = selectedStatus === 'ALL' || p.status === selectedStatus;
       const matchSearch =
         !searchQuery ||
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (p.locationCode && p.locationCode.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (p.slug && p.slug.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (p.address && p.address.toLowerCase().includes(searchQuery.toLowerCase()));
       return matchDistrict && matchStatus && matchSearch;
     });
@@ -107,6 +131,11 @@ export const GisMapPage: React.FC = () => {
               Danh sách ({filteredPins.length})
             </button>
           </div>
+          {lastSynced && (
+            <span className="text-[11px] text-gray-500 hidden sm:inline bg-gray-50 px-2 py-1 rounded border border-gray-200">
+              Đồng bộ: <span className="font-mono font-medium text-gray-700">{lastSynced}</span>
+            </span>
+          )}
           <button
             onClick={loadData}
             disabled={loading}
