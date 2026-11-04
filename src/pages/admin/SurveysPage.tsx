@@ -12,12 +12,13 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
-import { SurveyDto, SurveyQuestionDto, SurveyResponseDto } from '../../types/models';
+import { SurveyDto, SurveyQuestionDto, SurveyResponseDto, CampaignDto } from '../../types/models';
 import { Modal } from '../../components/Modal';
 import { AlertBanner } from '../../components/AlertBanner';
 
 export const SurveysPage: React.FC = () => {
   const [surveys, setSurveys] = useState<SurveyDto[]>([]);
+  const [campaigns, setCampaigns] = useState<CampaignDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +27,7 @@ export const SurveysPage: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [newSurveyTitle, setNewSurveyTitle] = useState('');
   const [newSurveyDesc, setNewSurveyDesc] = useState('');
+  const [selectedCampaignId, setSelectedCampaignId] = useState<number | undefined>(undefined);
   const [newSurveyQuota, setNewSurveyQuota] = useState(500);
   const [questions, setQuestions] = useState<Array<{
     questionText: string;
@@ -59,8 +61,12 @@ export const SurveysPage: React.FC = () => {
   const loadSurveys = async () => {
     setLoading(true);
     try {
-      const resp = await adminApi.getSurveys({ size: 50 });
+      const [resp, campResp] = await Promise.all([
+        adminApi.getSurveys({ size: 50 }),
+        adminApi.getCampaigns({ size: 100 }).catch(() => ({ content: [] })),
+      ]);
       setSurveys(resp.content);
+      setCampaigns(campResp.content);
       setError(null);
     } catch (err: any) {
       setError(err?.message || 'Không thể tải danh sách bài khảo sát ý kiến.');
@@ -103,6 +109,7 @@ export const SurveysPage: React.FC = () => {
 
       await adminApi.createSurvey({
         id: 0,
+        campaignId: selectedCampaignId,
         title: newSurveyTitle.trim(),
         description: newSurveyDesc.trim() || undefined,
         maxResponsesQuota: Number(newSurveyQuota),
@@ -114,6 +121,7 @@ export const SurveysPage: React.FC = () => {
       setIsCreateOpen(false);
       setNewSurveyTitle('');
       setNewSurveyDesc('');
+      setSelectedCampaignId(undefined);
       loadSurveys();
     } catch (err: any) {
       alert(err?.message || 'Không thể tạo bài khảo sát mới.');
@@ -232,7 +240,18 @@ export const SurveysPage: React.FC = () => {
                           </div>
                           <div>
                             <span className="font-bold text-slate-900 block text-xs">{s.title}</span>
-                            <span className="text-[11px] text-slate-400 line-clamp-1 max-w-sm">
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {s.campaignId ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+                                  Chiến dịch #{s.campaignId}: {campaigns.find((c) => c.id === s.campaignId)?.title || 'Chiến dịch'}
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-semibold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">
+                                  Áp dụng chung toàn hệ thống
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-slate-400 line-clamp-1 max-w-sm mt-0.5">
                               {s.description || 'Không có mô tả chi tiết'}
                             </span>
                           </div>
@@ -324,6 +343,27 @@ export const SurveysPage: React.FC = () => {
               className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-1 focus:ring-[#004b87]"
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Gắn với Chiến dịch tuyên truyền (Tùy chọn)
+            </label>
+            <select
+              value={selectedCampaignId || ''}
+              onChange={(e) => setSelectedCampaignId(e.target.value ? Number(e.target.value) : undefined)}
+              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+            >
+              <option value="">-- Áp dụng chung cho toàn bộ mạng Wi-Fi công cộng --</option>
+              {campaigns.map((c) => (
+                <option key={c.id} value={c.id}>
+                  [{c.status}] {c.title}
+                </option>
+              ))}
+            </select>
+            <p className="text-[10.5px] text-slate-500 mt-1">
+              Nếu không chọn chiến dịch, bài khảo sát sẽ tự động phát sóng chung cho tất cả các điểm Nhà văn hóa.
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

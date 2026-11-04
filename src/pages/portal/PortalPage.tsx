@@ -397,6 +397,75 @@ export const PortalPage: React.FC = () => {
           {error && <AlertBanner type="error" message={error} />}
           {successInfo && <AlertBanner type="success" message={successInfo} />}
 
+          {/* Smart Citizen Survey Block (Khảo sát ý kiến công dân trực tiếp) */}
+          {survey && survey.questions && survey.questions.length > 0 && (
+            <div className="p-3 bg-gradient-to-b from-sky-50/90 to-blue-50/60 rounded border border-sky-200/90 shadow-xs space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#004b87]">
+                  <ClipboardList className="w-3.5 h-3.5 text-[#004b87] flex-shrink-0" />
+                  <span>{survey.title}</span>
+                </div>
+                <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 font-bold uppercase tracking-wider">
+                  Khảo sát ý kiến
+                </span>
+              </div>
+              {survey.description && (
+                <p className="text-[11px] text-slate-600 leading-relaxed font-sans">{survey.description}</p>
+              )}
+
+              <div className="space-y-2 pt-0.5">
+                {survey.questions.map((q) => {
+                  let options: string[] = [];
+                  try {
+                    if (q.optionsJson) options = JSON.parse(q.optionsJson);
+                  } catch (_) {}
+
+                  return (
+                    <div key={q.id} className="p-2.5 bg-white rounded border border-slate-200 shadow-xs space-y-1.5">
+                      <p className="font-semibold text-slate-800 text-[11px] leading-snug">
+                        {q.questionText} {q.required && <span className="text-red-500 font-bold">*</span>}
+                      </p>
+                      {options.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {options.map((opt, oIdx) => {
+                            const isSelected = surveyAnswers[q.id?.toString() || oIdx] === opt;
+                            return (
+                              <button
+                                key={oIdx}
+                                type="button"
+                                onClick={() =>
+                                  setSurveyAnswers({ ...surveyAnswers, [q.id?.toString() || oIdx]: opt })
+                                }
+                                className={`px-2.5 py-1.5 rounded text-[10.5px] border text-left transition cursor-pointer flex items-center justify-between ${
+                                  isSelected
+                                    ? 'bg-[#004b87] text-white border-[#004b87] font-bold shadow-xs'
+                                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                                }`}
+                              >
+                                <span className="truncate">{opt}</span>
+                                {isSelected && <CheckCircle2 className="w-3 h-3 text-yellow-300 flex-shrink-0 ml-1" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
+                          placeholder="Nhập ý kiến đóng góp của quý vị..."
+                          value={surveyAnswers[q.id?.toString() || ''] || ''}
+                          onChange={(e) =>
+                            setSurveyAnswers({ ...surveyAnswers, [q.id?.toString() || '']: e.target.value })
+                          }
+                          className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:border-[#004b87] bg-white font-sans"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Legal Compliance Checkbox */}
           <div className="space-y-1.5 pt-0.5">
             <label className="flex items-start gap-2 cursor-pointer select-none text-[11px] text-slate-700">
@@ -536,57 +605,6 @@ export const PortalPage: React.FC = () => {
                     className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xs focus:outline-none focus:border-[#004b87]"
                   />
                 </div>
-
-                {/* Smart Citizen Survey */}
-                {survey && survey.questions && survey.questions.length > 0 && (
-                  <div className="space-y-2 pt-1 border-t border-slate-200">
-                    <div className="text-[11px] font-bold text-slate-800 flex items-center gap-1">
-                      <ClipboardList className="w-3 h-3 text-[#004b87]" /> {survey.title}
-                    </div>
-                    {survey.questions.map((q) => {
-                      let options: string[] = [];
-                      try {
-                        if (q.optionsJson) options = JSON.parse(q.optionsJson);
-                      } catch (_) {}
-
-                      return (
-                        <div key={q.id} className="p-2 bg-white rounded-xs border border-slate-200 space-y-1">
-                          <p className="font-medium text-slate-800 text-[11px]">{q.questionText}</p>
-                          {options.length > 0 ? (
-                            <div className="grid grid-cols-2 gap-1">
-                              {options.map((opt, oIdx) => (
-                                <button
-                                  key={oIdx}
-                                  type="button"
-                                  onClick={() =>
-                                    setSurveyAnswers({ ...surveyAnswers, [q.id?.toString() || oIdx]: opt })
-                                  }
-                                  className={`px-2 py-1 rounded-xs text-[10px] border text-left transition cursor-pointer ${
-                                    surveyAnswers[q.id?.toString() || oIdx] === opt
-                                      ? 'bg-[#004b87] text-white border-[#004b87] font-semibold'
-                                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                                  }`}
-                                >
-                                  {opt}
-                                </button>
-                              ))}
-                            </div>
-                          ) : (
-                            <input
-                              type="text"
-                              placeholder="Nhập ý kiến..."
-                              value={surveyAnswers[q.id?.toString() || ''] || ''}
-                              onChange={(e) =>
-                                setSurveyAnswers({ ...surveyAnswers, [q.id?.toString() || '']: e.target.value })
-                              }
-                              className="w-full px-2 py-1 text-[11px] border border-slate-300 rounded-xs"
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
             )}
           </div>
