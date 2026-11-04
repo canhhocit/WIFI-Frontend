@@ -203,13 +203,20 @@ export const PortalBuilderPage: React.FC = () => {
               </div>
 
               <div className="space-y-4 pt-1">
-                {/* Background Image with Local Upload & Quick Presets */}
+                {/* 1. Background Wallpaper */}
                 <div className="p-3.5 bg-slate-50 rounded-sm border border-slate-200 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                    <span className="w-5 h-5 rounded-full bg-[#004b87] text-white flex items-center justify-center text-[11px] font-bold">1</span>
+                    <span>Hình nền lớn toàn màn hình (Background Wallpaper)</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Bao phủ toàn bộ không gian phía sau khung đăng nhập (ảnh phong cảnh Cầu Hoàng Văn Thụ, trung tâm TP...).
+                  </p>
                   <ImageUploadInput
                     value={template.backgroundImageUrl || ''}
                     onChange={(url) => setTemplate({ ...template, backgroundImageUrl: url })}
-                    label="Hình nền Cổng chào toàn TP (Background Wallpaper)"
-                    helperText="Tải ảnh nền từ máy tính hoặc dán URL (Độ phân giải khuyến nghị: 1920x1080)"
+                    label="Tải ảnh nền hoặc dán URL (Khuyến nghị 1920x1080):"
+                    helperText="Chọn ảnh từ máy hoặc dán link URL"
                     category="banners"
                   />
                   <div className="pt-2">
@@ -254,21 +261,41 @@ export const PortalBuilderPage: React.FC = () => {
                   </div>
                 </div>
 
-                <ImageUploadInput
-                  value={template.bannerUrl || ''}
-                  onChange={(url) => setTemplate({ ...template, bannerUrl: url })}
-                  label="Hình ảnh Banner đầu trang (Hiển thị chung toàn TP)"
-                  helperText="Tải banner từ máy tính hoặc nhập liên kết ảnh"
-                  category="banners"
-                />
+                {/* 2. Card Header Banner */}
+                <div className="p-3.5 bg-slate-50 rounded-sm border border-slate-200 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                    <span className="w-5 h-5 rounded-full bg-[#004b87] text-white flex items-center justify-center text-[11px] font-bold">2</span>
+                    <span>Ảnh Banner minh họa (Nằm trong thẻ chào mừng)</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Ảnh chữ nhật hiển thị ở giữa thẻ thông tin phía trên nút kết nối (ảnh cổng Nhà văn hóa, biểu ngữ tuyên truyền...).
+                  </p>
+                  <ImageUploadInput
+                    value={template.bannerUrl || ''}
+                    onChange={(url) => setTemplate({ ...template, bannerUrl: url })}
+                    label="Tải ảnh banner hoặc dán URL:"
+                    helperText="Tải banner từ máy tính hoặc nhập liên kết ảnh"
+                    category="banners"
+                  />
+                </div>
 
-                <ImageUploadInput
-                  value={template.logoUrl || ''}
-                  onChange={(url) => setTemplate({ ...template, logoUrl: url })}
-                  label="Biểu trưng chính thức (Logo)"
-                  helperText="Tải logo từ máy tính hoặc nhập liên kết ảnh"
-                  category="logos"
-                />
+                {/* 3. Official Logo */}
+                <div className="p-3.5 bg-slate-50 rounded-sm border border-slate-200 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                    <span className="w-5 h-5 rounded-full bg-[#004b87] text-white flex items-center justify-center text-[11px] font-bold">3</span>
+                    <span>Biểu trưng chính thức / Logo (Huy hiệu TP hoặc cơ quan)</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Logo đặt ở đầu tiêu đề Cổng chào (khuyến nghị dùng ảnh PNG tách nền trong suốt).
+                  </p>
+                  <ImageUploadInput
+                    value={template.logoUrl || ''}
+                    onChange={(url) => setTemplate({ ...template, logoUrl: url })}
+                    label="Tải logo hoặc dán URL:"
+                    helperText="Tải logo từ máy tính hoặc nhập liên kết ảnh"
+                    category="logos"
+                  />
+                </div>
               </div>
 
               <div>
@@ -325,9 +352,19 @@ export const PortalBuilderPage: React.FC = () => {
                 <div className="relative z-10 bg-white rounded-lg border border-slate-300 shadow-2xl overflow-hidden my-auto space-y-0">
                   {/* Card Red Header */}
                   <div className="bg-[#a81c1c] text-white text-center p-3 border-b border-[#881313]">
-                    <div className="inline-flex items-center justify-center w-5 h-5 rounded-xs bg-red-800 text-yellow-300 font-bold text-[10px] mb-1 border border-amber-300/40">
-                      ★
-                    </div>
+                    {template.logoUrl ? (
+                      <div className="flex justify-center mb-1">
+                        <img
+                          src={template.logoUrl}
+                          alt="Logo"
+                          className="h-7 w-auto max-w-[100px] object-contain drop-shadow-xs"
+                        />
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center justify-center w-5 h-5 rounded-xs bg-red-800 text-yellow-300 font-bold text-[10px] mb-1 border border-amber-300/40">
+                        ★
+                      </div>
+                    )}
                     <div className="text-[8.5px] font-bold tracking-widest text-yellow-300 uppercase">
                       UBND THÀNH PHỐ HẢI PHÒNG
                     </div>
@@ -337,14 +374,18 @@ export const PortalBuilderPage: React.FC = () => {
                   </div>
 
                   {/* Banner Photo */}
-                  {template.bannerUrl && (
-                    <div className="relative overflow-hidden border-b border-slate-200">
-                      <img src={template.bannerUrl} alt="Banner" className="w-full h-24 object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2">
-                        <span className="text-[10px] font-bold text-white drop-shadow-xs">Ảnh thực tế Nhà văn hóa</span>
-                      </div>
+                  <div className="relative overflow-hidden border-b border-slate-200">
+                    <img
+                      src={template.bannerUrl || '/banners/haiphong_culture_house.jpg'}
+                      alt="Banner"
+                      className="w-full h-24 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2">
+                      <span className="text-[10px] font-bold text-white drop-shadow-xs">
+                        {template.bannerUrl ? 'Ảnh Banner tùy biến' : 'Ảnh Banner mặc định (Nhà văn hóa)'}
+                      </span>
                     </div>
-                  )}
+                  </div>
 
                   <div className="p-3.5 space-y-3">
                     {/* Welcome Message Card */}

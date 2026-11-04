@@ -16,7 +16,10 @@ import {
   PlusCircle,
   X,
   Radio,
-  Server
+  Server,
+  Notebook,
+  NotepadTextDashed,
+  NotebookTabs
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -234,8 +237,8 @@ export const GisMapPage: React.FC = () => {
           {/* Interactive Map Legend */}
           <div className="absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-sm p-3 text-xs text-slate-200 shadow-xl pointer-events-auto">
             <div className="font-semibold text-white mb-2 flex items-center gap-1.5">
-              <Radio className="w-3.5 h-3.5 text-blue-400" />
-              Chú thích bản đồ GIS
+              <NotebookTabs className="w-3.5 h-3.5 text-blue-400" />
+              Chú thích
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">

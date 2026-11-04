@@ -225,16 +225,39 @@ export const PortalPage: React.FC = () => {
     );
   }
 
+  const template = portalData?.portalTemplate;
   const campaign = portalData?.activeCampaign;
   const survey = portalData?.activeSurvey;
+
+  // Background Wallpaper Priority:
+  // 1. Location-specific custom wallpaper (if customized and not equal to default placeholder)
+  // 2. Global Template wallpaper from Portal Builder
+  // 3. Location wallpaper fallback
+  // 4. Static city background
+  const backgroundWallpaperUrl =
+    (portalData?.location.backgroundImageUrl &&
+     portalData.location.backgroundImageUrl !== '/banners/haiphong_city_bg.jpg'
+      ? portalData.location.backgroundImageUrl
+      : template?.backgroundImageUrl) ||
+    template?.backgroundImageUrl ||
+    portalData?.location.backgroundImageUrl ||
+    '/banners/haiphong_city_bg.jpg';
+
+  // Banner Photo Priority:
+  // 1. Active campaign banner
+  // 2. Location-specific custom promo banner (if customized and not equal to default placeholder)
+  // 3. Global Template banner from Portal Builder
+  // 4. Location promo banner fallback
+  // 5. Static culture house banner
   const localBannerUrl =
     campaign?.bannerUrl ||
+    (portalData?.location.promoBannerUrl &&
+     portalData.location.promoBannerUrl !== '/banners/haiphong_culture_house.jpg'
+      ? portalData.location.promoBannerUrl
+      : template?.bannerUrl) ||
+    template?.bannerUrl ||
     portalData?.location.promoBannerUrl ||
     '/banners/haiphong_culture_house.jpg';
-  const backgroundWallpaperUrl =
-    portalData?.location.backgroundImageUrl ||
-    portalData?.portalTemplate?.backgroundImageUrl ||
-    '/banners/haiphong_city_bg.jpg';
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center p-3 sm:p-5 text-slate-900 font-sans">
@@ -249,9 +272,19 @@ export const PortalPage: React.FC = () => {
       <div className="relative z-10 bg-white rounded-lg border border-slate-300/80 shadow-2xl max-w-md w-full overflow-hidden">
         {/* Official Government Header */}
         <div className="bg-[#a81c1c] text-white text-center p-4 border-b border-[#881313] relative">
-          <div className="inline-flex items-center justify-center w-7 h-7 aspect-square rounded-sm bg-red-800 text-yellow-300 font-bold text-xs mb-1.5 border border-amber-300/40 shadow-xs">
-            ★
-          </div>
+          {template?.logoUrl ? (
+            <div className="flex justify-center mb-1.5">
+              <img
+                src={template.logoUrl}
+                alt="Biểu trưng chính thức"
+                className="h-10 w-auto max-w-[130px] object-contain drop-shadow-sm"
+              />
+            </div>
+          ) : (
+            <div className="inline-flex items-center justify-center w-7 h-7 aspect-square rounded-sm bg-red-800 text-yellow-300 font-bold text-xs mb-1.5 border border-amber-300/40 shadow-xs">
+              ★
+            </div>
+          )}
           <div className="text-[10px] font-bold tracking-widest text-yellow-300 uppercase">
             Cộng Hòa Xã Hội Chủ Nghĩa Việt Nam
           </div>
@@ -263,7 +296,7 @@ export const PortalPage: React.FC = () => {
             Ủy Ban Nhân Dân Thành Phố Hải Phòng
           </div>
           <h1 className="text-sm font-extrabold tracking-tight mt-0.5 uppercase text-white">
-            Cổng Truy Cập Wi-Fi
+            {template?.title || 'Cổng Truy Cập Wi-Fi'}
           </h1>
         </div>
 
@@ -289,7 +322,7 @@ export const PortalPage: React.FC = () => {
               <span>Chính quyền số cơ sở</span>
             </div>
             <h2 className="text-sm font-extrabold text-slate-900 leading-snug">
-              {portalData?.location.welcomeMessage || `Chào mừng Nhân dân đến với ${portalData?.location.name || 'Nhà văn hóa'}`}
+              {portalData?.location.welcomeMessage || template?.welcomeText || `Chào mừng Nhân dân đến với ${portalData?.location.name || 'Nhà văn hóa'}`}
             </h2>
             <p className="text-[11px] text-slate-600 flex items-center gap-1 mt-1">
               <MapPin className="w-3 h-3 text-[#a81c1c] flex-shrink-0" />
@@ -374,7 +407,13 @@ export const PortalPage: React.FC = () => {
                 className="mt-0.5 rounded-xs border-slate-300 text-[#004b87] focus:ring-[#004b87] w-4 h-4 cursor-pointer flex-shrink-0"
               />
               <span className="leading-relaxed">
-                Tôi đồng ý với <strong>Quy chế sử dụng mạng Wi-Fi công cộng</strong> và tuân thủ các quy định bảo vệ dữ liệu cá nhân theo Nghị định 13/2023/NĐ-CP.
+                {template?.termsText ? (
+                  template.termsText
+                ) : (
+                  <>
+                    Tôi đồng ý với <strong>Quy chế sử dụng mạng Wi-Fi công cộng</strong> và tuân thủ các quy định bảo vệ dữ liệu cá nhân theo Nghị định 13/2023/NĐ-CP.
+                  </>
+                )}
               </span>
             </label>
           </div>
@@ -384,7 +423,8 @@ export const PortalPage: React.FC = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3 px-4 rounded-sm text-white font-extrabold text-xs sm:text-sm tracking-wide uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-md bg-[#004b87] hover:bg-[#003865] active:bg-[#002b4d] disabled:opacity-50"
+              className="w-full py-3 px-4 rounded-sm text-white font-extrabold text-xs sm:text-sm tracking-wide uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-md hover:brightness-95 active:brightness-90 disabled:opacity-50"
+              style={{ backgroundColor: template?.themeColor || '#004b87' }}
             >
               {submitting ? (
                 <>
@@ -394,7 +434,7 @@ export const PortalPage: React.FC = () => {
               ) : (
                 <>
                   <Wifi className="w-4 h-4 text-yellow-300" />
-                  <span>KẾT NỐI WI-FI MIỄN PHÍ</span>
+                  <span>{template?.buttonText || 'KẾT NỐI WI-FI MIỄN PHÍ'}</span>
                 </>
               )}
             </button>
