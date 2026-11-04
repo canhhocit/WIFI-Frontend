@@ -192,7 +192,7 @@ export const ImageUploadInput: React.FC<ImageUploadInputProps> = ({
           <div className="flex items-center justify-between text-[11px] text-slate-600">
             <span className="font-semibold flex items-center gap-1 text-[#004b87]">
               <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-              <span>Xem trước hình ảnh (Preview trước khi lưu):</span>
+              <span>Xem trước hình ảnh:</span>
             </span>
             <button
               type="button"
