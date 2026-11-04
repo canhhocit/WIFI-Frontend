@@ -53,7 +53,7 @@ export const LocationsPage: React.FC = () => {
     adminUnitId: '' as string | number,
     latitude: '' as string | number,
     longitude: '' as string | number,
-    ispProvider: 'VNPT',
+    ispProvider: 'Viettel',
     circuitId: '',
     sessionDurationMinutes: 120,
     maxBandwidthMbps: 20,
@@ -103,7 +103,7 @@ export const LocationsPage: React.FC = () => {
       adminUnitId: '',
       latitude: '20.8449',
       longitude: '106.6881',
-      ispProvider: 'VNPT',
+      ispProvider: 'Viettel',
       circuitId: '',
       sessionDurationMinutes: 120,
       maxBandwidthMbps: 20,
@@ -130,7 +130,7 @@ export const LocationsPage: React.FC = () => {
       adminUnitId: loc.adminUnitId || '',
       latitude: loc.latitude !== undefined && loc.latitude !== null ? loc.latitude : '',
       longitude: loc.longitude !== undefined && loc.longitude !== null ? loc.longitude : '',
-      ispProvider: loc.ispName || 'VNPT',
+      ispProvider: loc.ispName || 'Viettel',
       circuitId: loc.circuitCode || '',
       sessionDurationMinutes: loc.sessionDurationMinutes,
       maxBandwidthMbps: loc.maxBandwidthMbps,
@@ -552,8 +552,8 @@ export const LocationsPage: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, ispProvider: e.target.value })}
                 className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
               >
+                <option value="Viettel">Viettel (Mặc định)</option>
                 <option value="VNPT">VNPT</option>
-                <option value="Viettel">Viettel</option>
                 <option value="FPT">FPT Telecom</option>
               </select>
             </div>
@@ -798,8 +798,8 @@ export const LocationsPage: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, ispProvider: e.target.value })}
                 className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
               >
+                <option value="Viettel">Viettel (Mặc định)</option>
                 <option value="VNPT">VNPT</option>
-                <option value="Viettel">Viettel</option>
                 <option value="FPT">FPT Telecom</option>
               </select>
             </div>
