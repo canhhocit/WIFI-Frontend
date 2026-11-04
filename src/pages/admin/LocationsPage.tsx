@@ -376,8 +376,7 @@ export const LocationsPage: React.FC = () => {
                       )}
                     </td>
                     <td className="py-3 px-4 text-slate-700">
-                      <div className="font-bold text-slate-800">{loc.ispName || 'VNPT'}</div>
-                      <div className="text-[11px] font-mono text-slate-500">{loc.circuitCode || 'Chưa gán mã'}</div>
+                      <div className="font-bold text-slate-800">{loc.ispName || 'Viettel'}</div>
                     </td>
                     <td className="py-3 px-4 font-semibold text-slate-700">
                       <div className="flex items-center gap-1">
@@ -544,29 +543,17 @@ export const LocationsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Nhà mạng (ISP)</label>
-              <select
-                value={formData.ispProvider}
-                onChange={(e) => setFormData({ ...formData, ispProvider: e.target.value })}
-                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
-              >
-                <option value="Viettel">Viettel (Mặc định)</option>
-                <option value="VNPT">VNPT</option>
-                <option value="FPT">FPT Telecom</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Mã đường truyền / Hợp đồng cáp</label>
-              <input
-                type="text"
-                value={formData.circuitId}
-                onChange={(e) => setFormData({ ...formData, circuitId: e.target.value })}
-                placeholder="Ví dụ: HP-HBG-00129"
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
-              />
-            </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Nhà mạng cung cấp dịch vụ (ISP)</label>
+            <select
+              value={formData.ispProvider}
+              onChange={(e) => setFormData({ ...formData, ispProvider: e.target.value })}
+              className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
+            >
+              <option value="Viettel">Viettel (Mặc định)</option>
+              <option value="VNPT">VNPT</option>
+              <option value="FPT">FPT Telecom</option>
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -790,28 +777,17 @@ export const LocationsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Nhà mạng (ISP)</label>
-              <select
-                value={formData.ispProvider}
-                onChange={(e) => setFormData({ ...formData, ispProvider: e.target.value })}
-                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
-              >
-                <option value="Viettel">Viettel (Mặc định)</option>
-                <option value="VNPT">VNPT</option>
-                <option value="FPT">FPT Telecom</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Mã đường truyền cáp</label>
-              <input
-                type="text"
-                value={formData.circuitId}
-                onChange={(e) => setFormData({ ...formData, circuitId: e.target.value })}
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
-              />
-            </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Nhà mạng cung cấp dịch vụ (ISP)</label>
+            <select
+              value={formData.ispProvider}
+              onChange={(e) => setFormData({ ...formData, ispProvider: e.target.value })}
+              className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
+            >
+              <option value="Viettel">Viettel (Mặc định)</option>
+              <option value="VNPT">VNPT</option>
+              <option value="FPT">FPT Telecom</option>
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
