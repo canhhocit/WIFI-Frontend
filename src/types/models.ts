@@ -225,6 +225,7 @@ export interface GuestSessionStatusResponse {
   ipAddress: string;
   maxBandwidthMbps: number;
   revokeReason?: string;
+  activeCampaign?: CampaignDto;
 }
 
 export interface AdminUserDto {

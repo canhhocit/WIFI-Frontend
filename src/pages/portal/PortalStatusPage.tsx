@@ -374,6 +374,74 @@ export const PortalStatusPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Active City Campaign Highlight (Chiến dịch Truyền thông TP đang phát sóng) */}
+        {session.activeCampaign && (
+          <div className="bg-gradient-to-r from-red-950 via-[#7a1212] to-[#0c2340] rounded-lg border border-red-700/80 text-white shadow-md overflow-hidden">
+            <div className="flex flex-col md:flex-row">
+              {session.activeCampaign.bannerUrl && (
+                <div className="md:w-5/12 relative min-h-[170px] md:min-h-full bg-slate-950 overflow-hidden flex-shrink-0">
+                  <img
+                    src={session.activeCampaign.bannerUrl}
+                    alt={session.activeCampaign.title}
+                    className="w-full h-full object-cover opacity-90"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/banners/haiphong_city_bg.jpg';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/80 via-transparent to-transparent flex items-end p-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-800 text-yellow-300 border border-yellow-400/40">
+                      Áp phích chính sách số
+                    </span>
+                  </div>
+                </div>
+              )}
+              <div className="p-5 md:p-6 flex-1 flex flex-col justify-between space-y-3">
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-yellow-400 text-slate-950 text-[10.5px] font-extrabold uppercase tracking-wider">
+                    <Megaphone className="w-3.5 h-3.5 text-red-700 flex-shrink-0" />
+                    <span>Chiến Dịch Tuyên Truyền TP. Hải Phòng Đang Phát Sóng</span>
+                  </div>
+                  <h2 className="text-base sm:text-lg font-black tracking-tight text-white leading-snug">
+                    {session.activeCampaign.title}
+                  </h2>
+                  {session.activeCampaign.description && (
+                    <p className="text-xs text-red-100 leading-relaxed font-sans">
+                      {session.activeCampaign.description}
+                    </p>
+                  )}
+                </div>
+
+                <div className="pt-2 flex flex-wrap items-center gap-3">
+                  {session.activeCampaign.actionUrl ? (
+                    <a
+                      href={session.activeCampaign.actionUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-slate-950 rounded text-xs font-black transition shadow-sm cursor-pointer uppercase tracking-wide"
+                    >
+                      <span>Xem Toàn Văn Kế Hoạch & Chính Sách</span>
+                      <ExternalLink className="w-4 h-4 text-slate-900" />
+                    </a>
+                  ) : (
+                    <a
+                      href="https://haiphong.gov.vn"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-slate-950 rounded text-xs font-black transition shadow-sm cursor-pointer uppercase tracking-wide"
+                    >
+                      <span>Cổng Thông Tin TP. Hải Phòng</span>
+                      <ExternalLink className="w-4 h-4 text-slate-900" />
+                    </a>
+                  )}
+                  <span className="text-[11px] text-red-200 italic font-sans">
+                    * Ban Tuyên giáo & UBND TP. Hải Phòng chỉ đạo phát sóng trên toàn mạng Wi-Fi.
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 4 Public Administrative Services Grid */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">

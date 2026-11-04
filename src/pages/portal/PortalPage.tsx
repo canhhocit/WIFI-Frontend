@@ -366,8 +366,12 @@ export const PortalPage: React.FC = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent flex flex-col justify-end p-3 text-white">
             <div className="text-xs font-bold text-white drop-shadow-sm flex items-center justify-between">
-              <span>Ảnh thực tế: {portalData?.location.name}</span>
-              <span className="text-[9.5px] px-1.5 py-0.5 bg-emerald-700/90 text-emerald-100 rounded font-semibold">Trực tuyến</span>
+              <span className="truncate pr-2">
+                {campaign ? `📢 Áp phích: ${campaign.title}` : `Ảnh thực tế: ${portalData?.location.name}`}
+              </span>
+              <span className="text-[9.5px] px-1.5 py-0.5 bg-emerald-700/90 text-emerald-100 rounded font-semibold flex-shrink-0">
+                {campaign ? 'Chiến dịch đang phát sóng' : 'Trực tuyến'}
+              </span>
             </div>
             <div className="text-[10px] text-slate-200 drop-shadow-xs flex items-center gap-1.5 mt-0.5 font-mono">
               <span>Nhà mạng: <strong className="text-yellow-300">{portalData?.location.ispName || 'VNPT'}</strong></span>
@@ -381,13 +385,40 @@ export const PortalPage: React.FC = () => {
 
         {/* Campaign Policy Notice (if configured) */}
         {campaign && (
-          <div className="border-b border-slate-200 bg-slate-50 p-3 space-y-1">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-              <Megaphone className="w-3 h-3 text-[#a81c1c]" /> Tuyên Truyền Chính Sách
+          <div className="border-b border-amber-300/80 bg-gradient-to-r from-red-50/95 via-amber-50/90 to-red-50/95 p-3.5 space-y-2 border-l-4 border-l-[#a81c1c] shadow-xs">
+            <div className="flex items-center justify-between">
+              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs bg-[#a81c1c] text-yellow-300 text-[10px] font-bold uppercase tracking-wider shadow-2xs">
+                <Megaphone className="w-3 h-3 text-yellow-300 flex-shrink-0" />
+                <span>Chiến Dịch Tuyên Truyền TP. Hải Phòng</span>
+              </div>
+              <span className="text-[9.5px] font-bold text-red-800 bg-red-100/90 px-1.5 py-0.5 rounded border border-red-200">
+                Chính sách trọng điểm
+              </span>
             </div>
-            <div className="text-xs font-bold text-slate-900">{campaign.title}</div>
+
+            <h3 className="text-xs sm:text-[13px] font-black text-slate-900 leading-snug uppercase">
+              {campaign.title}
+            </h3>
+
             {campaign.description && (
-              <p className="text-[11px] text-slate-600 leading-relaxed">{campaign.description}</p>
+              <p className="text-[11.5px] text-slate-700 leading-relaxed font-sans">
+                {campaign.description}
+              </p>
+            )}
+
+            {/* Action button if campaign has actionUrl */}
+            {campaign.actionUrl && (
+              <div className="pt-1">
+                <a
+                  href={campaign.actionUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#a81c1c] hover:bg-[#881313] text-white rounded text-[11px] font-bold transition shadow-xs cursor-pointer"
+                >
+                  <span>Xem Chi Tiết Kế Hoạch / Văn Bản Chỉ Đạo</span>
+                  <ExternalLink className="w-3 h-3 text-yellow-300" />
+                </a>
+              </div>
             )}
           </div>
         )}
