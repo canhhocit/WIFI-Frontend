@@ -35,9 +35,9 @@ export const ImageUploadInput: React.FC<ImageUploadInputProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check size limit: 10MB
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Kích thước ảnh vượt quá giới hạn 10MB. Vui lòng chọn ảnh nhỏ hơn.');
+    // Check size limit: 15MB
+    if (file.size > 15 * 1024 * 1024) {
+      setError('Kích thước ảnh vượt quá giới hạn 15MB. Vui lòng chọn ảnh nhỏ hơn.');
       return;
     }
 
@@ -144,7 +144,7 @@ export const ImageUploadInput: React.FC<ImageUploadInputProps> = ({
                   Bấm để chọn tệp ảnh từ máy tính
                 </div>
                 <div className="text-[10px] text-slate-400">
-                  Hỗ trợ định dạng JPG, PNG, WebP (Tối đa 10MB)
+                  Hỗ trợ định dạng JPG, PNG, WebP (Tối đa 15MB)
                 </div>
               </>
             )}

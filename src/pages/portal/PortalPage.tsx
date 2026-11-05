@@ -476,10 +476,10 @@ export const PortalPage: React.FC = () => {
               </div>
               <div>
                 <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-300 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  {/* <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" /> */}
                   Sóng Wi-Fi Sẵn Sàng
                 </div>
-                <div className="text-sm font-bold text-white">Kết Nối Internet Nhà Văn Hóa</div>
+                <div className="text-sm font-bold text-white">Kết Nối Internet</div>
               </div>
             </div>
 
