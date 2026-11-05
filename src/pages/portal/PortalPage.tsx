@@ -11,16 +11,15 @@ import {
   Smartphone,
   ClipboardList,
   Send,
+  Lock,
   ChevronDown,
   ChevronUp,
   Landmark,
   Sparkles,
-  Phone,
-  UserCheck,
-  Globe,
-  Search,
-  FileText,
-  ShieldAlert,
+  Shield,
+  Clock,
+  Gauge,
+  HelpCircle,
 } from 'lucide-react';
 import { portalApi } from '../../api/portalApi';
 import { PortalInitResponse } from '../../types/models';
@@ -47,7 +46,7 @@ export const PortalPage: React.FC = () => {
   const [macAddress, setMacAddress] = useState('');
   const [consentGiven, setConsentGiven] = useState(true);
 
-  // Collapsible Advanced Authentication Toggle
+  // Ver 1 Mode: Advanced Auth / Survey Collapsible Toggle
   const [showAdvancedAuth, setShowAdvancedAuth] = useState(false);
 
   // Survey State
@@ -89,11 +88,6 @@ export const PortalPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSwitchDemoLocation = (slug: string) => {
-    navigate(`/portal?location=${slug}`);
-    loadPortal(slug);
   };
 
   const handleSendOtp = async () => {
@@ -150,6 +144,8 @@ export const PortalPage: React.FC = () => {
       return;
     }
 
+    // In Ver 1: 1-click connect without mandatory OTP by default.
+    // If the user explicitly opened advanced verification, require OTP.
     if (showAdvancedAuth && portalData.otpRequired && !otpVerified && !portalData.macRemembered) {
       setError('Vui lòng xác thực số điện thoại qua OTP hoặc thu gọn tùy chọn nâng cao để kết nối nhanh.');
       return;
@@ -160,6 +156,7 @@ export const PortalPage: React.FC = () => {
     setSuccessInfo(null);
 
     try {
+      // If survey answers exist and submitted, send in background
       if (portalData.activeSurvey && Object.keys(surveyAnswers).length > 0 && !surveySubmitted) {
         try {
           await portalApi.submitSurvey(portalData.activeSurvey.id, {
@@ -171,7 +168,7 @@ export const PortalPage: React.FC = () => {
         } catch (_) {}
       }
 
-      await portalApi.login({
+      const session = await portalApi.login({
         locationSlug: portalData.location.slug,
         macAddress: macAddress || portalData.clientMacHint || '02:42:ac:11:00:01',
         guestName: guestName.trim() || undefined,
@@ -179,7 +176,7 @@ export const PortalPage: React.FC = () => {
         consentGiven: true,
       });
 
-      // Redirect directly to Haiphong Public Service Portal
+      // Redirect citizen directly to Haiphong Public Service portal upon successful connection
       window.location.href = 'https://dichvucong.haiphong.gov.vn/';
     } catch (err: any) {
       setError(err?.message || 'Xác thực truy cập không thành công. Vui lòng thử lại.');
@@ -232,18 +229,27 @@ export const PortalPage: React.FC = () => {
     );
   }
 
+  const handleSwitchDemoLocation = (slug: string) => {
+    navigate(`/portal?location=${slug}`);
+    loadPortal(slug);
+  };
+
   const template = portalData?.portalTemplate;
   const campaign = portalData?.activeCampaign;
   const survey = portalData?.activeSurvey;
 
-  // Background Wallpaper
+  // Background Wallpaper Priority:
   const backgroundWallpaperUrl =
-    portalData?.location.backgroundImageUrl ||
+    (portalData?.location.backgroundImageUrl &&
+     portalData.location.backgroundImageUrl !== '/banners/haiphong_city_bg.jpg'
+      ? portalData.location.backgroundImageUrl
+      : template?.backgroundImageUrl) ||
     template?.backgroundImageUrl ||
+    portalData?.location.backgroundImageUrl ||
     '/banners/haiphong_city_bg.jpg';
 
-  // Location Real Photo (Always prioritizes location's actual photo)
-  const locationBannerUrl =
+  // Banner Photo Priority: Always show the location's own actual culture house photo
+  const localBannerUrl =
     portalData?.location.promoBannerUrl ||
     template?.bannerUrl ||
     '/banners/haiphong_culture_house.jpg';
@@ -257,199 +263,181 @@ export const PortalPage: React.FC = () => {
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center p-3 sm:p-5 lg:p-6 text-slate-900 font-sans">
-      {/* City Architectural Wallpaper Background */}
+      {/* Official City Architectural Wallpaper Background */}
       <div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
         style={{ backgroundImage: `url('${backgroundWallpaperUrl}')` }}
       />
-      {/* GovTech Dark Overlay */}
-      <div className="fixed inset-0 bg-gradient-to-b from-slate-950/85 via-slate-900/80 to-slate-950/90 backdrop-blur-[2px]" />
+      {/* GovTech Dark Overlay with Restrained Glassmorphism */}
+      <div className="fixed inset-0 bg-gradient-to-b from-slate-950/80 via-slate-900/75 to-slate-950/85 backdrop-blur-[2px]" />
 
-      {/* Main Unified Government Portal Container */}
-      <div className="relative z-10 bg-white rounded-xl lg:rounded-2xl border border-slate-300/80 shadow-2xl max-w-md lg:max-w-5xl xl:max-w-6xl w-full overflow-hidden flex flex-col">
+      {/* Main Responsive Container: Mobile = Single Column max-w-md, Laptop = Full Screen 2-Column Split max-w-6xl */}
+      <div className="relative z-10 bg-white rounded-xl lg:rounded-2xl border border-slate-300/80 shadow-2xl max-w-md lg:max-w-5xl xl:max-w-6xl w-full overflow-hidden lg:grid lg:grid-cols-12">
         
-        {/* ================= 1. UNIFIED OFFICIAL NATIONAL HEADER (Trang nghiêm - Toàn bộ chiều ngang) ================= */}
-        <header className="bg-gradient-to-r from-[#8b1414] via-[#a81c1c] to-[#8b1414] text-white p-4 sm:p-5 border-b border-[#6e0d0d] shadow-sm">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-            <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-red-900/90 text-yellow-300 font-bold flex items-center justify-center text-xl border-2 border-yellow-400/50 shadow-md flex-shrink-0">
+        {/* ================= LEFT COLUMN: CITIZEN INFORMATION & CITY CAMPAIGN (lg:col-span-7) ================= */}
+        <div className="lg:col-span-7 flex flex-col bg-gradient-to-b from-slate-50/70 to-white border-b lg:border-b-0 lg:border-r border-slate-200">
+          
+          {/* Official Government Header */}
+          <div className="bg-[#a81c1c] text-white text-center p-4 sm:p-5 border-b border-[#881313] relative">
+            {template?.logoUrl ? (
+              <div className="flex justify-center mb-1.5">
+                <img
+                  src={template.logoUrl}
+                  alt="Biểu trưng chính thức"
+                  className="h-10 sm:h-12 w-auto max-w-[140px] object-contain drop-shadow-sm"
+                />
+              </div>
+            ) : (
+              <div className="inline-flex items-center justify-center w-8 h-8 aspect-square rounded-sm bg-red-800 text-yellow-300 font-bold text-sm mb-1.5 border border-amber-300/40 shadow-xs">
                 ★
               </div>
-              <div>
-                <div className="text-[10px] sm:text-[11px] font-bold tracking-widest text-yellow-300 uppercase">
-                  CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
-                </div>
-                <div className="text-[10px] sm:text-[10.5px] text-red-100 italic">
-                  Độc lập - Tự do - Hạnh phúc
-                </div>
-                <div className="text-xs sm:text-sm font-extrabold uppercase tracking-tight text-white mt-0.5">
-                  ỦY BAN NHÂN DÂN THÀNH PHỐ HẢI PHÒNG • SỞ THÔNG TIN VÀ TRUYỀN THÔNG
-                </div>
-              </div>
+            )}
+            <div className="text-[10px] sm:text-[11px] font-bold tracking-widest text-yellow-300 uppercase">
+              Cộng Hòa Xã Hội Chủ Nghĩa Việt Nam
             </div>
+            <div className="text-[10px] sm:text-[11px] text-red-100 italic">
+              Độc lập - Tự do - Hạnh phúc
+            </div>
+            <div className="h-0.5 w-24 bg-yellow-400/60 mx-auto my-2" />
+            <div className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-yellow-300">
+              Ủy Ban Nhân Dân Thành Phố Hải Phòng
+            </div>
+            <h1 className="text-sm sm:text-base font-extrabold tracking-tight mt-0.5 uppercase text-white">
+              {template?.title || 'Cổng Thông Tin Wi-Fi Nhà Văn Hóa'}
+            </h1>
+          </div>
 
-            <div className="flex flex-col sm:items-end">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-black/25 border border-white/20 text-yellow-300 text-[11px] font-bold uppercase tracking-wider">
-                <Wifi className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />
-                MẠNG WI-FI NHÀ VĂN HÓA CÔNG CỘNG
-              </span>
-              <span className="text-[10px] text-slate-200 mt-1">Phục vụ Nhân dân và Dịch vụ công trực tuyến</span>
+          {/* Location & Speed Meta Strip */}
+          <div className="px-4 py-2.5 bg-slate-100/90 border-b border-slate-200 flex items-center justify-between text-[11px] text-slate-700">
+            <div className="flex items-center gap-1.5 font-semibold truncate mr-2">
+              <MapPin className="w-3.5 h-3.5 text-[#a81c1c] flex-shrink-0" />
+              <span className="truncate">{portalData?.location.name || 'Nhà văn hóa thôn, tổ dân phố Hải Phòng'}</span>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0 font-mono text-[10.5px] text-slate-600">
+              <span>{portalData?.location.sessionDurationMinutes || 120} phút</span>
+              <span>•</span>
+              <span className="text-emerald-700 font-bold">{portalData?.location.maxBandwidthMbps || 20} Mbps</span>
             </div>
           </div>
-        </header>
 
-        {/* ================= 2. LOCATION & TELEMETRY SUB-NAV STRIP ================= */}
-        <div className="px-4 sm:px-6 py-2.5 bg-slate-100 border-b border-slate-200/90 flex flex-wrap items-center justify-between text-xs text-slate-700 gap-2">
-          <div className="flex items-center gap-2 font-bold text-slate-900 truncate">
-            <MapPin className="w-4 h-4 text-[#a81c1c] flex-shrink-0" />
-            <span className="truncate">{portalData?.location.name || 'Nhà văn hóa Hải Phòng'}</span>
-            <span className="hidden md:inline text-slate-400 font-normal">({portalData?.location.address})</span>
-          </div>
-
-          <div className="flex items-center gap-3 font-mono text-[11px]">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Trực tuyến
-            </span>
-            <span className="text-slate-600 font-semibold">{portalData?.location.maxBandwidthMbps || 20} Mbps</span>
-            <span className="text-slate-300">•</span>
-            <span className="text-slate-600 font-semibold">{portalData?.location.sessionDurationMinutes || 120} phút/phiên</span>
-            <span className="text-slate-300">•</span>
-            <span className="text-emerald-700 font-bold">Miễn phí 100%</span>
-          </div>
-        </div>
-
-        {/* ================= 3. TWO-COLUMN SPLIT CONTENT BODY ================= */}
-        <div className="lg:grid lg:grid-cols-12 flex-1">
-          
-          {/* ----- LEFT COLUMN: LOCAL CITIZEN INFORMATION & POLICY (lg:col-span-7) ----- */}
-          <div className="lg:col-span-7 p-4 sm:p-6 bg-slate-50/50 border-b lg:border-b-0 lg:border-r border-slate-200 space-y-4">
-            
-            {/* Lời chào mừng & Bản tin cơ sở */}
-            <div className="space-y-1.5">
-              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-red-100 text-[#a81c1c] text-[10.5px] font-bold uppercase tracking-wide">
-                <Sparkles className="w-3.5 h-3.5 text-[#a81c1c]" />
+          {/* Scrollable Content Body on Desktop */}
+          <div className="p-4 sm:p-5 space-y-4 flex-1">
+            {/* Lời chào mừng chính thức của điểm phát */}
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs bg-[#a81c1c] text-yellow-300 text-[10px] font-bold uppercase tracking-wider mb-1.5 shadow-2xs">
+                <Sparkles className="w-3 h-3" />
                 <span>Chính quyền số cơ sở</span>
               </div>
               <h2 className="text-base sm:text-lg font-extrabold text-slate-900 leading-snug">
-                {portalData?.location.welcomeMessage || `Chào mừng Nhân dân đến với ${portalData?.location.name}`}
+                {portalData?.location.welcomeMessage || template?.welcomeText || `Chào mừng Nhân dân đến với ${portalData?.location.name || 'Nhà văn hóa'}`}
               </h2>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Địa chỉ: <strong>{portalData?.location.address || 'Thành phố Hải Phòng'}</strong>
+              <p className="text-xs text-slate-600 flex items-center gap-1.5 mt-1.5">
+                <MapPin className="w-3.5 h-3.5 text-[#a81c1c] flex-shrink-0" />
+                <span>{portalData?.location.address || 'Thành phố Hải Phòng'}</span>
               </p>
             </div>
 
-            {/* Ảnh minh họa thực tế của chính Nhà văn hóa đó */}
-            <div className="relative rounded-lg border border-slate-200 bg-slate-950 overflow-hidden shadow-sm group">
+            {/* Bảng tin tuyên truyền & Chuyển đổi số địa phương */}
+            {(portalData?.location.promoTitle || portalData?.location.promoContent) && (
+              <div className="p-3.5 bg-amber-50/70 rounded-lg border border-amber-300/80 shadow-xs space-y-1.5">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#a81c1c]">
+                  <Megaphone className="w-4 h-4 text-[#a81c1c] flex-shrink-0" />
+                  <span>{portalData.location.promoTitle || 'Bản Tin Chuyển Đổi Số Địa Phương'}</span>
+                </div>
+                {portalData.location.promoContent && (
+                  <p className="text-xs text-slate-700 leading-relaxed font-sans">
+                    {portalData.location.promoContent}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Hướng dẫn Dịch vụ hành chính công Thành phố */}
+            <div className="p-3 bg-blue-50/80 rounded-lg border border-blue-200 flex items-start gap-2.5 text-slate-700">
+              <Landmark className="w-4 h-4 text-[#004b87] flex-shrink-0 mt-0.5" />
+              <div className="text-xs leading-relaxed">
+                <span className="font-bold text-[#004b87]">Dịch vụ công trực tuyến:</span> Sau khi kết nối Wi-Fi, hệ thống sẽ mở trực tiếp <strong>Cổng Dịch vụ công TP Hải Phòng</strong> để bà con tra cứu hồ sơ và nộp thủ tục hành chính miễn phí.
+              </div>
+            </div>
+
+            {/* Ảnh minh họa Nhà văn hóa thực tế của từng điểm phát */}
+            <div className="relative rounded-lg border border-slate-200 bg-slate-900 overflow-hidden shadow-sm">
               <img
-                src={locationBannerUrl}
-                alt={portalData?.location.name || 'Nhà văn hóa'}
-                className="w-full h-44 sm:h-52 object-cover opacity-90 group-hover:scale-101 transition duration-500"
+                src={localBannerUrl}
+                alt={portalData?.location.name || 'Nhà văn hóa Hải Phòng'}
+                className="w-full h-40 sm:h-48 lg:h-52 object-cover opacity-95 transition hover:scale-101 duration-300"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = '/banners/haiphong_culture_house.jpg';
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-3.5 text-white">
-                <div className="text-xs sm:text-sm font-bold drop-shadow-sm flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 font-bold">
-                    <Landmark className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-                    <span>Ảnh thực tế: {portalData?.location.name}</span>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent flex flex-col justify-end p-3.5 text-white">
+                <div className="text-xs sm:text-sm font-bold text-white drop-shadow-sm flex items-center justify-between">
+                  <span className="truncate pr-2 font-extrabold flex items-center gap-1.5">
+                    <Landmark className="w-4 h-4 text-amber-300 flex-shrink-0" />
+                    <span>Ảnh thực tế: {portalData?.location.name || 'Nhà văn hóa'}</span>
                   </span>
-                  <span className="text-[10px] px-2 py-0.5 bg-emerald-700 text-white rounded font-bold shadow-xs">
-                    Phát sóng 24/7
+                  <span className="text-[10px] px-2 py-0.5 bg-emerald-600/90 text-white rounded font-bold flex-shrink-0 shadow-2xs">
+                    Điểm phát trực tuyến
                   </span>
                 </div>
-                <div className="text-[10.5px] text-slate-200 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 mt-1 font-mono">
-                  <span>Nhà mạng: <strong className="text-yellow-300">{portalData?.location.ispName || 'VNPT Hải Phòng'}</strong></span>
+                <div className="text-[10.5px] text-slate-200 drop-shadow-xs flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 font-mono">
+                  <span>Nhà mạng: <strong className="text-yellow-300">{portalData?.location.ispName || 'Viettel'}</strong></span>
                   <span>•</span>
                   <span>Băng thông: <strong className="text-emerald-300">{portalData?.location.maxBandwidthMbps || 20} Mbps</strong></span>
                   <span>•</span>
-                  <span>Mã trạm: <strong className="text-slate-100">{portalData?.location.locationCode || 'LOC-HP'}</strong></span>
+                  <span>Mã trạm: <strong className="text-slate-200">{portalData?.location.locationCode || 'LOC-HP'}</strong></span>
                 </div>
               </div>
             </div>
 
-            {/* Thông tin cán bộ phụ trách & Giờ hỗ trợ chuyển đổi số */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                  <UserCheck className="w-3.5 h-3.5 text-[#004b87]" />
-                  <span>Cán bộ phụ trách trạm Wi-Fi:</span>
-                </div>
-                <div className="text-xs text-slate-700 font-medium">
-                  {portalData?.location.contactName || 'Ban Quản trị Nhà văn hóa'}
-                </div>
-                <div className="text-[11px] text-slate-500 flex items-center gap-1">
-                  <Phone className="w-3 h-3 text-[#a81c1c]" />
-                  <span>Điện thoại: <strong>{portalData?.location.contactPhone || '0225.1022'}</strong></span>
-                </div>
-              </div>
-
-              <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-[#a81c1c]">
-                  <Megaphone className="w-3.5 h-3.5 text-[#a81c1c]" />
-                  <span>Tổ công nghệ số cộng đồng:</span>
-                </div>
-                <div className="text-xs text-slate-700">
-                  {portalData?.location.promoTitle || 'Hỗ trợ VNeID & Dịch vụ công'}
-                </div>
-                <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">
-                  {portalData?.location.promoContent || 'Túc trực hướng dẫn người dân kích hoạt tài khoản định danh VNeID mức 2 và nộp hồ sơ trực tuyến.'}
-                </p>
-              </div>
-            </div>
-
-            {/* 3 Lối tắt Dịch vụ công thiết yếu cho công dân */}
-            <div className="space-y-2 pt-1">
-              <div className="text-xs font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5 text-[#004b87]" />
-                <span>Tiện ích Cổng Dịch vụ công TP. Hải Phòng phục vụ bà con:</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                <a
-                  href="https://dichvucong.haiphong.gov.vn/dichvucong/tracuu"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="p-2.5 bg-white hover:bg-blue-50/80 rounded border border-slate-200 hover:border-blue-300 transition group shadow-2xs"
-                >
-                  <Search className="w-4 h-4 text-[#004b87] mx-auto mb-1 group-hover:scale-110 transition" />
-                  <div className="font-bold text-slate-800 text-[11px]">Tra cứu hồ sơ</div>
-                  <div className="text-[10px] text-slate-500">Tiến độ Một cửa</div>
-                </a>
-
-                <a
-                  href="https://dichvucong.haiphong.gov.vn/dichvucong/dichvu"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="p-2.5 bg-white hover:bg-blue-50/80 rounded border border-slate-200 hover:border-blue-300 transition group shadow-2xs"
-                >
-                  <FileText className="w-4 h-4 text-emerald-700 mx-auto mb-1 group-hover:scale-110 transition" />
-                  <div className="font-bold text-slate-800 text-[11px]">Nộp trực tuyến</div>
-                  <div className="text-[10px] text-slate-500">1.800+ thủ tục</div>
-                </a>
-
-                <a
-                  href="https://dancuquocgia.gov.vn"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="p-2.5 bg-white hover:bg-blue-50/80 rounded border border-slate-200 hover:border-blue-300 transition group shadow-2xs"
-                >
-                  <ShieldCheck className="w-4 h-4 text-[#a81c1c] mx-auto mb-1 group-hover:scale-110 transition" />
-                  <div className="font-bold text-slate-800 text-[11px]">Cư trú VNeID</div>
-                  <div className="text-[10px] text-slate-500">Hộ tịch & CCCD</div>
-                </a>
-              </div>
-            </div>
-
-            {/* Trải nghiệm chuyển đổi nhanh các điểm phát (Demo Switcher) */}
-            <div className="pt-2">
-              <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1.5">
-                <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-[#a81c1c]" /> Trải nghiệm hình ảnh & thông tin từng Nhà văn hóa:
+            {/* Campaign Policy Notice (if configured) */}
+            {campaign && (
+              <div className="border border-amber-300/80 bg-gradient-to-r from-red-50/95 via-amber-50/90 to-red-50/95 p-3.5 rounded-lg space-y-2 border-l-4 border-l-[#a81c1c] shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs bg-[#a81c1c] text-yellow-300 text-[10px] font-bold uppercase tracking-wider">
+                    <Megaphone className="w-3 h-3 text-yellow-300 flex-shrink-0" />
+                    <span>Chiến Dịch Tuyên Truyền TP. Hải Phòng</span>
+                  </div>
+                  <span className="text-[9.5px] font-bold text-red-800 bg-red-100/90 px-1.5 py-0.5 rounded border border-red-200">
+                    Chính sách trọng điểm
                   </span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+
+                <h3 className="text-xs sm:text-sm font-black text-slate-900 leading-snug uppercase">
+                  {campaign.title}
+                </h3>
+
+                {campaign.description && (
+                  <p className="text-xs text-slate-700 leading-relaxed font-sans">
+                    {campaign.description}
+                  </p>
+                )}
+
+                {campaign.actionUrl && (
+                  <div className="pt-1">
+                    <a
+                      href={campaign.actionUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#a81c1c] hover:bg-[#881313] text-white rounded text-[11px] font-bold transition shadow-xs cursor-pointer"
+                    >
+                      <span>Xem Chi Tiết Kế Hoạch / Văn Bản Chỉ Đạo</span>
+                      <ExternalLink className="w-3 h-3 text-yellow-300" />
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Desktop-only: Demo Location Switcher inside Left Column */}
+            <div className="hidden lg:block pt-2">
+              <div className="p-3 bg-slate-900/95 rounded-lg border border-slate-700 text-white shadow-md">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-amber-300" /> Trải nghiệm hình ảnh & thông tin từng điểm:
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
                   {demoLocations.map((item) => {
                     const isActive =
                       portalData?.location.slug === item.slug ||
@@ -459,14 +447,14 @@ export const PortalPage: React.FC = () => {
                         key={item.slug}
                         type="button"
                         onClick={() => handleSwitchDemoLocation(item.slug)}
-                        className={`px-2 py-1.5 rounded text-center transition cursor-pointer flex flex-col items-center justify-center border text-xs ${
+                        className={`px-2 py-1.5 rounded text-center transition cursor-pointer flex flex-col items-center justify-center border ${
                           isActive
-                            ? 'bg-[#004b87] text-white border-[#004b87] font-bold shadow-xs'
-                            : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                            ? 'bg-[#004b87] text-white border-blue-400 font-bold shadow-md ring-1 ring-blue-300'
+                            : 'bg-white/10 hover:bg-white/20 text-slate-200 border-white/10 hover:border-white/25 text-[11px]'
                         }`}
                       >
-                        <span className="font-bold leading-tight">{item.name}</span>
-                        <span className="text-[10px] opacity-80">{item.sub}</span>
+                        <span className="text-xs font-semibold leading-tight">{item.name}</span>
+                        <span className="text-[9.5px] opacity-80">{item.sub}</span>
                       </button>
                     );
                   })}
@@ -475,104 +463,150 @@ export const PortalPage: React.FC = () => {
             </div>
 
           </div>
+        </div>
 
-          {/* ----- RIGHT COLUMN: ACCESS FORM & CITIZEN INTERACTION (lg:col-span-5) ----- */}
-          <div className="lg:col-span-5 p-4 sm:p-6 bg-white flex flex-col justify-between space-y-4">
-            
-            <form onSubmit={handleConnect} className="space-y-4 text-xs">
-              
-              {/* Tiêu đề Khối Kết Nối */}
-              <div className="pb-3 border-b border-slate-200 space-y-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-blue-50 text-[#004b87] flex items-center justify-center border border-blue-200 shadow-2xs">
-                    <Wifi className="w-4 h-4 text-[#004b87]" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-extrabold text-slate-900 uppercase">
-                      Đăng Ký Truy Cập Wi-Fi Miễn Phí
-                    </h3>
-                    <p className="text-[11px] text-slate-500">
-                      Nhấn kết nối để truy cập Internet và mở Cổng Dịch vụ công Hải Phòng
-                    </p>
-                  </div>
+        {/* ================= RIGHT COLUMN: INTERNET ACCESS FORM & VERIFICATION (lg:col-span-5) ================= */}
+        <div className="lg:col-span-5 flex flex-col bg-white">
+          
+          {/* Laptop Top Banner / Telemetry Status Card (Visible on lg screens) */}
+          <div className="hidden lg:block bg-gradient-to-r from-[#0c2340] to-[#004b87] text-white p-5 border-b border-blue-900 shadow-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-yellow-300 shadow-inner">
+                <Wifi className="w-5 h-5 animate-pulse" />
+              </div>
+              <div>
+                <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-300 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  Sóng Wi-Fi Sẵn Sàng
+                </div>
+                <div className="text-sm font-bold text-white">Kết Nối Internet Nhà Văn Hóa</div>
+              </div>
+            </div>
+
+            {/* 3 Quick Telemetry Metric Tiles */}
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="p-2 rounded bg-white/10 border border-white/15">
+                <div className="text-[10px] text-slate-300">Tốc độ</div>
+                <div className="text-xs font-extrabold text-emerald-300 font-mono">
+                  {portalData?.location.maxBandwidthMbps || 20} Mbps
                 </div>
               </div>
+              <div className="p-2 rounded bg-white/10 border border-white/15">
+                <div className="text-[10px] text-slate-300">Thời lượng</div>
+                <div className="text-xs font-extrabold text-yellow-300 font-mono">
+                  {portalData?.location.sessionDurationMinutes || 120} phút
+                </div>
+              </div>
+              <div className="p-2 rounded bg-white/10 border border-white/15">
+                <div className="text-[10px] text-slate-300">Chi phí</div>
+                <div className="text-xs font-extrabold text-white">Miễn phí 100%</div>
+              </div>
+            </div>
+          </div>
 
+          {/* Connect Action Form Container */}
+          <form onSubmit={handleConnect} className="p-4 sm:p-6 space-y-4 text-xs flex-1 flex flex-col justify-between">
+            <div className="space-y-4">
               {error && <AlertBanner type="error" message={error} />}
               {successInfo && <AlertBanner type="success" message={successInfo} />}
 
-              {/* Khảo sát ý kiến công dân (nếu điểm phát có gắn khảo sát) */}
+              {/* Smart Citizen Survey Block (Khảo sát ý kiến công dân trực tiếp) */}
               {survey && survey.questions && survey.questions.length > 0 && (
-                <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100 space-y-2">
-                  <div className="flex items-center justify-between text-xs font-bold text-[#004b87]">
-                    <span className="flex items-center gap-1.5">
-                      <ClipboardList className="w-3.5 h-3.5 text-[#004b87]" />
+                <div className="p-3.5 bg-gradient-to-b from-sky-50/90 to-blue-50/60 rounded-lg border border-sky-200/90 shadow-xs space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-[#004b87]">
+                      <ClipboardList className="w-4 h-4 text-[#004b87] flex-shrink-0" />
                       <span>{survey.title}</span>
-                    </span>
-                    <span className="text-[9.5px] px-1.5 py-0.2 rounded bg-blue-100 text-[#004b87] font-semibold">
+                    </div>
+                    <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 font-bold uppercase tracking-wider">
                       Khảo sát ý kiến
                     </span>
                   </div>
+                  {survey.description && (
+                    <p className="text-[11.5px] text-slate-600 leading-relaxed font-sans">{survey.description}</p>
+                  )}
 
-                  {survey.questions.slice(0, 1).map((q) => {
-                    let options: string[] = ['Rất tốt', 'Ổn định', 'Chập chờn', 'Yếu'];
-                    try {
-                      if (q.optionsJson) options = JSON.parse(q.optionsJson);
-                    } catch (_) {}
+                  <div className="space-y-2 pt-0.5">
+                    {survey.questions.map((q) => {
+                      let options: string[] = [];
+                      try {
+                        if (q.optionsJson) options = JSON.parse(q.optionsJson);
+                      } catch (_) {}
 
-                    return (
-                      <div key={q.id} className="space-y-1.5 pt-1">
-                        <p className="text-[11px] font-medium text-slate-700 leading-snug">
-                          {q.questionText}
-                        </p>
-                        <div className="grid grid-cols-2 gap-1.5">
-                          {options.map((opt, oIdx) => {
-                            const isSelected = surveyAnswers[q.id?.toString() || oIdx] === opt;
-                            return (
-                              <button
-                                key={oIdx}
-                                type="button"
-                                onClick={() =>
-                                  setSurveyAnswers({ ...surveyAnswers, [q.id?.toString() || oIdx]: opt })
-                                }
-                                className={`px-2.5 py-1.5 rounded text-[11px] border text-center transition cursor-pointer ${
-                                  isSelected
-                                    ? 'bg-[#004b87] text-white border-[#004b87] font-bold shadow-2xs'
-                                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                                }`}
-                              >
-                                {opt}
-                              </button>
-                            );
-                          })}
+                      return (
+                        <div key={q.id} className="p-2.5 bg-white rounded border border-slate-200 shadow-xs space-y-1.5">
+                          <p className="font-semibold text-slate-800 text-[11px] leading-snug">
+                            {q.questionText} {q.required && <span className="text-red-500 font-bold">*</span>}
+                          </p>
+                          {options.length > 0 ? (
+                            <div className="grid grid-cols-2 gap-1.5">
+                              {options.map((opt, oIdx) => {
+                                const isSelected = surveyAnswers[q.id?.toString() || oIdx] === opt;
+                                return (
+                                  <button
+                                    key={oIdx}
+                                    type="button"
+                                    onClick={() =>
+                                      setSurveyAnswers({ ...surveyAnswers, [q.id?.toString() || oIdx]: opt })
+                                    }
+                                    className={`px-2.5 py-1.5 rounded text-[10.5px] border text-left transition cursor-pointer flex items-center justify-between ${
+                                      isSelected
+                                        ? 'bg-[#004b87] text-white border-[#004b87] font-bold shadow-xs'
+                                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                                    }`}
+                                  >
+                                    <span className="truncate">{opt}</span>
+                                    {isSelected && <CheckCircle2 className="w-3 h-3 text-yellow-300 flex-shrink-0 ml-1" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <input
+                              type="text"
+                              placeholder="Nhập ý kiến đóng góp của quý vị..."
+                              value={surveyAnswers[q.id?.toString() || ''] || ''}
+                              onChange={(e) =>
+                                setSurveyAnswers({ ...surveyAnswers, [q.id?.toString() || '']: e.target.value })
+                              }
+                              className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:border-[#004b87] bg-white font-sans"
+                            />
+                          )}
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
-              {/* Checkbox tuân thủ quy chế an toàn & Nghị định 13 */}
-              <div className="pt-1">
+              {/* Legal Compliance Checkbox */}
+              <div className="space-y-1.5 pt-1">
                 <label className="flex items-start gap-2.5 cursor-pointer select-none text-[11.5px] text-slate-700">
                   <input
                     type="checkbox"
                     checked={consentGiven}
                     onChange={(e) => setConsentGiven(e.target.checked)}
-                    className="mt-0.5 rounded border-slate-300 text-[#004b87] focus:ring-[#004b87] w-4 h-4 cursor-pointer flex-shrink-0"
+                    className="mt-0.5 rounded-xs border-slate-300 text-[#004b87] focus:ring-[#004b87] w-4 h-4 cursor-pointer flex-shrink-0"
                   />
                   <span className="leading-relaxed">
-                    Tôi đồng ý với <strong>Quy chế sử dụng mạng Wi-Fi công cộng</strong> và tuân thủ các quy tắc bảo vệ dữ liệu cá nhân theo Nghị định 13/2023/NĐ-CP.
+                    {template?.termsText ? (
+                      template.termsText
+                    ) : (
+                      <>
+                        Tôi đồng ý với <strong>Quy chế sử dụng mạng Wi-Fi công cộng</strong> và tuân thủ các quy định bảo vệ dữ liệu cá nhân theo Nghị định 13/2023/NĐ-CP.
+                      </>
+                    )}
                   </span>
                 </label>
               </div>
 
-              {/* Nút bấm KẾT NỐI WI-FI MIỄN PHÍ - Màu xanh chính quyền uy tín */}
+              {/* Primary Action Button (Bấm vào kết nối 1-chạm) */}
               <div className="pt-2">
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-3.5 px-4 rounded-lg bg-[#004b87] hover:bg-[#003865] active:bg-[#002d52] text-white font-extrabold text-sm sm:text-base tracking-wide uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-md hover:shadow-lg disabled:opacity-50"
+                  className="w-full py-3.5 px-4 rounded-lg text-white font-extrabold text-sm sm:text-base tracking-wide uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:brightness-105 active:scale-[0.99] disabled:opacity-50"
+                  style={{ backgroundColor: template?.themeColor || '#004b87' }}
                 >
                   {submitting ? (
                     <>
@@ -582,20 +616,16 @@ export const PortalPage: React.FC = () => {
                   ) : (
                     <>
                       <Wifi className="w-5 h-5 text-yellow-300" />
-                      <span>KẾT NỐI WI-FI MIỄN PHÍ</span>
+                      <span>{template?.buttonText || 'KẾT NỐI WI-FI MIỄN PHÍ'}</span>
                     </>
                   )}
                 </button>
-                <div className="text-[11px] text-slate-500 text-center mt-2 flex items-center justify-center gap-2">
-                  <span>Tốc độ: <strong>20 Mbps</strong></span>
-                  <span>•</span>
-                  <span>Thời lượng: <strong>120 phút</strong></span>
-                  <span>•</span>
-                  <span>Băng thông ổn định</span>
-                </div>
+                <p className="text-[10.5px] text-slate-500 text-center mt-2 font-medium">
+                  Tốc độ: <strong>20 Mbps</strong> • Thời lượng phiên: <strong>120 phút</strong> • Băng thông ổn định
+                </p>
               </div>
 
-              {/* Tùy chọn nâng cao: Xác thực số điện thoại & Nhớ thiết bị 30 ngày */}
+              {/* Collapsible Advanced Authentication (Optional SĐT / OTP & Tùy chọn) */}
               <div className="border-t border-slate-200 pt-3">
                 <button
                   type="button"
@@ -603,7 +633,7 @@ export const PortalPage: React.FC = () => {
                   className="w-full flex items-center justify-between text-xs font-semibold text-slate-600 hover:text-slate-900 py-1 cursor-pointer"
                 >
                   <span className="flex items-center gap-1.5">
-                    <Smartphone className="w-3.5 h-3.5 text-slate-500" />
+                    <Smartphone className="w-4 h-4 text-slate-500" />
                     Tùy chọn: Định danh số điện thoại & Nhớ thiết bị
                   </span>
                   {showAdvancedAuth ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -611,6 +641,7 @@ export const PortalPage: React.FC = () => {
 
                 {showAdvancedAuth && (
                   <div className="mt-2.5 p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
+                    {/* OTP Section */}
                     {portalData?.macRemembered || otpVerified ? (
                       <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded flex items-center gap-2 text-emerald-800 text-[11px]">
                         <ShieldCheck className="w-4 h-4 text-emerald-700 flex-shrink-0" />
@@ -674,6 +705,7 @@ export const PortalPage: React.FC = () => {
                       </div>
                     )}
 
+                    {/* Citizen Name Field */}
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1">
                         Họ và tên công dân (tùy chọn):
@@ -689,38 +721,59 @@ export const PortalPage: React.FC = () => {
                   </div>
                 )}
               </div>
-            </form>
+            </div>
 
-            {/* Thông tin Hỗ trợ Kỹ thuật & Đường dây nóng */}
-            <div className="pt-3 border-t border-slate-200 text-xs text-slate-500 space-y-2">
-              <div className="flex items-center justify-between p-2.5 rounded bg-slate-50 border border-slate-200">
-                <span className="font-semibold text-slate-700">Đường dây nóng DVC Hải Phòng:</span>
+            {/* Support hotline & legal note */}
+            <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-500 space-y-2">
+              <div className="flex items-center justify-between p-2 rounded bg-slate-50 border border-slate-200/80">
+                <span className="font-medium text-slate-600">Đường dây nóng DVC Hải Phòng:</span>
                 <span className="font-mono font-bold text-[#004b87]">0225.1022</span>
-              </div>
-              <div className="flex items-center justify-between p-2.5 rounded bg-slate-50 border border-slate-200">
-                <span className="font-semibold text-slate-700">Hỗ trợ kỹ thuật viễn thông:</span>
-                <span className="font-mono font-bold text-emerald-700">1800.1166</span>
               </div>
               <div className="flex items-center gap-1.5 text-[10.5px] text-slate-400">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                <span>Mạng Wi-Fi tuân thủ các quy tắc an toàn bảo mật thông tin Nhà nước.</span>
+                <span>Hệ thống bảo vệ an toàn thông tin & dữ liệu công dân.</span>
               </div>
             </div>
+          </form>
 
+          {/* Right Column Footer */}
+          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 text-center text-[10.5px] text-slate-500 space-y-0.5">
+            <div className="font-bold text-slate-700">Sở Thông tin và Truyền thông Thành phố Hải Phòng</div>
+            <div>Hạ tầng viễn thông phối hợp vận hành cùng Viettel & VNPT</div>
           </div>
-
         </div>
 
-        {/* ================= 4. UNIFIED GOVERNMENT FOOTER ================= */}
-        <footer className="bg-slate-900 text-slate-400 p-3 sm:p-4 text-center text-xs border-t border-slate-800 space-y-0.5">
-          <div className="font-bold text-slate-200">
-            ỦY BAN NHÂN DÂN THÀNH PHỐ HẢI PHÒNG • SỞ THÔNG TIN VÀ TRUYỀN THÔNG
-          </div>
-          <div className="text-[11px] text-slate-400">
-            Hạ tầng kết nối mạng Wi-Fi công cộng phục vụ chuyển đổi số và đời sống văn hóa cơ sở
-          </div>
-        </footer>
+      </div>
 
+      {/* Demo Location Switcher for Mobile (Hidden on laptop/lg:hidden) */}
+      <div className="lg:hidden relative z-10 mt-3 max-w-md w-full bg-slate-900/90 backdrop-blur-md rounded-lg p-2.5 border border-white/20 text-white shadow-xl">
+        <div className="flex items-center justify-between mb-1.5 px-0.5">
+          <span className="text-[10.5px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
+            <MapPin className="w-3.5 h-3.5 text-amber-300" /> Trải nghiệm hình ảnh & thông tin từng điểm:
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          {demoLocations.map((item) => {
+            const isActive =
+              portalData?.location.slug === item.slug ||
+              (!locationParam && item.slug === 'hp-hb-nvh01');
+            return (
+              <button
+                key={item.slug}
+                type="button"
+                onClick={() => handleSwitchDemoLocation(item.slug)}
+                className={`px-2 py-1.5 rounded text-center transition cursor-pointer flex flex-col items-center justify-center border ${
+                  isActive
+                    ? 'bg-[#004b87] text-white border-blue-400 font-bold shadow-md ring-1 ring-blue-300'
+                    : 'bg-white/10 hover:bg-white/20 text-slate-200 border-white/10 hover:border-white/25 text-[11px]'
+                }`}
+              >
+                <span className="text-xs font-semibold leading-tight">{item.name}</span>
+                <span className="text-[9px] opacity-75">{item.sub}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
