@@ -175,8 +175,8 @@ export const PortalPage: React.FC = () => {
         consentGiven: true,
       });
 
-      // Navigate to the post-connection public administrative page
-      navigate(`/portal/status/${session.sessionToken}`);
+      // Redirect citizen directly to Haiphong Public Service portal upon successful connection
+      window.location.href = 'https://dichvucong.haiphong.gov.vn/';
     } catch (err: any) {
       setError(err?.message || 'Xác thực truy cập không thành công. Vui lòng thử lại.');
     } finally {
