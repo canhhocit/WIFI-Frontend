@@ -56,6 +56,7 @@ export const LocationsPage: React.FC = () => {
   const [deletingLocation, setDeletingLocation] = useState<LocationDto | null>(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Form Fields
   const [formData, setFormData] = useState({
@@ -256,12 +257,14 @@ export const LocationsPage: React.FC = () => {
   const handleDeleteLocation = async () => {
     if (!deletingLocation) return;
     setSaving(true);
+    setDeleteError(null);
     try {
       await adminApi.deleteLocation(deletingLocation.id);
       setDeletingLocation(null);
+      setDeleteError(null);
       loadLocations();
     } catch (err: any) {
-      alert(err?.message || 'Không thể xóa điểm phát Wi-Fi này.');
+      setDeleteError(err?.message || 'Không thể xóa điểm phát Wi-Fi này.');
     } finally {
       setSaving(false);
     }
@@ -368,7 +371,7 @@ export const LocationsPage: React.FC = () => {
               className="px-3 py-1.5 bg-emerald-600 text-white rounded font-medium hover:bg-emerald-700 transition flex items-center gap-1.5 shadow-xs cursor-pointer text-xs"
             >
               <MapPin className="w-3.5 h-3.5" />
-              Xem ngay trên Bản đồ GIS ↗
+              Xem trên Bản đồ
             </button>
             <button
               onClick={() => setCreatedNotification(null)}
@@ -387,7 +390,7 @@ export const LocationsPage: React.FC = () => {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50/70 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                <th className="py-3 px-4">Tên điểm phát & Slug</th>
+                <th className="py-3 px-4">Tên điểm phát</th>
                 <th className="py-3 px-4">Địa chỉ & Tọa độ GPS</th>
                 <th className="py-3 px-4">Nhà mạng & Mã cáp</th>
                 <th className="py-3 px-4">Thời lượng & Băng thông</th>
@@ -1052,27 +1055,42 @@ export const LocationsPage: React.FC = () => {
       {/* Modal 3: Confirm Delete */}
       <Modal
         isOpen={!!deletingLocation}
-        onClose={() => setDeletingLocation(null)}
+        onClose={() => {
+          if (!saving) {
+            setDeletingLocation(null);
+            setDeleteError(null);
+          }
+        }}
         title="Xác Nhận Xóa Điểm Phát Wi-Fi"
         maxWidth="sm"
       >
         {deletingLocation && (
           <div className="space-y-3.5 text-xs">
+            {deleteError && (
+              <AlertBanner type="error" message={deleteError} />
+            )}
             <p className="text-slate-600 leading-relaxed">
-              Bạn có chắc chắn muốn xóa điểm phát sóng <strong className="text-slate-900 font-bold">{deletingLocation.name}</strong> không? Các phiên truy cập trong quá khứ vẫn sẽ được lưu trữ trong nhật ký.
+              Bạn có chắc chắn muốn xóa điểm phát sóng <strong className="text-slate-900 font-bold">{deletingLocation.name}</strong> không? Các phiên truy cập trong quá khứ vẫn sẽ được lưu trữ an toàn trong nhật ký hệ thống.
             </p>
             <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
               <button
-                onClick={() => setDeletingLocation(null)}
-                className="px-3.5 py-1.5 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-sm text-xs font-bold transition cursor-pointer"
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  setDeletingLocation(null);
+                  setDeleteError(null);
+                }}
+                className="px-3.5 py-1.5 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-sm text-xs font-bold transition cursor-pointer disabled:opacity-50"
               >
                 Hủy
               </button>
               <button
+                type="button"
                 onClick={handleDeleteLocation}
                 disabled={saving}
-                className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-sm text-xs font-bold transition cursor-pointer shadow-xs"
+                className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-sm text-xs font-bold transition cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5"
               >
+                {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 {saving ? 'Đang xóa...' : 'Xác nhận xóa'}
               </button>
             </div>
