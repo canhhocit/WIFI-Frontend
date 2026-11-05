@@ -70,11 +70,12 @@ export const PortalPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [otpTimer]);
 
-  const loadPortal = async () => {
+  const loadPortal = async (overrideSlug?: string) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await portalApi.init(locationParam);
+      const slug = overrideSlug !== undefined ? overrideSlug : locationParam;
+      const data = await portalApi.init(slug);
       setPortalData(data);
       if (data.clientMacHint) {
         setMacAddress(data.clientMacHint);
@@ -218,7 +219,7 @@ export const PortalPage: React.FC = () => {
           <h2 className="text-sm font-bold text-slate-900 mb-1">Không thể tải Cổng Wi-Fi</h2>
           <p className="text-xs text-slate-600 mb-4">{error}</p>
           <button
-            onClick={loadPortal}
+            onClick={() => loadPortal()}
             className="w-full py-2 px-3 bg-[#004b87] hover:bg-[#003865] text-white rounded text-xs font-semibold transition cursor-pointer"
           >
             Thử lại kết nối
@@ -227,6 +228,11 @@ export const PortalPage: React.FC = () => {
       </div>
     );
   }
+
+  const handleSwitchDemoLocation = (slug: string) => {
+    navigate(`/portal?location=${slug}`);
+    loadPortal(slug);
+  };
 
   const template = portalData?.portalTemplate;
   const campaign = portalData?.activeCampaign;
@@ -242,15 +248,10 @@ export const PortalPage: React.FC = () => {
     portalData?.location.backgroundImageUrl ||
     '/banners/haiphong_city_bg.jpg';
 
-  // Banner Photo Priority:
+  // Banner Photo Priority: Always show the location's own actual culture house photo
   const localBannerUrl =
-    campaign?.bannerUrl ||
-    (portalData?.location.promoBannerUrl &&
-     portalData.location.promoBannerUrl !== '/banners/haiphong_culture_house.jpg'
-      ? portalData.location.promoBannerUrl
-      : template?.bannerUrl) ||
-    template?.bannerUrl ||
     portalData?.location.promoBannerUrl ||
+    template?.bannerUrl ||
     '/banners/haiphong_culture_house.jpg';
 
   const demoLocations = [
@@ -359,31 +360,32 @@ export const PortalPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Ảnh minh họa Nhà văn hóa hoặc Áp phích */}
+            {/* Ảnh minh họa Nhà văn hóa thực tế của từng điểm phát */}
             <div className="relative rounded-lg border border-slate-200 bg-slate-900 overflow-hidden shadow-sm">
               <img
                 src={localBannerUrl}
                 alt={portalData?.location.name || 'Nhà văn hóa Hải Phòng'}
-                className="w-full h-40 sm:h-48 lg:h-52 object-cover opacity-90 transition hover:scale-101 duration-300"
+                className="w-full h-40 sm:h-48 lg:h-52 object-cover opacity-95 transition hover:scale-101 duration-300"
                 onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = '/banners/haiphong_city_bg.jpg';
+                  (e.currentTarget as HTMLImageElement).src = '/banners/haiphong_culture_house.jpg';
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex flex-col justify-end p-3.5 text-white">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent flex flex-col justify-end p-3.5 text-white">
                 <div className="text-xs sm:text-sm font-bold text-white drop-shadow-sm flex items-center justify-between">
-                  <span className="truncate pr-2">
-                    {campaign ? `📢 Áp phích: ${campaign.title}` : `Ảnh thực tế: ${portalData?.location.name}`}
+                  <span className="truncate pr-2 font-extrabold flex items-center gap-1.5">
+                    <Landmark className="w-4 h-4 text-amber-300 flex-shrink-0" />
+                    <span>Ảnh thực tế: {portalData?.location.name || 'Nhà văn hóa'}</span>
                   </span>
-                  <span className="text-[10px] px-2 py-0.5 bg-emerald-700/90 text-emerald-100 rounded font-semibold flex-shrink-0">
-                    {campaign ? 'Chiến dịch đang phát sóng' : 'Trực tuyến'}
+                  <span className="text-[10px] px-2 py-0.5 bg-emerald-600/90 text-white rounded font-bold flex-shrink-0 shadow-2xs">
+                    Điểm phát trực tuyến
                   </span>
                 </div>
-                <div className="text-[10.5px] text-slate-200 drop-shadow-xs flex items-center gap-2 mt-1 font-mono">
+                <div className="text-[10.5px] text-slate-200 drop-shadow-xs flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 font-mono">
                   <span>Nhà mạng: <strong className="text-yellow-300">{portalData?.location.ispName || 'Viettel'}</strong></span>
                   <span>•</span>
                   <span>Băng thông: <strong className="text-emerald-300">{portalData?.location.maxBandwidthMbps || 20} Mbps</strong></span>
                   <span>•</span>
-                  <span className="text-yellow-200">Miễn phí 100%</span>
+                  <span>Mã trạm: <strong className="text-slate-200">{portalData?.location.locationCode || 'LOC-HP'}</strong></span>
                 </div>
               </div>
             </div>
@@ -444,7 +446,7 @@ export const PortalPage: React.FC = () => {
                       <button
                         key={item.slug}
                         type="button"
-                        onClick={() => navigate(`/portal?location=${item.slug}`)}
+                        onClick={() => handleSwitchDemoLocation(item.slug)}
                         className={`px-2 py-1.5 rounded text-center transition cursor-pointer flex flex-col items-center justify-center border ${
                           isActive
                             ? 'bg-[#004b87] text-white border-blue-400 font-bold shadow-md ring-1 ring-blue-300'
@@ -759,7 +761,7 @@ export const PortalPage: React.FC = () => {
               <button
                 key={item.slug}
                 type="button"
-                onClick={() => navigate(`/portal?location=${item.slug}`)}
+                onClick={() => handleSwitchDemoLocation(item.slug)}
                 className={`px-2 py-1.5 rounded text-center transition cursor-pointer flex flex-col items-center justify-center border ${
                   isActive
                     ? 'bg-[#004b87] text-white border-blue-400 font-bold shadow-md ring-1 ring-blue-300'
