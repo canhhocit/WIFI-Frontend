@@ -188,25 +188,13 @@ export const PortalPage: React.FC = () => {
       const targetDestination = targetUrlParam || 'https://dichvucong.haiphong.gov.vn/';
 
       if (rawLoginUrl) {
-        try {
-          const form = document.createElement('form');
-          form.method = 'POST';
-          form.action = rawLoginUrl;
-
-          const redirectInput = document.createElement('input');
-          redirectInput.type = 'hidden';
-          redirectInput.name = 'redirect';
-          redirectInput.value = targetDestination;
-          form.appendChild(redirectInput);
-
-          document.body.appendChild(form);
-          form.submit();
-        } catch (_) {
-          const sep = rawLoginUrl.includes('?') ? '&' : '?';
-          window.location.href = `${rawLoginUrl}${sep}redirect=${encodeURIComponent(targetDestination)}`;
-        }
+        // Direct browser navigation to EXCAP login_url with redirect target.
+        // Uses GET navigation instead of POST form to avoid browser mixed-content (HTTPS -> HTTP) security warnings.
+        const sep = rawLoginUrl.includes('?') ? '&' : '?';
+        const excapAuthUrl = `${rawLoginUrl}${sep}redirect=${encodeURIComponent(targetDestination)}`;
+        window.location.replace(excapAuthUrl);
       } else {
-        window.location.href = targetDestination;
+        window.location.replace(targetDestination);
       }
     } catch (err: any) {
       setError(err?.message || 'Xác thực truy cập không thành công. Vui lòng thử lại.');
