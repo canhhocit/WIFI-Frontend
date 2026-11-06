@@ -58,6 +58,7 @@ export const PortalPage: React.FC = () => {
   const rawIp = searchParams.get('client_ip') || searchParams.get('ip') || undefined;
   const apMacParam = searchParams.get('ap_mac') || searchParams.get('apmac') || searchParams.get('gw_mac') || undefined;
   const targetUrlParam = searchParams.get('url') || searchParams.get('target') || undefined;
+  const rawLoginUrl = searchParams.get('login_url') || searchParams.get('loginurl') || undefined;
 
   useEffect(() => {
     loadPortal();
@@ -181,8 +182,32 @@ export const PortalPage: React.FC = () => {
         consentGiven: true,
       });
 
-      // Redirect citizen directly to Haiphong Public Service portal upon successful connection
-      window.location.href = 'https://dichvucong.haiphong.gov.vn/';
+      // Redirect citizen:
+      // If hardware router / gateway provided a login_url (Grandstream EXCAP protocol),
+      // forward citizen through it so the physical hardware firewall unblocks Internet access for this MAC.
+      const targetDestination = targetUrlParam || 'https://dichvucong.haiphong.gov.vn/';
+
+      if (rawLoginUrl) {
+        try {
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = rawLoginUrl;
+
+          const redirectInput = document.createElement('input');
+          redirectInput.type = 'hidden';
+          redirectInput.name = 'redirect';
+          redirectInput.value = targetDestination;
+          form.appendChild(redirectInput);
+
+          document.body.appendChild(form);
+          form.submit();
+        } catch (_) {
+          const sep = rawLoginUrl.includes('?') ? '&' : '?';
+          window.location.href = `${rawLoginUrl}${sep}redirect=${encodeURIComponent(targetDestination)}`;
+        }
+      } else {
+        window.location.href = targetDestination;
+      }
     } catch (err: any) {
       setError(err?.message || 'Xác thực truy cập không thành công. Vui lòng thử lại.');
     } finally {
