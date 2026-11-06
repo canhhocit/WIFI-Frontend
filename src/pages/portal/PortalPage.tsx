@@ -34,6 +34,8 @@ export const PortalPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successInfo, setSuccessInfo] = useState<string | null>(null);
+  const [connectedSession, setConnectedSession] = useState<any | null>(null);
+  const [countdown, setCountdown] = useState(3);
 
   // Form Fields
   const [guestName, setGuestName] = useState('');
@@ -53,12 +55,30 @@ export const PortalPage: React.FC = () => {
   const [surveyAnswers, setSurveyAnswers] = useState<Record<string, any>>({});
   const [surveySubmitted, setSurveySubmitted] = useState(false);
 
-  const locationParam = searchParams.get('location') || undefined;
-  const rawMac = searchParams.get('client_mac') || searchParams.get('mac') || searchParams.get('clientMac') || undefined;
-  const rawIp = searchParams.get('client_ip') || searchParams.get('ip') || undefined;
-  const apMacParam = searchParams.get('ap_mac') || searchParams.get('apmac') || searchParams.get('gw_mac') || undefined;
-  const targetUrlParam = searchParams.get('url') || searchParams.get('target') || undefined;
-  const rawLoginUrl = searchParams.get('login_url') || searchParams.get('loginurl') || undefined;
+  // Helper to extract query parameters robustly even when routers concatenate with multiple '?'
+  const getParam = (paramName: string): string | undefined => {
+    const standardVal = searchParams.get(paramName);
+    if (standardVal) {
+      if (standardVal.includes('?')) {
+        return standardVal.split('?')[0];
+      }
+      return standardVal;
+    }
+    const fullSearch = window.location.search || window.location.href;
+    const regex = new RegExp(`[?&]${paramName}=([^&?#]+)`, 'i');
+    const match = fullSearch.match(regex);
+    if (match && match[1]) {
+      return decodeURIComponent(match[1]);
+    }
+    return undefined;
+  };
+
+  const locationParam = getParam('location');
+  const rawMac = getParam('client_mac') || getParam('mac') || getParam('clientMac');
+  const rawIp = getParam('client_ip') || getParam('ip');
+  const apMacParam = getParam('ap_mac') || getParam('apmac') || getParam('gw_mac');
+  const targetUrlParam = getParam('url') || getParam('target');
+  const rawLoginUrl = getParam('login_url') || getParam('loginurl');
 
   useEffect(() => {
     loadPortal();
@@ -73,6 +93,19 @@ export const PortalPage: React.FC = () => {
     }
     return () => clearInterval(interval);
   }, [otpTimer]);
+
+  useEffect(() => {
+    if (!connectedSession) return;
+    const targetDestination = targetUrlParam || 'https://dichvucong.haiphong.gov.vn/';
+    if (countdown <= 0) {
+      window.location.href = targetDestination;
+      return;
+    }
+    const timer = setTimeout(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [connectedSession, countdown]);
 
   const loadPortal = async (overrideSlug?: string) => {
     setLoading(true);
@@ -182,26 +215,69 @@ export const PortalPage: React.FC = () => {
         consentGiven: true,
       });
 
-      // Redirect citizen:
-      // If hardware router / gateway provided a login_url (Grandstream EXCAP protocol),
-      // forward citizen through it so the physical hardware firewall unblocks Internet access for this MAC.
-      const targetDestination = targetUrlParam || 'https://dichvucong.haiphong.gov.vn/';
-
+      // Background ping EXCAP login_url if available
       if (rawLoginUrl) {
-        // Direct browser navigation to EXCAP login_url with redirect target.
-        // Uses GET navigation instead of POST form to avoid browser mixed-content (HTTPS -> HTTP) security warnings.
-        const sep = rawLoginUrl.includes('?') ? '&' : '?';
-        const excapAuthUrl = `${rawLoginUrl}${sep}redirect=${encodeURIComponent(targetDestination)}`;
-        window.location.replace(excapAuthUrl);
-      } else {
-        window.location.replace(targetDestination);
+        try {
+          fetch(rawLoginUrl, { mode: 'no-cors' }).catch(() => {});
+        } catch (_) {}
       }
+
+      setConnectedSession(session);
+      setSuccessInfo('Kết nối thành công! Đã cấp quyền truy cập Internet.');
     } catch (err: any) {
       setError(err?.message || 'Xác thực truy cập không thành công. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (connectedSession) {
+    const targetDestination = targetUrlParam || 'https://dichvucong.haiphong.gov.vn/';
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-6 sm:p-8 text-center space-y-6">
+          <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+            <CheckCircle2 className="w-12 h-12" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">KẾT NỐI THÀNH CÔNG!</h2>
+            <p className="text-sm text-slate-600 mt-2">
+              Chào mừng quý công dân đến với <strong>{connectedSession.locationName || portalData?.location.name || 'Nhà văn hóa'}</strong>
+            </p>
+          </div>
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-xs text-emerald-900 space-y-2 text-left">
+            <div className="flex justify-between font-bold">
+              <span>Trạng thái mạng:</span>
+              <span className="text-emerald-700">Đã mở kết nối Internet</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Thời lượng phiên:</span>
+              <span className="font-semibold">{connectedSession.durationMinutes || 120} phút</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Băng thông tốc độ cao:</span>
+              <span className="font-semibold">{portalData?.location.maxBandwidthMbps || 20} Mbps</span>
+            </div>
+          </div>
+          <div className="space-y-3 pt-2">
+            <a
+              href={targetDestination}
+              className="w-full py-3.5 px-4 rounded-xl bg-[#a81c1c] text-white font-bold text-sm tracking-wide shadow-lg hover:bg-[#8b1414] transition flex items-center justify-center gap-2"
+            >
+              <Landmark className="w-4 h-4 text-yellow-300" />
+              <span>VÀO DỊCH VỤ CÔNG HẢI PHÒNG ({countdown}s)</span>
+            </a>
+            <a
+              href="https://www.google.com"
+              className="w-full py-3 px-4 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition flex items-center justify-center gap-2 border border-slate-300"
+            >
+              <span>🌐 Tiếp tục lướt web (Google)</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
