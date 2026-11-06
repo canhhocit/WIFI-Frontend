@@ -54,11 +54,14 @@ export const PortalPage: React.FC = () => {
   const [surveySubmitted, setSurveySubmitted] = useState(false);
 
   const locationParam = searchParams.get('location') || undefined;
-  const macParam = searchParams.get('mac') || undefined;
+  const rawMac = searchParams.get('client_mac') || searchParams.get('mac') || searchParams.get('clientMac') || undefined;
+  const rawIp = searchParams.get('client_ip') || searchParams.get('ip') || undefined;
+  const apMacParam = searchParams.get('ap_mac') || searchParams.get('apmac') || searchParams.get('gw_mac') || undefined;
+  const targetUrlParam = searchParams.get('url') || searchParams.get('target') || undefined;
 
   useEffect(() => {
     loadPortal();
-  }, [locationParam, macParam]);
+  }, [locationParam, rawMac, apMacParam]);
 
   useEffect(() => {
     let interval: any = null;
@@ -75,9 +78,11 @@ export const PortalPage: React.FC = () => {
     setError(null);
     try {
       const slug = overrideSlug !== undefined ? overrideSlug : locationParam;
-      const data = await portalApi.init(slug);
+      const data = await portalApi.init(slug, apMacParam);
       setPortalData(data);
-      if (data.clientMacHint) {
+      if (rawMac) {
+        setMacAddress(rawMac);
+      } else if (data.clientMacHint) {
         setMacAddress(data.clientMacHint);
       }
       if (data.macRemembered) {
