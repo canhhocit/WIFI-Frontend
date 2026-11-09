@@ -68,14 +68,33 @@ export const PortalPage: React.FC = () => {
   const targetUrlParam = normalizedParams.get('url') || normalizedParams.get('target') || searchParams.get('url') || undefined;
   const rawLoginUrl = normalizedParams.get('login_url') || normalizedParams.get('loginurl') || searchParams.get('login_url') || undefined;
 
+  const [redirectCountdown, setRedirectCountdown] = useState<number>(3);
+
   const buildExcapUrl = (sessionToken?: string) => {
     const finalDest = targetUrlParam || 'https://dichvucong.haiphong.gov.vn/';
-    if (!rawLoginUrl) return finalDest;
-    const sep = rawLoginUrl.includes('?') ? '&' : '?';
+    const baseLogin = rawLoginUrl || 'http://cwp.gwnportal.cloud:8080/gwn_login';
+    const sep = baseLogin.includes('?') ? '&' : '?';
     const cleanMac = (macAddress || portalData?.clientMacHint || rawMac || '').replace(/[:-]/g, '').toLowerCase();
     const token = sessionToken || (connectedSession ? connectedSession.sessionToken : '') || 'guest';
-    return `${rawLoginUrl}${sep}username=${encodeURIComponent(cleanMac + '@gwn')}&password=${encodeURIComponent(token)}&redirect=${encodeURIComponent(finalDest)}`;
+    return `${baseLogin}${sep}username=${encodeURIComponent(cleanMac + '@gwn')}&password=${encodeURIComponent(token)}&redirect=${encodeURIComponent(finalDest)}`;
   };
+
+  useEffect(() => {
+    if (connectedSession) {
+      const excapRedirect = buildExcapUrl(connectedSession.sessionToken);
+      const timer = setInterval(() => {
+        setRedirectCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            window.location.href = excapRedirect;
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [connectedSession]);
 
   useEffect(() => {
     loadPortal();
@@ -246,15 +265,17 @@ export const PortalPage: React.FC = () => {
               <span className="font-semibold">{portalData?.location.maxBandwidthMbps || 20} Mbps</span>
             </div>
           </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+            <span>Đang tự động chuyển tiếp kích hoạt Internet ({redirectCountdown}s)...</span>
+          </div>
           <div className="pt-2">
             <a
               href={excapRedirect}
-              target="_blank"
-              rel="noreferrer"
               className="w-full py-3.5 px-4 rounded-xl bg-[#a81c1c] text-white font-bold text-sm tracking-wide shadow-lg hover:bg-[#8b1414] transition flex items-center justify-center gap-2 cursor-pointer"
             >
               <Landmark className="w-4 h-4 text-yellow-300" />
-              <span>VÀO DỊCH VỤ CÔNG HẢI PHÒNG</span>
+              <span>VÀO DỊCH VỤ CÔNG HẢI PHÒNG (KÍCH HOẠT NGAY)</span>
             </a>
           </div>
         </div>
