@@ -35,7 +35,6 @@ export const PortalPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successInfo, setSuccessInfo] = useState<string | null>(null);
   const [connectedSession, setConnectedSession] = useState<any | null>(null);
-  const [countdown, setCountdown] = useState(3);
 
   // Form Fields
   const [guestName, setGuestName] = useState('');
@@ -91,19 +90,6 @@ export const PortalPage: React.FC = () => {
     }
     return () => clearInterval(interval);
   }, [otpTimer]);
-
-  useEffect(() => {
-    if (!connectedSession) return;
-    const targetDestination = buildExcapUrl(connectedSession.sessionToken);
-    if (countdown <= 0) {
-      window.location.href = targetDestination;
-      return;
-    }
-    const timer = setTimeout(() => {
-      setCountdown((prev) => prev - 1);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [connectedSession, countdown, rawLoginUrl, macAddress, portalData]);
 
   const loadPortal = async (overrideSlug?: string) => {
     setLoading(true);
@@ -260,19 +246,15 @@ export const PortalPage: React.FC = () => {
               <span className="font-semibold">{portalData?.location.maxBandwidthMbps || 20} Mbps</span>
             </div>
           </div>
-          <div className="space-y-3 pt-2">
+          <div className="pt-2">
             <a
               href={excapRedirect}
-              className="w-full py-3.5 px-4 rounded-xl bg-[#a81c1c] text-white font-bold text-sm tracking-wide shadow-lg hover:bg-[#8b1414] transition flex items-center justify-center gap-2"
+              target="_blank"
+              rel="noreferrer"
+              className="w-full py-3.5 px-4 rounded-xl bg-[#a81c1c] text-white font-bold text-sm tracking-wide shadow-lg hover:bg-[#8b1414] transition flex items-center justify-center gap-2 cursor-pointer"
             >
               <Landmark className="w-4 h-4 text-yellow-300" />
-              <span>VÀO DỊCH VỤ CÔNG HẢI PHÒNG ({countdown}s)</span>
-            </a>
-            <a
-              href="https://www.google.com"
-              className="w-full py-3 px-4 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition flex items-center justify-center gap-2 border border-slate-300"
-            >
-              <span>🌐 Tiếp tục lướt web (Google)</span>
+              <span>VÀO DỊCH VỤ CÔNG HẢI PHÒNG</span>
             </a>
           </div>
         </div>
