@@ -218,18 +218,17 @@ export const PortalPage: React.FC = () => {
         consentGiven: true,
       });
 
-      // Background beacon EXCAP login_url if available
-      if (rawLoginUrl) {
-        try {
-          const authUrl = buildExcapUrl(session.sessionToken);
-          fetch(authUrl, { mode: 'no-cors' }).catch(() => {});
-          const img = new Image();
-          img.src = authUrl;
-        } catch (_) {}
-      }
+      const authUrl = buildExcapUrl(session.sessionToken);
 
       setConnectedSession(session);
-      setSuccessInfo('Kết nối thành công! Đã cấp quyền truy cập Internet.');
+      setSuccessInfo('Kết nối thành công! Đang chuyển tiếp kích hoạt Internet...');
+
+      // Immediately navigate top window to gateway login callback if rawLoginUrl was supplied by captive router
+      if (rawLoginUrl) {
+        setTimeout(() => {
+          window.location.href = authUrl;
+        }, 800);
+      }
     } catch (err: any) {
       setError(err?.message || 'Xác thực truy cập không thành công. Vui lòng thử lại.');
     } finally {
