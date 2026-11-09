@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Wifi,
@@ -55,30 +55,28 @@ export const PortalPage: React.FC = () => {
   const [surveyAnswers, setSurveyAnswers] = useState<Record<string, any>>({});
   const [surveySubmitted, setSurveySubmitted] = useState(false);
 
-  // Helper to extract query parameters robustly even when routers concatenate with multiple '?'
-  const getParam = (paramName: string): string | undefined => {
-    const standardVal = searchParams.get(paramName);
-    if (standardVal) {
-      if (standardVal.includes('?')) {
-        return standardVal.split('?')[0];
-      }
-      return standardVal;
-    }
-    const fullSearch = window.location.search || window.location.href;
-    const regex = new RegExp(`[?&]${paramName}=([^&?#]+)`, 'i');
-    const match = fullSearch.match(regex);
-    if (match && match[1]) {
-      return decodeURIComponent(match[1]);
-    }
-    return undefined;
-  };
+  // Normalize search query string to handle multiple '?' appended by captive routers
+  const normalizedParams = useMemo(() => {
+    const rawSearch = window.location.search || '';
+    const norm = rawSearch.startsWith('?') ? rawSearch.slice(1).replace(/\?/g, '&') : rawSearch.replace(/\?/g, '&');
+    return new URLSearchParams(norm);
+  }, []);
 
-  const locationParam = getParam('location');
-  const rawMac = getParam('client_mac') || getParam('mac') || getParam('clientMac');
-  const rawIp = getParam('client_ip') || getParam('ip');
-  const apMacParam = getParam('ap_mac') || getParam('apmac') || getParam('gw_mac');
-  const targetUrlParam = getParam('url') || getParam('target');
-  const rawLoginUrl = getParam('login_url') || getParam('loginurl');
+  const locationParam = normalizedParams.get('location') || searchParams.get('location') || undefined;
+  const rawMac = normalizedParams.get('client_mac') || normalizedParams.get('mac') || normalizedParams.get('clientMac') || searchParams.get('client_mac') || undefined;
+  const rawIp = normalizedParams.get('client_ip') || normalizedParams.get('ip') || searchParams.get('client_ip') || undefined;
+  const apMacParam = normalizedParams.get('ap_mac') || normalizedParams.get('apmac') || normalizedParams.get('gw_mac') || searchParams.get('ap_mac') || undefined;
+  const targetUrlParam = normalizedParams.get('url') || normalizedParams.get('target') || searchParams.get('url') || undefined;
+  const rawLoginUrl = normalizedParams.get('login_url') || normalizedParams.get('loginurl') || searchParams.get('login_url') || undefined;
+
+  const buildExcapUrl = (sessionToken?: string) => {
+    const finalDest = targetUrlParam || 'https://dichvucong.haiphong.gov.vn/';
+    if (!rawLoginUrl) return finalDest;
+    const sep = rawLoginUrl.includes('?') ? '&' : '?';
+    const cleanMac = (macAddress || portalData?.clientMacHint || rawMac || '').replace(/[:-]/g, '').toLowerCase();
+    const token = sessionToken || (connectedSession ? connectedSession.sessionToken : '') || 'guest';
+    return `${rawLoginUrl}${sep}username=${encodeURIComponent(cleanMac + '@gwn')}&password=${encodeURIComponent(token)}&redirect=${encodeURIComponent(finalDest)}`;
+  };
 
   useEffect(() => {
     loadPortal();
@@ -96,7 +94,7 @@ export const PortalPage: React.FC = () => {
 
   useEffect(() => {
     if (!connectedSession) return;
-    const targetDestination = targetUrlParam || 'https://dichvucong.haiphong.gov.vn/';
+    const targetDestination = buildExcapUrl(connectedSession.sessionToken);
     if (countdown <= 0) {
       window.location.href = targetDestination;
       return;
@@ -105,7 +103,7 @@ export const PortalPage: React.FC = () => {
       setCountdown((prev) => prev - 1);
     }, 1000);
     return () => clearTimeout(timer);
-  }, [connectedSession, countdown]);
+  }, [connectedSession, countdown, rawLoginUrl, macAddress, portalData]);
 
   const loadPortal = async (overrideSlug?: string) => {
     setLoading(true);
@@ -215,10 +213,13 @@ export const PortalPage: React.FC = () => {
         consentGiven: true,
       });
 
-      // Background ping EXCAP login_url if available
+      // Background beacon EXCAP login_url if available
       if (rawLoginUrl) {
         try {
-          fetch(rawLoginUrl, { mode: 'no-cors' }).catch(() => {});
+          const authUrl = buildExcapUrl(session.sessionToken);
+          fetch(authUrl, { mode: 'no-cors' }).catch(() => {});
+          const img = new Image();
+          img.src = authUrl;
         } catch (_) {}
       }
 
@@ -232,7 +233,7 @@ export const PortalPage: React.FC = () => {
   };
 
   if (connectedSession) {
-    const targetDestination = targetUrlParam || 'https://dichvucong.haiphong.gov.vn/';
+    const excapRedirect = buildExcapUrl(connectedSession.sessionToken);
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-6 sm:p-8 text-center space-y-6">
@@ -261,7 +262,7 @@ export const PortalPage: React.FC = () => {
           </div>
           <div className="space-y-3 pt-2">
             <a
-              href={targetDestination}
+              href={excapRedirect}
               className="w-full py-3.5 px-4 rounded-xl bg-[#a81c1c] text-white font-bold text-sm tracking-wide shadow-lg hover:bg-[#8b1414] transition flex items-center justify-center gap-2"
             >
               <Landmark className="w-4 h-4 text-yellow-300" />
@@ -741,9 +742,6 @@ export const PortalPage: React.FC = () => {
                         <ShieldCheck className="w-4 h-4 text-emerald-700 flex-shrink-0" />
                         <div>
                           <span className="font-bold">Thiết bị đã ghi nhớ 30 ngày.</span>
-                          <span className="block text-[10px] text-emerald-600">
-                            Lần sau đến Nhà văn hóa không cần xác thực lại.
-                          </span>
                         </div>
                       </div>
                     ) : (
