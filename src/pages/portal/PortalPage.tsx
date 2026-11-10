@@ -120,17 +120,18 @@ export const PortalPage: React.FC = () => {
   }, [targetUrlParam]);
 
   const buildExcapUrl = (sessionToken?: string) => {
-    if (!rawLoginUrl) return targetDestination;
-    const sep = rawLoginUrl.includes('?') ? '&' : '?';
+    const finalDest = targetDestination;
+    const baseLogin = rawLoginUrl || 'http://cwp.gwnportal.cloud:8080/gwn_login';
+    const sep = baseLogin.includes('?') ? '&' : '?';
     const cleanMac = (effectiveClientMac || macAddress || '0242ac110001').replace(/[:-]/g, '').toLowerCase();
     const token = sessionToken || (connectedSession ? connectedSession.sessionToken : '') || 'guest';
-    return `${rawLoginUrl}${sep}username=${encodeURIComponent(cleanMac + '@gwn')}&password=${encodeURIComponent(token)}&redirect=${encodeURIComponent(targetDestination)}`;
+    return `${baseLogin}${sep}username=${encodeURIComponent(cleanMac + '@gwn')}&password=${encodeURIComponent(token)}&redirect=${encodeURIComponent(finalDest)}`;
   };
 
   useEffect(() => {
     if (!connectedSession) return;
     if (redirectCountdown <= 0) {
-      window.location.replace(targetDestination);
+      window.location.replace(buildExcapUrl(connectedSession.sessionToken));
       return;
     }
     const timer = setTimeout(() => {
@@ -327,7 +328,7 @@ export const PortalPage: React.FC = () => {
           <div className="space-y-3 pt-2">
             <button
               type="button"
-              onClick={() => window.location.replace(targetDestination)}
+              onClick={() => window.location.replace(buildExcapUrl(connectedSession.sessionToken))}
               className="w-full py-3.5 px-4 rounded-xl bg-[#a81c1c] text-white font-bold text-sm tracking-wide shadow-lg hover:bg-[#8b1414] transition flex items-center justify-center gap-2 cursor-pointer"
             >
               <Landmark className="w-4 h-4 text-yellow-300" />
