@@ -334,6 +334,12 @@ export const PortalPage: React.FC = () => {
               <span>VÀO DỊCH VỤ CÔNG HẢI PHÒNG ({redirectCountdown}s)</span>
             </a>
             
+            <a
+              href="https://www.google.com"
+              className="w-full py-3 px-4 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition flex items-center justify-center gap-2 border border-slate-300 cursor-pointer"
+            >
+              <span>🌐 Tiếp tục lướt web (Google)</span>
+            </a>
           </div>
         </div>
       </div>
