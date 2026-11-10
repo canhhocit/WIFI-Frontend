@@ -457,7 +457,7 @@ export const PortalPage: React.FC = () => {
               Ủy Ban Nhân Dân Thành Phố Hải Phòng
             </div>
             <h1 className="text-sm sm:text-base font-extrabold tracking-tight mt-0.5 uppercase text-white">
-              {template?.title || 'Cổng Thông Tin Wi-Fi Nhà Văn Hóa'}
+              {template?.title || 'Cổng Thông Tin Wi-Fi'}
             </h1>
           </div>
 

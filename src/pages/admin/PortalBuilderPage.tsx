@@ -395,7 +395,7 @@ export const PortalBuilderPage: React.FC = () => {
                       type="text"
                       value={template.title}
                       onChange={(e) => setTemplate({ ...template, title: e.target.value })}
-                      placeholder="Ví dụ: Cổng Thông Tin Wi-Fi Nhà Văn Hóa"
+                      placeholder="Ví dụ: Cổng Thông Tin Wi-Fi"
                       className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] font-semibold"
                       required
                     />
