@@ -14,17 +14,23 @@ import {
   Radio,
   Router,
   Repeat,
+  RotateCw,
+  Power,
   CheckCircle2,
   XCircle,
   Cpu
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
-import { DeviceDto, NetworkDeviceDto } from '../../types/models';
+import { DeviceDto, NetworkDeviceDto, DeviceTopologySummaryDto } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
 import { DeviceSwapModal } from '../../components/DeviceSwapModal';
+import { DeviceMonitoringTopology } from '../../components/DeviceMonitoringTopology';
 
 export const DevicesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'CLIENT' | 'INFRASTRUCTURE'>('CLIENT');
+
+  // Topology data
+  const [topologyData, setTopologyData] = useState<DeviceTopologySummaryDto | undefined>(undefined);
 
   // Client devices state
   const [devices, setDevices] = useState<DeviceDto[]>([]);
@@ -49,6 +55,12 @@ export const DevicesPage: React.FC = () => {
   const [swapModalOpen, setSwapModalOpen] = useState(false);
   const [selectedDeviceForSwap, setSelectedDeviceForSwap] = useState<NetworkDeviceDto | null>(null);
 
+  // Grandstream sync & reboot state
+  const [syncingGwn, setSyncingGwn] = useState(false);
+  const [syncSuccessMsg, setSyncSuccessMsg] = useState<string | null>(null);
+  const [deviceToReboot, setDeviceToReboot] = useState<NetworkDeviceDto | null>(null);
+  const [rebootingId, setRebootingId] = useState<number | null>(null);
+
   useEffect(() => {
     if (activeTab === 'CLIENT') {
       loadDevices();
@@ -72,8 +84,18 @@ export const DevicesPage: React.FC = () => {
     }
   };
 
+  const loadTopology = async () => {
+    try {
+      const overview = await adminApi.getOverview();
+      setTopologyData(overview.topology);
+    } catch {
+      // Ignore background overview error
+    }
+  };
+
   const loadNetworkDevices = async () => {
     setLoadingNetDev(true);
+    loadTopology();
     try {
       const resp = await adminApi.getNetworkDevices({
         type: deviceTypeFilter || undefined,
@@ -89,6 +111,38 @@ export const DevicesPage: React.FC = () => {
       setError(err?.message || 'Không thể tải danh sách thiết bị hạ tầng.');
     } finally {
       setLoadingNetDev(false);
+    }
+  };
+
+  const handleSyncGrandstream = async () => {
+    setSyncingGwn(true);
+    setError(null);
+    setSyncSuccessMsg(null);
+    try {
+      const res = await adminApi.syncGrandstreamDevices();
+      setSyncSuccessMsg(res.message || `Đồng bộ thành công ${res.syncedCount} thiết bị từ Grandstream Cloud.`);
+      await loadNetworkDevices();
+      await loadTopology();
+    } catch (err: any) {
+      setError(err?.message || 'Lỗi khi đồng bộ dữ liệu từ Grandstream Cloud.');
+    } finally {
+      setSyncingGwn(false);
+    }
+  };
+
+  const handleConfirmReboot = async () => {
+    if (!deviceToReboot) return;
+    setRebootingId(deviceToReboot.id);
+    setError(null);
+    try {
+      await adminApi.rebootNetworkDevice(deviceToReboot.id);
+      setSyncSuccessMsg(`Đã phát lệnh khởi động lại thành công tới Router ${deviceToReboot.model || ''} (MAC: ${deviceToReboot.macAddress}). Thiết bị đang trong tiến trình Reboot.`);
+      setDeviceToReboot(null);
+      await loadNetworkDevices();
+    } catch (err: any) {
+      setError(err?.message || 'Không thể gửi lệnh khởi động lại tới thiết bị.');
+    } finally {
+      setRebootingId(null);
     }
   };
 
@@ -171,6 +225,7 @@ export const DevicesPage: React.FC = () => {
       </div>
 
       {error && <AlertBanner type="error" message={error} />}
+      {syncSuccessMsg && <AlertBanner type="success" message={syncSuccessMsg} />}
 
       {/* Tab Switcher */}
       <div className="flex border-b border-slate-300 gap-2">
@@ -343,6 +398,8 @@ export const DevicesPage: React.FC = () => {
       {/* Tab 2: Infrastructure Devices */}
       {activeTab === 'INFRASTRUCTURE' && (
         <>
+          <DeviceMonitoringTopology topology={topologyData} />
+
           <div className="bg-white p-3.5 rounded border border-slate-300 shadow-xs flex flex-wrap gap-2.5 items-center">
             <div className="w-48">
               <select
@@ -383,6 +440,25 @@ export const DevicesPage: React.FC = () => {
             >
               Lọc thiết bị
             </button>
+
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                onClick={handleSyncGrandstream}
+                disabled={syncingGwn}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-700 hover:bg-sky-800 disabled:opacity-50 text-white rounded-sm text-xs font-semibold transition cursor-pointer shadow-xs"
+                title="Đồng bộ danh sách thiết bị Router và trạng thái thực tế từ Grandstream GDMS/GWN Cloud"
+              >
+                {syncingGwn ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Đang đồng bộ...
+                  </>
+                ) : (
+                  <>
+                    <RotateCw className="w-3.5 h-3.5" /> Đồng bộ từ Grandstream Cloud
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           <div className="bg-white rounded border border-slate-300 shadow-xs overflow-hidden">
@@ -442,6 +518,10 @@ export const DevicesPage: React.FC = () => {
                             <span className="inline-flex items-center gap-1 font-semibold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-sm text-[11px]">
                               <CheckCircle2 className="w-3 h-3 text-emerald-600" /> ONLINE
                             </span>
+                          ) : nd.status === 'REBOOTING' ? (
+                            <span className="inline-flex items-center gap-1 font-semibold text-sky-800 bg-sky-50 border border-sky-300 px-2 py-0.5 rounded-sm text-[11px] animate-pulse">
+                              <Loader2 className="w-3 h-3 text-sky-600 animate-spin" /> REBOOTING
+                            </span>
                           ) : nd.status === 'OFFLINE' ? (
                             <span className="inline-flex items-center gap-1 font-semibold text-rose-800 bg-rose-50 border border-rose-300 px-2 py-0.5 rounded-sm text-[11px]">
                               <XCircle className="w-3 h-3 text-rose-600" /> OFFLINE
@@ -456,16 +536,33 @@ export const DevicesPage: React.FC = () => {
                           {formatDate(nd.lastSeenAt)}
                         </td>
                         <td className="py-3 px-4 text-right">
-                          <button
-                            onClick={() => {
-                              setSelectedDeviceForSwap(nd);
-                              setSwapModalOpen(true);
-                            }}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-sm text-xs font-semibold transition cursor-pointer"
-                            title="Hoán đổi phần cứng thay thế khi hỏng hóc tại cơ sở"
-                          >
-                            <Repeat className="w-3.5 h-3.5 text-amber-700" /> Thay thế thiết bị
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            {(nd.deviceType === 'ROUTER' || (nd.vendor && nd.vendor.toLowerCase().includes('grandstream'))) && (
+                              <button
+                                onClick={() => setDeviceToReboot(nd)}
+                                disabled={rebootingId === nd.id || nd.status === 'REBOOTING'}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 disabled:opacity-40 rounded-sm text-xs font-semibold transition cursor-pointer"
+                                title="Gửi lệnh khởi động lại phần cứng từ xa qua Grandstream Cloud"
+                              >
+                                {rebootingId === nd.id ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600" />
+                                ) : (
+                                  <Power className="w-3.5 h-3.5 text-rose-600" />
+                                )}
+                                Khởi động lại
+                              </button>
+                            )}
+                            <button
+                              onClick={() => {
+                                setSelectedDeviceForSwap(nd);
+                                setSwapModalOpen(true);
+                              }}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-sm text-xs font-semibold transition cursor-pointer"
+                              title="Hoán đổi phần cứng thay thế khi hỏng hóc tại cơ sở"
+                            >
+                              <Repeat className="w-3.5 h-3.5 text-amber-700" /> Thay thế thiết bị
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -513,6 +610,61 @@ export const DevicesPage: React.FC = () => {
         }}
         device={selectedDeviceForSwap}
       />
+
+      {/* Remote Reboot Confirmation Modal */}
+      {deviceToReboot && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-sm shadow-xl border border-slate-300 max-w-md w-full p-6 text-slate-800">
+            <div className="flex items-center gap-3 text-rose-600 mb-4">
+              <div className="w-10 h-10 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center flex-shrink-0">
+                <Power className="w-5 h-5 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-base text-slate-900">Xác nhận khởi động lại Router</h3>
+                <p className="text-xs text-slate-500">Phát lệnh phần cứng qua Grandstream Cloud</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed mb-4">
+              Bạn có chắc chắn muốn phát lệnh <strong>Reboot từ xa</strong> cho thiết bị{' '}
+              <strong className="text-slate-900 font-mono">
+                {deviceToReboot.model || 'Router'} ({deviceToReboot.macAddress})
+              </strong>{' '}
+              tại địa bàn <strong>{deviceToReboot.locationName || 'Nhà văn hóa'}</strong>?
+            </p>
+            <div className="bg-amber-50 border border-amber-200 p-2.5 rounded-sm text-xs text-amber-800 mb-5">
+              ⚠️ <strong>Lưu ý:</strong> Thiết bị sẽ tạm ngắt kết nối mạng khoảng 1 - 2 phút trong lúc phần cứng khởi động lại. Tất cả phiên Wi-Fi đang truy cập tại địa bàn sẽ tạm thời bị gián đoạn.
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setDeviceToReboot(null)}
+                disabled={rebootingId !== null}
+                className="px-3.5 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-sm text-xs font-semibold cursor-pointer"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmReboot}
+                disabled={rebootingId !== null}
+                className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white rounded-sm text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+              >
+                {rebootingId !== null ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Đang phát lệnh...
+                  </>
+                ) : (
+                  <>
+                    <Power className="w-3.5 h-3.5" /> Xác nhận Reboot
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -15,7 +15,8 @@ import {
   Signal,
   Download,
   Upload,
-  Globe2
+  Globe2,
+  Users
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { LocationDto, CreateLocationRequest, UpdateLocationRequest, AdminUnitDto } from '../../types/models';
@@ -71,6 +72,7 @@ export const LocationsPage: React.FC = () => {
     circuitId: '',
     sessionDurationMinutes: 120,
     maxBandwidthMbps: 20,
+    maxConcurrentUsers: 50,
     welcomeMessage: 'Chào mừng quý khách đến với mạng Wi-Fi miễn phí',
     termsAndConditions: 'Bằng việc kết nối vào mạng Wi-Fi này, quý khách cam kết tuân thủ chính sách sử dụng hợp lý, không thực hiện các hành vi gây hại hoặc vi phạm pháp luật.',
     promoTitle: '',
@@ -126,6 +128,7 @@ export const LocationsPage: React.FC = () => {
       circuitId: '',
       sessionDurationMinutes: 120,
       maxBandwidthMbps: 20,
+      maxConcurrentUsers: 50,
       welcomeMessage: 'Chào mừng quý khách đến với mạng Wi-Fi Nhà văn hóa',
       termsAndConditions: 'Bằng việc kết nối vào mạng Wi-Fi này, quý khách cam kết tuân thủ chính sách sử dụng mạng hợp lý và an toàn thông tin theo quy định của UBND TP Hải Phòng.',
       promoTitle: '',
@@ -164,6 +167,7 @@ export const LocationsPage: React.FC = () => {
       circuitId: loc.circuitCode || '',
       sessionDurationMinutes: loc.sessionDurationMinutes,
       maxBandwidthMbps: loc.maxBandwidthMbps,
+      maxConcurrentUsers: loc.maxConcurrentUsers || 50,
       welcomeMessage: loc.welcomeMessage || '',
       termsAndConditions: loc.termsAndConditions,
       promoTitle: loc.promoTitle || '',
@@ -194,6 +198,7 @@ export const LocationsPage: React.FC = () => {
         circuitCode: formData.circuitId.trim() || undefined,
         sessionDurationMinutes: Number(formData.sessionDurationMinutes),
         maxBandwidthMbps: Number(formData.maxBandwidthMbps),
+        maxConcurrentUsers: Number(formData.maxConcurrentUsers) || 50,
         welcomeMessage: formData.welcomeMessage.trim() || undefined,
         termsAndConditions: formData.termsAndConditions.trim(),
         promoTitle: formData.promoTitle.trim() || undefined,
@@ -234,6 +239,7 @@ export const LocationsPage: React.FC = () => {
         circuitCode: formData.circuitId.trim() || undefined,
         sessionDurationMinutes: Number(formData.sessionDurationMinutes),
         maxBandwidthMbps: Number(formData.maxBandwidthMbps),
+        maxConcurrentUsers: Number(formData.maxConcurrentUsers) || 50,
         welcomeMessage: formData.welcomeMessage.trim() || undefined,
         termsAndConditions: formData.termsAndConditions.trim(),
         promoTitle: formData.promoTitle.trim() || undefined,
@@ -393,7 +399,7 @@ export const LocationsPage: React.FC = () => {
                 <th className="py-3 px-4">Tên điểm phát</th>
                 <th className="py-3 px-4">Địa chỉ & Tọa độ GPS</th>
                 <th className="py-3 px-4">Nhà mạng & Mã cáp</th>
-                <th className="py-3 px-4">Thời lượng & Băng thông</th>
+                <th className="py-3 px-4">Chính sách phiên & Tải kết nối</th>
                 <th className="py-3 px-4">Trạng thái</th>
                 <th className="py-3 px-4 text-right">Thao tác</th>
               </tr>
@@ -439,12 +445,48 @@ export const LocationsPage: React.FC = () => {
                     <td className="py-3 px-4 text-slate-700">
                       <div className="font-bold text-slate-800">{loc.ispName || 'Viettel'}</div>
                     </td>
-                    <td className="py-3 px-4 font-semibold text-slate-700">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-slate-400" /> {loc.sessionDurationMinutes} phút
+                    <td className="py-3 px-4 font-semibold text-slate-700 min-w-[190px]">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" /> {loc.sessionDurationMinutes} phút
+                        </div>
+                        <div className="flex items-center gap-1 text-[11px] text-emerald-700">
+                          <Signal className="w-3 h-3" /> {loc.maxBandwidthMbps} Mbps
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 text-[11px] text-emerald-700 mt-0.5">
-                        <Signal className="w-3 h-3" /> {loc.maxBandwidthMbps} Mbps
+
+                      {/* Concurrent users count & capacity bar */}
+                      <div className="mt-1.5 pt-1 border-t border-slate-100">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="flex items-center gap-1 text-slate-600 font-medium">
+                            <Users className="w-3 h-3 text-indigo-600" />
+                            <span className="font-bold text-slate-900">{loc.activeSessionsCount ?? 0}</span>
+                            <span className="text-slate-400">/{loc.maxConcurrentUsers ?? 50}</span>
+                          </span>
+                          <span
+                            className={`font-mono text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                              (loc.capacityUsagePercent ?? 0) >= 90
+                                ? 'bg-rose-100 text-rose-700'
+                                : (loc.capacityUsagePercent ?? 0) >= 70
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-slate-100 text-slate-600'
+                            }`}
+                          >
+                            {loc.capacityUsagePercent ?? 0}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1 border border-slate-200">
+                          <div
+                            className={`h-full transition-all duration-300 ${
+                              (loc.capacityUsagePercent ?? 0) >= 90
+                                ? 'bg-rose-500'
+                                : (loc.capacityUsagePercent ?? 0) >= 70
+                                ? 'bg-amber-500'
+                                : 'bg-emerald-500'
+                            }`}
+                            style={{ width: `${Math.min(100, loc.capacityUsagePercent ?? 0)}%` }}
+                          />
+                        </div>
                       </div>
                     </td>
                     <td className="py-3 px-4">
@@ -655,9 +697,9 @@ export const LocationsPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Thời lượng tối đa (phút)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Thời lượng phiên (phút)</label>
               <input
                 type="number"
                 min="1"
@@ -667,6 +709,7 @@ export const LocationsPage: React.FC = () => {
                 className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
                 required
               />
+              <span className="text-[10px] text-slate-500 mt-0.5 block">Hết giờ tự động ngắt</span>
             </div>
 
             <div>
@@ -680,6 +723,21 @@ export const LocationsPage: React.FC = () => {
                 className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
                 required
               />
+              <span className="text-[10px] text-slate-500 mt-0.5 block">Tốc độ tối đa mỗi máy</span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Giới hạn tải (Users)</label>
+              <input
+                type="number"
+                min="1"
+                max="10000"
+                value={formData.maxConcurrentUsers}
+                onChange={(e) => setFormData({ ...formData, maxConcurrentUsers: Number(e.target.value) })}
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
+                required
+              />
+              <span className="text-[10px] text-slate-500 mt-0.5 block">Số máy truy cập đồng thời</span>
             </div>
           </div>
 
@@ -919,7 +977,7 @@ export const LocationsPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Thời lượng phiên (phút)</label>
               <input
@@ -931,6 +989,7 @@ export const LocationsPage: React.FC = () => {
                 className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
                 required
               />
+              <span className="text-[10px] text-slate-500 mt-0.5 block">Hết giờ tự động ngắt</span>
             </div>
 
             <div>
@@ -944,6 +1003,21 @@ export const LocationsPage: React.FC = () => {
                 className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
                 required
               />
+              <span className="text-[10px] text-slate-500 mt-0.5 block">Tốc độ tối đa mỗi máy</span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Giới hạn tải (Users)</label>
+              <input
+                type="number"
+                min="1"
+                max="10000"
+                value={formData.maxConcurrentUsers}
+                onChange={(e) => setFormData({ ...formData, maxConcurrentUsers: Number(e.target.value) })}
+                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
+                required
+              />
+              <span className="text-[10px] text-slate-500 mt-0.5 block">Số máy truy cập đồng thời</span>
             </div>
           </div>
 

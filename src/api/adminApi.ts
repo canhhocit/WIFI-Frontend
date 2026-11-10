@@ -16,6 +16,7 @@ import {
   AdminUnitDto,
   NetworkDeviceDto,
   DeviceSwapRequest,
+  DeviceSyncSummaryDto,
   ExcelImportSummaryDto,
   CampaignDto,
   CreateCampaignRequest,
@@ -23,22 +24,14 @@ import {
   SurveyDto,
   SurveyResponseDto,
   PortalTemplateDto,
-  TelemetryMetricDto,
-  IngestTelemetryRequest,
-  AlertRuleDto,
   IncidentTicketDto,
   CreateIncidentRequest,
   AssignIncidentRequest,
   ResolveIncidentRequest,
-  SlaMetricsDto,
   GisLocationPinDto,
-  NetworkBandwidthPolicyDto,
-  CreatePolicyRequest,
   MacBlacklistDto,
   CreateBlacklistRequest,
   AccessLogRetentionDto,
-  RadiusClientDto,
-  CreateRadiusClientRequest,
   GovernmentReportDto,
   DistrictStatDto,
   AdminUserDto,
@@ -201,6 +194,18 @@ export const adminApi = {
     return request<NetworkDeviceDto>('/v1/admin/network-devices/swap', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  },
+
+  syncGrandstreamDevices: () => {
+    return request<DeviceSyncSummaryDto>('/v1/admin/network-devices/sync-grandstream', {
+      method: 'POST',
+    });
+  },
+
+  rebootNetworkDevice: (id: number) => {
+    return request<NetworkDeviceDto>(`/v1/admin/network-devices/${id}/reboot`, {
+      method: 'POST',
     });
   },
 
@@ -384,40 +389,7 @@ export const adminApi = {
     return request<GisLocationPinDto[]>('/v1/admin/gis/locations');
   },
 
-  // Telemetry & Alert Rules
-  getTelemetryLatest: (params: { locationId?: number; deviceId?: number; limit?: number }) => {
-    const sp = new URLSearchParams();
-    if (params.locationId) sp.append('locationId', params.locationId.toString());
-    if (params.deviceId) sp.append('deviceId', params.deviceId.toString());
-    if (params.limit) sp.append('limit', params.limit.toString());
-    return request<TelemetryMetricDto[]>(`/v1/admin/telemetry/latest?${sp.toString()}`);
-  },
-
-  ingestTelemetry: (data: IngestTelemetryRequest) => {
-    return request<TelemetryMetricDto>('/v1/admin/telemetry/ingest', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
-
-  getAlertRules: () => {
-    return request<AlertRuleDto[]>('/v1/admin/alerts/rules');
-  },
-
-  createAlertRule: (data: Partial<AlertRuleDto>) => {
-    return request<AlertRuleDto>('/v1/admin/alerts/rules', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
-
-  toggleAlertRule: (id: number) => {
-    return request<AlertRuleDto>(`/v1/admin/alerts/rules/${id}/toggle`, {
-      method: 'PUT',
-    });
-  },
-
-  // Incidents & SLA
+  // Incidents
   getIncidents: (params: { status?: string; page?: number; size?: number }) => {
     const sp = new URLSearchParams();
     if (params.status) sp.append('status', params.status);
@@ -448,28 +420,6 @@ export const adminApi = {
     return request<IncidentTicketDto>(`/v1/admin/incidents/${id}/resolve`, {
       method: 'PUT',
       body: JSON.stringify(data),
-    });
-  },
-
-  getSlaMetrics: () => {
-    return request<SlaMetricsDto>('/v1/admin/incidents/sla/metrics');
-  },
-
-  // Bandwidth QoS Policies
-  getNetworkPolicies: () => {
-    return request<NetworkBandwidthPolicyDto[]>('/v1/admin/network-policies');
-  },
-
-  createNetworkPolicy: (data: CreatePolicyRequest) => {
-    return request<NetworkBandwidthPolicyDto>('/v1/admin/network-policies', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
-
-  toggleNetworkPolicy: (id: number) => {
-    return request<NetworkBandwidthPolicyDto>(`/v1/admin/network-policies/${id}/toggle`, {
-      method: 'PUT',
     });
   },
 
@@ -505,24 +455,6 @@ export const adminApi = {
     if (params.page !== undefined) sp.append('page', params.page.toString());
     if (params.size !== undefined) sp.append('size', params.size.toString());
     return request<PageResponse<AccessLogRetentionDto>>(`/v1/admin/access-logs?${sp.toString()}`);
-  },
-
-  // RADIUS Gateway Clients
-  getRadiusClients: () => {
-    return request<RadiusClientDto[]>('/v1/admin/radius-clients');
-  },
-
-  createRadiusClient: (data: CreateRadiusClientRequest) => {
-    return request<RadiusClientDto>('/v1/admin/radius-clients', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
-
-  toggleRadiusClient: (id: number) => {
-    return request<RadiusClientDto>(`/v1/admin/radius-clients/${id}/toggle`, {
-      method: 'PUT',
-    });
   },
 
   // Government Administrative Reports (Sở TT&TT / UBND TP Hải Phòng)

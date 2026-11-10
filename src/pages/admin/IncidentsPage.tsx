@@ -9,8 +9,7 @@ import {
   CreateIncidentRequest,
   AssignIncidentRequest,
   ResolveIncidentRequest,
-  LocationDto,
-  SlaMetricsDto
+  LocationDto
 } from '../../types/models';
 import {
   AlertCircle,
@@ -35,7 +34,6 @@ export const IncidentsPage: React.FC = () => {
 
   const [incidents, setIncidents] = useState<IncidentTicketDto[]>([]);
   const [locations, setLocations] = useState<LocationDto[]>([]);
-  const [slaMetrics, setSlaMetrics] = useState<SlaMetricsDto | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [selectedSeverity, setSelectedSeverity] = useState<string>('ALL');
@@ -69,14 +67,12 @@ export const IncidentsPage: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [ticketsPage, locsPage, slaData] = await Promise.all([
+      const [ticketsPage, locsPage] = await Promise.all([
         adminApi.getIncidents({ size: 50 }),
         adminApi.getLocations({ page: 0, size: 100 }),
-        adminApi.getSlaMetrics(),
       ]);
       setIncidents(ticketsPage.content);
       setLocations(locsPage.content);
-      setSlaMetrics(slaData);
     } catch (err) {
       console.error('Failed to load incidents:', err);
     } finally {
@@ -222,34 +218,40 @@ export const IncidentsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* SLA Metrics Cards */}
-      {slaMetrics && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
-            <div className="text-xs text-gray-500 font-medium">Tổng số phiếu sự cố</div>
-            <div className="mt-1 text-2xl font-bold text-gray-900">{slaMetrics.totalTickets}</div>
-            <div className="text-xs text-gray-500 mt-0.5">{slaMetrics.openTickets} đang xử lý</div>
-          </div>
-
-          <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
-            <div className="text-xs text-emerald-600 font-medium">Đã hoàn thành khắc phục</div>
-            <div className="mt-1 text-2xl font-bold text-emerald-600">{slaMetrics.resolvedTickets}</div>
-            <div className="text-xs text-emerald-600/80 mt-0.5">Đã phục hồi Internet</div>
-          </div>
-
-          <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
-            <div className="text-xs text-rose-600 font-medium">Vi phạm hạn cam kết SLA</div>
-            <div className="mt-1 text-2xl font-bold text-rose-600">{slaMetrics.slaBreachedCount}</div>
-            <div className="text-xs text-rose-600/80 mt-0.5">Cần ưu tiên xử lý khẩn cấp</div>
-          </div>
-
-          <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
-            <div className="text-xs text-blue-600 font-medium">Tỷ lệ tuân thủ SLA</div>
-            <div className="mt-1 text-2xl font-bold text-blue-600">{slaMetrics.slaComplianceRatePercent}%</div>
-            <div className="text-xs text-blue-600/80 mt-0.5">MTTR trung bình: {slaMetrics.averageResolutionHours} giờ</div>
+      {/* Incident Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
+          <div className="text-xs text-gray-500 font-medium">Tổng số phiếu sự cố</div>
+          <div className="mt-1 text-2xl font-bold text-gray-900">{incidents.length}</div>
+          <div className="text-xs text-gray-500 mt-0.5">
+            {incidents.filter(i => i.status !== 'RESOLVED' && i.status !== 'CLOSED').length} đang xử lý
           </div>
         </div>
-      )}
+
+        <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
+          <div className="text-xs text-emerald-600 font-medium">Đã khắc phục hoàn tất</div>
+          <div className="mt-1 text-2xl font-bold text-emerald-600">
+            {incidents.filter(i => i.status === 'RESOLVED' || i.status === 'CLOSED').length}
+          </div>
+          <div className="text-xs text-emerald-600/80 mt-0.5">Đã phục hồi Internet</div>
+        </div>
+
+        <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
+          <div className="text-xs text-rose-600 font-medium">Sự cố mức độ Khẩn cấp</div>
+          <div className="mt-1 text-2xl font-bold text-rose-600">
+            {incidents.filter(i => i.severity === 'CRITICAL').length}
+          </div>
+          <div className="text-xs text-rose-600/80 mt-0.5">Cần ưu tiên xử lý khẩn cấp</div>
+        </div>
+
+        <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
+          <div className="text-xs text-blue-600 font-medium">Tỷ lệ giải quyết sự cố</div>
+          <div className="mt-1 text-2xl font-bold text-blue-600">
+            {incidents.length > 0 ? Math.round((incidents.filter(i => i.status === 'RESOLVED' || i.status === 'CLOSED').length / incidents.length) * 100) : 100}%
+          </div>
+          <div className="text-xs text-blue-600/80 mt-0.5">Tiến độ phục hồi hệ thống</div>
+        </div>
+      </div>
 
       {/* Filter and Search Bar */}
       <div className="bg-white p-3 rounded-sm border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-3">

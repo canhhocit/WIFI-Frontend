@@ -8,6 +8,9 @@ export interface LocationDto {
   description?: string;
   sessionDurationMinutes: number;
   maxBandwidthMbps: number;
+  maxConcurrentUsers?: number;
+  activeSessionsCount?: number;
+  capacityUsagePercent?: number;
   termsAndConditions: string;
   welcomeMessage?: string;
   promoTitle?: string;
@@ -66,6 +69,15 @@ export interface NetworkDeviceDto {
   installedAt?: string;
 }
 
+export interface DeviceSyncSummaryDto {
+  syncedCount: number;
+  updatedCount: number;
+  createdCount: number;
+  devices: NetworkDeviceDto[];
+  message: string;
+  simulated: boolean;
+}
+
 export interface DeviceSwapRequest {
   locationId: number;
   oldDeviceId?: number;
@@ -106,6 +118,9 @@ export interface CreateLocationRequest {
   contactPhone?: string;
   sessionDurationMinutes: number;
   maxBandwidthMbps: number;
+  maxConcurrentUsers?: number;
+  activeSessionsCount?: number;
+  capacityUsagePercent?: number;
   termsAndConditions: string;
   welcomeMessage?: string;
   promoTitle?: string;
@@ -130,6 +145,7 @@ export interface UpdateLocationRequest {
   contactPhone?: string;
   sessionDurationMinutes?: number;
   maxBandwidthMbps?: number;
+  maxConcurrentUsers?: number;
   termsAndConditions: string;
   welcomeMessage?: string;
   promoTitle?: string;
@@ -190,6 +206,9 @@ export interface PortalInitResponse {
   portalTemplate?: PortalTemplateDto;
   macRemembered?: boolean;
   otpRequired?: boolean;
+  currentActiveUsers?: number;
+  maxConcurrentUsers?: number;
+  capacityReached?: boolean;
 }
 
 export interface GuestLoginRequest {
@@ -306,6 +325,21 @@ export interface HourlyTrendDto {
   uniqueDevices: number;
 }
 
+export interface DeviceTopologySummaryDto {
+  totalLocations: number;
+  errorLocations: number;
+  totalDevices: number;
+  errorDevices: number;
+  routerOnline: number;
+  routerOffline: number;
+  switchOnline: number;
+  switchOffline: number;
+  apOnline: number;
+  apOffline: number;
+  clientWired: number;
+  clientWireless: number;
+}
+
 export interface DashboardOverviewDto {
   totalSessions: number;
   activeSessions: number;
@@ -316,6 +350,7 @@ export interface DashboardOverviewDto {
   gatewayStatus: GatewayStatusDto;
   sessionsByStatus: Record<string, number>;
   locationDistribution: LocationAnalyticsDto[];
+  topology?: DeviceTopologySummaryDto;
 }
 
 export interface ApiResponse<T> {

@@ -15,13 +15,9 @@ import { PortalBuilderPage } from './pages/admin/PortalBuilderPage';
 import { CampaignsPage } from './pages/admin/CampaignsPage';
 import { SurveysPage } from './pages/admin/SurveysPage';
 import { GisMapPage } from './pages/admin/GisMapPage';
-import { AlertCenterPage } from './pages/admin/AlertCenterPage';
 import { IncidentsPage } from './pages/admin/IncidentsPage';
-import { SlaAnalyticsPage } from './pages/admin/SlaAnalyticsPage';
-import { NetworkPoliciesPage } from './pages/admin/NetworkPoliciesPage';
 import { BlacklistPage } from './pages/admin/BlacklistPage';
 import { AccessLogsPage } from './pages/admin/AccessLogsPage';
-import { RadiusGatewayPage } from './pages/admin/RadiusGatewayPage';
 import { GovernmentReportPage } from './pages/admin/GovernmentReportPage';
 import { UsersPage } from './pages/admin/UsersPage';
 import { RolePermissionsPage } from './pages/admin/RolePermissionsPage';
@@ -48,13 +44,9 @@ export const App: React.FC = () => {
         <Route path="campaigns" element={<CampaignsPage />} />
         <Route path="surveys" element={<SurveysPage />} />
         <Route path="gis" element={<GisMapPage />} />
-        <Route path="alerts" element={<AlertCenterPage />} />
         <Route path="incidents" element={<IncidentsPage />} />
-        <Route path="sla" element={<SlaAnalyticsPage />} />
-        <Route path="network-policies" element={<NetworkPoliciesPage />} />
         <Route path="blacklist" element={<BlacklistPage />} />
         <Route path="access-logs" element={<AccessLogsPage />} />
-        <Route path="radius-gateway" element={<RadiusGatewayPage />} />
         <Route path="government-report" element={<GovernmentReportPage />} />
         <Route path="dns-filtering" element={<DnsFilteringPage />} />
         <Route path="users" element={<UsersPage />} />

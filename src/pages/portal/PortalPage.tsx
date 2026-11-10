@@ -20,6 +20,8 @@ import {
   Clock,
   Gauge,
   HelpCircle,
+  Users,
+  RefreshCw,
 } from 'lucide-react';
 import { portalApi } from '../../api/portalApi';
 import { PortalInitResponse } from '../../types/models';
@@ -414,6 +416,11 @@ export const PortalPage: React.FC = () => {
               <span>{portalData?.location.sessionDurationMinutes || 120} phút</span>
               <span>•</span>
               <span className="text-emerald-700 font-bold">{portalData?.location.maxBandwidthMbps || 20} Mbps</span>
+              <span>•</span>
+              <span className={`font-semibold flex items-center gap-1 ${portalData?.capacityReached ? 'text-rose-600' : 'text-indigo-700'}`}>
+                <Users className="w-3 h-3" />
+                {portalData?.currentActiveUsers ?? 0}/{portalData?.maxConcurrentUsers || portalData?.location.maxConcurrentUsers || 50}
+              </span>
             </div>
           </div>
 
@@ -580,8 +587,8 @@ export const PortalPage: React.FC = () => {
               </div>
             </div>
 
-            {/* 3 Quick Telemetry Metric Tiles */}
-            <div className="grid grid-cols-3 gap-2 text-center">
+            {/* 4 Quick Telemetry Metric Tiles */}
+            <div className="grid grid-cols-4 gap-2 text-center">
               <div className="p-2 rounded bg-white/10 border border-white/15">
                 <div className="text-[10px] text-slate-300">Tốc độ</div>
                 <div className="text-xs font-extrabold text-emerald-300 font-mono">
@@ -595,8 +602,14 @@ export const PortalPage: React.FC = () => {
                 </div>
               </div>
               <div className="p-2 rounded bg-white/10 border border-white/15">
+                <div className="text-[10px] text-slate-300">Tải kết nối</div>
+                <div className={`text-xs font-extrabold font-mono ${portalData?.capacityReached ? 'text-rose-300' : 'text-cyan-200'}`}>
+                  {portalData?.currentActiveUsers ?? 0}/{portalData?.maxConcurrentUsers || portalData?.location.maxConcurrentUsers || 50}
+                </div>
+              </div>
+              <div className="p-2 rounded bg-white/10 border border-white/15">
                 <div className="text-[10px] text-slate-300">Chi phí</div>
-                <div className="text-xs font-extrabold text-white">Miễn phí 100%</div>
+                <div className="text-xs font-extrabold text-white">Miễn phí</div>
               </div>
             </div>
           </div>
@@ -606,6 +619,27 @@ export const PortalPage: React.FC = () => {
             <div className="space-y-4">
               {error && <AlertBanner type="error" message={error} />}
               {successInfo && <AlertBanner type="success" message={successInfo} />}
+
+              {/* Capacity Limit Reached Warning Alert */}
+              {portalData?.capacityReached && (
+                <div className="p-3.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-xs space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-amber-800">
+                    <Users className="w-4 h-4 text-amber-700 flex-shrink-0" />
+                    <span>Điểm phát sóng hiện đã đạt giới hạn tối đa</span>
+                  </div>
+                  <p className="text-[11.5px] leading-relaxed text-amber-800">
+                    Hiện có <strong>{portalData.currentActiveUsers}</strong>/{portalData.maxConcurrentUsers} thiết bị đang truy cập mạng. Quý vị vui lòng thử lại sau giây lát khi có người rời đi để đảm bảo chất lượng đường truyền.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => loadPortal()}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white rounded text-[11px] font-bold transition shadow-xs cursor-pointer"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Thử kiểm tra lại tải mạng</span>
+                  </button>
+                </div>
+              )}
 
               {/* Smart Citizen Survey Block (Khảo sát ý kiến công dân trực tiếp) */}
               {survey && survey.questions && survey.questions.length > 0 && (
@@ -701,14 +735,27 @@ export const PortalPage: React.FC = () => {
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={submitting}
-                  className="w-full py-3.5 px-4 rounded-lg text-white font-extrabold text-sm sm:text-base tracking-wide uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:brightness-105 active:scale-[0.99] disabled:opacity-50"
-                  style={{ backgroundColor: template?.themeColor || '#004b87' }}
+                  disabled={submitting || Boolean(portalData?.capacityReached)}
+                  className={`w-full py-3.5 px-4 rounded-lg text-white font-extrabold text-sm sm:text-base tracking-wide uppercase transition flex items-center justify-center gap-2 shadow-lg ${
+                    portalData?.capacityReached
+                      ? 'bg-slate-400 cursor-not-allowed opacity-80'
+                      : 'cursor-pointer hover:brightness-105 active:scale-[0.99] disabled:opacity-50'
+                  }`}
+                  style={{
+                    backgroundColor: portalData?.capacityReached
+                      ? undefined
+                      : template?.themeColor || '#004b87',
+                  }}
                 >
                   {submitting ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin text-yellow-300" />
                       <span>Đang cấp quyền kết nối Internet...</span>
+                    </>
+                  ) : portalData?.capacityReached ? (
+                    <>
+                      <Users className="w-5 h-5 text-amber-200" />
+                      <span>ĐIỂM PHÁT ĐÃ ĐẦY TẢI ({portalData?.currentActiveUsers ?? 0}/{portalData?.maxConcurrentUsers ?? 50})</span>
                     </>
                   ) : (
                     <>
@@ -718,7 +765,7 @@ export const PortalPage: React.FC = () => {
                   )}
                 </button>
                 <p className="text-[10.5px] text-slate-500 text-center mt-2 font-medium">
-                  Tốc độ: <strong>20 Mbps</strong> • Thời lượng phiên: <strong>120 phút</strong> • Băng thông ổn định
+                  Tốc độ: <strong>{portalData?.location.maxBandwidthMbps || 20} Mbps</strong> • Thời lượng phiên: <strong>{portalData?.location.sessionDurationMinutes || 120} phút</strong> • Giới hạn: <strong>{portalData?.maxConcurrentUsers || portalData?.location.maxConcurrentUsers || 50} kết nối đồng thời</strong>
                 </p>
               </div>
 

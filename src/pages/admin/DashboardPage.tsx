@@ -19,6 +19,7 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { DashboardOverviewDto } from '../../types/models';
 import { StatusBadge } from '../../components/Badge';
+import { DeviceMonitoringTopology } from '../../components/DeviceMonitoringTopology';
 
 export const DashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardOverviewDto | null>(null);
@@ -46,7 +47,7 @@ export const DashboardPage: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <RefreshCw className="w-6 h-6 text-blue-700 animate-spin mb-2" />
-        <span className="text-xs text-slate-500 font-medium">Đang đồng bộ số liệu NOC Hải Phòng...</span>
+        <span className="text-xs text-slate-500 font-medium">Đang đồng bộ số liệu...</span>
       </div>
     );
   }
@@ -57,11 +58,8 @@ export const DashboardPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-4 sm:p-5 rounded border border-slate-300 shadow-xs">
         <div>
           <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
-            Bảng Điều Hành Trung Tâm Wi-Fi Công Cộng Hải Phòng
+            Tổng quan
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Giám sát thời gian thực phiên truy cập của công dân, hạ tầng AP Gateway và chỉ số cam kết SLA viễn thông.
-          </p>
         </div>
         <button
           onClick={loadOverview}
@@ -77,6 +75,9 @@ export const DashboardPage: React.FC = () => {
           <span>{error}</span>
         </div>
       )}
+
+      {/* Hardware & Network Topology Monitoring Block */}
+      <DeviceMonitoringTopology topology={data?.topology} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Active Sessions */}
