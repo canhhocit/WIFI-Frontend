@@ -27,7 +27,7 @@ import {
 import { portalApi } from '../../api/portalApi';
 import { PortalInitResponse } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
-import { GovernmentEmblem } from '../../components/GovernmentEmblem';
+import { VietnamFlag } from '../../components/VietnamFlag';
 
 export const PortalPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -329,9 +329,11 @@ export const PortalPage: React.FC = () => {
         />
         <div className="fixed inset-0 bg-gradient-to-b from-slate-950/85 via-slate-900/80 to-slate-950/90 backdrop-blur-[2px]" />
         <div className="relative z-10 flex flex-col items-center">
-          <GovernmentEmblem size={56} className="drop-shadow-xl mb-4" />
-          <Loader2 className="w-6 h-6 animate-spin text-amber-300 mb-2" />
-          <p className="text-xs text-slate-200 font-medium tracking-wide">Đang tải Cổng Wi-Fi Nhà văn hóa Hải Phòng...</p>
+          <div className="relative mb-5 flex items-center justify-center">
+            <VietnamFlag width={72} height={48} className="rounded-sm shadow-2xl border border-yellow-400/60" animate />
+          </div>
+          <Loader2 className="w-6 h-6 animate-spin text-yellow-300 mb-2" />
+          <p className="text-xs text-slate-100 font-medium tracking-wide">Đang tải Cổng Wi-Fi Nhà văn hóa Hải Phòng...</p>
         </div>
       </div>
     );
@@ -422,7 +424,7 @@ export const PortalPage: React.FC = () => {
               </div>
             ) : (
               <div className="flex justify-center mb-2">
-                <GovernmentEmblem size={44} className="drop-shadow-sm" />
+                <VietnamFlag width={48} height={32} className="rounded-xs shadow-sm border border-yellow-400/50" />
               </div>
             )}
             <div className="text-[10px] sm:text-[11px] font-bold tracking-widest text-yellow-300 uppercase">

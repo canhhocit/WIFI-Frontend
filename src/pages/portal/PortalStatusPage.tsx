@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { portalApi } from '../../api/portalApi';
 import { GuestSessionStatusResponse } from '../../types/models';
-import { GovernmentEmblem } from '../../components/GovernmentEmblem';
+import { VietnamFlag } from '../../components/VietnamFlag';
 
 export const PortalStatusPage: React.FC = () => {
   const { sessionToken } = useParams<{ sessionToken: string }>();
@@ -105,7 +105,9 @@ export const PortalStatusPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white font-sans">
-        <GovernmentEmblem size={56} className="drop-shadow-lg mb-4" />
+        <div className="relative mb-4 flex items-center justify-center">
+          <VietnamFlag width={66} height={44} className="rounded-sm shadow-xl border border-yellow-400/50" animate />
+        </div>
         <Loader2 className="w-6 h-6 animate-spin text-blue-400 mb-2" />
         <p className="text-xs text-slate-300 font-medium">Đang xác minh phiên mạng và mở Cổng Dịch vụ công...</p>
       </div>
@@ -194,7 +196,7 @@ export const PortalStatusPage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           {/* Left: Emblem and Live Network Status */}
           <div className="flex items-center gap-2.5">
-            <GovernmentEmblem size={28} className="drop-shadow-xs flex-shrink-0" />
+            <VietnamFlag width={33} height={22} className="rounded-xs shadow-xs border border-amber-300/40 flex-shrink-0" />
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider leading-none">

@@ -28,7 +28,7 @@ import { PortalTemplateDto, LocationDto } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
 import { ImageUploadInput } from '../../components/ImageUploadInput';
 import { Toast } from '../../components/Toast';
-import { GovernmentEmblem } from '../../components/GovernmentEmblem';
+import { VietnamFlag } from '../../components/VietnamFlag';
 
 export const PortalBuilderPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -749,7 +749,7 @@ export const PortalBuilderPage: React.FC = () => {
                       </div>
                     ) : (
                       <div className="flex justify-center mb-1">
-                        <GovernmentEmblem size={28} className="drop-shadow-sm" />
+                        <VietnamFlag width={36} height={24} className="rounded-xs shadow-xs border border-yellow-400/50" />
                       </div>
                     )}
                     <div className="text-[7.5px] font-bold tracking-widest text-yellow-300 uppercase">

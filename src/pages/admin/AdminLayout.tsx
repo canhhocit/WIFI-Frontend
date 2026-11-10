@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -29,13 +29,23 @@ import {
   Settings,
   Activity,
   Clock,
-} from 'lucide-react';
-import { authApi } from '../../api/authApi';
-import { adminApi } from '../../api/adminApi';
-import { AdminUserDto, GatewayStatusDto, RolePermissionDto } from '../../types/models';
-import { GovernmentEmblem } from '../../components/GovernmentEmblem';
+} from "lucide-react";
+import { authApi } from "../../api/authApi";
+import { adminApi } from "../../api/adminApi";
+import {
+  AdminUserDto,
+  GatewayStatusDto,
+  RolePermissionDto,
+} from "../../types/models";
+import { GovernmentEmblem } from "../../components/GovernmentEmblem";
 
-type RbacModule = 'LOCATIONS' | 'DEVICES' | 'CAMPAIGNS' | 'INCIDENTS' | 'USERS' | 'SETTINGS';
+type RbacModule =
+  | "LOCATIONS"
+  | "DEVICES"
+  | "CAMPAIGNS"
+  | "INCIDENTS"
+  | "USERS"
+  | "SETTINGS";
 
 interface NavItem {
   to: string;
@@ -52,111 +62,136 @@ interface NavGroup {
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    groupTitle: 'HẠ TẦNG & ĐIỂM PHÁT SÓNG',
+    groupTitle: "HẠ TẦNG & ĐIỂM PHÁT SÓNG",
     items: [
-      { to: '/admin', label: 'Tổng quan điều hành', icon: LayoutDashboard, end: true },
       {
-        to: '/admin/gis',
-        label: 'Bản đồ số GIS',
+        to: "/admin",
+        label: "Tổng quan điều hành",
+        icon: LayoutDashboard,
+        end: true,
+      },
+      {
+        to: "/admin/gis",
+        label: "Bản đồ số GIS",
         icon: Map,
-        module: 'LOCATIONS',
+        module: "LOCATIONS",
       },
-      { to: '/admin/locations', label: 'Danh bạ Nhà văn hóa', icon: MapPin, module: 'LOCATIONS' },
       {
-        to: '/admin/devices',
-        label: 'Thiết bị & AP Gateway',
+        to: "/admin/locations",
+        label: "Danh bạ Nhà văn hóa",
+        icon: MapPin,
+        module: "LOCATIONS",
+      },
+      {
+        to: "/admin/devices",
+        label: "Thiết bị & AP Gateway",
         icon: Smartphone,
-        module: 'DEVICES',
+        module: "DEVICES",
       },
-      { to: '/admin/sessions', label: 'Quản lý phiên truy cập', icon: Users, module: 'LOCATIONS' },
+      {
+        to: "/admin/sessions",
+        label: "Quản lý phiên truy cập",
+        icon: Users,
+        module: "LOCATIONS",
+      },
     ],
   },
   {
-    groupTitle: 'GIÁM SÁT MẠNG & AN NINH',
+    groupTitle: "GIÁM SÁT MẠNG & AN NINH",
     items: [
-      { to: '/admin/incidents', label: 'Xử lý sự cố viễn thông', icon: ShieldAlert, module: 'INCIDENTS' },
       {
-        to: '/admin/blacklist',
-        label: 'Danh sách cấm MAC',
+        to: "/admin/incidents",
+        label: "Xử lý sự cố viễn thông",
+        icon: ShieldAlert,
+        module: "INCIDENTS",
+      },
+      {
+        to: "/admin/blacklist",
+        label: "Danh sách cấm MAC",
         icon: Ban,
-        module: 'INCIDENTS',
+        module: "INCIDENTS",
       },
       {
-        to: '/admin/access-logs',
-        label: 'Nhật ký 12 tháng pháp lý',
+        to: "/admin/access-logs",
+        label: "Nhật ký 12 tháng pháp lý",
         icon: Lock,
-        module: 'INCIDENTS',
+        module: "INCIDENTS",
       },
     ],
   },
   {
-    groupTitle: 'CỔNG CHÀO & TRUYỀN THÔNG SỐ',
+    groupTitle: "CỔNG CHÀO & TRUYỀN THÔNG SỐ",
     items: [
       {
-        to: '/admin/portal-builder',
-        label: 'Trình dựng Cổng chào',
+        to: "/admin/portal-builder",
+        label: "Trình dựng Cổng chào",
         icon: Palette,
-        module: 'CAMPAIGNS',
+        module: "CAMPAIGNS",
       },
       {
-        to: '/admin/campaigns',
-        label: 'Chiến dịch tuyên truyền',
+        to: "/admin/campaigns",
+        label: "Chiến dịch tuyên truyền",
         icon: Megaphone,
-        module: 'CAMPAIGNS',
+        module: "CAMPAIGNS",
       },
       {
-        to: '/admin/surveys',
-        label: 'Khảo sát ý kiến nhân dân',
+        to: "/admin/surveys",
+        label: "Khảo sát ý kiến nhân dân",
         icon: ClipboardList,
-        module: 'CAMPAIGNS',
+        module: "CAMPAIGNS",
       },
       {
-        to: '/admin/dns-filtering',
-        label: 'Bộ lọc tên miền DNS & DVC',
+        to: "/admin/dns-filtering",
+        label: "Bộ lọc tên miền DNS & DVC",
         icon: Globe,
-        module: 'CAMPAIGNS',
+        module: "CAMPAIGNS",
       },
     ],
   },
   {
-    groupTitle: 'QUẢN TRỊ CHÍNH QUYỀN & HỆ THỐNG',
+    groupTitle: "QUẢN TRỊ CHÍNH QUYỀN & HỆ THỐNG",
     items: [
       {
-        to: '/admin/government-report',
-        label: 'Báo cáo Sở TT&TT / UBND',
+        to: "/admin/government-report",
+        label: "Báo cáo Sở TT&TT / UBND",
         icon: Landmark,
-        module: 'SETTINGS',
+        module: "SETTINGS",
       },
       {
-        to: '/admin/users',
-        label: 'Cán bộ 5 cấp & Địa bàn',
+        to: "/admin/users",
+        label: "Cán bộ 5 cấp & Địa bàn",
         icon: UserCheck,
-        module: 'USERS',
+        module: "USERS",
       },
       {
-        to: '/admin/role-permissions',
-        label: 'Ma trận phân quyền RBAC',
+        to: "/admin/role-permissions",
+        label: "Ma trận phân quyền RBAC",
         icon: KeyRound,
-        module: 'USERS',
+        module: "USERS",
       },
       {
-        to: '/admin/system-settings',
-        label: 'Cấu hình tham số hệ thống',
+        to: "/admin/system-settings",
+        label: "Cấu hình tham số hệ thống",
         icon: Settings,
-        module: 'SETTINGS',
+        module: "SETTINGS",
       },
-      { to: '/admin/analytics', label: 'Thống kê & Báo cáo', icon: BarChart3, module: 'SETTINGS' },
       {
-        to: '/admin/audit',
-        label: 'Nhật ký hệ thống',
+        to: "/admin/analytics",
+        label: "Thống kê & Báo cáo",
+        icon: BarChart3,
+        module: "SETTINGS",
+      },
+      {
+        to: "/admin/audit",
+        label: "Nhật ký hệ thống",
         icon: ScrollText,
-        module: 'USERS',
+        module: "USERS",
       },
       {
-        to: '/admin/gateway',
-        label: 'Chẩn đoán kết nối Gateway',
+        to: "/admin/gateway",
+        label: "Chẩn đoán kết nối Gateway",
         icon: Radio,
-        module: 'DEVICES',
+        module: "DEVICES",
       },
     ],
   },
@@ -165,13 +200,19 @@ const NAV_GROUPS: NavGroup[] = [
 export const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [currentUser, setCurrentUser] = useState<AdminUserDto | null>(authApi.getCurrentUser());
-  const [gatewayStatus, setGatewayStatus] = useState<GatewayStatusDto | null>(null);
+  const [currentUser, setCurrentUser] = useState<AdminUserDto | null>(
+    authApi.getCurrentUser(),
+  );
+  const [gatewayStatus, setGatewayStatus] = useState<GatewayStatusDto | null>(
+    null,
+  );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString('vi-VN'));
+  const [currentTime, setCurrentTime] = useState(
+    new Date().toLocaleTimeString("vi-VN"),
+  );
   const [permissions, setPermissions] = useState<RolePermissionDto[]>(() => {
     try {
-      const cached = localStorage.getItem('wifi_rbac_permissions');
+      const cached = localStorage.getItem("wifi_rbac_permissions");
       return cached ? JSON.parse(cached) : [];
     } catch {
       return [];
@@ -180,27 +221,26 @@ export const AdminLayout: React.FC = () => {
 
   useEffect(() => {
     if (!authApi.isAuthenticated()) {
-      navigate('/admin/login');
+      navigate("/admin/login");
       return;
     }
 
-    authApi.getMe()
+    authApi
+      .getMe()
       .then(setCurrentUser)
-      .catch(() => navigate('/admin/login'));
+      .catch(() => navigate("/admin/login"));
 
-    adminApi.getGatewayStatus()
-      .then(setGatewayStatus)
-      .catch(console.error);
+    adminApi.getGatewayStatus().then(setGatewayStatus).catch(console.error);
 
     const loadPermissions = async () => {
       try {
         const perms = await adminApi.getRolePermissions();
         if (perms && Array.isArray(perms)) {
           setPermissions(perms);
-          localStorage.setItem('wifi_rbac_permissions', JSON.stringify(perms));
+          localStorage.setItem("wifi_rbac_permissions", JSON.stringify(perms));
         }
       } catch (err) {
-        console.warn('Could not load dynamic role permissions:', err);
+        console.warn("Could not load dynamic role permissions:", err);
       }
     };
 
@@ -210,18 +250,27 @@ export const AdminLayout: React.FC = () => {
       loadPermissions();
     };
 
-    window.addEventListener('rbac-permissions-updated', handlePermissionsUpdated);
+    window.addEventListener(
+      "rbac-permissions-updated",
+      handlePermissionsUpdated,
+    );
 
     const gatewayTimer = setInterval(() => {
-      adminApi.getGatewayStatus().then(setGatewayStatus).catch(() => {});
+      adminApi
+        .getGatewayStatus()
+        .then(setGatewayStatus)
+        .catch(() => {});
     }, 30000);
 
     const clockTimer = setInterval(() => {
-      setCurrentTime(new Date().toLocaleTimeString('vi-VN'));
+      setCurrentTime(new Date().toLocaleTimeString("vi-VN"));
     }, 1000);
 
     return () => {
-      window.removeEventListener('rbac-permissions-updated', handlePermissionsUpdated);
+      window.removeEventListener(
+        "rbac-permissions-updated",
+        handlePermissionsUpdated,
+      );
       clearInterval(gatewayTimer);
       clearInterval(clockTimer);
     };
@@ -229,61 +278,64 @@ export const AdminLayout: React.FC = () => {
 
   const handleLogout = () => {
     authApi.logout();
-    navigate('/admin/login');
+    navigate("/admin/login");
   };
 
   const getRoleBadge = (role?: string) => {
     switch (role) {
-      case 'ROLE_SUPER_ADMIN':
-      case 'ROLE_ADMIN':
+      case "ROLE_SUPER_ADMIN":
+      case "ROLE_ADMIN":
         return {
-          label: 'Quản trị hệ thống',
-          scope: 'Toàn quyền Hệ thống',
-          color: 'bg-slate-800 text-slate-100 border-slate-600',
+          label: "Quản trị hệ thống",
+          scope: "Toàn quyền Hệ thống",
+          color: "bg-slate-800 text-slate-100 border-slate-600",
         };
-      case 'ROLE_SOTTTT_ADMIN':
+      case "ROLE_SOTTTT_ADMIN":
         return {
-          label: 'Sở TT&TT Hải Phòng',
-          scope: 'Toàn Thành phố',
-          color: 'bg-[#004b87] text-white border-[#003865]',
+          label: "Sở TT&TT Hải Phòng",
+          scope: "Toàn Thành phố",
+          color: "bg-[#004b87] text-white border-[#003865]",
         };
-      case 'ROLE_DISTRICT_OFFICER':
+      case "ROLE_DISTRICT_OFFICER":
         return {
-          label: 'Cán bộ Quận/Huyện',
-          scope: 'Địa bàn Quận / Huyện',
-          color: 'bg-slate-700 text-slate-100 border-slate-600',
+          label: "Cán bộ Quận/Huyện",
+          scope: "Địa bàn Quận / Huyện",
+          color: "bg-slate-700 text-slate-100 border-slate-600",
         };
-      case 'ROLE_COMMUNE_OFFICER':
+      case "ROLE_COMMUNE_OFFICER":
         return {
-          label: 'Cán bộ Phường/Xã',
-          scope: 'Cơ sở Phường / Xã',
-          color: 'bg-slate-700 text-slate-100 border-slate-600',
+          label: "Cán bộ Phường/Xã",
+          scope: "Cơ sở Phường / Xã",
+          color: "bg-slate-700 text-slate-100 border-slate-600",
         };
-      case 'ROLE_VNPT_ENGINEER':
+      case "ROLE_VNPT_ENGINEER":
         return {
-          label: 'Kỹ sư VNPT',
-          scope: 'Hạ tầng Viễn thông',
-          color: 'bg-[#003865] text-blue-100 border-blue-700',
+          label: "Kỹ sư VNPT",
+          scope: "Hạ tầng Viễn thông",
+          color: "bg-[#003865] text-blue-100 border-blue-700",
         };
       default:
         return {
-          label: 'Cán bộ Vận hành',
-          scope: 'Phân quyền Tiêu chuẩn',
-          color: 'bg-slate-800 text-slate-300 border-slate-700',
+          label: "Cán bộ Vận hành",
+          scope: "Phân quyền Tiêu chuẩn",
+          color: "bg-slate-800 text-slate-300 border-slate-700",
         };
     }
   };
 
   const roleInfo = getRoleBadge(currentUser?.role);
-  const userRole = currentUser?.role || 'ROLE_SUPER_ADMIN';
+  const userRole = currentUser?.role || "ROLE_SUPER_ADMIN";
 
   // Check if current user has permission to view a specific module
   const hasModulePermission = (module?: RbacModule): boolean => {
     if (!module) return true;
-    if (userRole === 'ROLE_SUPER_ADMIN' || userRole === 'ROLE_ADMIN') return true;
+    if (userRole === "ROLE_SUPER_ADMIN" || userRole === "ROLE_ADMIN")
+      return true;
 
     if (permissions && permissions.length > 0) {
-      const match = permissions.find((p) => p.roleName === userRole && p.moduleName === module);
+      const match = permissions.find(
+        (p) => p.roleName === userRole && p.moduleName === module,
+      );
       if (match) {
         return Boolean(match.canView);
       }
@@ -291,18 +343,31 @@ export const AdminLayout: React.FC = () => {
 
     // Default fallback if permissions have not synced from server yet
     switch (module) {
-      case 'LOCATIONS':
+      case "LOCATIONS":
         return true;
-      case 'DEVICES':
-        return userRole === 'ROLE_VNPT_ENGINEER' || userRole === 'ROLE_SOTTTT_ADMIN';
-      case 'CAMPAIGNS':
-        return userRole === 'ROLE_SOTTTT_ADMIN' || userRole === 'ROLE_DISTRICT_OFFICER' || userRole === 'ROLE_COMMUNE_OFFICER';
-      case 'INCIDENTS':
-        return userRole === 'ROLE_VNPT_ENGINEER' || userRole === 'ROLE_SOTTTT_ADMIN' || userRole === 'ROLE_DISTRICT_OFFICER';
-      case 'USERS':
-        return userRole === 'ROLE_SOTTTT_ADMIN';
-      case 'SETTINGS':
-        return userRole === 'ROLE_SOTTTT_ADMIN' || userRole === 'ROLE_DISTRICT_OFFICER';
+      case "DEVICES":
+        return (
+          userRole === "ROLE_VNPT_ENGINEER" || userRole === "ROLE_SOTTTT_ADMIN"
+        );
+      case "CAMPAIGNS":
+        return (
+          userRole === "ROLE_SOTTTT_ADMIN" ||
+          userRole === "ROLE_DISTRICT_OFFICER" ||
+          userRole === "ROLE_COMMUNE_OFFICER"
+        );
+      case "INCIDENTS":
+        return (
+          userRole === "ROLE_VNPT_ENGINEER" ||
+          userRole === "ROLE_SOTTTT_ADMIN" ||
+          userRole === "ROLE_DISTRICT_OFFICER"
+        );
+      case "USERS":
+        return userRole === "ROLE_SOTTTT_ADMIN";
+      case "SETTINGS":
+        return (
+          userRole === "ROLE_SOTTTT_ADMIN" ||
+          userRole === "ROLE_DISTRICT_OFFICER"
+        );
       default:
         return true;
     }
@@ -310,7 +375,9 @@ export const AdminLayout: React.FC = () => {
 
   // Dynamically filter navigation items based on current officer's RBAC role permissions
   const filteredNavGroups = NAV_GROUPS.map((group) => {
-    const visibleItems = group.items.filter((item) => hasModulePermission(item.module));
+    const visibleItems = group.items.filter((item) =>
+      hasModulePermission(item.module),
+    );
     return {
       ...group,
       items: visibleItems,
@@ -319,12 +386,14 @@ export const AdminLayout: React.FC = () => {
 
   // Check if current URL route is permitted for current role
   const isCurrentPathAllowed = () => {
-    if (userRole === 'ROLE_SUPER_ADMIN' || userRole === 'ROLE_ADMIN') return true;
+    if (userRole === "ROLE_SUPER_ADMIN" || userRole === "ROLE_ADMIN")
+      return true;
     for (const group of NAV_GROUPS) {
       for (const item of group.items) {
         const matches = item.end
           ? location.pathname === item.to
-          : location.pathname === item.to || location.pathname.startsWith(`${item.to}/`);
+          : location.pathname === item.to ||
+            location.pathname.startsWith(`${item.to}/`);
         if (matches) {
           return hasModulePermission(item.module);
         }
@@ -339,20 +408,28 @@ export const AdminLayout: React.FC = () => {
       <div className="md:hidden bg-[#0c2340] text-white px-4 py-3 flex items-center justify-between border-b border-[#18365a] sticky top-0 z-40">
         <div className="flex items-center gap-2.5">
           <GovernmentEmblem size={28} />
-          <span className="font-bold text-xs uppercase tracking-wide text-slate-100">Wi-Fi Hải Phòng • Quản Trị</span>
+          <span className="font-bold text-xs uppercase tracking-wide text-slate-100">
+            Wi-Fi Hải Phòng • Quản Trị
+          </span>
         </div>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="p-1.5 rounded text-slate-300 hover:text-white hover:bg-[#13355e] cursor-pointer"
         >
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          {mobileMenuOpen ? (
+            <X className="w-5 h-5" />
+          ) : (
+            <Menu className="w-5 h-5" />
+          )}
         </button>
       </div>
 
       {/* Sidebar Navigation */}
       <aside
         className={`fixed md:sticky top-0 left-0 z-30 h-screen w-72 bg-[#0c2340] text-slate-300 flex flex-col border-r border-[#18365a] transition-transform duration-200 ease-in-out ${
-          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+          mobileMenuOpen
+            ? "translate-x-0"
+            : "-translate-x-full md:translate-x-0"
         }`}
       >
         {/* Department / Brand Banner */}
@@ -364,15 +441,6 @@ export const AdminLayout: React.FC = () => {
             <div className="overflow-hidden min-w-0">
               <div className="text-[10.5px] font-extrabold text-amber-300 uppercase tracking-wider leading-tight truncate">
                 UBND TP. HẢI PHÒNG
-              </div>
-              <div className="text-xs text-white font-bold tracking-tight truncate mt-0.5">
-                Cổng Quản Trị Wi-Fi Công Cộng
-              </div>
-              <div className="mt-1.5 flex items-center gap-1.5">
-                <span className="inline-flex items-center gap-1.5 text-[9.5px] font-medium px-2 py-0.5 rounded-full bg-blue-950/80 text-blue-200 border border-blue-400/30 truncate shadow-2xs">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400 flex-shrink-0" />
-                  <span className="truncate">{roleInfo.scope}</span>
-                </span>
               </div>
             </div>
           </div>
@@ -411,11 +479,13 @@ export const AdminLayout: React.FC = () => {
                       onClick={() => setMobileMenuOpen(false)}
                       className={`flex items-center gap-2.5 px-3 py-1.5 rounded text-xs font-medium transition ${
                         isActive
-                          ? 'bg-[#004b87] text-white font-semibold shadow-xs'
-                          : 'text-slate-300 hover:text-white hover:bg-[#13355e]'
+                          ? "bg-[#004b87] text-white font-semibold shadow-xs"
+                          : "text-slate-300 hover:text-white hover:bg-[#13355e]"
                       }`}
                     >
-                      <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                      <Icon
+                        className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-white" : "text-slate-400"}`}
+                      />
                       <span className="truncate">{item.label}</span>
                     </NavLink>
                   );
@@ -437,7 +507,9 @@ export const AdminLayout: React.FC = () => {
               <ExternalLink className="w-3.5 h-3.5 text-blue-400" />
               Mở Cổng chào Người dân
             </span>
-            <span className="text-[10px] font-mono text-slate-400">/portal</span>
+            <span className="text-[10px] font-mono text-slate-400">
+              /portal
+            </span>
           </a>
         </div>
 
@@ -446,11 +518,13 @@ export const AdminLayout: React.FC = () => {
           <div className="truncate pr-1">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-bold text-slate-200 truncate">
-                {currentUser?.fullName || currentUser?.username || 'Cán bộ Quản trị'}
+                {currentUser?.fullName ||
+                  currentUser?.username ||
+                  "Cán bộ Quản trị"}
               </span>
             </div>
             <div className="text-[10px] text-slate-400 font-mono truncate mt-0.5">
-              {currentUser?.email || 'admin@haiphong.gov.vn'}
+              {currentUser?.email || "admin@haiphong.gov.vn"}
             </div>
           </div>
           <button
@@ -468,7 +542,9 @@ export const AdminLayout: React.FC = () => {
         {/* Desktop Top Header Bar */}
         <header className="hidden md:flex h-12 bg-white border-b border-slate-300 px-6 items-center justify-between shadow-2xs">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-slate-500">Trung tâm Điều hành:</span>
+            <span className="text-xs font-semibold text-slate-500">
+              Trung tâm Điều hành:
+            </span>
             <span className="text-xs font-bold text-slate-800">
               Mạng Wi-Fi Công cộng tỉnh Hải Phòng
             </span>
@@ -502,13 +578,15 @@ export const AdminLayout: React.FC = () => {
                   Quyền Hạn Truy Cập Bị Giới Hạn
                 </h2>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Tài khoản của bạn đăng nhập với vai trò <strong>{roleInfo.label}</strong> ({roleInfo.scope}).
-                  Tính năng này yêu cầu đặc quyền phân quyền cao hơn theo Ma trận phân quyền RBAC Thành phố.
+                  Tài khoản của bạn đăng nhập với vai trò{" "}
+                  <strong>{roleInfo.label}</strong> ({roleInfo.scope}). Tính
+                  năng này yêu cầu đặc quyền phân quyền cao hơn theo Ma trận
+                  phân quyền RBAC Thành phố.
                 </p>
               </div>
               <div className="pt-2">
                 <button
-                  onClick={() => navigate('/admin')}
+                  onClick={() => navigate("/admin")}
                   className="px-4 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold cursor-pointer shadow-xs transition"
                 >
                   Trở Về Bảng Điều Hành Trung Tâm
