@@ -114,11 +114,13 @@ export const PortalPage: React.FC = () => {
 
   const buildExcapUrl = (sessionToken?: string) => {
     const finalDest = targetUrlParam || 'https://dichvucong.haiphong.gov.vn/';
-    const baseLogin = rawLoginUrl || 'http://cwp.gwnportal.cloud:8080/gwn_login';
-    const sep = baseLogin.includes('?') ? '&' : '?';
+    if (!rawLoginUrl) {
+      return finalDest;
+    }
+    const sep = rawLoginUrl.includes('?') ? '&' : '?';
     const cleanMac = (effectiveClientMac || macAddress || '0242ac110001').replace(/[:-]/g, '').toLowerCase();
     const token = sessionToken || (connectedSession ? connectedSession.sessionToken : '') || 'guest';
-    return `${baseLogin}${sep}username=${encodeURIComponent(cleanMac + '@gwn')}&password=${encodeURIComponent(token)}&redirect=${encodeURIComponent(finalDest)}`;
+    return `${rawLoginUrl}${sep}username=${encodeURIComponent(cleanMac + '@gwn')}&password=${encodeURIComponent(token)}&redirect=${encodeURIComponent(finalDest)}`;
   };
 
   useEffect(() => {

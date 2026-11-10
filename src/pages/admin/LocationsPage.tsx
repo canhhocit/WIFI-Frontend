@@ -463,8 +463,35 @@ export const LocationsPage: React.FC = () => {
                 </tr>
               ) : filteredLocations.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
-                    Không tìm thấy điểm phát nào phù hợp với điều kiện tìm kiếm.
+                  <td colSpan={6} className="py-12 text-center text-slate-500">
+                    {statusFilter === 'ERROR' || statusFilter === 'INACTIVE' ? (
+                      <div className="max-w-md mx-auto space-y-2.5">
+                        <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200">
+                          <CheckCircle2 className="w-5 h-5" />
+                        </div>
+                        <div className="font-bold text-slate-800 text-sm">
+                          Hạ tầng mạng hoàn hảo!
+                        </div>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Hiện tại không có điểm phát sóng nào gặp sự cố hoặc tạm dừng. Toàn bộ {locations.length} điểm phát đều đang hoạt động ổn định.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setStatusFilter('ALL');
+                            const next = new URLSearchParams(searchParams);
+                            next.delete('status');
+                            setSearchParams(next);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded text-xs font-semibold cursor-pointer transition shadow-xs mt-1"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          <span>Xem tất cả {locations.length} điểm phát</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <span>Không tìm thấy điểm phát nào phù hợp với điều kiện tìm kiếm.</span>
+                    )}
                   </td>
                 </tr>
               ) : (
@@ -561,9 +588,9 @@ export const LocationsPage: React.FC = () => {
                         <span>Xem Cổng chào</span>
                       </a>
                       <button
-                        onClick={() => navigate(`/admin/gis-map?selectLocation=${loc.id}`)}
+                        onClick={() => navigate(`/admin/gis?selectLocation=${loc.id}`)}
                         className="p-1 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded-sm transition cursor-pointer"
-                        title="Xem vị trí trên Bản đồ GIS"
+                        title="Xem vị trí trên Bản đồ số GIS"
                       >
                         <MapPin className="w-4 h-4 text-blue-600" />
                       </button>
