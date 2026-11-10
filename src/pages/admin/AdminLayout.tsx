@@ -37,7 +37,7 @@ import {
   GatewayStatusDto,
   RolePermissionDto,
 } from "../../types/models";
-import { GovernmentEmblem } from "../../components/GovernmentEmblem";
+import { VietnamFlag } from "../../components/VietnamFlag";
 
 type RbacModule =
   | "LOCATIONS"
@@ -407,7 +407,7 @@ export const AdminLayout: React.FC = () => {
       {/* Mobile Top Header */}
       <div className="md:hidden bg-[#0c2340] text-white px-4 py-3 flex items-center justify-between border-b border-[#18365a] sticky top-0 z-40">
         <div className="flex items-center gap-2.5">
-          <GovernmentEmblem size={28} />
+          <VietnamFlag width={30} height={20} className="shadow-xs rounded-xs" />
           <span className="font-bold text-xs uppercase tracking-wide text-slate-100">
             Wi-Fi Hải Phòng • Quản Trị
           </span>
@@ -436,11 +436,24 @@ export const AdminLayout: React.FC = () => {
         <div className="p-4 border-b border-[#18365a] bg-gradient-to-b from-[#0a1e38] via-[#091a30] to-[#071629]">
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0 drop-shadow-md">
-              <GovernmentEmblem size={44} />
+              <VietnamFlag
+                width={45}
+                height={30}
+                className="rounded-xs shadow-md border border-amber-300/40"
+              />
             </div>
             <div className="overflow-hidden min-w-0">
               <div className="text-[10.5px] font-extrabold text-amber-300 uppercase tracking-wider leading-tight truncate">
                 UBND TP. HẢI PHÒNG
+              </div>
+              <div className="text-xs text-white font-bold tracking-tight truncate mt-0.5">
+                Cổng Quản Trị Wi-Fi Công Cộng
+              </div>
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-1.5 text-[9.5px] font-medium px-2 py-0.5 rounded-full bg-blue-950/80 text-blue-200 border border-blue-400/30 truncate shadow-2xs">
+                  <ShieldCheck className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                  <span className="truncate">{roleInfo.scope}</span>
+                </span>
               </div>
             </div>
           </div>
