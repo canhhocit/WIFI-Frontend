@@ -113,7 +113,10 @@ export const PortalPage: React.FC = () => {
   const [redirectCountdown, setRedirectCountdown] = useState<number>(3);
 
   const targetDestination = useMemo(() => {
-    return targetUrlParam || 'https://dichvucong.haiphong.gov.vn/';
+    if (targetUrlParam && !targetUrlParam.includes('/portal')) {
+      return targetUrlParam;
+    }
+    return 'https://dichvucong.haiphong.gov.vn/';
   }, [targetUrlParam]);
 
   const buildExcapUrl = (sessionToken?: string) => {
@@ -125,20 +128,16 @@ export const PortalPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (connectedSession) {
-      const timer = setInterval(() => {
-        setRedirectCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            window.location.href = targetDestination;
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(timer);
+    if (!connectedSession) return;
+    if (redirectCountdown <= 0) {
+      window.location.replace(targetDestination);
+      return;
     }
-  }, [connectedSession, targetDestination]);
+    const timer = setTimeout(() => {
+      setRedirectCountdown((prev) => prev - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [connectedSession, redirectCountdown, targetDestination]);
 
   useEffect(() => {
     loadPortal();
@@ -326,20 +325,22 @@ export const PortalPage: React.FC = () => {
             <span>Đang tự động chuyển tiếp đến Dịch vụ công ({redirectCountdown}s)...</span>
           </div>
           <div className="space-y-3 pt-2">
-            <a
-              href={targetDestination}
+            <button
+              type="button"
+              onClick={() => window.location.replace(targetDestination)}
               className="w-full py-3.5 px-4 rounded-xl bg-[#a81c1c] text-white font-bold text-sm tracking-wide shadow-lg hover:bg-[#8b1414] transition flex items-center justify-center gap-2 cursor-pointer"
             >
               <Landmark className="w-4 h-4 text-yellow-300" />
               <span>VÀO DỊCH VỤ CÔNG HẢI PHÒNG ({redirectCountdown}s)</span>
-            </a>
+            </button>
             
-            <a
-              href="https://www.google.com"
+            <button
+              type="button"
+              onClick={() => window.location.replace('https://www.google.com')}
               className="w-full py-3 px-4 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition flex items-center justify-center gap-2 border border-slate-300 cursor-pointer"
             >
               <span>🌐 Tiếp tục lướt web (Google)</span>
-            </a>
+            </button>
           </div>
         </div>
       </div>
