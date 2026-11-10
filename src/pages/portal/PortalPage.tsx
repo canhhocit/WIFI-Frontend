@@ -22,10 +22,12 @@ import {
   HelpCircle,
   Users,
   RefreshCw,
+  Star,
 } from 'lucide-react';
 import { portalApi } from '../../api/portalApi';
 import { PortalInitResponse } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
+import { GovernmentEmblem } from '../../components/GovernmentEmblem';
 
 export const PortalPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -64,9 +66,24 @@ export const PortalPage: React.FC = () => {
   }, []);
 
   const locationParam = normalizedParams.get('location') || searchParams.get('location') || undefined;
-  const rawMac = normalizedParams.get('client_mac') || normalizedParams.get('mac') || normalizedParams.get('clientMac') || searchParams.get('client_mac') || undefined;
-  const rawIp = normalizedParams.get('client_ip') || normalizedParams.get('ip') || searchParams.get('client_ip') || undefined;
   const apMacParam = normalizedParams.get('ap_mac') || normalizedParams.get('apmac') || normalizedParams.get('gw_mac') || searchParams.get('ap_mac') || undefined;
+
+  // Strict disambiguation: prioritize explicit client MAC parameters
+  const explicitClientMac =
+    normalizedParams.get('client_mac') ||
+    normalizedParams.get('clientMac') ||
+    normalizedParams.get('usermac') ||
+    normalizedParams.get('u_mac') ||
+    searchParams.get('client_mac') ||
+    undefined;
+
+  // Fallback 'mac' parameter ONLY if it does not match the AP / Gateway MAC
+  const generalMac = normalizedParams.get('mac') || searchParams.get('mac') || undefined;
+  const rawMac =
+    explicitClientMac ||
+    (generalMac && apMacParam && generalMac.toLowerCase() !== apMacParam.toLowerCase() ? generalMac : (!apMacParam ? generalMac : undefined));
+
+  const rawIp = normalizedParams.get('client_ip') || normalizedParams.get('ip') || searchParams.get('client_ip') || undefined;
   const targetUrlParam = normalizedParams.get('url') || normalizedParams.get('target') || searchParams.get('url') || undefined;
   const rawLoginUrl = normalizedParams.get('login_url') || normalizedParams.get('loginurl') || searchParams.get('login_url') || undefined;
 
@@ -195,6 +212,25 @@ export const PortalPage: React.FC = () => {
       return;
     }
 
+    // Validate required survey questions if active survey is present
+    if (portalData.activeSurvey?.questions) {
+      for (const q of portalData.activeSurvey.questions) {
+        if (q.required) {
+          const qKey = q.id?.toString() || '';
+          const ans = surveyAnswers[qKey];
+          const isEmpty =
+            ans === undefined ||
+            ans === null ||
+            ans === '' ||
+            (Array.isArray(ans) && ans.length === 0);
+          if (isEmpty) {
+            setError(`Vui lòng hoàn thành câu hỏi khảo sát bắt buộc: "${q.questionText}"`);
+            return;
+          }
+        }
+      }
+    }
+
     setSubmitting(true);
     setError(null);
     setSuccessInfo(null);
@@ -293,9 +329,7 @@ export const PortalPage: React.FC = () => {
         />
         <div className="fixed inset-0 bg-gradient-to-b from-slate-950/85 via-slate-900/80 to-slate-950/90 backdrop-blur-[2px]" />
         <div className="relative z-10 flex flex-col items-center">
-          <div className="w-12 h-12 rounded-sm bg-[#a81c1c] text-yellow-300 font-bold flex items-center justify-center text-xl shadow-lg mb-4 border border-yellow-400/30">
-            ★
-          </div>
+          <GovernmentEmblem size={56} className="drop-shadow-xl mb-4" />
           <Loader2 className="w-6 h-6 animate-spin text-amber-300 mb-2" />
           <p className="text-xs text-slate-200 font-medium tracking-wide">Đang tải Cổng Wi-Fi Nhà văn hóa Hải Phòng...</p>
         </div>
@@ -387,8 +421,8 @@ export const PortalPage: React.FC = () => {
                 />
               </div>
             ) : (
-              <div className="inline-flex items-center justify-center w-8 h-8 aspect-square rounded-sm bg-red-800 text-yellow-300 font-bold text-sm mb-1.5 border border-amber-300/40 shadow-xs">
-                ★
+              <div className="flex justify-center mb-2">
+                <GovernmentEmblem size={44} className="drop-shadow-sm" />
               </div>
             )}
             <div className="text-[10px] sm:text-[11px] font-bold tracking-widest text-yellow-300 uppercase">
@@ -657,51 +691,141 @@ export const PortalPage: React.FC = () => {
                     <p className="text-[11.5px] text-slate-600 leading-relaxed font-sans">{survey.description}</p>
                   )}
 
-                  <div className="space-y-2 pt-0.5">
-                    {survey.questions.map((q) => {
+                  <div className="space-y-3 pt-0.5">
+                    {survey.questions.map((q, idx) => {
                       let options: string[] = [];
                       try {
                         if (q.optionsJson) options = JSON.parse(q.optionsJson);
                       } catch (_) {}
 
+                      const qKey = q.id?.toString() || `q_${idx}`;
+                      const currentVal = surveyAnswers[qKey];
+
                       return (
-                        <div key={q.id} className="p-2.5 bg-white rounded border border-slate-200 shadow-xs space-y-1.5">
-                          <p className="font-semibold text-slate-800 text-[11px] leading-snug">
-                            {q.questionText} {q.required && <span className="text-red-500 font-bold">*</span>}
+                        <div key={q.id || idx} className="p-3 bg-white rounded-lg border border-slate-200/90 shadow-xs space-y-2">
+                          <p className="font-semibold text-slate-800 text-[11.5px] leading-snug">
+                            <span className="text-[#004b87] font-bold mr-1">Câu {idx + 1}:</span>
+                            {q.questionText} {q.required && <span className="text-red-500 font-bold ml-0.5">*</span>}
                           </p>
-                          {options.length > 0 ? (
-                            <div className="grid grid-cols-2 gap-1.5">
+
+                          {/* TYPE: RATING */}
+                          {q.questionType === 'RATING' && (
+                            <div className="space-y-1.5 pt-0.5">
+                              <div className="flex items-center gap-1.5 sm:gap-2">
+                                {[1, 2, 3, 4, 5].map((star) => {
+                                  const ratingNum = typeof currentVal === 'number' ? currentVal : parseInt(currentVal, 10);
+                                  const isFilled = !isNaN(ratingNum) && ratingNum >= star;
+                                  return (
+                                    <button
+                                      key={star}
+                                      type="button"
+                                      onClick={() => setSurveyAnswers({ ...surveyAnswers, [qKey]: star })}
+                                      className="p-1 rounded hover:scale-110 transition cursor-pointer focus:outline-none"
+                                      title={`${star} sao`}
+                                    >
+                                      <Star
+                                        className={`w-6 h-6 transition-colors ${
+                                          isFilled
+                                            ? 'text-amber-400 fill-amber-400 drop-shadow-xs'
+                                            : 'text-slate-300 hover:text-amber-300'
+                                        }`}
+                                      />
+                                    </button>
+                                  );
+                                })}
+                                {currentVal && (
+                                  <span className="text-[11px] font-bold text-amber-700 ml-1">
+                                    {currentVal === 5 ? '5/5 - Rất hài lòng' :
+                                     currentVal === 4 ? '4/5 - Hài lòng' :
+                                     currentVal === 3 ? '3/5 - Bình thường' :
+                                     currentVal === 2 ? '2/5 - Chưa hài lòng' :
+                                     '1/5 - Kém'}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* TYPE: MULTI_CHOICE */}
+                          {q.questionType === 'MULTI_CHOICE' && options.length > 0 && (
+                            <div className="space-y-1.5 pt-0.5">
                               {options.map((opt, oIdx) => {
-                                const isSelected = surveyAnswers[q.id?.toString() || oIdx] === opt;
+                                const selectedList: string[] = Array.isArray(currentVal) ? currentVal : [];
+                                const isChecked = selectedList.includes(opt);
+                                return (
+                                  <button
+                                    key={oIdx}
+                                    type="button"
+                                    onClick={() => {
+                                      const next = isChecked
+                                        ? selectedList.filter((x) => x !== opt)
+                                        : [...selectedList, opt];
+                                      setSurveyAnswers({ ...surveyAnswers, [qKey]: next });
+                                    }}
+                                    className={`w-full px-2.5 py-1.5 rounded text-[11px] border text-left transition cursor-pointer flex items-center justify-between ${
+                                      isChecked
+                                        ? 'bg-blue-50 text-[#004b87] border-[#004b87] font-semibold shadow-xs'
+                                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center text-[10px] font-bold ${
+                                        isChecked ? 'bg-[#004b87] border-[#004b87] text-white' : 'border-slate-400 bg-white'
+                                      }`}>
+                                        {isChecked && '✓'}
+                                      </div>
+                                      <span>{opt}</span>
+                                    </div>
+                                    {isChecked && <span className="text-[9.5px] text-[#004b87] font-bold">Đã chọn</span>}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* TYPE: SINGLE_CHOICE */}
+                          {(q.questionType === 'SINGLE_CHOICE' || (!q.questionType && options.length > 0)) && options.length > 0 && (
+                            <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                              {options.map((opt, oIdx) => {
+                                const isSelected = currentVal === opt;
                                 return (
                                   <button
                                     key={oIdx}
                                     type="button"
                                     onClick={() =>
-                                      setSurveyAnswers({ ...surveyAnswers, [q.id?.toString() || oIdx]: opt })
+                                      setSurveyAnswers({ ...surveyAnswers, [qKey]: opt })
                                     }
-                                    className={`px-2.5 py-1.5 rounded text-[10.5px] border text-left transition cursor-pointer flex items-center justify-between ${
+                                    className={`px-2.5 py-1.5 rounded text-[11px] border text-left transition cursor-pointer flex items-center justify-between ${
                                       isSelected
                                         ? 'bg-[#004b87] text-white border-[#004b87] font-bold shadow-xs'
                                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                                     }`}
                                   >
                                     <span className="truncate">{opt}</span>
-                                    {isSelected && <CheckCircle2 className="w-3 h-3 text-yellow-300 flex-shrink-0 ml-1" />}
+                                    {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-yellow-300 flex-shrink-0 ml-1" />}
                                   </button>
                                 );
                               })}
                             </div>
-                          ) : (
-                            <input
-                              type="text"
-                              placeholder="Nhập ý kiến đóng góp của quý vị..."
-                              value={surveyAnswers[q.id?.toString() || ''] || ''}
-                              onChange={(e) =>
-                                setSurveyAnswers({ ...surveyAnswers, [q.id?.toString() || '']: e.target.value })
-                              }
-                              className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:border-[#004b87] bg-white font-sans"
-                            />
+                          )}
+
+                          {/* TYPE: TEXT */}
+                          {(q.questionType === 'TEXT' || (!options.length && q.questionType !== 'RATING')) && (
+                            <div className="space-y-1 pt-0.5">
+                              <textarea
+                                rows={2}
+                                maxLength={300}
+                                placeholder="Nhập ý kiến đóng góp của quý vị..."
+                                value={typeof currentVal === 'string' ? currentVal : ''}
+                                onChange={(e) =>
+                                  setSurveyAnswers({ ...surveyAnswers, [qKey]: e.target.value })
+                                }
+                                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:border-[#004b87] bg-white font-sans resize-none"
+                              />
+                              <div className="flex justify-end text-[10px] text-slate-400 font-mono">
+                                {typeof currentVal === 'string' ? currentVal.length : 0}/300
+                              </div>
+                            </div>
                           )}
                         </div>
                       );

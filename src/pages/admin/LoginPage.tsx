@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, KeyRound, Loader2, Info, ArrowLeft, Shield, UserCheck, Wrench, Building } from 'lucide-react';
 import { authApi } from '../../api/authApi';
 import { AlertBanner } from '../../components/AlertBanner';
+import { GovernmentEmblem } from '../../components/GovernmentEmblem';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -37,8 +38,8 @@ export const LoginPage: React.FC = () => {
       <div className="w-full max-w-md">
         {/* National Emblem & Department Banner */}
         <div className="text-center mb-5 space-y-1">
-          <div className="inline-flex items-center justify-center w-14 h-14 aspect-square rounded-sm bg-[#a81c1c] text-yellow-300 font-bold text-base border border-amber-300/40 mb-1.5 shadow-xs">
-            ★ HP
+          <div className="flex justify-center mb-1">
+            <GovernmentEmblem size={56} className="drop-shadow-md" />
           </div>
           <div className="text-[11px] font-bold tracking-widest text-slate-800 uppercase">
             Cộng Hòa Xã Hội Chủ Nghĩa Việt Nam

@@ -28,6 +28,7 @@ import { PortalTemplateDto, LocationDto } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
 import { ImageUploadInput } from '../../components/ImageUploadInput';
 import { Toast } from '../../components/Toast';
+import { GovernmentEmblem } from '../../components/GovernmentEmblem';
 
 export const PortalBuilderPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -747,8 +748,8 @@ export const PortalBuilderPage: React.FC = () => {
                         />
                       </div>
                     ) : (
-                      <div className="inline-flex items-center justify-center w-6 h-6 rounded-sm bg-red-800 text-yellow-300 font-bold text-[10px] mb-1 border border-amber-300/40 shadow-xs">
-                        ★
+                      <div className="flex justify-center mb-1">
+                        <GovernmentEmblem size={28} className="drop-shadow-sm" />
                       </div>
                     )}
                     <div className="text-[7.5px] font-bold tracking-widest text-yellow-300 uppercase">

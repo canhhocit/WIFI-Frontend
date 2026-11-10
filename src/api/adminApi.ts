@@ -23,6 +23,7 @@ import {
   ApproveCampaignRequest,
   SurveyDto,
   SurveyResponseDto,
+  SurveyAnalyticsDto,
   PortalTemplateDto,
   IncidentTicketDto,
   CreateIncidentRequest,
@@ -345,6 +346,27 @@ export const adminApi = {
     });
   },
 
+  exportSurveyResponsesExcel: async (id: number, title?: string) => {
+    const token = localStorage.getItem('admin_token');
+    const res = await fetch(`/api/v1/admin/surveys/${id}/export/excel`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    if (!res.ok) throw new Error('Không thể xuất báo cáo Excel kết quả khảo sát');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const safeName = (title || `Khao_Sat_${id}`).replace(/[^a-zA-Z0-9_\u00C0-\u024F\u1E00-\u1EFF-]/g, '_');
+    const today = new Date().toISOString().slice(0, 10);
+    a.download = `Bao_Cao_Khao_Sat_${safeName}_${today}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  },
+
   exportSurveyResponsesCsv: async (id: number) => {
     const token = localStorage.getItem('admin_token');
     const res = await fetch(`/api/v1/admin/surveys/${id}/export/csv`, {
@@ -364,8 +386,16 @@ export const adminApi = {
     window.URL.revokeObjectURL(url);
   },
 
-  getSurveyResponses: (id: number, page = 0, size = 20) => {
-    return request<PageResponse<SurveyResponseDto>>(`/v1/admin/surveys/${id}/responses?page=${page}&size=${size}`);
+  getSurveyAnalytics: (id: number) => {
+    return request<SurveyAnalyticsDto>(`/v1/admin/surveys/${id}/analytics`);
+  },
+
+  getSurveyResponses: (id: number, locationId?: number, page = 0, size = 20) => {
+    const sp = new URLSearchParams();
+    sp.append('page', page.toString());
+    sp.append('size', size.toString());
+    if (locationId) sp.append('locationId', locationId.toString());
+    return request<PageResponse<SurveyResponseDto>>(`/v1/admin/surveys/${id}/responses?${sp.toString()}`);
   },
 
   // Portal Templates

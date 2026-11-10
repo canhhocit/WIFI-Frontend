@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Shield,
+  ShieldCheck,
   Circle,
   Palette,
   Megaphone,
@@ -32,6 +33,7 @@ import {
 import { authApi } from '../../api/authApi';
 import { adminApi } from '../../api/adminApi';
 import { AdminUserDto, GatewayStatusDto, RolePermissionDto } from '../../types/models';
+import { GovernmentEmblem } from '../../components/GovernmentEmblem';
 
 type RbacModule = 'LOCATIONS' | 'DEVICES' | 'CAMPAIGNS' | 'INCIDENTS' | 'USERS' | 'SETTINGS';
 
@@ -336,10 +338,8 @@ export const AdminLayout: React.FC = () => {
       {/* Mobile Top Header */}
       <div className="md:hidden bg-[#0c2340] text-white px-4 py-3 flex items-center justify-between border-b border-[#18365a] sticky top-0 z-40">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded bg-[#a81c1c] text-yellow-300 font-bold flex items-center justify-center text-xs border border-amber-300/40">
-            ★
-          </div>
-          <span className="font-bold text-xs uppercase tracking-wide">Wi-Fi Hải Phòng • Quản Trị</span>
+          <GovernmentEmblem size={28} />
+          <span className="font-bold text-xs uppercase tracking-wide text-slate-100">Wi-Fi Hải Phòng • Quản Trị</span>
         </div>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -356,21 +356,22 @@ export const AdminLayout: React.FC = () => {
         }`}
       >
         {/* Department / Brand Banner */}
-        <div className="p-4 border-b border-[#18365a] bg-[#091a30]">
+        <div className="p-4 border-b border-[#18365a] bg-gradient-to-b from-[#0a1e38] via-[#091a30] to-[#071629]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 aspect-square rounded-sm bg-[#a81c1c] border border-yellow-400/50 text-yellow-300 flex items-center justify-center font-bold text-sm shadow-xs flex-shrink-0">
-              ★ HP
+            <div className="flex-shrink-0 drop-shadow-md">
+              <GovernmentEmblem size={44} />
             </div>
-            <div className="overflow-hidden">
-              <div className="text-[10px] font-bold text-yellow-400 uppercase tracking-widest leading-none">
+            <div className="overflow-hidden min-w-0">
+              <div className="text-[10.5px] font-extrabold text-amber-300 uppercase tracking-wider leading-tight truncate">
                 UBND TP. HẢI PHÒNG
               </div>
-              <div className="text-[10.5px] text-slate-300 font-medium truncate mt-1">
+              <div className="text-xs text-white font-bold tracking-tight truncate mt-0.5">
                 Cổng Quản Trị Wi-Fi Công Cộng
               </div>
-              <div className="mt-1 flex items-center gap-1.5">
-                <span className="text-[9px] font-mono font-medium px-1.5 py-0.5 rounded-xs bg-[#18365a] text-blue-200 border border-blue-400/20 truncate">
-                  {roleInfo.scope}
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-1.5 text-[9.5px] font-medium px-2 py-0.5 rounded-full bg-blue-950/80 text-blue-200 border border-blue-400/30 truncate shadow-2xs">
+                  <ShieldCheck className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                  <span className="truncate">{roleInfo.scope}</span>
                 </span>
               </div>
             </div>

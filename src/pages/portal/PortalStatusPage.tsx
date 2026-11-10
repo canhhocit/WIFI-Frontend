@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { portalApi } from '../../api/portalApi';
 import { GuestSessionStatusResponse } from '../../types/models';
+import { GovernmentEmblem } from '../../components/GovernmentEmblem';
 
 export const PortalStatusPage: React.FC = () => {
   const { sessionToken } = useParams<{ sessionToken: string }>();
@@ -104,9 +105,7 @@ export const PortalStatusPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white font-sans">
-        <div className="w-12 h-12 rounded-xs bg-[#a81c1c] text-yellow-300 font-bold flex items-center justify-center text-xl shadow-lg mb-4 border border-yellow-400/30">
-          ★
-        </div>
+        <GovernmentEmblem size={56} className="drop-shadow-lg mb-4" />
         <Loader2 className="w-6 h-6 animate-spin text-blue-400 mb-2" />
         <p className="text-xs text-slate-300 font-medium">Đang xác minh phiên mạng và mở Cổng Dịch vụ công...</p>
       </div>
@@ -195,12 +194,10 @@ export const PortalStatusPage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           {/* Left: Emblem and Live Network Status */}
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 aspect-square rounded-xs bg-[#a81c1c] text-yellow-300 font-bold flex items-center justify-center text-xs border border-amber-300/40 shadow-xs flex-shrink-0">
-              ★
-            </div>
+            <GovernmentEmblem size={28} className="drop-shadow-xs flex-shrink-0" />
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold text-yellow-400 uppercase tracking-widest leading-none">
+                <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider leading-none">
                   UBND TP. HẢI PHÒNG
                 </span>
                 <span className="inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.2 rounded-xs bg-emerald-950 text-emerald-300 border border-emerald-500/30">

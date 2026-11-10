@@ -9,16 +9,39 @@ import {
   BarChart2,
   Trash2,
   GitBranch,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Download,
+  Star,
+  MessageSquare,
+  Filter,
+  MapPin,
+  Clock,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  PieChart,
+  HelpCircle,
+  FileText,
+  Building,
+  Smartphone,
+  Quote,
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
-import { SurveyDto, SurveyQuestionDto, SurveyResponseDto, CampaignDto } from '../../types/models';
+import {
+  SurveyDto,
+  SurveyQuestionDto,
+  SurveyResponseDto,
+  CampaignDto,
+  SurveyAnalyticsDto,
+  LocationDto,
+} from '../../types/models';
 import { Modal } from '../../components/Modal';
 import { AlertBanner } from '../../components/AlertBanner';
 
 export const SurveysPage: React.FC = () => {
   const [surveys, setSurveys] = useState<SurveyDto[]>([]);
   const [campaigns, setCampaigns] = useState<CampaignDto[]>([]);
+  const [locations, setLocations] = useState<LocationDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,32 +69,59 @@ export const SurveysPage: React.FC = () => {
       questionType: 'TEXT',
       options: '',
       required: false,
-    }
+    },
   ]);
 
-  // View Responses Modal
+  // View Responses & Analytics Modal State
   const [selectedSurveyForResponses, setSelectedSurveyForResponses] = useState<SurveyDto | null>(null);
+  const [activeAnalyticsTab, setActiveAnalyticsTab] = useState<'ANALYTICS' | 'RESPONSES' | 'FEEDBACK'>('ANALYTICS');
+  const [analytics, setAnalytics] = useState<SurveyAnalyticsDto | null>(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+
+  // Paginated responses state
   const [responses, setResponses] = useState<SurveyResponseDto[]>([]);
   const [loadingResponses, setLoadingResponses] = useState(false);
+  const [responsePage, setResponsePage] = useState(0);
+  const [responseTotalPages, setResponseTotalPages] = useState(1);
+  const [responseTotalElements, setResponseTotalElements] = useState(0);
+  const [filterLocationId, setFilterLocationId] = useState<number | undefined>(undefined);
+
+  // Text feedback search state
+  const [feedbackSearch, setFeedbackSearch] = useState('');
+
+  // Export states
+  const [exportingExcel, setExportingExcel] = useState(false);
+  const [exportingCsv, setExportingCsv] = useState(false);
 
   useEffect(() => {
-    loadSurveys();
+    loadInitialData();
   }, []);
 
-  const loadSurveys = async () => {
+  const loadInitialData = async () => {
     setLoading(true);
     try {
-      const [resp, campResp] = await Promise.all([
+      const [survResp, campResp, locsResp] = await Promise.all([
         adminApi.getSurveys({ size: 50 }),
         adminApi.getCampaigns({ size: 100 }).catch(() => ({ content: [] })),
+        adminApi.getLocations({ size: 100 }).catch(() => ({ content: [] })),
       ]);
-      setSurveys(resp.content);
+      setSurveys(survResp.content);
       setCampaigns(campResp.content);
+      setLocations(locsResp.content || []);
       setError(null);
     } catch (err: any) {
       setError(err?.message || 'Không thể tải danh sách bài khảo sát ý kiến.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadSurveys = async () => {
+    try {
+      const survResp = await adminApi.getSurveys({ size: 50 });
+      setSurveys(survResp.content);
+    } catch (err: any) {
+      setError(err?.message || 'Không thể làm mới danh sách.');
     }
   };
 
@@ -83,7 +133,7 @@ export const SurveysPage: React.FC = () => {
         questionType: 'SINGLE_CHOICE',
         options: 'Rất hài lòng, Hài lòng, Chưa hài lòng',
         required: true,
-      }
+      },
     ]);
   };
 
@@ -130,17 +180,54 @@ export const SurveysPage: React.FC = () => {
     }
   };
 
-  const handleViewResponses = async (s: SurveyDto) => {
+  // Open Feedback & Analytics Center
+  const handleOpenAnalytics = async (s: SurveyDto) => {
     setSelectedSurveyForResponses(s);
+    setActiveAnalyticsTab('ANALYTICS');
+    setFilterLocationId(undefined);
+    setResponsePage(0);
+    setFeedbackSearch('');
+
+    // Fetch Analytics & Initial Responses in parallel
+    setLoadingAnalytics(true);
     setLoadingResponses(true);
     try {
-      const resp = await adminApi.getSurveyResponses(s.id, 0, 50);
-      setResponses(resp.content);
+      const [analyticsData, responsesData] = await Promise.all([
+        adminApi.getSurveyAnalytics(s.id),
+        adminApi.getSurveyResponses(s.id, undefined, 0, 15),
+      ]);
+      setAnalytics(analyticsData);
+      setResponses(responsesData.content);
+      setResponseTotalPages(responsesData.totalPages);
+      setResponseTotalElements(responsesData.totalElements);
     } catch (err: any) {
-      alert(err?.message || 'Không thể tải danh sách câu trả lời khảo sát');
+      alert(err?.message || 'Không thể tải số liệu phân tích khảo sát.');
+    } finally {
+      setLoadingAnalytics(false);
+      setLoadingResponses(false);
+    }
+  };
+
+  const loadResponsesWithFilter = async (locId?: number, page = 0) => {
+    if (!selectedSurveyForResponses) return;
+    setLoadingResponses(true);
+    try {
+      const data = await adminApi.getSurveyResponses(selectedSurveyForResponses.id, locId, page, 15);
+      setResponses(data.content);
+      setResponseTotalPages(data.totalPages);
+      setResponseTotalElements(data.totalElements);
+      setResponsePage(page);
+    } catch (err: any) {
+      alert(err?.message || 'Không thể tải danh sách phản hồi.');
     } finally {
       setLoadingResponses(false);
     }
+  };
+
+  const handleLocationFilterChange = (locIdStr: string) => {
+    const locId = locIdStr ? Number(locIdStr) : undefined;
+    setFilterLocationId(locId);
+    loadResponsesWithFilter(locId, 0);
   };
 
   const handleToggleSurvey = async (s: SurveyDto) => {
@@ -164,12 +251,69 @@ export const SurveysPage: React.FC = () => {
     }
   };
 
-  const handleExportResponses = async (surveyId: number) => {
+  const handleExportExcel = async () => {
+    if (!selectedSurveyForResponses) return;
+    setExportingExcel(true);
     try {
-      await adminApi.exportSurveyResponsesCsv(surveyId);
+      await adminApi.exportSurveyResponsesExcel(selectedSurveyForResponses.id, selectedSurveyForResponses.title);
+    } catch (err: any) {
+      alert(err?.message || 'Lỗi khi xuất file báo cáo Excel');
+    } finally {
+      setExportingExcel(false);
+    }
+  };
+
+  const handleExportCsv = async () => {
+    if (!selectedSurveyForResponses) return;
+    setExportingCsv(true);
+    try {
+      await adminApi.exportSurveyResponsesCsv(selectedSurveyForResponses.id);
     } catch (err: any) {
       alert(err?.message || 'Lỗi khi xuất file phản hồi CSV');
+    } finally {
+      setExportingCsv(false);
     }
+  };
+
+  // Helper: Decode answer JSON value safely
+  const decodeAnswerValue = (answersJson: string, questionId?: number): string => {
+    if (!questionId) return '—';
+    try {
+      const map = JSON.parse(answersJson);
+      const val = map[questionId.toString()];
+      if (val === undefined || val === null) return '—';
+      if (Array.isArray(val)) return val.join(', ');
+      return String(val);
+    } catch {
+      return '—';
+    }
+  };
+
+  // Filter feedback text items
+  const getAllTextFeedback = () => {
+    if (!analytics) return [];
+    const items: Array<{
+      questionText: string;
+      responseId: number;
+      locationName: string;
+      clientMac: string;
+      submittedAt: string;
+      answerText: string;
+    }> = [];
+
+    for (const qa of analytics.questionAnalytics) {
+      if (qa.questionType === 'TEXT' && qa.textResponses) {
+        for (const tr of qa.textResponses) {
+          if (!feedbackSearch.trim() || tr.answerText.toLowerCase().includes(feedbackSearch.toLowerCase())) {
+            items.push({
+              questionText: qa.questionText,
+              ...tr,
+            });
+          }
+        }
+      }
+    }
+    return items;
   };
 
   return (
@@ -177,14 +321,16 @@ export const SurveysPage: React.FC = () => {
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Khảo Sát Ý Kiến Nhân Dân Về Dịch Vụ Số & Mạng Wi-Fi</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            Khảo Sát Ý Kiến Nhân Dân Về Dịch Vụ Số & Mạng Wi-Fi
+          </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Thiết kế phiếu thăm dò ý kiến nhân dân, kiểm soát định ngạch (Quota), thu thập mức độ hài lòng về hạ tầng mạng công cộng Hải Phòng.
+            Thiết kế phiếu thăm dò ý kiến, kiểm soát hạn ngạch (Quota), tự động phân tích tỷ lệ phần trăm và xuất báo cáo Excel cho UBND Thành phố.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={loadSurveys}
+            onClick={loadInitialData}
             className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-100 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" /> Làm mới
@@ -210,7 +356,7 @@ export const SurveysPage: React.FC = () => {
                 <th className="py-3.5 px-4">Tiến độ thu thập (Quota)</th>
                 <th className="py-3.5 px-4">Trạng thái</th>
                 <th className="py-3.5 px-4">Ngày tạo</th>
-                <th className="py-3.5 px-4 text-right">Hành động</th>
+                <th className="py-3.5 px-4 text-right">Thao tác & Phân tích</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -250,65 +396,65 @@ export const SurveysPage: React.FC = () => {
                                   Áp dụng chung toàn hệ thống
                                 </span>
                               )}
+                              <span className="text-slate-400">•</span>
+                              <span className="text-slate-500 font-mono text-[10.5px]">
+                                {s.questions?.length || 0} câu hỏi
+                              </span>
                             </div>
-                            <span className="text-[11px] text-slate-400 line-clamp-1 max-w-sm mt-0.5">
-                              {s.description || 'Không có mô tả chi tiết'}
-                            </span>
                           </div>
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 w-48">
-                        <div className="flex items-center justify-between text-[11px] mb-1 font-semibold text-slate-700">
-                          <span>{s.currentResponsesCount} phản hồi</span>
-                          <span className="text-slate-400 font-normal">Chỉ tiêu: {quota}</span>
-                        </div>
-                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full transition-all duration-300 rounded-full ${
-                              pct >= 100 ? 'bg-emerald-500' : 'bg-purple-600'
-                            }`}
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </td>
+
                       <td className="py-3.5 px-4">
-                        {s.active ? (
-                          <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-sm text-[11px]">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Đang mở nhận
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-sm text-[11px]">
-                            Đã đóng
-                          </span>
-                        )}
+                        <div className="w-36 space-y-1">
+                          <div className="flex justify-between text-[11px] font-mono">
+                            <span className="font-bold text-slate-800">{s.currentResponsesCount}</span>
+                            <span className="text-slate-400">/ {quota}</span>
+                          </div>
+                          <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className={`h-full transition-all duration-500 ${
+                                pct >= 100 ? 'bg-emerald-500' : 'bg-purple-600'
+                              }`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
                       </td>
-                      <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500">
+
+                      <td className="py-3.5 px-4">
+                        <button
+                          onClick={() => handleToggleSurvey(s)}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold transition cursor-pointer ${
+                            s.active
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                              : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200'
+                          }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${s.active ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                          {s.active ? 'Đang phát sóng' : 'Tạm dừng'}
+                        </button>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-slate-500 font-mono text-[11px]">
                         {s.createdAt ? new Date(s.createdAt).toLocaleDateString('vi-VN') : '—'}
                       </td>
+
                       <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                        <div className="inline-flex items-center gap-1.5">
                           <button
-                            onClick={() => handleViewResponses(s)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-sm text-xs font-bold transition cursor-pointer"
-                            title="Xem chi tiết các phản hồi"
+                            onClick={() => handleOpenAnalytics(s)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded text-xs font-bold transition shadow-xs cursor-pointer"
+                            title="Mở Bảng phân tích và Danh sách kết quả phản hồi"
                           >
-                            <Eye className="w-3.5 h-3.5" /> Phản hồi ({s.currentResponsesCount})
+                            <BarChart2 className="w-3.5 h-3.5" />
+                            <span>Xem kết quả & Phân tích</span>
                           </button>
-                          <button
-                            onClick={() => handleToggleSurvey(s)}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-sm text-xs font-bold transition cursor-pointer border ${
-                              s.active
-                                ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'
-                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'
-                            }`}
-                            title={s.active ? 'Đóng khảo sát này' : 'Mở lại khảo sát'}
-                          >
-                            {s.active ? 'Tạm đóng' : 'Mở lại'}
-                          </button>
+
                           <button
                             onClick={() => handleDeleteSurvey(s)}
-                            className="inline-flex items-center p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-sm transition cursor-pointer"
-                            title="Xóa bài khảo sát này"
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition cursor-pointer"
+                            title="Xóa khảo sát"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -323,25 +469,25 @@ export const SurveysPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal 1: Create Survey Wizard */}
+      {/* Modal 1: Create New Survey */}
       <Modal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
-        title="Tạo Bài Khảo Sát / Phiếu Lấy Ý Kiến Mới"
-        maxWidth="lg"
+        title="Tạo Phiếu Khảo Sát Ý Kiến Nhân Dân"
+        maxWidth="2xl"
       >
-        <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs max-h-[75vh] overflow-y-auto pr-1">
+        <form onSubmit={handleCreateSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Tiêu đề bài khảo sát <span className="text-red-500">*</span>
+              Tiêu đề khảo sát <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
+              required
               value={newSurveyTitle}
               onChange={(e) => setNewSurveyTitle(e.target.value)}
-              placeholder="Ví dụ: Đánh giá chất lượng dịch vụ Wi-Fi Nhà văn hóa quý 4"
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-1 focus:ring-[#004b87]"
-              required
+              placeholder="VD: Thăm dò mức độ hài lòng về tiện ích số tại Nhà văn hóa"
+              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
             />
           </div>
 
@@ -497,42 +643,465 @@ export const SurveysPage: React.FC = () => {
         </form>
       </Modal>
 
-      {/* Modal 2: View Responses */}
+      {/* Modal 2: Comprehensive Analytics & Feedback Center */}
       <Modal
         isOpen={!!selectedSurveyForResponses}
         onClose={() => setSelectedSurveyForResponses(null)}
-        title={`Kết Quả Phản Hồi: ${selectedSurveyForResponses?.title}`}
-        maxWidth="lg"
+        title={`Trung Tâm Phân Tích & Phản Hồi: ${selectedSurveyForResponses?.title || ''}`}
+        maxWidth="5xl"
       >
         <div className="space-y-4 text-xs">
-          {loadingResponses ? (
-            <div className="py-8 text-center text-slate-400">
-              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#004b87]" />
-              Đang tải danh sách câu trả lời...
+          {/* Header Action Bar: Export Buttons & Quick Stats */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-md bg-[#004b87] text-white flex items-center justify-center shadow-xs">
+                <BarChart2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="font-extrabold text-slate-900 text-sm">{selectedSurveyForResponses?.title}</h2>
+                <p className="text-[11px] text-slate-500">
+                  Tổng phản hồi: <strong>{analytics?.totalResponses ?? selectedSurveyForResponses?.currentResponsesCount ?? 0}</strong> phiếu • Hạn ngạch: <strong>{selectedSurveyForResponses?.maxResponsesQuota ?? 1000}</strong>
+                </p>
+              </div>
             </div>
-          ) : responses.length === 0 ? (
-            <div className="py-8 text-center text-slate-400">Chưa có người dân nào gửi câu trả lời cho khảo sát này.</div>
-          ) : (
-            <div className="max-h-[60vh] overflow-y-auto divide-y divide-slate-100">
-              {responses.map((r) => (
-                <div key={r.id} className="py-3 space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
-                    <span>MAC: <strong className="text-slate-700">{r.clientMac}</strong></span>
-                    <span>{new Date(r.submittedAt).toLocaleString('vi-VN')}</span>
-                  </div>
-                  <div className="bg-slate-50 p-2.5 rounded-sm border border-slate-200 font-mono text-[11px] text-slate-700">
-                    {r.answersJson}
-                  </div>
+
+            {/* Export Buttons */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                disabled={exportingExcel}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50"
+                title="Tải báo cáo định dạng Microsoft Excel 2 Sheet (Chi tiết + Thống kê %)"
+              >
+                {exportingExcel ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+                <span>Xuất Báo Cáo Excel (.xlsx)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleExportCsv}
+                disabled={exportingCsv}
+                className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-300 hover:bg-slate-100 bg-white text-slate-700 rounded text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+              >
+                {exportingCsv ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                <span>Xuất CSV</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="flex items-center border-b border-slate-200 gap-1">
+            <button
+              type="button"
+              onClick={() => setActiveAnalyticsTab('ANALYTICS')}
+              className={`px-4 py-2.5 font-bold text-xs flex items-center gap-1.5 border-b-2 transition cursor-pointer ${
+                activeAnalyticsTab === 'ANALYTICS'
+                  ? 'border-[#004b87] text-[#004b87]'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <PieChart className="w-4 h-4" />
+              <span>Biểu Đồ & Thống Kê (%)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveAnalyticsTab('RESPONSES')}
+              className={`px-4 py-2.5 font-bold text-xs flex items-center gap-1.5 border-b-2 transition cursor-pointer ${
+                activeAnalyticsTab === 'RESPONSES'
+                  ? 'border-[#004b87] text-[#004b87]'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>Danh Sách Phản Hồi Chi Tiết ({responseTotalElements})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveAnalyticsTab('FEEDBACK')}
+              className={`px-4 py-2.5 font-bold text-xs flex items-center gap-1.5 border-b-2 transition cursor-pointer ${
+                activeAnalyticsTab === 'FEEDBACK'
+                  ? 'border-[#004b87] text-[#004b87]'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>Tường Ý Kiến Nhân Dân ({getAllTextFeedback().length})</span>
+            </button>
+          </div>
+
+          {/* ================= TAB 1: ANALYTICS & CHARTS ================= */}
+          {activeAnalyticsTab === 'ANALYTICS' && (
+            <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
+              {loadingAnalytics ? (
+                <div className="py-12 text-center text-slate-400">
+                  <Loader2 className="w-7 h-7 animate-spin mx-auto mb-2 text-[#004b87]" />
+                  Đang tổng hợp số liệu và tính toán tỷ lệ phần trăm...
                 </div>
-              ))}
+              ) : !analytics ? (
+                <div className="py-12 text-center text-slate-400">Không có dữ liệu phân tích.</div>
+              ) : (
+                <>
+                  {/* KPI Overview Tiles */}
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-xs">
+                      <div className="text-[11px] text-slate-500 font-medium">Tổng mẫu thu thập</div>
+                      <div className="text-xl font-extrabold text-slate-900 mt-1 font-mono">
+                        {analytics.totalResponses}
+                      </div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">
+                        Hạn ngạch định mức: {analytics.maxResponsesQuota}
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-xs">
+                      <div className="text-[11px] text-slate-500 font-medium">Tiến độ hoàn thành</div>
+                      <div className="text-xl font-extrabold text-purple-700 mt-1 font-mono">
+                        {analytics.completionRatePercent}%
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-1.5 mt-1.5 overflow-hidden">
+                        <div
+                          className="h-full bg-purple-600 rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(100, analytics.completionRatePercent)}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-xs">
+                      <div className="text-[11px] text-slate-500 font-medium">Điểm đánh giá trung bình</div>
+                      <div className="text-xl font-extrabold text-amber-600 mt-1 flex items-center gap-1 font-mono">
+                        {analytics.averageRating ? `${analytics.averageRating}` : '—'}
+                        {analytics.averageRating && <Star className="w-4 h-4 fill-amber-400 text-amber-500" />}
+                      </div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">Thang điểm 5.0 (CSAT)</div>
+                    </div>
+
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-xs">
+                      <div className="text-[11px] text-slate-500 font-medium">Nhà văn hóa tham gia</div>
+                      <div className="text-xl font-extrabold text-[#004b87] mt-1 font-mono">
+                        {Object.keys(analytics.locationDistribution).length}
+                      </div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">Điểm phát sóng cơ sở</div>
+                    </div>
+                  </div>
+
+                  {/* Question Breakdown Cards */}
+                  <div className="space-y-3 pt-2">
+                    <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                      <PieChart className="w-4 h-4 text-[#004b87]" />
+                      <span>Phân Tích Tỷ Lệ Theo Từng Câu Hỏi</span>
+                    </h3>
+
+                    {analytics.questionAnalytics.map((qa, qIndex) => (
+                      <div key={qa.questionId || qIndex} className="p-4 bg-white border border-slate-200 rounded-lg shadow-xs space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="text-[10.5px] font-bold text-[#004b87] uppercase tracking-wide">
+                              Câu hỏi #{qIndex + 1}
+                            </span>
+                            <h4 className="font-bold text-slate-900 text-sm mt-0.5">{qa.questionText}</h4>
+                          </div>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-100 text-slate-700 rounded border border-slate-200 flex-shrink-0">
+                            {qa.questionType === 'SINGLE_CHOICE' && 'Trắc nghiệm chọn 1'}
+                            {qa.questionType === 'MULTI_CHOICE' && 'Trắc nghiệm chọn nhiều'}
+                            {qa.questionType === 'RATING' && 'Đánh giá 1 - 5 Sao'}
+                            {qa.questionType === 'TEXT' && 'Ý kiến tự luận'}
+                          </span>
+                        </div>
+
+                        {/* Rendering by Question Type */}
+                        {qa.questionType === 'TEXT' ? (
+                          <div className="p-3 bg-slate-50 border border-slate-200 rounded flex items-center justify-between text-xs text-slate-700">
+                            <span>
+                              Đã thu thập <strong>{qa.textResponses.length}</strong> ý kiến đóng góp bằng văn bản của người dân.
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setActiveAnalyticsTab('FEEDBACK')}
+                              className="font-bold text-[#004b87] hover:underline inline-flex items-center gap-1 cursor-pointer"
+                            >
+                              <span>Xem trên Tường Ý Kiến</span>
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : qa.questionType === 'RATING' ? (
+                          <div className="space-y-2">
+                            {[5, 4, 3, 2, 1].map((star) => {
+                              const count = qa.ratingCounts[star] || 0;
+                              const pct = qa.totalAnswersCount > 0 ? (count * 100.0) / qa.totalAnswersCount : 0;
+                              return (
+                                <div key={star} className="space-y-1">
+                                  <div className="flex justify-between text-[11px]">
+                                    <span className="font-semibold text-slate-700 flex items-center gap-1">
+                                      <span>{star} Sao</span>
+                                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+                                    </span>
+                                    <span className="font-mono text-slate-500">
+                                      <strong>{count}</strong> ({pct.toFixed(1)}%)
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                                    <div
+                                      className="h-full bg-amber-400 rounded-full transition-all duration-500"
+                                      style={{ width: `${pct}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          /* SINGLE_CHOICE or MULTI_CHOICE Progress Bars */
+                          <div className="space-y-2.5">
+                            {Object.entries(qa.optionCounts).map(([option, count]) => {
+                              const pct = qa.optionPercentages[option] || 0;
+                              return (
+                                <div key={option} className="space-y-1">
+                                  <div className="flex justify-between text-[11.5px]">
+                                    <span className="font-semibold text-slate-800">{option}</span>
+                                    <span className="font-mono text-slate-600">
+                                      <strong className="text-slate-900">{count}</strong> lượt ({pct.toFixed(1)}%)
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                                    <div
+                                      className="h-full bg-[#004b87] rounded-full transition-all duration-500"
+                                      style={{ width: `${Math.min(100, pct)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Location Distribution Card */}
+                  <div className="p-4 bg-white border border-slate-200 rounded-lg shadow-xs space-y-2.5">
+                    <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5 uppercase tracking-wider">
+                      <MapPin className="w-4 h-4 text-[#a81c1c]" />
+                      <span>Phân Bổ Lượng Ý Kiến Theo Điểm Nhà Văn Hóa</span>
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {Object.entries(analytics.locationDistribution).map(([locName, count]) => (
+                        <div key={locName} className="p-2.5 bg-slate-50 border border-slate-200 rounded flex justify-between items-center text-xs">
+                          <span className="font-semibold text-slate-800 truncate pr-2">{locName}</span>
+                          <span className="font-bold text-[#004b87] font-mono px-2 py-0.5 bg-sky-50 border border-sky-200 rounded">
+                            {count} phiếu
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
-          <div className="flex justify-end pt-2 border-t border-slate-100">
+          {/* ================= TAB 2: DETAILED RESPONSES GRID ================= */}
+          {activeAnalyticsTab === 'RESPONSES' && (
+            <div className="space-y-3">
+              {/* Filter Toolbar */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 bg-slate-50 p-2.5 rounded border border-slate-200">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                  <span className="text-[11px] font-bold text-slate-700">Lọc theo điểm:</span>
+                  <select
+                    value={filterLocationId || ''}
+                    onChange={(e) => handleLocationFilterChange(e.target.value)}
+                    className="px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs focus:outline-none focus:border-[#004b87]"
+                  >
+                    <option value="">-- Tất cả các điểm Nhà văn hóa --</option>
+                    {locations.map((loc) => (
+                      <option key={loc.id} value={loc.id}>
+                        {loc.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="text-[11px] text-slate-500 font-mono">
+                  Hiển thị <strong>{responses.length}</strong> / tổng số <strong>{responseTotalElements}</strong> phiếu phản hồi
+                </div>
+              </div>
+
+              {/* Data Table */}
+              <div className="border border-slate-200 rounded overflow-x-auto max-h-[50vh]">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead className="bg-slate-100 text-slate-700 sticky top-0 z-10 text-[10.5px] uppercase font-bold border-b border-slate-200">
+                    <tr>
+                      <th className="py-2.5 px-3">STT</th>
+                      <th className="py-2.5 px-3">Mã phiếu</th>
+                      <th className="py-2.5 px-3">Thời gian</th>
+                      <th className="py-2.5 px-3">Nhà văn hóa</th>
+                      <th className="py-2.5 px-3">Địa chỉ MAC</th>
+                      {selectedSurveyForResponses?.questions?.map((q) => (
+                        <th key={q.id} className="py-2.5 px-3 min-w-[160px]">
+                          {q.questionText}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {loadingResponses ? (
+                      <tr>
+                        <td colSpan={5 + (selectedSurveyForResponses?.questions?.length || 0)} className="py-8 text-center text-slate-400">
+                          <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1 text-[#004b87]" />
+                          Đang tải dữ liệu phản hồi...
+                        </td>
+                      </tr>
+                    ) : responses.length === 0 ? (
+                      <tr>
+                        <td colSpan={5 + (selectedSurveyForResponses?.questions?.length || 0)} className="py-8 text-center text-slate-400">
+                          Không tìm thấy câu trả lời nào phù hợp với bộ lọc.
+                        </td>
+                      </tr>
+                    ) : (
+                      responses.map((r, rIdx) => (
+                        <tr key={r.id} className="hover:bg-slate-50 transition">
+                          <td className="py-2 px-3 font-mono text-slate-400">
+                            {responsePage * 15 + rIdx + 1}
+                          </td>
+                          <td className="py-2 px-3 font-mono font-bold text-slate-700">
+                            #{r.id}
+                          </td>
+                          <td className="py-2 px-3 text-slate-500 font-mono text-[10.5px] whitespace-nowrap">
+                            {new Date(r.submittedAt).toLocaleString('vi-VN')}
+                          </td>
+                          <td className="py-2 px-3 font-semibold text-slate-800 whitespace-nowrap">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3 text-[#a81c1c] flex-shrink-0" />
+                              <span>{r.locationName || 'Chung hệ thống'}</span>
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 font-mono text-slate-600 text-[10.5px]">
+                            {r.clientMac?.toUpperCase()}
+                          </td>
+                          {selectedSurveyForResponses?.questions?.map((q) => {
+                            const val = decodeAnswerValue(r.answersJson, q.id);
+                            return (
+                              <td key={q.id} className="py-2 px-3 font-sans text-slate-800">
+                                {val === '—' ? (
+                                  <span className="text-slate-300">—</span>
+                                ) : (
+                                  <span className="inline-block px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-900 text-[11px]">
+                                    {val}
+                                  </span>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {responseTotalPages > 1 && (
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-[11px] text-slate-500">
+                    Trang {responsePage + 1} / {responseTotalPages}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      disabled={responsePage <= 0}
+                      onClick={() => loadResponsesWithFilter(filterLocationId, responsePage - 1)}
+                      className="px-2.5 py-1 border border-slate-200 rounded text-xs hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={responsePage >= responseTotalPages - 1}
+                      onClick={() => loadResponsesWithFilter(filterLocationId, responsePage + 1)}
+                      className="px-2.5 py-1 border border-slate-200 rounded text-xs hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ================= TAB 3: CITIZEN FEEDBACK WALL ================= */}
+          {activeAnalyticsTab === 'FEEDBACK' && (
+            <div className="space-y-3">
+              {/* Search Toolbar */}
+              <div className="flex items-center gap-2 bg-slate-50 p-2.5 rounded border border-slate-200">
+                <Search className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={feedbackSearch}
+                  onChange={(e) => setFeedbackSearch(e.target.value)}
+                  placeholder="Tìm kiếm từ khóa trong ý kiến tự luận (VD: wifi, thủ tục, đèn, cán bộ...)"
+                  className="w-full px-2 py-1 text-xs bg-white border border-slate-200 rounded focus:outline-none focus:border-[#004b87]"
+                />
+                {feedbackSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setFeedbackSearch('')}
+                    className="text-xs text-slate-400 hover:text-slate-600 px-2"
+                  >
+                    Xóa
+                  </button>
+                )}
+              </div>
+
+              {/* Feedback Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[55vh] overflow-y-auto pr-1">
+                {getAllTextFeedback().length === 0 ? (
+                  <div className="col-span-2 py-12 text-center text-slate-400">
+                    Chưa có ý kiến tự luận nào phù hợp với từ khóa tìm kiếm.
+                  </div>
+                ) : (
+                  getAllTextFeedback().map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3.5 bg-white border border-slate-200 rounded-lg shadow-xs hover:border-slate-300 transition space-y-2 flex flex-col justify-between"
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-start gap-2">
+                          <Quote className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
+                          <div className="text-[10px] text-purple-700 font-bold uppercase tracking-wider">
+                            {item.questionText}
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-900 font-sans leading-relaxed pl-6">
+                          "{item.answerText}"
+                        </p>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                        <span className="flex items-center gap-1 font-semibold text-slate-700">
+                          <MapPin className="w-3 h-3 text-[#a81c1c]" />
+                          <span>{item.locationName}</span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-slate-400" />
+                          <span>{new Date(item.submittedAt).toLocaleDateString('vi-VN')}</span>
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Modal Footer */}
+          <div className="flex justify-end pt-3 border-t border-slate-200">
             <button
               type="button"
               onClick={() => setSelectedSurveyForResponses(null)}
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-sm text-xs font-bold transition cursor-pointer"
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded text-xs font-bold transition cursor-pointer"
             >
               Đóng
             </button>

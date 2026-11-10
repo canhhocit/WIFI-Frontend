@@ -450,9 +450,42 @@ export interface SurveyResponseDto {
   id: number;
   surveyId: number;
   locationId?: number;
+  locationName?: string;
   clientMac: string;
   answersJson: string;
   submittedAt: string;
+}
+
+export interface TextFeedbackItemDto {
+  responseId: number;
+  locationName: string;
+  clientMac: string;
+  submittedAt: string;
+  answerText: string;
+}
+
+export interface QuestionAnalyticsDto {
+  questionId: number;
+  questionText: string;
+  questionType: 'SINGLE_CHOICE' | 'MULTI_CHOICE' | 'RATING' | 'TEXT';
+  required: boolean;
+  totalAnswersCount: number;
+  optionCounts: Record<string, number>;
+  optionPercentages: Record<string, number>;
+  averageRating?: number;
+  ratingCounts: Record<number, number>;
+  textResponses: TextFeedbackItemDto[];
+}
+
+export interface SurveyAnalyticsDto {
+  surveyId: number;
+  surveyTitle: string;
+  totalResponses: number;
+  maxResponsesQuota: number;
+  completionRatePercent: number;
+  averageRating?: number;
+  locationDistribution: Record<string, number>;
+  questionAnalytics: QuestionAnalyticsDto[];
 }
 
 export interface PortalTemplateDto {
