@@ -196,9 +196,9 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
 
         {/* Card 2: Địa điểm lỗi */}
         <div
-          onClick={() => navigate('/admin/locations')}
+          onClick={() => navigate('/admin/locations?status=ERROR')}
           className="bg-white p-4 rounded border border-slate-200 shadow-xs flex items-center justify-between cursor-pointer group hover:border-rose-400/50 hover:shadow-sm transition-all"
-          title="Nhấp để xem danh sách Địa điểm"
+          title="Nhấp để lọc danh sách các địa điểm đang gặp lỗi hoặc tạm dừng"
         >
           <div className="flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 flex-shrink-0 group-hover:scale-105 transition-transform">

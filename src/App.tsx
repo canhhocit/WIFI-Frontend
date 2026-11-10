@@ -44,6 +44,7 @@ export const App: React.FC = () => {
         <Route path="campaigns" element={<CampaignsPage />} />
         <Route path="surveys" element={<SurveysPage />} />
         <Route path="gis" element={<GisMapPage />} />
+        <Route path="gis-map" element={<Navigate to="/admin/gis" replace />} />
         <Route path="incidents" element={<IncidentsPage />} />
         <Route path="blacklist" element={<BlacklistPage />} />
         <Route path="access-logs" element={<AccessLogsPage />} />

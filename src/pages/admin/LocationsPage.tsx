@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   MapPin,
   Plus,
@@ -46,7 +46,20 @@ export const LocationsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedAdminUnit, setSelectedAdminUnit] = useState<string>('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [statusFilter, setStatusFilter] = useState<string>(() => {
+    return (searchParams.get('status') || 'ALL').toUpperCase();
+  });
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const st = searchParams.get('status');
+    if (st) {
+      setStatusFilter(st.toUpperCase());
+    } else {
+      setStatusFilter('ALL');
+    }
+  }, [searchParams]);
 
   // Excel Modal
   const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
@@ -280,6 +293,15 @@ export const LocationsPage: React.FC = () => {
     if (selectedAdminUnit && loc.adminUnitId !== Number(selectedAdminUnit)) {
       return false;
     }
+
+    if (statusFilter === 'ERROR' || statusFilter === 'INACTIVE') {
+      const isErr = !loc.active || ['INACTIVE', 'ERROR', 'OFFLINE', 'DEGRADED'].includes((loc.status || '').toUpperCase());
+      if (!isErr) return false;
+    } else if (statusFilter === 'ACTIVE' || statusFilter === 'ONLINE') {
+      const isAct = loc.active && (loc.status || 'ACTIVE').toUpperCase() !== 'INACTIVE';
+      if (!isAct) return false;
+    }
+
     return true;
   });
 
@@ -354,6 +376,33 @@ export const LocationsPage: React.FC = () => {
             </select>
           </div>
         )}
+        <div className="w-full md:w-56">
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              const val = e.target.value;
+              setStatusFilter(val);
+              if (val === 'ALL') {
+                const next = new URLSearchParams(searchParams);
+                next.delete('status');
+                setSearchParams(next);
+              } else {
+                const next = new URLSearchParams(searchParams);
+                next.set('status', val);
+                setSearchParams(next);
+              }
+            }}
+            className={`w-full px-2.5 py-1.5 text-xs border rounded-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004b87] font-medium transition ${
+              statusFilter === 'ERROR'
+                ? 'border-rose-400 text-rose-700 bg-rose-50/50'
+                : 'border-slate-300 text-slate-700'
+            }`}
+          >
+            <option value="ALL">-- Tất cả trạng thái điểm phát --</option>
+            <option value="ACTIVE">✓ Điểm phát đang hoạt động</option>
+            <option value="ERROR">⚠ Điểm phát lỗi / Tạm dừng</option>
+          </select>
+        </div>
         <button
           onClick={loadLocations}
           className="w-full md:w-auto px-4 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold transition cursor-pointer"
@@ -373,7 +422,7 @@ export const LocationsPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate(`/admin/gis-map?selectLocation=${createdNotification.id}`)}
+              onClick={() => navigate(`/admin/gis?selectLocation=${createdNotification.id}`)}
               className="px-3 py-1.5 bg-emerald-600 text-white rounded font-medium hover:bg-emerald-700 transition flex items-center gap-1.5 shadow-xs cursor-pointer text-xs"
             >
               <MapPin className="w-3.5 h-3.5" />
