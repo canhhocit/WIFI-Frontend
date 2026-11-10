@@ -449,12 +449,7 @@ export const AdminLayout: React.FC = () => {
               <div className="text-xs text-white font-bold tracking-tight truncate mt-0.5">
                 Cổng Quản Trị Wi-Fi Công Cộng
               </div>
-              <div className="mt-1.5 flex items-center gap-1.5">
-                <span className="inline-flex items-center gap-1.5 text-[9.5px] font-medium px-2 py-0.5 rounded-full bg-blue-950/80 text-blue-200 border border-blue-400/30 truncate shadow-2xs">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400 flex-shrink-0" />
-                  <span className="truncate">{roleInfo.scope}</span>
-                </span>
-              </div>
+              
             </div>
           </div>
         </div>

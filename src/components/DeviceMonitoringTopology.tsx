@@ -167,9 +167,6 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
           <span>Giám sát thiết bị</span>
-          <span className="text-[11px] font-normal text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-            Nhấp chuột để xem chi tiết
-          </span>
         </h2>
       </div>
 

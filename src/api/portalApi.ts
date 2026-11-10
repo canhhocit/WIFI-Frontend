@@ -13,10 +13,11 @@ import {
 } from '../types/models';
 
 export const portalApi = {
-  init: (locationSlug?: string, apMac?: string) => {
+  init: (locationSlug?: string, apMac?: string, clientMac?: string) => {
     const params = new URLSearchParams();
     if (locationSlug) params.append('location', locationSlug);
     if (apMac) params.append('ap_mac', apMac);
+    if (clientMac) params.append('client_mac', clientMac);
     const query = params.toString() ? `?${params.toString()}` : '';
     return request<PortalInitResponse>(`/portal/init${query}`);
   },

@@ -29,6 +29,24 @@ import { PortalInitResponse } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
 import { VietnamFlag } from '../../components/VietnamFlag';
 
+const getOrCreateLocalClientMac = () => {
+  try {
+    let mac = localStorage.getItem('wifi_client_device_mac');
+    if (!mac || !/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(mac)) {
+      const randomHex = Array.from({ length: 5 }, () =>
+        Math.floor(Math.random() * 256)
+          .toString(16)
+          .padStart(2, '0')
+      ).join(':');
+      mac = `02:${randomHex}`.toLowerCase();
+      localStorage.setItem('wifi_client_device_mac', mac);
+    }
+    return mac;
+  } catch {
+    return '02:42:ac:11:00:01';
+  }
+};
+
 export const PortalPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -83,6 +101,11 @@ export const PortalPage: React.FC = () => {
     explicitClientMac ||
     (generalMac && apMacParam && generalMac.toLowerCase() !== apMacParam.toLowerCase() ? generalMac : (!apMacParam ? generalMac : undefined));
 
+  const effectiveClientMac = useMemo(() => {
+    if (rawMac) return rawMac.toLowerCase();
+    return getOrCreateLocalClientMac();
+  }, [rawMac]);
+
   const rawIp = normalizedParams.get('client_ip') || normalizedParams.get('ip') || searchParams.get('client_ip') || undefined;
   const targetUrlParam = normalizedParams.get('url') || normalizedParams.get('target') || searchParams.get('url') || undefined;
   const rawLoginUrl = normalizedParams.get('login_url') || normalizedParams.get('loginurl') || searchParams.get('login_url') || undefined;
@@ -93,7 +116,7 @@ export const PortalPage: React.FC = () => {
     const finalDest = targetUrlParam || 'https://dichvucong.haiphong.gov.vn/';
     const baseLogin = rawLoginUrl || 'http://cwp.gwnportal.cloud:8080/gwn_login';
     const sep = baseLogin.includes('?') ? '&' : '?';
-    const cleanMac = (macAddress || portalData?.clientMacHint || rawMac || '').replace(/[:-]/g, '').toLowerCase();
+    const cleanMac = (effectiveClientMac || macAddress || '0242ac110001').replace(/[:-]/g, '').toLowerCase();
     const token = sessionToken || (connectedSession ? connectedSession.sessionToken : '') || 'guest';
     return `${baseLogin}${sep}username=${encodeURIComponent(cleanMac + '@gwn')}&password=${encodeURIComponent(token)}&redirect=${encodeURIComponent(finalDest)}`;
   };
@@ -117,7 +140,7 @@ export const PortalPage: React.FC = () => {
 
   useEffect(() => {
     loadPortal();
-  }, [locationParam, rawMac, apMacParam]);
+  }, [locationParam, rawMac, apMacParam, effectiveClientMac]);
 
   useEffect(() => {
     let interval: any = null;
@@ -134,13 +157,9 @@ export const PortalPage: React.FC = () => {
     setError(null);
     try {
       const slug = overrideSlug !== undefined ? overrideSlug : locationParam;
-      const data = await portalApi.init(slug, apMacParam);
+      const data = await portalApi.init(slug, apMacParam, effectiveClientMac);
       setPortalData(data);
-      if (rawMac) {
-        setMacAddress(rawMac);
-      } else if (data.clientMacHint) {
-        setMacAddress(data.clientMacHint);
-      }
+      setMacAddress(effectiveClientMac);
       if (data.macRemembered) {
         setOtpVerified(true);
       }
@@ -161,7 +180,7 @@ export const PortalPage: React.FC = () => {
     try {
       const res = await portalApi.sendOtp({
         phoneNumber: phoneNumber.trim(),
-        clientMac: macAddress || portalData?.clientMacHint || '02:42:ac:11:00:01',
+        clientMac: effectiveClientMac,
       });
       setOtpSent(true);
       setOtpTimer(60);
@@ -184,7 +203,7 @@ export const PortalPage: React.FC = () => {
     try {
       const res = await portalApi.verifyOtp({
         phoneNumber: phoneNumber.trim(),
-        clientMac: macAddress || portalData?.clientMacHint || '02:42:ac:11:00:01',
+        clientMac: effectiveClientMac,
         otpCode: otpCode.trim(),
       });
       setOtpVerified(true);
@@ -241,7 +260,7 @@ export const PortalPage: React.FC = () => {
         try {
           await portalApi.submitSurvey(portalData.activeSurvey.id, {
             locationId: portalData.location.id,
-            clientMac: macAddress || portalData.clientMacHint || '02:42:ac:11:00:01',
+            clientMac: effectiveClientMac,
             answers: surveyAnswers,
           });
           setSurveySubmitted(true);
@@ -250,7 +269,7 @@ export const PortalPage: React.FC = () => {
 
       const session = await portalApi.login({
         locationSlug: portalData.location.slug,
-        macAddress: macAddress || portalData.clientMacHint || '02:42:ac:11:00:01',
+        macAddress: effectiveClientMac,
         guestName: guestName.trim() || undefined,
         guestContact: phoneNumber.trim() || undefined,
         consentGiven: true,
