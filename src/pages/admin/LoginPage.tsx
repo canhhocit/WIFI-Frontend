@@ -171,7 +171,7 @@ export const LoginPage: React.FC = () => {
               >
                 <Wrench className="w-3.5 h-3.5 text-slate-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-bold text-[11px]">Kỹ sư VNPT</div>
+                  <div className="font-bold text-[11px]">Kỹ thuật viên</div>
                   <div className="text-[10px] text-slate-500 font-mono">vnpt_tech01</div>
                 </div>
               </button>
@@ -183,7 +183,7 @@ export const LoginPage: React.FC = () => {
               href="/portal"
               className="text-[#004b87] hover:underline font-semibold inline-flex items-center gap-1 transition"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> Cổng chào người dân
+              <ArrowLeft className="w-3.5 h-3.5" /> Trang portal
             </a>
           </div>
         </div>

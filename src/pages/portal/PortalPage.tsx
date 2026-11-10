@@ -112,25 +112,25 @@ export const PortalPage: React.FC = () => {
 
   const [redirectCountdown, setRedirectCountdown] = useState<number>(3);
 
+  const targetDestination = useMemo(() => {
+    return targetUrlParam || 'https://dichvucong.haiphong.gov.vn/';
+  }, [targetUrlParam]);
+
   const buildExcapUrl = (sessionToken?: string) => {
-    const finalDest = targetUrlParam || 'https://dichvucong.haiphong.gov.vn/';
-    if (!rawLoginUrl) {
-      return finalDest;
-    }
+    if (!rawLoginUrl) return targetDestination;
     const sep = rawLoginUrl.includes('?') ? '&' : '?';
     const cleanMac = (effectiveClientMac || macAddress || '0242ac110001').replace(/[:-]/g, '').toLowerCase();
     const token = sessionToken || (connectedSession ? connectedSession.sessionToken : '') || 'guest';
-    return `${rawLoginUrl}${sep}username=${encodeURIComponent(cleanMac + '@gwn')}&password=${encodeURIComponent(token)}&redirect=${encodeURIComponent(finalDest)}`;
+    return `${rawLoginUrl}${sep}username=${encodeURIComponent(cleanMac + '@gwn')}&password=${encodeURIComponent(token)}&redirect=${encodeURIComponent(targetDestination)}`;
   };
 
   useEffect(() => {
     if (connectedSession) {
-      const excapRedirect = buildExcapUrl(connectedSession.sessionToken);
       const timer = setInterval(() => {
         setRedirectCountdown((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
-            window.location.href = excapRedirect;
+            window.location.href = targetDestination;
             return 0;
           }
           return prev - 1;
@@ -138,7 +138,7 @@ export const PortalPage: React.FC = () => {
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [connectedSession]);
+  }, [connectedSession, targetDestination]);
 
   useEffect(() => {
     loadPortal();
@@ -277,17 +277,16 @@ export const PortalPage: React.FC = () => {
         consentGiven: true,
       });
 
-      const authUrl = buildExcapUrl(session.sessionToken);
+      // Background beacon EXCAP login_url if available from router
+      if (rawLoginUrl) {
+        try {
+          const authUrl = buildExcapUrl(session.sessionToken);
+          fetch(authUrl, { mode: 'no-cors' }).catch(() => {});
+        } catch (_) {}
+      }
 
       setConnectedSession(session);
-      setSuccessInfo('Kết nối thành công! Đang chuyển tiếp kích hoạt Internet...');
-
-      // Immediately navigate top window to gateway login callback if rawLoginUrl was supplied by captive router
-      if (rawLoginUrl) {
-        setTimeout(() => {
-          window.location.href = authUrl;
-        }, 800);
-      }
+      setSuccessInfo('Kết nối thành công! Đã cấp quyền truy cập Internet.');
     } catch (err: any) {
       setError(err?.message || 'Xác thực truy cập không thành công. Vui lòng thử lại.');
     } finally {
@@ -296,7 +295,6 @@ export const PortalPage: React.FC = () => {
   };
 
   if (connectedSession) {
-    const excapRedirect = buildExcapUrl(connectedSession.sessionToken);
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-6 sm:p-8 text-center space-y-6">
@@ -325,16 +323,17 @@ export const PortalPage: React.FC = () => {
           </div>
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 flex items-center justify-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
-            <span>Đang tự động chuyển tiếp kích hoạt Internet ({redirectCountdown}s)...</span>
+            <span>Đang tự động chuyển tiếp đến Dịch vụ công ({redirectCountdown}s)...</span>
           </div>
-          <div className="pt-2">
+          <div className="space-y-3 pt-2">
             <a
-              href={excapRedirect}
+              href={targetDestination}
               className="w-full py-3.5 px-4 rounded-xl bg-[#a81c1c] text-white font-bold text-sm tracking-wide shadow-lg hover:bg-[#8b1414] transition flex items-center justify-center gap-2 cursor-pointer"
             >
               <Landmark className="w-4 h-4 text-yellow-300" />
-              <span>VÀO DỊCH VỤ CÔNG HẢI PHÒNG (KÍCH HOẠT NGAY)</span>
+              <span>VÀO DỊCH VỤ CÔNG HẢI PHÒNG ({redirectCountdown}s)</span>
             </a>
+            
           </div>
         </div>
       </div>
