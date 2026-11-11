@@ -22,6 +22,10 @@ import {
   Landmark,
   Wifi,
   ChevronDown,
+  Monitor,
+  Check,
+  Star,
+  ClipboardList,
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { PortalTemplateDto, LocationDto } from '../../types/models';
@@ -79,6 +83,19 @@ export const PortalBuilderPage: React.FC = () => {
     backgroundImageUrl: '',
     promoActionUrl: '',
   });
+
+  // Live Studio Simulation State
+  const [previewDevice, setPreviewDevice] = useState<'MOBILE' | 'DESKTOP'>('MOBILE');
+  const [simCampaign, setSimCampaign] = useState(true);
+  const [simSurvey, setSimSurvey] = useState(true);
+  const [simCapacityFull, setSimCapacityFull] = useState(false);
+
+  const colorPresets = [
+    { name: 'GovTech Hải Phòng', themeColor: '#004b87', bgColor: '#0c2340', bgImg: '/banners/haiphong_city_bg.jpg' },
+    { name: 'Cờ Đỏ Chính Quyền', themeColor: '#a81c1c', bgColor: '#450a0a', bgImg: '/banners/haiphong_culture_house.jpg' },
+    { name: 'Đô Thị Số Hải Phòng', themeColor: '#0284c7', bgColor: '#082f49', bgImg: '/banners/central.jpg' },
+    { name: 'Di Sản & Văn Hóa', themeColor: '#065f46', bgColor: '#022c22', bgImg: '/banners/haiphong_culture_house.jpg' },
+  ];
 
   useEffect(() => {
     loadInitialData();
@@ -351,6 +368,45 @@ export const PortalBuilderPage: React.FC = () => {
                     />
                   </div>
 
+                  {/* Theme Presets */}
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-sm space-y-2">
+                    <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                      Gợi ý chủ đề màu sắc chuẩn GovTech:
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {colorPresets.map((preset) => {
+                        const isSelected = template.themeColor === preset.themeColor;
+                        return (
+                          <button
+                            key={preset.name}
+                            type="button"
+                            onClick={() => {
+                              setTemplate({
+                                ...template,
+                                themeColor: preset.themeColor,
+                                backgroundColor: preset.bgColor,
+                                backgroundImageUrl: preset.bgImg,
+                              });
+                            }}
+                            className={`p-2 rounded border text-left transition flex flex-col gap-1 cursor-pointer ${
+                              isSelected
+                                ? 'bg-white border-[#004b87] ring-1 ring-[#004b87] shadow-xs'
+                                : 'bg-white/80 border-slate-200 hover:bg-white'
+                            }`}
+                          >
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: preset.themeColor }} />
+                              <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: preset.bgColor }} />
+                              {isSelected && <Check className="w-3 h-3 text-[#004b87] ml-auto" />}
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-800 line-clamp-1">{preset.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Màu chủ đạo (Theme Color nút bấm)</label>
@@ -465,7 +521,7 @@ export const PortalBuilderPage: React.FC = () => {
                                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                             }`}
                           >
-                            Nhà văn hóa Hải Phòng
+                            Wifi công cộng Hải Phòng
                           </button>
                           <button
                             type="button"
@@ -706,12 +762,46 @@ export const PortalBuilderPage: React.FC = () => {
 
           {/* Right Live Preview: Smartphone Mockup (5 cols) - Sticky Centered */}
           <div className="lg:col-span-5 lg:sticky lg:top-4 lg:self-start flex flex-col items-center justify-center">
-            <div className="flex items-center justify-between w-full max-w-[340px] mb-2 px-1">
-              <span className="flex items-center gap-1.5 text-xs font-bold text-slate-600 uppercase tracking-wider">
-                <Smartphone className="w-4 h-4 text-[#004b87]" />
-                {scope === 'LOCATION' ? 'Xem Trước Điểm Này' : 'Xem Trước Mẫu Chung'}
-              </span>
-              <span className="text-[10px] font-mono text-slate-400">375 x 667 px</span>
+            {/* Live Studio Toolbar */}
+            <div className="w-full max-w-[340px] mb-2 px-1 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <Smartphone className="w-4 h-4 text-[#004b87]" />
+                  {scope === 'LOCATION' ? 'Xem Trước Điểm Này' : 'Xem Trước Mẫu Chung'}
+                </span>
+                <span className="text-[10px] font-mono text-slate-400">375 x 667 px</span>
+              </div>
+
+              {/* Scenario Toggles */}
+              <div className="flex items-center justify-between gap-1 bg-white p-1.5 rounded border border-slate-200 text-[10.5px]">
+                <label className="flex items-center gap-1 font-semibold text-slate-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={simCampaign}
+                    onChange={(e) => setSimCampaign(e.target.checked)}
+                    className="rounded text-[#004b87] w-3 h-3"
+                  />
+                  <span>Chiến dịch</span>
+                </label>
+                <label className="flex items-center gap-1 font-semibold text-slate-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={simSurvey}
+                    onChange={(e) => setSimSurvey(e.target.checked)}
+                    className="rounded text-[#004b87] w-3 h-3"
+                  />
+                  <span>Khảo sát</span>
+                </label>
+                <label className="flex items-center gap-1 font-semibold text-slate-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={simCapacityFull}
+                    onChange={(e) => setSimCapacityFull(e.target.checked)}
+                    className="rounded text-[#004b87] w-3 h-3"
+                  />
+                  <span>Đầy tải</span>
+                </label>
+              </div>
             </div>
 
             {/* Phone Bezel */}
@@ -838,6 +928,24 @@ export const PortalBuilderPage: React.FC = () => {
                         <span className="font-bold text-[#004b87]">Dịch vụ công:</span> Sau khi kết nối Wi-Fi, hệ thống mở trực tiếp Cổng Dịch vụ công TP Hải Phòng để nộp hồ sơ miễn phí.
                       </div>
                     </div>
+
+                    {/* Simulated Campaign Card if toggled */}
+                    {simCampaign && (
+                      <div className="p-2 bg-gradient-to-r from-red-50 to-amber-50 rounded border-l-2 border-l-[#a81c1c] border border-amber-200 shadow-2xs space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="inline-flex items-center gap-1 text-[8px] font-bold text-[#a81c1c] uppercase">
+                            <Megaphone className="w-2.5 h-2.5" /> Chiến Dịch Thành Phố
+                          </span>
+                          <span className="text-[7.5px] font-bold text-red-700 bg-red-100 px-1 rounded">Chính sách</span>
+                        </div>
+                        <h4 className="text-[9.5px] font-extrabold text-slate-900 leading-tight">
+                          Tuyên truyền Dịch vụ công & Kích hoạt VNeID
+                        </h4>
+                        <p className="text-[8.5px] text-slate-600 line-clamp-2 leading-tight">
+                          Đẩy mạnh cài đặt và sử dụng tài khoản định danh điện tử mức độ 2 cho công dân toàn thành phố.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* 2. Banner Photo with Overlay */}
@@ -853,7 +961,7 @@ export const PortalBuilderPage: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent flex flex-col justify-end p-2 text-white">
                       <div className="text-[9.5px] font-bold text-white drop-shadow-sm flex items-center justify-between">
                         <span className="truncate pr-1">
-                          Ảnh thực tế: {scope === 'LOCATION' && selectedLocation ? selectedLocation.name : 'Nhà văn hóa Hải Phòng'}
+                          Ảnh thực tế: {scope === 'LOCATION' && selectedLocation ? selectedLocation.name : 'Wifi công cộng Hải Phòng'}
                         </span>
                         <span className="text-[8px] px-1 py-0.5 bg-emerald-700/90 text-emerald-100 rounded font-semibold flex-shrink-0">
                           Trực tuyến
@@ -871,6 +979,39 @@ export const PortalBuilderPage: React.FC = () => {
 
                   {/* 3. Action Form */}
                   <div className="p-3 space-y-2.5">
+                    {/* Simulated Capacity Limit Warning if toggled */}
+                    {simCapacityFull && (
+                      <div className="p-2 bg-amber-50 border border-amber-300 rounded text-amber-900 text-[9px] space-y-0.5">
+                        <span className="font-bold flex items-center gap-1 text-amber-800">
+                          ⚠️ Điểm phát đã đạt giới hạn tối đa
+                        </span>
+                        <p className="text-[8px] leading-tight">
+                          Hiện có 50/50 thiết bị đang truy cập mạng. Quý vị vui lòng thử lại sau.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Simulated Survey Card if toggled */}
+                    {simSurvey && (
+                      <div className="p-2 bg-sky-50/70 border border-sky-200 rounded space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="inline-flex items-center gap-1 text-[8.5px] font-bold text-[#004b87]">
+                            <ClipboardList className="w-2.5 h-2.5" /> Thăm Dò Ý Kiến Nhân Dân
+                          </span>
+                          <span className="text-[7.5px] font-bold text-sky-700 bg-sky-100 px-1 rounded">Khảo sát</span>
+                        </div>
+                        <p className="text-[8.5px] font-semibold text-slate-800">
+                          Đánh giá chất lượng sóng Wi-Fi hôm nay:
+                        </p>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star key={star} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                          ))}
+                          <span className="text-[8px] text-amber-700 font-bold ml-1">5/5 - Rất tốt</span>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Legal Checkbox */}
                     <div className="flex items-start gap-1.5 text-[9.5px] text-slate-600">
                       <div className="w-3.5 h-3.5 rounded border border-slate-300 bg-white mt-0.5 flex-shrink-0 flex items-center justify-center text-[#004b87] text-[8px] font-bold">
@@ -891,11 +1032,14 @@ export const PortalBuilderPage: React.FC = () => {
                     <div>
                       <button
                         type="button"
-                        className="w-full py-2.5 px-3 rounded-sm text-white font-extrabold text-[11px] tracking-wide uppercase shadow-md flex items-center justify-center gap-1.5 transition"
-                        style={{ backgroundColor: template.themeColor || '#004b87' }}
+                        disabled={simCapacityFull}
+                        className={`w-full py-2.5 px-3 rounded-sm text-white font-extrabold text-[11px] tracking-wide uppercase shadow-md flex items-center justify-center gap-1.5 transition ${
+                          simCapacityFull ? 'bg-slate-400 cursor-not-allowed opacity-75' : ''
+                        }`}
+                        style={{ backgroundColor: simCapacityFull ? undefined : template.themeColor || '#004b87' }}
                       >
                         <Wifi className="w-3.5 h-3.5 text-yellow-300" />
-                        <span>{template.buttonText || 'KẾT NỐI WI-FI MIỄN PHÍ'}</span>
+                        <span>{simCapacityFull ? 'ĐIỂM PHÁT ĐÃ ĐẦY TẢI (50/50)' : template.buttonText || 'KẾT NỐI WI-FI MIỄN PHÍ'}</span>
                       </button>
                       <p className="text-[8.5px] text-slate-500 text-center mt-1">
                         Tốc độ: <strong>20 Mbps</strong> • Thời lượng: <strong>120 phút</strong> • Băng thông ổn định

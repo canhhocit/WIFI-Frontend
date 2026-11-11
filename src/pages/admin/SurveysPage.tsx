@@ -25,6 +25,9 @@ import {
   Building,
   Smartphone,
   Quote,
+  ArrowUp,
+  ArrowDown,
+  X,
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import {
@@ -55,19 +58,19 @@ export const SurveysPage: React.FC = () => {
   const [questions, setQuestions] = useState<Array<{
     questionText: string;
     questionType: 'SINGLE_CHOICE' | 'MULTI_CHOICE' | 'TEXT' | 'RATING';
-    options: string;
+    optionsList: string[];
     required: boolean;
   }>>([
     {
       questionText: 'Quý vị đánh giá chất lượng sóng Wi-Fi tại Nhà văn hóa hôm nay như thế nào?',
       questionType: 'SINGLE_CHOICE',
-      options: 'Rất tốt, Ổn định, Chập chờn, Không vào được mạng',
+      optionsList: ['Rất tốt', 'Ổn định', 'Chập chờn', 'Không vào được mạng'],
       required: true,
     },
     {
       questionText: 'Ý kiến đóng góp thêm về tiện ích chuyển đổi số tại địa phương:',
       questionType: 'TEXT',
-      options: '',
+      optionsList: [],
       required: false,
     },
   ]);
@@ -131,7 +134,7 @@ export const SurveysPage: React.FC = () => {
       {
         questionText: '',
         questionType: 'SINGLE_CHOICE',
-        options: 'Rất hài lòng, Hài lòng, Chưa hài lòng',
+        optionsList: ['Rất hài lòng', 'Hài lòng', 'Chưa hài lòng'],
         required: true,
       },
     ]);
@@ -139,6 +142,38 @@ export const SurveysPage: React.FC = () => {
 
   const handleRemoveQuestion = (index: number) => {
     setQuestions(questions.filter((_, i) => i !== index));
+  };
+
+  const handleMoveQuestion = (index: number, direction: 'UP' | 'DOWN') => {
+    if ((direction === 'UP' && index === 0) || (direction === 'DOWN' && index === questions.length - 1)) return;
+    const targetIdx = direction === 'UP' ? index - 1 : index + 1;
+    const updated = [...questions];
+    const temp = updated[index];
+    updated[index] = updated[targetIdx];
+    updated[targetIdx] = temp;
+    setQuestions(updated);
+  };
+
+  const handleAddOption = (qIdx: number) => {
+    const updated = [...questions];
+    const currentList = updated[qIdx].optionsList || [];
+    updated[qIdx].optionsList = [...currentList, `Lựa chọn ${currentList.length + 1}`];
+    setQuestions(updated);
+  };
+
+  const handleUpdateOption = (qIdx: number, optIdx: number, val: string) => {
+    const updated = [...questions];
+    const list = [...(updated[qIdx].optionsList || [])];
+    list[optIdx] = val;
+    updated[qIdx].optionsList = list;
+    setQuestions(updated);
+  };
+
+  const handleRemoveOption = (qIdx: number, optIdx: number) => {
+    const updated = [...questions];
+    const list = [...(updated[qIdx].optionsList || [])].filter((_, i) => i !== optIdx);
+    updated[qIdx].optionsList = list;
+    setQuestions(updated);
   };
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
@@ -150,9 +185,10 @@ export const SurveysPage: React.FC = () => {
       const payloadQuestions: SurveyQuestionDto[] = questions.map((q, idx) => ({
         questionText: q.questionText.trim(),
         questionType: q.questionType,
-        optionsJson: q.options
-          ? JSON.stringify(q.options.split(',').map((s) => s.trim()).filter(Boolean))
-          : undefined,
+        optionsJson:
+          q.questionType === 'SINGLE_CHOICE' || q.questionType === 'MULTI_CHOICE'
+            ? JSON.stringify((q.optionsList || []).map((s) => s.trim()).filter(Boolean))
+            : undefined,
         sortOrder: idx,
         required: q.required,
       }));
@@ -555,18 +591,58 @@ export const SurveysPage: React.FC = () => {
             </div>
 
             {questions.map((q, idx) => (
-              <div key={idx} className="p-3 bg-slate-50 border border-slate-200 rounded-sm space-y-2 relative">
+              <div key={idx} className="p-3.5 bg-slate-50 border border-slate-200 rounded space-y-2.5 relative">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-700 text-[11px]">Câu hỏi #{idx + 1}</span>
-                  {questions.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveQuestion(idx)}
-                      className="text-slate-400 hover:text-rose-600 p-1 cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                  <span className="font-bold text-slate-800 text-[11px] bg-slate-200/80 px-2 py-0.5 rounded">
+                    Câu hỏi #{idx + 1}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold text-slate-700 select-none">
+                      <input
+                        type="checkbox"
+                        checked={q.required}
+                        onChange={(e) => {
+                          const updated = [...questions];
+                          updated[idx].required = e.target.checked;
+                          setQuestions(updated);
+                        }}
+                        className="rounded text-[#004b87] focus:ring-[#004b87] w-3.5 h-3.5"
+                      />
+                      <span>Bắt buộc (*)</span>
+                    </label>
+
+                    <div className="flex items-center border border-slate-200 rounded bg-white">
+                      <button
+                        type="button"
+                        disabled={idx === 0}
+                        onClick={() => handleMoveQuestion(idx, 'UP')}
+                        className="p-1 text-slate-500 hover:text-slate-800 disabled:opacity-30 cursor-pointer"
+                        title="Di chuyển lên trên"
+                      >
+                        <ArrowUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={idx === questions.length - 1}
+                        onClick={() => handleMoveQuestion(idx, 'DOWN')}
+                        className="p-1 text-slate-500 hover:text-slate-800 disabled:opacity-30 cursor-pointer border-l border-slate-200"
+                        title="Di chuyển xuống dưới"
+                      >
+                        <ArrowDown className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {questions.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveQuestion(idx)}
+                        className="text-slate-400 hover:text-rose-600 p-1 cursor-pointer"
+                        title="Xóa câu hỏi này"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <input
@@ -578,11 +654,11 @@ export const SurveysPage: React.FC = () => {
                     setQuestions(updated);
                   }}
                   placeholder="Nhập nội dung câu hỏi..."
-                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-sm"
+                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-sm font-medium"
                   required
                 />
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
                   <div>
                     <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Loại câu hỏi</label>
                     <select
@@ -590,6 +666,9 @@ export const SurveysPage: React.FC = () => {
                       onChange={(e) => {
                         const updated = [...questions];
                         updated[idx].questionType = e.target.value as any;
+                        if ((e.target.value === 'SINGLE_CHOICE' || e.target.value === 'MULTI_CHOICE') && (!q.optionsList || q.optionsList.length === 0)) {
+                          updated[idx].optionsList = ['Lựa chọn 1', 'Lựa chọn 2'];
+                        }
                         setQuestions(updated);
                       }}
                       className="w-full px-2 py-1 text-xs bg-white border border-slate-200 rounded-sm"
@@ -600,22 +679,47 @@ export const SurveysPage: React.FC = () => {
                       <option value="TEXT">Tự luận nhập văn bản (Text)</option>
                     </select>
                   </div>
-                  {q.questionType !== 'TEXT' && q.questionType !== 'RATING' && (
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
-                        Các lựa chọn (phân cách bằng dấu phẩy)
-                      </label>
-                      <input
-                        type="text"
-                        value={q.options}
-                        onChange={(e) => {
-                          const updated = [...questions];
-                          updated[idx].options = e.target.value;
-                          setQuestions(updated);
-                        }}
-                        placeholder="VD: Rất tốt, Tốt, Kém"
-                        className="w-full px-2 py-1 text-xs bg-white border border-slate-200 rounded-sm font-mono text-[11px]"
-                      />
+
+                  {(q.questionType === 'SINGLE_CHOICE' || q.questionType === 'MULTI_CHOICE') && (
+                    <div className="bg-white p-2.5 rounded border border-slate-200 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10.5px] font-bold text-slate-700">
+                          Các lựa chọn trả lời ({q.optionsList?.length || 0}):
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => handleAddOption(idx)}
+                          className="inline-flex items-center gap-1 text-[10.5px] font-bold text-[#004b87] hover:underline cursor-pointer"
+                        >
+                          <Plus className="w-3 h-3" /> Thêm lựa chọn
+                        </button>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        {(q.optionsList || []).map((opt, optIdx) => (
+                          <div key={optIdx} className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-slate-400 font-mono w-4 text-center">{optIdx + 1}.</span>
+                            <input
+                              type="text"
+                              value={opt}
+                              onChange={(e) => handleUpdateOption(idx, optIdx, e.target.value)}
+                              placeholder={`Lựa chọn ${optIdx + 1}`}
+                              className="flex-1 px-2 py-1 text-xs bg-slate-50 border border-slate-200 rounded focus:bg-white"
+                              required
+                            />
+                            {q.optionsList.length > 2 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveOption(idx, optIdx)}
+                                className="text-slate-400 hover:text-rose-500 p-1 cursor-pointer"
+                                title="Xóa lựa chọn này"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

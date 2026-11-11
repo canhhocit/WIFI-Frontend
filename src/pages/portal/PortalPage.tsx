@@ -75,6 +75,7 @@ export const PortalPage: React.FC = () => {
   // Survey State
   const [surveyAnswers, setSurveyAnswers] = useState<Record<string, any>>({});
   const [surveySubmitted, setSurveySubmitted] = useState(false);
+  const [missingQuestionId, setMissingQuestionId] = useState<number | null>(null);
 
   // Normalize search query string to handle multiple '?' appended by captive routers
   const normalizedParams = useMemo(() => {
@@ -227,10 +228,12 @@ export const PortalPage: React.FC = () => {
     }
 
     // In Ver 1: 1-click connect without mandatory OTP by default.
-    // If the user explicitly opened advanced verification, require OTP.
+    // If the user explicitly opened advanced verification, require OTP ONLY if they entered a phone number and haven't verified.
     if (showAdvancedAuth && portalData.otpRequired && !otpVerified && !portalData.macRemembered) {
-      setError('Vui lòng xác thực số điện thoại qua OTP hoặc thu gọn tùy chọn nâng cao để kết nối nhanh.');
-      return;
+      if (phoneNumber.trim().length > 0 && !otpCode.trim()) {
+        setError('Quý vị đang nhập số điện thoại nhưng chưa xác thực mã OTP. Vui lòng hoàn thành OTP hoặc xóa số điện thoại để kết nối nhanh.');
+        return;
+      }
     }
 
     // Validate required survey questions if active survey is present
@@ -245,12 +248,18 @@ export const PortalPage: React.FC = () => {
             ans === '' ||
             (Array.isArray(ans) && ans.length === 0);
           if (isEmpty) {
+            setMissingQuestionId(q.id || null);
             setError(`Vui lòng hoàn thành câu hỏi khảo sát bắt buộc: "${q.questionText}"`);
+            const el = document.getElementById(`survey-q-${q.id}`);
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
             return;
           }
         }
       }
     }
+    setMissingQuestionId(null);
 
     setSubmitting(true);
     setError(null);
@@ -361,7 +370,7 @@ export const PortalPage: React.FC = () => {
             <VietnamFlag width={72} height={48} className="rounded-sm shadow-2xl border border-yellow-400/60" animate />
           </div>
           <Loader2 className="w-6 h-6 animate-spin text-yellow-300 mb-2" />
-          <p className="text-xs text-slate-100 font-medium tracking-wide">Đang tải Cổng Wi-Fi Nhà văn hóa Hải Phòng...</p>
+          <p className="text-xs text-slate-100 font-medium tracking-wide">Đang tải Cổng Wi-Fi Hải Phòng...</p>
         </div>
       </div>
     );
@@ -532,7 +541,7 @@ export const PortalPage: React.FC = () => {
             <div className="relative rounded-lg border border-slate-200 bg-slate-900 overflow-hidden shadow-sm">
               <img
                 src={localBannerUrl}
-                alt={portalData?.location.name || 'Nhà văn hóa Hải Phòng'}
+                alt={portalData?.location.name || 'Wifi công cộng Hải Phòng'}
                 className="w-full h-40 sm:h-48 lg:h-52 object-cover opacity-95 transition hover:scale-101 duration-300"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = '/banners/haiphong_culture_house.jpg';
@@ -574,6 +583,20 @@ export const PortalPage: React.FC = () => {
                 <h3 className="text-xs sm:text-sm font-black text-slate-900 leading-snug uppercase">
                   {campaign.title}
                 </h3>
+
+                {/* Poster / Banner chính sách */}
+                {campaign.bannerUrl && (
+                  <div className="relative rounded-lg overflow-hidden border border-amber-200/90 shadow-xs my-2 max-h-56 bg-slate-900 group">
+                    <img
+                      src={campaign.bannerUrl}
+                      alt={campaign.title}
+                      className="w-full h-auto max-h-52 object-cover transition-transform duration-300 group-hover:scale-[1.01]"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
 
                 {campaign.description && (
                   <p className="text-xs text-slate-700 leading-relaxed font-sans">
@@ -730,12 +753,23 @@ export const PortalPage: React.FC = () => {
 
                       const qKey = q.id?.toString() || `q_${idx}`;
                       const currentVal = surveyAnswers[qKey];
+                      const isMissing = missingQuestionId === q.id;
 
                       return (
-                        <div key={q.id || idx} className="p-3 bg-white rounded-lg border border-slate-200/90 shadow-xs space-y-2">
+                        <div
+                          id={`survey-q-${q.id}`}
+                          key={q.id || idx}
+                          className={`p-3 bg-white rounded-lg border shadow-xs space-y-2 transition-all duration-300 ${
+                            isMissing ? 'border-rose-500 ring-2 ring-rose-200 bg-rose-50/20' : 'border-slate-200/90'
+                          }`}
+                        >
                           <p className="font-semibold text-slate-800 text-[11.5px] leading-snug">
                             <span className="text-[#004b87] font-bold mr-1">Câu {idx + 1}:</span>
-                            {q.questionText} {q.required && <span className="text-red-500 font-bold ml-0.5">*</span>}
+                            {q.questionText} {q.required ? (
+                              <span className="text-rose-600 font-bold ml-1 text-[10px] bg-rose-50 border border-rose-200 px-1 py-0.5 rounded">Bắt buộc</span>
+                            ) : (
+                              <span className="text-slate-400 font-normal ml-1 text-[10px] italic">(Tùy chọn)</span>
+                            )}
                           </p>
 
                           {/* TYPE: RATING */}
@@ -884,6 +918,14 @@ export const PortalPage: React.FC = () => {
                   </span>
                 </label>
               </div>
+
+              {/* Secondary Inline Error Callout right above submit button for mobile view */}
+              {error && (
+                <div className="p-2.5 bg-rose-50 border border-rose-300 rounded-lg text-rose-800 text-xs flex items-start gap-2 shadow-xs">
+                  <span className="font-bold text-rose-700 flex-shrink-0">⚠️ Lưu ý:</span>
+                  <span className="leading-tight">{error}</span>
+                </div>
+              )}
 
               {/* Primary Action Button (Bấm vào kết nối 1-chạm) */}
               <div className="pt-2">

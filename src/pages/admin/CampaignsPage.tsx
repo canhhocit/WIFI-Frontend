@@ -27,8 +27,12 @@ import { ImageUploadInput } from '../../components/ImageUploadInput';
 
 export const CampaignsPage: React.FC = () => {
   const [campaigns, setCampaigns] = useState<CampaignDto[]>([]);
+  const [locations, setLocations] = useState<LocationDto[]>([]);
+  const [adminUnits, setAdminUnits] = useState<AdminUnitDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [targetMode, setTargetMode] = useState<'ALL' | 'ADMIN_UNIT' | 'LOCATION'>('ALL');
   const [error, setError] = useState<string | null>(null);
 
   // Modal State
@@ -59,8 +63,14 @@ export const CampaignsPage: React.FC = () => {
   const loadCampaigns = async () => {
     setLoading(true);
     try {
-      const resp = await adminApi.getCampaigns({ status: statusFilter || undefined, size: 50 });
+      const [resp, locsResp, adminResp] = await Promise.all([
+        adminApi.getCampaigns({ status: statusFilter || undefined, size: 50 }),
+        adminApi.getLocations({ size: 100 }).catch(() => ({ content: [] })),
+        adminApi.getAdminByLevel(2).catch(() => []),
+      ]);
       setCampaigns(resp.content);
+      setLocations(locsResp.content || []);
+      setAdminUnits(adminResp || []);
       setError(null);
     } catch (err: any) {
       setError(err?.message || 'Không thể tải danh sách chiến dịch truyền thông.');
@@ -89,6 +99,7 @@ export const CampaignsPage: React.FC = () => {
 
   const openEdit = (c: CampaignDto) => {
     setEditingCampaign(c);
+    setTargetMode(c.targetLocationId ? 'LOCATION' : (c.targetAdminUnitId ? 'ADMIN_UNIT' : 'ALL'));
     setFormData({
       title: c.title,
       description: c.description || '',
@@ -172,8 +183,34 @@ export const CampaignsPage: React.FC = () => {
     });
   };
 
-  const renderStatusBadge = (status: string) => {
-    switch (status) {
+  const renderStatusBadge = (c: CampaignDto) => {
+    const now = new Date();
+    const start = c.startTime ? new Date(c.startTime) : null;
+    const end = c.endTime ? new Date(c.endTime) : null;
+
+    if (c.status === 'APPROVED') {
+      if (end && now > end) {
+        return (
+          <span className="inline-flex items-center gap-1 font-semibold text-slate-600 bg-slate-100 border border-slate-300 px-2.5 py-0.5 rounded-sm text-[11px]">
+            <Clock className="w-3 h-3 text-slate-400" /> Đã kết thúc
+          </span>
+        );
+      }
+      if (start && now < start) {
+        return (
+          <span className="inline-flex items-center gap-1 font-bold text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-0.5 rounded-sm text-[11px]">
+            <Clock className="w-3 h-3 text-sky-500" /> Sắp phát sóng
+          </span>
+        );
+      }
+      return (
+        <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-sm text-[11px]">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Đang phát sóng
+        </span>
+      );
+    }
+
+    switch (c.status) {
       case 'DRAFT':
         return (
           <span className="inline-flex items-center gap-1 font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-sm text-[11px]">
@@ -186,12 +223,6 @@ export const CampaignsPage: React.FC = () => {
             <Clock className="w-3 h-3 text-amber-500 animate-pulse" /> Chờ duyệt
           </span>
         );
-      case 'APPROVED':
-        return (
-          <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-sm text-[11px]">
-            <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Đã duyệt
-          </span>
-        );
       case 'REJECTED':
         return (
           <span className="inline-flex items-center gap-1 font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-sm text-[11px]">
@@ -199,9 +230,15 @@ export const CampaignsPage: React.FC = () => {
           </span>
         );
       default:
-        return <span className="text-[11px] font-semibold text-slate-500">{status}</span>;
+        return <span className="text-[11px] font-semibold text-slate-500">{c.status}</span>;
     }
   };
+
+  const filteredCampaigns = campaigns.filter((c) => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase();
+    return c.title.toLowerCase().includes(term) || (c.description && c.description.toLowerCase().includes(term));
+  });
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -228,27 +265,40 @@ export const CampaignsPage: React.FC = () => {
 
       {error && <AlertBanner type="error" message={error} />}
 
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-2 bg-white p-2 rounded border border-slate-300 shadow-xs">
-        {['', 'DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED'].map((st) => (
-          <button
-            key={st}
-            onClick={() => setStatusFilter(st)}
-            className={`px-3 py-1.5 rounded-sm text-xs font-bold transition cursor-pointer ${
-              statusFilter === st ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            {st === ''
-              ? 'Tất cả trạng thái'
-              : st === 'DRAFT'
-              ? 'Bản nháp'
-              : st === 'PENDING_APPROVAL'
-              ? 'Chờ duyệt (Cần xử lý)'
-              : st === 'APPROVED'
-              ? 'Đã duyệt'
-              : 'Từ chối'}
-          </button>
-        ))}
+      {/* Filter Tabs & Search Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-2.5 rounded border border-slate-300 shadow-xs">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {['', 'DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED'].map((st) => (
+            <button
+              key={st}
+              onClick={() => setStatusFilter(st)}
+              className={`px-3 py-1.5 rounded-sm text-xs font-bold transition cursor-pointer ${
+                statusFilter === st ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              {st === ''
+                ? 'Tất cả trạng thái'
+                : st === 'DRAFT'
+                ? 'Bản nháp'
+                : st === 'PENDING_APPROVAL'
+                ? 'Chờ duyệt'
+                : st === 'APPROVED'
+                ? 'Đã duyệt'
+                : 'Từ chối'}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative w-full sm:w-64">
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Tìm theo tiêu đề chiến dịch..."
+            className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+          />
+        </div>
       </div>
 
       {/* Campaigns Table */}
@@ -273,14 +323,14 @@ export const CampaignsPage: React.FC = () => {
                     Đang tải danh sách chiến dịch...
                   </td>
                 </tr>
-              ) : campaigns.length === 0 ? (
+              ) : filteredCampaigns.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
                     Không có chiến dịch truyền thông nào phù hợp.
                   </td>
                 </tr>
               ) : (
-                campaigns.map((c) => (
+                filteredCampaigns.map((c) => (
                   <tr key={c.id} className="hover:bg-slate-50/80 transition">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
@@ -301,6 +351,22 @@ export const CampaignsPage: React.FC = () => {
                         <div>
                           <span className="font-bold text-slate-900 block text-xs">{c.title}</span>
                           <span className="text-[11px] text-slate-500 line-clamp-1 max-w-xs">{c.description || 'Không có mô tả'}</span>
+                          {c.targetLocationId ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200 mt-0.5">
+                              <MapPin className="w-2.5 h-2.5" />
+                              Điểm: {locations.find(l => l.id === c.targetLocationId)?.name || `ID #${c.targetLocationId}`}
+                            </span>
+                          ) : c.targetAdminUnitId ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-blue-800 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200 mt-0.5">
+                              <MapPin className="w-2.5 h-2.5" />
+                              Địa bàn: {adminUnits.find(u => u.id === c.targetAdminUnitId)?.name || `Cấp #${c.targetAdminUnitId}`}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.2 rounded mt-0.5">
+                              <Layers className="w-2.5 h-2.5" />
+                              Toàn thành phố
+                            </span>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -314,7 +380,7 @@ export const CampaignsPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="py-3.5 px-4">
-                      {renderStatusBadge(c.status)}
+                      {renderStatusBadge(c)}
                       {c.rejectReason && (
                         <span className="text-[10px] text-rose-600 block mt-1 italic">Lý do từ chối: {c.rejectReason}</span>
                       )}
@@ -326,30 +392,23 @@ export const CampaignsPage: React.FC = () => {
                       )}
                     </td>
                     <td className="py-3.5 px-4 text-right space-x-1.5 whitespace-nowrap">
+                      {/* Cho phép Sửa đối với tất cả trạng thái bao gồm cả APPROVED */}
+                      <button
+                        onClick={() => openEdit(c)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-sm text-xs font-semibold transition cursor-pointer"
+                        title="Chỉnh sửa nội dung chiến dịch"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" /> Sửa
+                      </button>
+
                       {(c.status === 'DRAFT' || c.status === 'REJECTED') && (
-                        <>
-                          <button
-                            onClick={() => openEdit(c)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-sm text-xs font-semibold transition cursor-pointer"
-                            title="Chỉnh sửa nội dung chiến dịch"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" /> Sửa
-                          </button>
-                          <button
-                            onClick={() => handleSubmitForApproval(c.id)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-[#003865] border border-sky-200 rounded-sm text-xs font-bold transition cursor-pointer"
-                            title="Trình duyệt chiến dịch lên cấp thẩm quyền"
-                          >
-                            <Send className="w-3.5 h-3.5" /> Gửi duyệt
-                          </button>
-                          <button
-                            onClick={() => handleDeleteCampaign(c.id)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-sm text-xs font-semibold transition cursor-pointer"
-                            title="Xóa chiến dịch"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" /> Xóa
-                          </button>
-                        </>
+                        <button
+                          onClick={() => handleSubmitForApproval(c.id)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-[#003865] border border-sky-200 rounded-sm text-xs font-bold transition cursor-pointer"
+                          title="Trình duyệt chiến dịch lên cấp thẩm quyền"
+                        >
+                          <Send className="w-3.5 h-3.5" /> Gửi duyệt
+                        </button>
                       )}
 
                       {c.status === 'PENDING_APPROVAL' && (
@@ -371,15 +430,13 @@ export const CampaignsPage: React.FC = () => {
                         </>
                       )}
 
-                      {c.status === 'APPROVED' && (
-                        <button
-                          onClick={() => handleDeleteCampaign(c.id)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-sm text-xs font-semibold transition cursor-pointer"
-                          title="Gỡ bỏ / Xóa chiến dịch"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" /> Xóa
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleDeleteCampaign(c.id)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-sm text-xs font-semibold transition cursor-pointer"
+                        title="Xóa chiến dịch"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Xóa
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -432,15 +489,110 @@ export const CampaignsPage: React.FC = () => {
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Link chuyển hướng khi bấm (Action URL)</label>
-            <input
-              type="text"
-              value={formData.actionUrl || ''}
-              onChange={(e) => setFormData({ ...formData, actionUrl: e.target.value })}
-              placeholder="Ví dụ: https://dichvucong.gov.vn"
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm"
-            />
+          {/* Target Scope Selection */}
+          <div className="bg-slate-50 p-3 rounded border border-slate-200 space-y-2">
+            <label className="block text-xs font-bold text-slate-800">
+              Phạm vi phát sóng chiến dịch
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setTargetMode('ALL');
+                  setFormData({ ...formData, targetAdminUnitId: undefined, targetLocationId: undefined });
+                }}
+                className={`py-1.5 px-2 rounded text-xs font-semibold border transition cursor-pointer ${
+                  targetMode === 'ALL'
+                    ? 'bg-[#004b87] text-white border-[#004b87]'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                Toàn Thành Phố
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setTargetMode('ADMIN_UNIT');
+                  setFormData({ ...formData, targetLocationId: undefined });
+                }}
+                className={`py-1.5 px-2 rounded text-xs font-semibold border transition cursor-pointer ${
+                  targetMode === 'ADMIN_UNIT'
+                    ? 'bg-[#004b87] text-white border-[#004b87]'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                Theo Quận / Huyện
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setTargetMode('LOCATION');
+                  setFormData({ ...formData, targetAdminUnitId: undefined });
+                }}
+                className={`py-1.5 px-2 rounded text-xs font-semibold border transition cursor-pointer ${
+                  targetMode === 'LOCATION'
+                    ? 'bg-[#004b87] text-white border-[#004b87]'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                Nhà Văn Hóa Cụ Thể
+              </button>
+            </div>
+
+            {targetMode === 'ADMIN_UNIT' && (
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Chọn Quận / Huyện:</label>
+                <select
+                  value={formData.targetAdminUnitId || ''}
+                  onChange={(e) => setFormData({ ...formData, targetAdminUnitId: e.target.value ? Number(e.target.value) : undefined })}
+                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded"
+                >
+                  <option value="">-- Chọn Quận / Huyện phát sóng --</option>
+                  {adminUnits.map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {targetMode === 'LOCATION' && (
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Chọn Nhà văn hóa:</label>
+                <select
+                  value={formData.targetLocationId || ''}
+                  onChange={(e) => setFormData({ ...formData, targetLocationId: e.target.value ? Number(e.target.value) : undefined })}
+                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded"
+                >
+                  <option value="">-- Chọn Nhà văn hóa phát sóng --</option>
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>[{loc.locationCode || loc.slug}] {loc.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Link chuyển hướng khi bấm (Action URL)</label>
+              <input
+                type="text"
+                value={formData.actionUrl || ''}
+                onChange={(e) => setFormData({ ...formData, actionUrl: e.target.value })}
+                placeholder="Ví dụ: https://dichvucong.haiphong.gov.vn"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Video tuyên truyền (YouTube URL)</label>
+              <input
+                type="text"
+                value={formData.videoUrl || ''}
+                onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                placeholder="Ví dụ: https://youtube.com/watch?v=..."
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
@@ -538,15 +690,110 @@ export const CampaignsPage: React.FC = () => {
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Link chuyển hướng khi bấm (Action URL)</label>
-            <input
-              type="text"
-              value={formData.actionUrl || ''}
-              onChange={(e) => setFormData({ ...formData, actionUrl: e.target.value })}
-              placeholder="Ví dụ: https://dichvucong.gov.vn"
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm"
-            />
+          {/* Target Scope Selection */}
+          <div className="bg-slate-50 p-3 rounded border border-slate-200 space-y-2">
+            <label className="block text-xs font-bold text-slate-800">
+              Phạm vi phát sóng chiến dịch
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setTargetMode('ALL');
+                  setFormData({ ...formData, targetAdminUnitId: undefined, targetLocationId: undefined });
+                }}
+                className={`py-1.5 px-2 rounded text-xs font-semibold border transition cursor-pointer ${
+                  targetMode === 'ALL'
+                    ? 'bg-[#004b87] text-white border-[#004b87]'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                Toàn Thành Phố
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setTargetMode('ADMIN_UNIT');
+                  setFormData({ ...formData, targetLocationId: undefined });
+                }}
+                className={`py-1.5 px-2 rounded text-xs font-semibold border transition cursor-pointer ${
+                  targetMode === 'ADMIN_UNIT'
+                    ? 'bg-[#004b87] text-white border-[#004b87]'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                Theo Quận / Huyện
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setTargetMode('LOCATION');
+                  setFormData({ ...formData, targetAdminUnitId: undefined });
+                }}
+                className={`py-1.5 px-2 rounded text-xs font-semibold border transition cursor-pointer ${
+                  targetMode === 'LOCATION'
+                    ? 'bg-[#004b87] text-white border-[#004b87]'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                Nhà Văn Hóa Cụ Thể
+              </button>
+            </div>
+
+            {targetMode === 'ADMIN_UNIT' && (
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Chọn Quận / Huyện:</label>
+                <select
+                  value={formData.targetAdminUnitId || ''}
+                  onChange={(e) => setFormData({ ...formData, targetAdminUnitId: e.target.value ? Number(e.target.value) : undefined })}
+                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded"
+                >
+                  <option value="">-- Chọn Quận / Huyện phát sóng --</option>
+                  {adminUnits.map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {targetMode === 'LOCATION' && (
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Chọn Nhà văn hóa:</label>
+                <select
+                  value={formData.targetLocationId || ''}
+                  onChange={(e) => setFormData({ ...formData, targetLocationId: e.target.value ? Number(e.target.value) : undefined })}
+                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded"
+                >
+                  <option value="">-- Chọn Nhà văn hóa phát sóng --</option>
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>[{loc.locationCode || loc.slug}] {loc.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Link chuyển hướng khi bấm (Action URL)</label>
+              <input
+                type="text"
+                value={formData.actionUrl || ''}
+                onChange={(e) => setFormData({ ...formData, actionUrl: e.target.value })}
+                placeholder="Ví dụ: https://dichvucong.haiphong.gov.vn"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Video tuyên truyền (YouTube URL)</label>
+              <input
+                type="text"
+                value={formData.videoUrl || ''}
+                onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                placeholder="Ví dụ: https://youtube.com/watch?v=..."
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">

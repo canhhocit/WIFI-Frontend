@@ -162,7 +162,7 @@ export const PortalStatusPage: React.FC = () => {
                 {session?.status === 'EXPIRED' ? 'Phiên Wi-Fi Đã Hết Thời Gian' : 'Đã Ngắt Kết Nối Wi-Fi'}
               </h1>
               <p className="text-xs text-slate-500 mt-1">
-                Điểm phát sóng: <strong>{session?.locationName || 'Nhà văn hóa Hải Phòng'}</strong>
+                Điểm phát sóng: <strong>{session?.locationName || 'Wifi công cộng Hải Phòng'}</strong>
               </p>
             </div>
 
