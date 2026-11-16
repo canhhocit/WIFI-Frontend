@@ -9,7 +9,8 @@ import {
   CreateIncidentRequest,
   AssignIncidentRequest,
   ResolveIncidentRequest,
-  LocationDto
+  LocationDto,
+  CitizenReportDto
 } from '../../types/models';
 import {
   AlertCircle,
@@ -34,6 +35,8 @@ export const IncidentsPage: React.FC = () => {
 
   const [incidents, setIncidents] = useState<IncidentTicketDto[]>([]);
   const [locations, setLocations] = useState<LocationDto[]>([]);
+  const [citizenReports, setCitizenReports] = useState<CitizenReportDto[]>([]);
+  const [activeTab, setActiveTab] = useState<'TICKETS' | 'CITIZEN_REPORTS'>('TICKETS');
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [selectedSeverity, setSelectedSeverity] = useState<string>('ALL');
@@ -67,12 +70,14 @@ export const IncidentsPage: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [ticketsPage, locsPage] = await Promise.all([
+      const [ticketsPage, locsPage, reportsPage] = await Promise.all([
         adminApi.getIncidents({ size: 50 }),
         adminApi.getLocations({ page: 0, size: 100 }),
+        adminApi.getCitizenReports({ size: 50 }).catch(() => ({ content: [], totalElements: 0 })),
       ]);
       setIncidents(ticketsPage.content);
       setLocations(locsPage.content);
+      setCitizenReports(reportsPage.content || []);
     } catch (err) {
       console.error('Failed to load incidents:', err);
     } finally {
@@ -83,6 +88,8 @@ export const IncidentsPage: React.FC = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  const [citizenStatusFilter, setCitizenStatusFilter] = useState<string>('ALL');
 
   const filteredIncidents = useMemo(() => {
     return incidents.filter((t) => {
@@ -97,6 +104,21 @@ export const IncidentsPage: React.FC = () => {
       return matchStatus && matchSeverity && matchSearch;
     });
   }, [incidents, selectedStatus, selectedSeverity, searchQuery]);
+
+  const filteredCitizenReports = useMemo(() => {
+    return citizenReports.filter((r) => {
+      const matchStatus = citizenStatusFilter === 'ALL' || r.status === citizenStatusFilter;
+      const matchSearch =
+        !searchQuery ||
+        (r.locationName && r.locationName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (r.issueType && r.issueType.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (r.reporterName && r.reporterName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (r.phoneNumber && r.phoneNumber.includes(searchQuery)) ||
+        (r.ticketCode && r.ticketCode.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (r.description && r.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchStatus && matchSearch;
+    });
+  }, [citizenReports, citizenStatusFilter, searchQuery]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,7 +243,7 @@ export const IncidentsPage: React.FC = () => {
       {/* Incident Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
-          <div className="text-xs text-gray-500 font-medium">Tổng số phiếu sự cố</div>
+          <div className="text-xs text-gray-500 font-medium">Tổng số phiếu sự cố SLA</div>
           <div className="mt-1 text-2xl font-bold text-gray-900">{incidents.length}</div>
           <div className="text-xs text-gray-500 mt-0.5">
             {incidents.filter(i => i.status !== 'RESOLVED' && i.status !== 'CLOSED').length} đang xử lý
@@ -245,15 +267,49 @@ export const IncidentsPage: React.FC = () => {
         </div>
 
         <div className="bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
-          <div className="text-xs text-blue-600 font-medium">Tỷ lệ giải quyết sự cố</div>
-          <div className="mt-1 text-2xl font-bold text-blue-600">
-            {incidents.length > 0 ? Math.round((incidents.filter(i => i.status === 'RESOLVED' || i.status === 'CLOSED').length / incidents.length) * 100) : 100}%
+          <div className="text-xs text-amber-700 font-medium">
+            <span>Phản ánh người dân</span>
           </div>
-          <div className="text-xs text-blue-600/80 mt-0.5">Tiến độ phục hồi hệ thống</div>
+          <div className="mt-1 text-2xl font-bold text-amber-600">{citizenReports.length}</div>
+          <div className="text-xs text-amber-700/80 mt-0.5">Tự động tạo sự cố từ 3 phản ánh/30p</div>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
+      {/* Tab Navigation */}
+      <div className="flex border-b border-gray-200 gap-6">
+        <button
+          type="button"
+          onClick={() => setActiveTab('TICKETS')}
+          className={`pb-3 text-xs font-bold transition flex items-center gap-2 border-b-2 cursor-pointer ${
+            activeTab === 'TICKETS'
+              ? 'border-rose-600 text-rose-700'
+              : 'border-transparent text-gray-500 hover:text-gray-800'
+          }`}
+        >
+          <ShieldAlert className="w-4 h-4" />
+          <span>Phiếu sự cố kỹ thuật SLA ({incidents.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('CITIZEN_REPORTS')}
+          className={`pb-3 text-xs font-bold transition flex items-center gap-2 border-b-2 cursor-pointer ${
+            activeTab === 'CITIZEN_REPORTS'
+              ? 'border-rose-600 text-rose-700'
+              : 'border-transparent text-gray-500 hover:text-gray-800'
+          }`}
+        >
+          <MessageSquare className="w-4 h-4" />
+          <span>Phản ánh chất lượng từ người dân</span>
+          <span className="px-2 py-0.5 rounded-full text-[10.5px] bg-amber-100 text-amber-800 font-mono font-bold">
+            {citizenReports.length}
+          </span>
+        </button>
+      </div>
+
+      {activeTab === 'TICKETS' ? (
+        <>
+          {/* Filter and Search Bar */}
       <div className="bg-white p-3 rounded-sm border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 flex-1">
           <div className="relative min-w-[220px] flex-1 max-w-sm">
@@ -420,6 +476,146 @@ export const IncidentsPage: React.FC = () => {
           </table>
         </div>
       </div>
+    </>
+  ) : (
+    <div className="space-y-4">
+      {/* Information Notice for Citizen Reports */}
+      <div className="p-3 bg-amber-50 border border-amber-200 rounded text-xs text-amber-900 flex items-start gap-2.5">
+        <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+        <div>
+          <strong className="font-bold text-amber-800">Cơ chế tự động gom phản ánh:</strong> Người dân có thể gửi phản ánh chất lượng Wi-Fi bất kỳ lúc nào từ Captive Portal (kể cả trước hoặc sau khi đăng nhập). Khi một điểm nhà văn hóa tiếp nhận <strong>từ 03 phản ánh trong vòng 30 phút</strong>, hệ thống tự động kích hoạt tạo phiếu sự cố kỹ thuật và áp dụng hạn cam kết SLA 8 giờ.
+        </div>
+      </div>
+
+      {/* Citizen Reports Filter Bar */}
+      <div className="bg-white p-3 rounded-sm border border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2 flex-1">
+          <div className="relative min-w-[220px] flex-1 max-w-sm">
+            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Tìm theo tên điểm, SĐT, loại sự cố, mã SC-..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-rose-500"
+            />
+          </div>
+
+          <select
+            value={citizenStatusFilter}
+            onChange={(e) => setCitizenStatusFilter(e.target.value)}
+            className="text-xs border border-gray-300 rounded-sm px-2.5 py-1.5 bg-white text-gray-700"
+          >
+            <option value="ALL">-- Tất cả trạng thái phản ánh --</option>
+            <option value="PENDING">Đang chờ xử lý (PENDING)</option>
+            <option value="AGGREGATED_TO_INCIDENT">Đã tự động tạo sự cố (AGGREGATED)</option>
+            <option value="RESOLVED">Đã xử lý (RESOLVED)</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Citizen Reports Table */}
+      <div className="bg-white rounded-sm border border-gray-200 overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 text-xs">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Thời gian</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Điểm phát NVH</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Loại phản ánh</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Người gửi & SĐT</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Mô tả sự cố</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Trạng thái / Phiếu sự cố</th>
+                <th className="px-4 py-3 text-right font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 bg-white">
+              {filteredCitizenReports.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                    Chưa có phản ánh nào từ người dân
+                  </td>
+                </tr>
+              ) : (
+                filteredCitizenReports.map((r) => {
+                  const issueBadge =
+                    r.issueType === 'CANNOT_CONNECT'
+                      ? { text: 'Mất Internet', color: 'bg-red-100 text-red-800' }
+                      : r.issueType === 'SLOW_CONNECTION'
+                      ? { text: 'Mạng chậm', color: 'bg-amber-100 text-amber-800' }
+                      : r.issueType === 'SIGNAL_WEAK'
+                      ? { text: 'Sóng yếu', color: 'bg-orange-100 text-orange-800' }
+                      : r.issueType === 'PORTAL_ERROR'
+                      ? { text: 'Lỗi trang chào', color: 'bg-blue-100 text-blue-800' }
+                      : r.issueType === 'POWER_OUTAGE'
+                      ? { text: 'Mất điện', color: 'bg-purple-100 text-purple-800' }
+                      : { text: r.issueType, color: 'bg-gray-100 text-gray-800' };
+
+                  return (
+                    <tr key={r.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                        <div className="font-mono">{new Date(r.createdAt).toLocaleTimeString('vi-VN')}</div>
+                        <div className="text-[11px] text-gray-400">{new Date(r.createdAt).toLocaleDateString('vi-VN')}</div>
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-gray-900">
+                        {r.locationName}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex px-2 py-0.5 rounded text-[11px] font-bold ${issueBadge.color}`}>
+                          {issueBadge.text}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-700">
+                        <div>{r.reporterName || 'Người dân cơ sở'}</div>
+                        {r.phoneNumber && (
+                          <div className="text-[11px] font-mono text-blue-600 font-semibold">{r.phoneNumber}</div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 max-w-xs truncate">
+                        {r.description || <span className="italic text-gray-400">Không có mô tả</span>}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {r.ticketCode ? (
+                          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-300">
+                            <span>{r.ticketCode}</span>
+                          </div>
+                        ) : r.status === 'PENDING' ? (
+                          <span className="inline-flex px-2 py-0.5 rounded text-[11px] font-semibold bg-gray-100 text-gray-600">
+                            Chờ đủ 3 phản ánh
+                          </span>
+                        ) : (
+                          <span className="inline-flex px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700">
+                            {r.status}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        {!r.ticketCode ? (
+                          <button
+                            onClick={() => {
+                              if (r.locationId) setCreateLocationId(r.locationId);
+                              setCreateTitle(`Sự cố mạng tại ${r.locationName} (từ phản ánh người dân)`);
+                              setCreateDescription(`Phản ánh: ${r.issueType} - ${r.description || ''} (${r.phoneNumber || 'Không để lại SĐT'})`);
+                              setShowCreateModal(true);
+                            }}
+                            className="px-2.5 py-1 text-white bg-rose-600 hover:bg-rose-700 rounded text-[11px] font-medium cursor-pointer"
+                          >
+                            Tạo phiếu sự cố
+                          </button>
+                        ) : (
+                          <span className="text-[11px] text-gray-400 italic">Đã gắn phiếu</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )}
 
       {/* Incident Details & Timeline Drawer */}
       {selectedIncident && (

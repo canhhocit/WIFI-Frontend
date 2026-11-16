@@ -1,5 +1,13 @@
 export type SessionStatus = 'PENDING' | 'AUTHORIZED' | 'REVOKED' | 'EXPIRED' | 'FAILED';
 
+export interface AuthFunnelStep {
+  step: number;
+  stepName: string;
+  count: number;
+  retentionPct: number;
+  dropPct: number;
+}
+
 export interface LocationDto {
   id: number;
   slug: string;
@@ -48,6 +56,26 @@ export interface AdminUnitDto {
   createdAt?: string;
 }
 
+export interface LocationGroupDto {
+  id: number;
+  name: string;
+  code: string;
+  description?: string;
+  color: string;
+  locationCount: number;
+  locationIds?: number[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateLocationGroupRequest {
+  name: string;
+  code: string;
+  description?: string;
+  color?: string;
+  locationIds?: number[];
+}
+
 export interface NetworkDeviceDto {
   id: number;
   locationId?: number;
@@ -87,6 +115,28 @@ export interface DeviceSwapRequest {
   newModel?: string;
   newVendor?: string;
   swapReason: string;
+}
+
+export interface GwnClientDto {
+  mac: string;
+  ip: string;
+  hostname: string;
+  ssid: string;
+  apMac: string;
+  apName: string;
+  radioBand: string;
+  rssi: number;
+  bytesRx: number;
+  bytesTx: number;
+  connectTimeSeconds: number;
+}
+
+export interface GwnUpgradeResult {
+  success: boolean;
+  message: string;
+  upgradedMacs: string[];
+  targetFirmware: string;
+  elapsedMs: number;
 }
 
 export interface ExcelImportSummaryDto {
@@ -267,6 +317,12 @@ export interface LoginResponse {
   token: string;
   tokenType: string;
   user: AdminUserDto;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export interface GatewayStatusDto {
@@ -505,6 +561,16 @@ export interface PortalTemplateDto {
   active: boolean;
 }
 
+export interface PortalTemplateVersionDto {
+  id: number;
+  templateId: number;
+  versionNumber: number;
+  versionName?: string;
+  snapshotJson: string;
+  createdBy: string;
+  createdAt: string;
+}
+
 export interface OtpRequestDto {
   phoneNumber: string;
   clientMac: string;
@@ -622,6 +688,49 @@ export interface AssignIncidentRequest {
 export interface ResolveIncidentRequest {
   resolutionSummary: string;
   rootCauseCategory: RootCauseCategory;
+}
+
+export type CitizenIssueType =
+  | 'SLOW_CONNECTION'
+  | 'CANNOT_CONNECT'
+  | 'SIGNAL_WEAK'
+  | 'PORTAL_ERROR'
+  | 'POWER_OUTAGE'
+  | 'OTHER';
+
+export interface CreateCitizenReportRequest {
+  locationId?: number;
+  locationSlug?: string;
+  issueType: CitizenIssueType;
+  description?: string;
+  reporterName?: string;
+  phoneNumber?: string;
+  clientMac?: string;
+  clientIp?: string;
+}
+
+export interface CitizenReportResponse {
+  reportId: number;
+  incidentCreated: boolean;
+  ticketCode?: string;
+  locationName: string;
+  message: string;
+}
+
+export interface CitizenReportDto {
+  id: number;
+  locationId?: number;
+  locationName: string;
+  clientMac?: string;
+  clientIp?: string;
+  phoneNumber?: string;
+  reporterName?: string;
+  issueType: CitizenIssueType;
+  description?: string;
+  status: 'PENDING' | 'AGGREGATED_TO_INCIDENT' | 'RESOLVED';
+  incidentTicketId?: number;
+  ticketCode?: string;
+  createdAt: string;
 }
 
 export interface SlaMetricsDto {

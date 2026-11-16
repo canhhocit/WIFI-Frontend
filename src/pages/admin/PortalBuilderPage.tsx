@@ -25,10 +25,15 @@ import {
   Monitor,
   Check,
   Star,
+  Users,
+  AlertTriangle,
   ClipboardList,
+  History,
+  Maximize2,
+  X,
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
-import { PortalTemplateDto, LocationDto } from '../../types/models';
+import { PortalTemplateDto, LocationDto, PortalTemplateVersionDto } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
 import { ImageUploadInput } from '../../components/ImageUploadInput';
 import { Toast } from '../../components/Toast';
@@ -70,6 +75,7 @@ export const PortalBuilderPage: React.FC = () => {
     termsText: 'Bằng việc truy cập mạng Wi-Fi công cộng này, quý vị đồng ý tuân thủ quy tắc ứng xử trên không gian mạng và các quy định pháp luật hiện hành.',
     active: true,
   });
+  const [savedTemplate, setSavedTemplate] = useState<PortalTemplateDto | null>(null);
 
   // Per-Location Customization State
   const [locations, setLocations] = useState<LocationDto[]>([]);
@@ -83,11 +89,82 @@ export const PortalBuilderPage: React.FC = () => {
     backgroundImageUrl: '',
     promoActionUrl: '',
   });
+  const [savedLocFormData, setSavedLocFormData] = useState<typeof locFormData | null>(null);
 
   // Live Studio Simulation State
   const [previewDevice, setPreviewDevice] = useState<'MOBILE' | 'DESKTOP'>('MOBILE');
-  const [simCampaign, setSimCampaign] = useState(true);
-  const [simSurvey, setSimSurvey] = useState(true);
+  const [previewExpanded, setPreviewExpanded] = useState(false);
+  const [simCampaign, setSimCampaign] = useState(false);
+  const [simSurvey, setSimSurvey] = useState(false);
+
+  useEffect(() => {
+    if (!previewExpanded) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setPreviewExpanded(false);
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [previewExpanded]);
+
+  // Version History Modal State
+  const [versionsModalOpen, setVersionsModalOpen] = useState(false);
+  const [versions, setVersions] = useState<PortalTemplateVersionDto[]>([]);
+  const [loadingVersions, setLoadingVersions] = useState(false);
+  const [rollingBack, setRollingBack] = useState(false);
+
+  const openVersionsModal = async () => {
+    if (!template.id) {
+      setToast({
+        show: true,
+        title: 'Chưa có dữ liệu',
+        message: 'Vui lòng lưu mẫu giao diện trước khi xem lịch sử thay đổi',
+        type: 'warning',
+      });
+      return;
+    }
+    setVersionsModalOpen(true);
+    setLoadingVersions(true);
+    try {
+      const data = await adminApi.getPortalTemplateVersions(template.id);
+      setVersions(data);
+    } catch (e: any) {
+      setToast({
+        show: true,
+        title: 'Lỗi tải lịch sử',
+        message: e?.message || 'Không thể tải lịch sử phiên bản',
+        type: 'error',
+      });
+    } finally {
+      setLoadingVersions(false);
+    }
+  };
+
+  const handleRollback = async (versionNumber: number) => {
+    if (!template.id) return;
+    if (!window.confirm(`Bạn có chắc chắn muốn khôi phục về phiên bản v${versionNumber}?`)) return;
+    setRollingBack(true);
+    try {
+      const restored = await adminApi.rollbackPortalTemplateVersion(template.id, versionNumber);
+      setTemplate(restored);
+      setSavedTemplate(restored);
+      setVersionsModalOpen(false);
+      setToast({
+        show: true,
+        title: 'Khôi phục thành công',
+        message: `Đã khôi phục giao diện về phiên bản v${versionNumber}`,
+        type: 'success',
+      });
+    } catch (e: any) {
+      setToast({
+        show: true,
+        title: 'Lỗi khôi phục',
+        message: e?.message || 'Không thể khôi phục phiên bản đã chọn',
+        type: 'error',
+      });
+    } finally {
+      setRollingBack(false);
+    }
+  };
   const [simCapacityFull, setSimCapacityFull] = useState(false);
 
   const colorPresets = [
@@ -111,6 +188,9 @@ export const PortalBuilderPage: React.FC = () => {
 
       if (activeTpl) {
         setTemplate(activeTpl);
+        setSavedTemplate(activeTpl);
+      } else {
+        setSavedTemplate(template);
       }
 
       if (locsRes?.content) {
@@ -120,6 +200,14 @@ export const PortalBuilderPage: React.FC = () => {
           setSelectedLocationId(first.id);
           setSelectedLocation(first);
           setLocFormData({
+            welcomeMessage: first.welcomeMessage || '',
+            promoTitle: first.promoTitle || '',
+            promoContent: first.promoContent || '',
+            promoBannerUrl: first.promoBannerUrl || '',
+            backgroundImageUrl: first.backgroundImageUrl || '',
+            promoActionUrl: first.promoActionUrl || '',
+          });
+          setSavedLocFormData({
             welcomeMessage: first.welcomeMessage || '',
             promoTitle: first.promoTitle || '',
             promoContent: first.promoContent || '',
@@ -138,11 +226,20 @@ export const PortalBuilderPage: React.FC = () => {
   };
 
   const handleSelectLocation = (locId: number) => {
+    if (savedLocFormData && JSON.stringify(locFormData) !== JSON.stringify(savedLocFormData) && !window.confirm('Bạn có thay đổi chưa lưu. Bỏ thay đổi và chuyển sang điểm phát khác?')) return;
     setSelectedLocationId(locId);
     const found = locations.find((l) => l.id === locId);
     if (found) {
       setSelectedLocation(found);
       setLocFormData({
+        welcomeMessage: found.welcomeMessage || '',
+        promoTitle: found.promoTitle || '',
+        promoContent: found.promoContent || '',
+        promoBannerUrl: found.promoBannerUrl || '',
+        backgroundImageUrl: found.backgroundImageUrl || '',
+        promoActionUrl: found.promoActionUrl || '',
+      });
+      setSavedLocFormData({
         welcomeMessage: found.welcomeMessage || '',
         promoTitle: found.promoTitle || '',
         promoContent: found.promoContent || '',
@@ -160,6 +257,7 @@ export const PortalBuilderPage: React.FC = () => {
     try {
       const saved = await adminApi.savePortalTemplate(template);
       setTemplate(saved);
+      setSavedTemplate(saved);
       setToast({
         show: true,
         title: 'Lưu thành công',
@@ -210,6 +308,16 @@ export const PortalBuilderPage: React.FC = () => {
 
       setSelectedLocation(updated);
       setLocations((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
+      const savedLocForm = {
+        welcomeMessage: updated.welcomeMessage || '',
+        promoTitle: updated.promoTitle || '',
+        promoContent: updated.promoContent || '',
+        promoBannerUrl: updated.promoBannerUrl || '',
+        backgroundImageUrl: updated.backgroundImageUrl || '',
+        promoActionUrl: updated.promoActionUrl || '',
+      };
+      setLocFormData(savedLocForm);
+      setSavedLocFormData(savedLocForm);
       setToast({
         show: true,
         title: 'Cập nhật thành công',
@@ -264,13 +372,17 @@ export const PortalBuilderPage: React.FC = () => {
 
   const previewWelcomeText =
     scope === 'LOCATION'
-      ? locFormData.welcomeMessage || selectedLocation?.welcomeMessage || template.welcomeText
+      ? locFormData.welcomeMessage || template.welcomeText
       : template.welcomeText;
 
   const currentPreviewPortalLink =
     scope === 'LOCATION' && selectedLocation
       ? `/portal?location=${selectedLocation.slug}`
       : '/portal';
+
+  const hasUnsavedChanges = scope === 'GLOBAL'
+    ? Boolean(savedTemplate && JSON.stringify(template) !== JSON.stringify(savedTemplate))
+    : Boolean(savedLocFormData && JSON.stringify(locFormData) !== JSON.stringify(savedLocFormData));
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -280,6 +392,16 @@ export const PortalBuilderPage: React.FC = () => {
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Trình Dựng & Tùy Biến Cổng Chào Wi-Fi</h1>
         </div>
         <div className="flex items-center gap-2">
+          {scope === 'GLOBAL' && (
+            <button
+              onClick={openVersionsModal}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 hover:bg-slate-100 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
+              title="Lịch sử thay đổi giao diện"
+            >
+              <History className="w-3.5 h-3.5 text-indigo-600" />
+              Lịch sử giao diện
+            </button>
+          )}
           <a
             href={currentPreviewPortalLink}
             target="_blank"
@@ -350,7 +472,7 @@ export const PortalBuilderPage: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-7 bg-white rounded border border-slate-300 shadow-xs flex flex-col lg:max-h-[calc(100vh-175px)] overflow-hidden">
+          <div className="lg:col-span-6 bg-white rounded border border-slate-300 shadow-xs flex flex-col lg:max-h-[calc(100vh-175px)] overflow-hidden">
             {scope === 'GLOBAL' ? (
               /* FORM 1: GLOBAL CITYWIDE TEMPLATE */
               <form onSubmit={handleSaveGlobalTemplate} className="flex flex-col h-full overflow-hidden text-xs">
@@ -407,6 +529,12 @@ export const PortalBuilderPage: React.FC = () => {
                     </div>
                   </div>
 
+                  <details className="group rounded-sm border border-slate-200 bg-white">
+                    <summary className="cursor-pointer list-none px-3.5 py-3 font-bold text-sm text-slate-800 flex items-center justify-between">
+                      Nội dung và màu sắc
+                      <ChevronDown className="w-4 h-4 text-slate-400 transition group-open:rotate-180" />
+                    </summary>
+                    <div className="px-3.5 pb-4 space-y-4 border-t border-slate-100 pt-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Màu chủ đạo (Theme Color nút bấm)</label>
@@ -480,7 +608,16 @@ export const PortalBuilderPage: React.FC = () => {
                     />
                   </div>
 
+                    </div>
+                  </details>
+
                   {/* 3 IMAGE SECTIONS WITH DISTINCT NUMBERING */}
+                  <details className="group rounded-sm border border-slate-200 bg-white">
+                    <summary className="cursor-pointer list-none px-3.5 py-3 font-bold text-sm text-slate-800 flex items-center justify-between">
+                      Hình ảnh và nhận diện
+                      <ChevronDown className="w-4 h-4 text-slate-400 transition group-open:rotate-180" />
+                    </summary>
+                    <div className="px-3.5 pb-4 space-y-4 border-t border-slate-100 pt-4">
                   <div className="space-y-4 pt-1">
                     {/* 1. Background Wallpaper */}
                     <div className="p-3.5 bg-slate-50 rounded-sm border border-slate-200 space-y-2">
@@ -571,6 +708,15 @@ export const PortalBuilderPage: React.FC = () => {
                     </div>
                   </div>
 
+                    </div>
+                  </details>
+
+                  <details className="group rounded-sm border border-slate-200 bg-white">
+                    <summary className="cursor-pointer list-none px-3.5 py-3 font-bold text-sm text-slate-800 flex items-center justify-between">
+                      Điều khoản và quy định
+                      <ChevronDown className="w-4 h-4 text-slate-400 transition group-open:rotate-180" />
+                    </summary>
+                    <div className="px-3.5 pb-4 border-t border-slate-100 pt-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">Điều khoản & Quy định an toàn mạng</label>
                     <textarea
@@ -580,10 +726,15 @@ export const PortalBuilderPage: React.FC = () => {
                       className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm leading-relaxed"
                     />
                   </div>
+                    </div>
+                  </details>
                 </div>
 
                 {/* Sticky Action Footer */}
-                <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between rounded-b flex-shrink-0">
+                <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between rounded-b flex-shrink-0 gap-3">
+                  <span className={`text-[11px] font-semibold ${hasUnsavedChanges ? 'text-amber-700' : 'text-emerald-700'}`}>
+                    {hasUnsavedChanges ? 'Có thay đổi chưa lưu' : 'Đã lưu'}
+                  </span>
                  
                   <button
                     type="submit"
@@ -660,7 +811,11 @@ export const PortalBuilderPage: React.FC = () => {
                       placeholder={`Ví dụ: Chào mừng Nhân dân đến với ${selectedLocation?.name || 'Nhà văn hóa'}`}
                       className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                     />
-                    <p className="text-[10.5px] text-slate-400 mt-1">Để trống nếu muốn dùng câu chung</p>
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      {locFormData.welcomeMessage.trim()
+                        ? 'Đang dùng lời chào riêng cho điểm này.'
+                        : `Đang kế thừa mẫu chung: “${template.welcomeText || 'Chào mừng đến với điểm phát Wi-Fi'}”`}
+                    </p>
                   </div>
 
                   {/* Banner Photo for this specific location */}
@@ -674,7 +829,7 @@ export const PortalBuilderPage: React.FC = () => {
                       value={locFormData.promoBannerUrl}
                       onChange={(url) => setLocFormData({ ...locFormData, promoBannerUrl: url })}
                       label="Tải ảnh hoặc dán URL:"
-                      helperText="Tải từ máy hoặc để trống để dùng ảnh chung"
+                      helperText={locFormData.promoBannerUrl ? 'Ảnh riêng của điểm phát.' : 'Đang dùng ảnh banner của mẫu chung.'}
                       category="banners"
                     />
                   </div>
@@ -692,17 +847,18 @@ export const PortalBuilderPage: React.FC = () => {
                       value={locFormData.backgroundImageUrl}
                       onChange={(url) => setLocFormData({ ...locFormData, backgroundImageUrl: url })}
                       label="Tải ảnh nền riêng hoặc dán URL:"
-                      helperText="Khuyên dùng ảnh phong cảnh địa phương (hoặc để trống)"
+                      helperText={locFormData.backgroundImageUrl ? 'Ảnh nền riêng của điểm phát.' : 'Đang dùng ảnh nền của mẫu chung.'}
                       category="banners"
                     />
                   </div>
 
                   {/* Local Bulletin / Community Notice */}
-                  <div className="p-3.5 bg-amber-50/60 rounded-sm border border-amber-200 space-y-3">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-[#a81c1c]">
-                      <Megaphone className="w-4 h-4" />
-                      <span>Bản Tin</span>
-                    </div>
+                  <details open className="group p-3.5 bg-amber-50/60 rounded-sm border border-amber-200 space-y-3">
+                    <summary className="cursor-pointer list-none flex items-center justify-between text-xs font-bold text-[#a81c1c]">
+                      <span className="flex items-center gap-1.5"><Megaphone className="w-4 h-4" /> Bản tin và liên kết địa phương</span>
+                      <ChevronDown className="w-4 h-4 text-slate-400 transition group-open:rotate-180" />
+                    </summary>
+                    <div className="space-y-3 pt-2">
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 mb-1">
                         Tiêu đề bản tin địa phương:
@@ -739,13 +895,17 @@ export const PortalBuilderPage: React.FC = () => {
                         className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm bg-white font-mono"
                       />
                     </div>
-                  </div>
+                    </div>
+                  </details>
                 </div>
 
                 {/* Sticky Action Footer */}
-                <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between rounded-b flex-shrink-0">
+                <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between rounded-b flex-shrink-0 gap-3">
                   <span className="text-[11px] text-slate-500 truncate mr-2 hidden sm:inline">
                     Áp dụng riêng cho điểm: <strong>{selectedLocation?.name}</strong>
+                  </span>
+                  <span className={`text-[11px] font-semibold ${hasUnsavedChanges ? 'text-amber-700' : 'text-emerald-700'}`}>
+                    {hasUnsavedChanges ? 'Chưa lưu' : 'Đã lưu'}
                   </span>
                   <button
                     type="submit"
@@ -761,16 +921,36 @@ export const PortalBuilderPage: React.FC = () => {
           </div>
 
           {/* Right Live Preview: Smartphone Mockup (5 cols) - Sticky Centered */}
-          <div className="lg:col-span-5 lg:sticky lg:top-4 lg:self-start flex flex-col items-center justify-center">
+          <div
+            className={previewExpanded
+              ? 'fixed inset-0 z-[60] flex flex-col items-center justify-center bg-slate-950/80 p-3 sm:p-6'
+              : 'lg:col-span-6 lg:sticky lg:top-4 lg:self-start flex flex-col items-center justify-center'}
+            role={previewExpanded ? 'dialog' : undefined}
+            aria-modal={previewExpanded ? true : undefined}
+            aria-label={previewExpanded ? 'Xem trước cổng Wi-Fi phóng lớn' : undefined}
+          >
             {/* Live Studio Toolbar */}
-            <div className="w-full max-w-[340px] mb-2 px-1 space-y-1.5">
+              <div className={`${previewExpanded ? 'w-full max-w-[1600px]' : previewDevice === 'MOBILE' ? 'w-full max-w-[500px]' : 'w-full max-w-[900px]'} mb-2 px-1 space-y-1.5`}>
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  <Smartphone className="w-4 h-4 text-[#004b87]" />
+                    {previewDevice === 'MOBILE' ? <Smartphone className="w-4 h-4 text-[#004b87]" /> : <Monitor className="w-4 h-4 text-[#004b87]" />}
                   {scope === 'LOCATION' ? 'Xem Trước Điểm Này' : 'Xem Trước Mẫu Chung'}
                 </span>
-                <span className="text-[10px] font-mono text-slate-400">375 x 667 px</span>
+                  <div className="inline-flex rounded-sm border border-slate-200 bg-white p-0.5" role="group" aria-label="Kích thước xem trước">
+                    <button type="button" onClick={() => setPreviewDevice('MOBILE')} className={`px-2 py-1 rounded-sm text-[10px] font-semibold ${previewDevice === 'MOBILE' ? 'bg-[#004b87] text-white' : 'text-slate-600'}`}>Điện thoại</button>
+                    <button type="button" onClick={() => setPreviewDevice('DESKTOP')} className={`px-2 py-1 rounded-sm text-[10px] font-semibold ${previewDevice === 'DESKTOP' ? 'bg-[#004b87] text-white' : 'text-slate-600'}`}>Máy tính</button>
+                    <button type="button" onClick={() => setPreviewExpanded((expanded) => !expanded)} className="ml-1 inline-flex items-center gap-1 px-2 py-1 rounded-sm text-[10px] font-semibold text-slate-700 hover:bg-slate-100" aria-label={previewExpanded ? 'Thu nhỏ bản xem trước' : 'Phóng lớn bản xem trước'}>
+                      {previewExpanded ? <X className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                      {previewExpanded ? 'Đóng' : 'Phóng lớn'}
+                    </button>
+                  </div>
               </div>
+
+                <p className="text-[10px] text-slate-500">
+                  {previewDevice === 'MOBILE'
+                    ? 'Cuộn trong màn hình để xem phần kết nối. Chiến dịch và khảo sát là nội dung mô phỏng.'
+                    : 'Bố cục máy tính gồm khu vực thông tin và khu vực kết nối như trang khách.'}
+                </p>
 
               {/* Scenario Toggles */}
               <div className="flex items-center justify-between gap-1 bg-white p-1.5 rounded border border-slate-200 text-[10.5px]">
@@ -805,15 +985,24 @@ export const PortalBuilderPage: React.FC = () => {
             </div>
 
             {/* Phone Bezel */}
-            <div className="w-[320px] sm:w-[340px] h-[580px] xl:h-[620px] rounded-[36px] xl:rounded-[40px] border-[8px] xl:border-[10px] border-slate-900 bg-white shadow-2xl overflow-hidden flex flex-col relative">
+            <div
+              className={previewDevice === 'MOBILE'
+                ? `max-w-full rounded-[48px] xl:rounded-[52px] border-[10px] xl:border-[12px] border-slate-900 bg-white shadow-2xl overflow-hidden flex flex-col relative ${previewExpanded ? '' : 'w-[480px] h-[960px]'}`
+                : `w-full rounded-2xl border-8 border-slate-800 bg-white shadow-2xl overflow-hidden flex flex-col relative ${previewExpanded ? 'max-w-[1600px] h-[calc(92dvh-120px)]' : 'max-w-[1100px] h-[700px]'}`}
+              style={previewExpanded
+                ? previewDevice === 'MOBILE'
+                  ? { width: 'min(480px, 92vw, calc((100dvh - 180px) * 0.5))', height: 'min(900px, calc(100dvh - 180px))' }
+                  : { height: 'calc(92dvh - 120px)' }
+                : undefined}
+            >
               {/* Phone Speaker & Camera Notch */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-5 bg-slate-900 rounded-b-xl z-20 flex items-center justify-center">
+              {previewDevice === 'MOBILE' && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-5 bg-slate-900 rounded-b-xl z-20 flex items-center justify-center">
                 <div className="w-3 h-3 rounded-full bg-slate-950 mr-2" />
                 <div className="w-10 h-1 bg-slate-800 rounded-full" />
-              </div>
+              </div>}
 
               {/* Dynamic Preview Content */}
-              <div className="flex-1 overflow-y-auto p-3 pt-7 flex flex-col justify-between relative">
+              <div className={`flex-1 min-h-0 overflow-y-auto overscroll-contain ${previewDevice === 'MOBILE' ? 'px-2.5 pt-6 pb-2' : 'p-0'} relative`}>
                 {/* Background Wallpaper Layer */}
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-all duration-300"
@@ -825,167 +1014,167 @@ export const PortalBuilderPage: React.FC = () => {
                 {/* GovTech dark overlay with slight blur */}
                 <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-900/75 to-slate-950/85 backdrop-blur-[1px]" />
 
-                {/* Central Welcome Card - 1:1 Authentic Replica of Guest Portal */}
-                <div className="relative z-10 bg-white rounded-lg border border-slate-300 shadow-2xl overflow-hidden my-auto space-y-0 text-slate-900 font-sans">
+                {/* Portal card follows the guest page's mobile content order. */}
+                <div className={`relative z-10 bg-white rounded-xl border border-slate-300/80 shadow-xl overflow-hidden space-y-0 text-slate-900 font-sans ${previewDevice === 'DESKTOP' ? 'w-full grid grid-cols-12 items-start rounded-none border-0 shadow-none' : ''}`}>
                   {/* Official Government Header */}
-                  <div className="bg-[#a81c1c] text-white text-center p-3 border-b border-[#881313] relative">
+                  <div className={`bg-[#a81c1c] text-white text-center p-4 border-b border-[#881313] relative ${previewDevice === 'DESKTOP' ? 'col-span-7' : ''}`}>
                     {template.logoUrl ? (
-                      <div className="flex justify-center mb-1">
+                      <div className="flex justify-center mb-1.5">
                         <img
                           src={template.logoUrl}
                           alt="Biểu trưng chính thức"
-                          className="h-8 w-auto max-w-[110px] object-contain drop-shadow-sm"
+                          className="h-10 w-auto max-w-[140px] object-contain drop-shadow-sm"
                         />
                       </div>
                     ) : (
-                      <div className="flex justify-center mb-1">
-                        <VietnamFlag width={36} height={24} className="rounded-xs shadow-xs border border-yellow-400/50" />
+                      <div className="flex justify-center mb-2">
+                        <VietnamFlag width={48} height={32} className="rounded-xs shadow-sm border border-yellow-400/50" />
                       </div>
                     )}
-                    <div className="text-[7.5px] font-bold tracking-widest text-yellow-300 uppercase">
+                    <div className="text-[10px] font-bold tracking-widest text-yellow-300 uppercase">
                       Cộng Hòa Xã Hội Chủ Nghĩa Việt Nam
                     </div>
-                    <div className="text-[7.5px] text-red-100 italic">
+                    <div className="text-[10px] text-red-100 italic">
                       Độc lập - Tự do - Hạnh phúc
                     </div>
-                    <div className="h-0.5 w-14 bg-yellow-400/60 mx-auto my-1" />
-                    <div className="text-[8px] font-bold uppercase tracking-wider text-yellow-300">
+                    <div className="h-0.5 w-24 bg-yellow-400/60 mx-auto my-2" />
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-yellow-300">
                       Ủy Ban Nhân Dân Thành Phố Hải Phòng
                     </div>
-                    <h2 className="text-xs font-extrabold uppercase text-white mt-0.5 tracking-tight">
+                    <h2 className="text-sm font-extrabold uppercase text-white mt-0.5 tracking-tight">
                       {template.title || 'Cổng Truy Cập Wi-Fi'}
                     </h2>
                   </div>
 
                   {/* Location & Speed Meta Strip */}
-                  <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-[10px] text-slate-700">
-                    <div className="flex items-center gap-1 font-semibold truncate mr-2">
-                      <MapPin className="w-3 h-3 text-[#a81c1c] flex-shrink-0" />
+                  <div className={`px-3 py-2.5 bg-slate-100/90 border-b border-slate-200 flex flex-wrap items-center justify-between text-[11px] text-slate-700 gap-y-1.5 ${previewDevice === 'DESKTOP' ? 'col-span-7' : ''}`}>
+                    <div className="flex items-center gap-1.5 font-semibold truncate mr-2 max-w-full">
+                      <MapPin className="w-3.5 h-3.5 text-[#a81c1c] flex-shrink-0" />
                       <span className="truncate">
                         {scope === 'LOCATION' && selectedLocation
                           ? selectedLocation.name
-                          : 'Nhà văn hóa TDP số 1 - Phường Hoàng Văn Thụ'}
+                          : 'Nhà văn hóa thôn, tổ dân phố Hải Phòng'}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 flex-shrink-0 font-mono text-[9px] text-slate-500">
-                      <span>{scope === 'LOCATION' && selectedLocation ? selectedLocation.sessionDurationMinutes : 120}p</span>
+                    <div className="flex items-center gap-2 flex-shrink-0 font-mono text-[10px] text-slate-600">
+                      <span>{scope === 'LOCATION' && selectedLocation ? selectedLocation.sessionDurationMinutes : 120} phút</span>
                       <span>•</span>
-                      <span className="text-emerald-700 font-bold">
-                        {scope === 'LOCATION' && selectedLocation ? selectedLocation.maxBandwidthMbps : 20} Mbps
-                      </span>
+                      <span className="text-emerald-700 font-bold">{scope === 'LOCATION' && selectedLocation ? selectedLocation.maxBandwidthMbps : 20} Mbps</span>
+                      <span>•</span>
+                      <span className="font-semibold text-indigo-700 inline-flex items-center gap-1"><Users className="w-3 h-3" />0/{scope === 'LOCATION' && selectedLocation ? selectedLocation.maxConcurrentUsers || 50 : 50}</span>
+                      <span>•</span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-300 font-sans font-bold text-[10px]"><AlertTriangle className="w-3 h-3 text-amber-600" />Báo lỗi</span>
                     </div>
                   </div>
 
                   {/* 1. Content-First Notice Block */}
-                  <div className="p-3 bg-gradient-to-b from-amber-50/60 via-white to-slate-50 border-b border-slate-200 space-y-2">
+                  <div className={`p-4 space-y-4 bg-gradient-to-b from-slate-50/70 to-white ${previewDevice === 'DESKTOP' ? 'col-span-7' : ''}`}>
                     <div>
-                      <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-[#a81c1c] text-yellow-300 text-[8px] font-bold uppercase tracking-wider mb-0.5">
-                        <Sparkles className="w-2.5 h-2.5" />
-                        <span>Chính quyền số cơ sở</span>
-                      </div>
-                      <h3 className="text-[11.5px] font-extrabold text-slate-900 leading-snug">
+                     
+                      <h3 className="text-base font-extrabold text-slate-900 leading-snug">
                         {previewWelcomeText || 'Chào mừng Nhân dân đến với Nhà văn hóa'}
                       </h3>
-                      <p className="text-[9.5px] text-slate-500 flex items-center gap-1 mt-0.5 truncate">
-                        <MapPin className="w-2.5 h-2.5 text-[#a81c1c] flex-shrink-0" />
+                      <p className="text-xs text-slate-600 flex items-center gap-1.5 mt-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-[#a81c1c] flex-shrink-0" />
                         <span>
                           {scope === 'LOCATION' && selectedLocation?.address
                             ? selectedLocation.address
-                            : 'Số 28 Đinh Tiên Hoàng, Phường Hoàng Văn Thụ, TP Hải Phòng'}
+                            : 'Thành phố Hải Phòng'}
                         </span>
                       </p>
                     </div>
 
                     {/* Local Bulletin / Notice (Megaphone card) */}
-                    {(scope === 'LOCATION' && (locFormData.promoTitle || locFormData.promoContent)) ? (
-                      <div className="p-2 bg-white rounded border border-amber-300 shadow-xs space-y-1">
-                        <div className="flex items-center gap-1 text-[9.5px] font-bold text-[#a81c1c]">
-                          <Megaphone className="w-3 h-3 text-[#a81c1c] flex-shrink-0" />
+                    {(scope === 'LOCATION' && (locFormData.promoTitle || locFormData.promoContent || locFormData.promoActionUrl)) ? (
+                      <div className="p-3.5 bg-amber-50/70 rounded-lg border border-amber-300/80 shadow-xs space-y-1.5">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#a81c1c]">
+                          <Megaphone className="w-4 h-4 text-[#a81c1c] flex-shrink-0" />
                           <span>{locFormData.promoTitle || 'Bản Tin Chuyển Đổi Số Địa Phương'}</span>
                         </div>
                         {locFormData.promoContent && (
-                          <p className="text-[9px] text-slate-700 leading-relaxed font-sans line-clamp-2">
+                          <p className="text-xs text-slate-700 leading-relaxed font-sans">
                             {locFormData.promoContent}
                           </p>
                         )}
+                        {/^https?:\/\//i.test(locFormData.promoActionUrl.trim()) && (
+                          <a href={locFormData.promoActionUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-bold text-[#004b87] hover:underline">
+                            Mở cổng thông tin địa phương <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
                       </div>
-                    ) : (
-                      <div className="p-2 bg-white rounded border border-amber-300/60 shadow-xs space-y-0.5">
-                        <div className="flex items-center gap-1 text-[9.5px] font-bold text-[#a81c1c]">
-                          <Megaphone className="w-3 h-3 text-[#a81c1c] flex-shrink-0" />
-                          <span>Bản Tin Chuyển Đổi Số Địa Phương</span>
-                        </div>
-                        <p className="text-[9px] text-slate-600 line-clamp-2 leading-tight font-sans">
-                          Đoàn Thanh niên trực hỗ trợ công dân kích hoạt tài khoản định danh điện tử VNeID mức 2.
-                        </p>
-                      </div>
-                    )}
+                    ) : null}
 
                     {/* Dịch vụ công trực tuyến guide */}
-                    <div className="p-2 bg-blue-50/80 rounded border border-blue-200/80 flex items-start gap-1.5 text-slate-700">
-                      <Landmark className="w-3 h-3 text-[#004b87] flex-shrink-0 mt-0.5" />
-                      <div className="text-[9px] leading-tight">
-                        <span className="font-bold text-[#004b87]">Dịch vụ công:</span> Sau khi kết nối Wi-Fi, hệ thống mở trực tiếp Cổng Dịch vụ công TP Hải Phòng để nộp hồ sơ miễn phí.
+                    <div className="p-3 bg-blue-50/80 rounded-lg border border-blue-200 flex items-start gap-2.5 text-slate-700">
+                      <Landmark className="w-4 h-4 text-[#004b87] flex-shrink-0 mt-0.5" />
+                      <div className="text-xs leading-relaxed">
+                        <span className="font-bold text-[#004b87]">Dịch vụ công trực tuyến:</span> Sau khi kết nối Wi-Fi, hệ thống sẽ mở trực tiếp Cổng Dịch vụ công TP Hải Phòng để tra cứu hồ sơ và nộp thủ tục hành chính miễn phí.
                       </div>
                     </div>
-
-                    {/* Simulated Campaign Card if toggled */}
-                    {simCampaign && (
-                      <div className="p-2 bg-gradient-to-r from-red-50 to-amber-50 rounded border-l-2 border-l-[#a81c1c] border border-amber-200 shadow-2xs space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="inline-flex items-center gap-1 text-[8px] font-bold text-[#a81c1c] uppercase">
-                            <Megaphone className="w-2.5 h-2.5" /> Chiến Dịch Thành Phố
-                          </span>
-                          <span className="text-[7.5px] font-bold text-red-700 bg-red-100 px-1 rounded">Chính sách</span>
-                        </div>
-                        <h4 className="text-[9.5px] font-extrabold text-slate-900 leading-tight">
-                          Tuyên truyền Dịch vụ công & Kích hoạt VNeID
-                        </h4>
-                        <p className="text-[8.5px] text-slate-600 line-clamp-2 leading-tight">
-                          Đẩy mạnh cài đặt và sử dụng tài khoản định danh điện tử mức độ 2 cho công dân toàn thành phố.
-                        </p>
-                      </div>
-                    )}
                   </div>
 
                   {/* 2. Banner Photo with Overlay */}
-                  <div className="relative border-b border-slate-200 bg-slate-900 overflow-hidden">
+                  <div className={`relative border-b border-slate-200 bg-slate-900 overflow-hidden ${previewDevice === 'DESKTOP' ? 'col-span-7' : ''}`}>
                     <img
                       src={previewBannerUrl}
                       alt="Banner"
-                      className="w-full h-28 object-cover opacity-90"
+                      className="w-full h-40 object-cover opacity-95"
                       onError={(e) => {
                         (e.currentTarget as HTMLImageElement).src = '/banners/haiphong_culture_house.jpg';
                       }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent flex flex-col justify-end p-2 text-white">
-                      <div className="text-[9.5px] font-bold text-white drop-shadow-sm flex items-center justify-between">
-                        <span className="truncate pr-1">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent flex flex-col justify-end p-3.5 text-white">
+                      <div className="text-xs font-bold text-white drop-shadow-sm flex items-center justify-between">
+                        <span className="truncate pr-2 font-extrabold">
                           Ảnh thực tế: {scope === 'LOCATION' && selectedLocation ? selectedLocation.name : 'Wifi công cộng Hải Phòng'}
                         </span>
-                        <span className="text-[8px] px-1 py-0.5 bg-emerald-700/90 text-emerald-100 rounded font-semibold flex-shrink-0">
-                          Trực tuyến
+                        <span className="text-[10px] px-2 py-0.5 bg-emerald-600/90 text-white rounded font-bold flex-shrink-0">
+                          Điểm phát trực tuyến
                         </span>
                       </div>
-                      <div className="text-[8.5px] text-slate-200 drop-shadow-xs flex items-center gap-1 mt-0.5 font-mono">
-                        <span>Nhà mạng: <strong className="text-yellow-300">VNPT</strong></span>
+                      <div className="text-[10.5px] text-slate-200 drop-shadow-xs flex items-center gap-2 mt-1 font-mono">
+                        <span>Băng thông: <strong className="text-emerald-300">{scope === 'LOCATION' && selectedLocation ? selectedLocation.maxBandwidthMbps : 20} Mbps</strong></span>
                         <span>•</span>
-                        <span>Băng thông: <strong className="text-emerald-300">20 Mbps</strong></span>
-                        <span>•</span>
-                        <span className="text-yellow-200">Miễn phí 100%</span>
+                        <span>Mã trạm: <strong>{scope === 'LOCATION' && selectedLocation ? selectedLocation.locationCode || selectedLocation.slug : 'LOC-HP'}</strong></span>
                       </div>
                     </div>
                   </div>
 
+                  {simCampaign && (
+                    <div className={`mx-4 mb-4 border border-amber-300/80 bg-gradient-to-r from-red-50/95 via-amber-50/90 to-red-50/95 p-3.5 rounded-lg space-y-2 border-l-4 border-l-[#a81c1c] shadow-xs ${previewDevice === 'DESKTOP' ? 'col-span-7' : ''}`}>
+                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs bg-[#a81c1c] text-yellow-300 text-[10px] font-bold uppercase tracking-wider">
+                        <Megaphone className="w-3 h-3" /> Chiến dịch mô phỏng
+                      </div>
+                      <h4 className="text-xs font-black text-slate-900 leading-snug">Tuyên truyền Dịch vụ công & Kích hoạt VNeID</h4>
+                      <p className="text-xs text-slate-700 leading-relaxed">Đây là nội dung minh họa để xem bố cục chiến dịch trên cổng khách.</p>
+                    </div>
+                  )}
+
                   {/* 3. Action Form */}
-                  <div className="p-3 space-y-2.5">
+                  <div className={previewDevice === 'DESKTOP' ? 'col-span-5 col-start-8 row-start-1 border-l border-slate-200 bg-white min-h-full' : 'contents'}>
+                    {previewDevice === 'DESKTOP' && (
+                      <div className="bg-gradient-to-r from-[#0c2340] to-[#004b87] text-white p-5 border-b border-blue-900">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-yellow-300"><Wifi className="w-5 h-5" /></div>
+                          <div>
+                            <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-300">Sóng Wi-Fi sẵn sàng</div>
+                            <div className="text-sm font-bold">Kết nối Internet</div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-center">
+                          <div className="p-2 rounded bg-white/10 border border-white/15"><div className="text-[10px] text-slate-300">Tốc độ</div><div className="text-xs font-extrabold text-emerald-300">{scope === 'LOCATION' && selectedLocation ? selectedLocation.maxBandwidthMbps : 20} Mbps</div></div>
+                          <div className="p-2 rounded bg-white/10 border border-white/15"><div className="text-[10px] text-slate-300">Thời lượng</div><div className="text-xs font-extrabold text-yellow-300">{scope === 'LOCATION' && selectedLocation ? selectedLocation.sessionDurationMinutes : 120} phút</div></div>
+                        </div>
+                      </div>
+                    )}
+                  <div className="p-4 sm:p-5 space-y-4 border-t border-slate-200">
                     {/* Simulated Capacity Limit Warning if toggled */}
                     {simCapacityFull && (
-                      <div className="p-2 bg-amber-50 border border-amber-300 rounded text-amber-900 text-[9px] space-y-0.5">
-                        <span className="font-bold flex items-center gap-1 text-amber-800">
+                        <div className="p-3.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-xs space-y-2">
+                          <span className="font-bold flex items-center gap-2 text-amber-800">
                           ⚠️ Điểm phát đã đạt giới hạn tối đa
                         </span>
-                        <p className="text-[8px] leading-tight">
+                          <p className="text-[11.5px] leading-relaxed">
                           Hiện có 50/50 thiết bị đang truy cập mạng. Quý vị vui lòng thử lại sau.
                         </p>
                       </div>
@@ -993,28 +1182,28 @@ export const PortalBuilderPage: React.FC = () => {
 
                     {/* Simulated Survey Card if toggled */}
                     {simSurvey && (
-                      <div className="p-2 bg-sky-50/70 border border-sky-200 rounded space-y-1.5">
+                      <div className="p-3.5 bg-sky-50/70 border border-sky-200 rounded-lg space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="inline-flex items-center gap-1 text-[8.5px] font-bold text-[#004b87]">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#004b87]">
                             <ClipboardList className="w-2.5 h-2.5" /> Thăm Dò Ý Kiến Nhân Dân
                           </span>
-                          <span className="text-[7.5px] font-bold text-sky-700 bg-sky-100 px-1 rounded">Khảo sát</span>
+                          <span className="text-[10px] font-bold text-sky-700 bg-sky-100 px-1.5 py-0.5 rounded">Khảo sát mô phỏng</span>
                         </div>
-                        <p className="text-[8.5px] font-semibold text-slate-800">
+                        <p className="text-xs font-semibold text-slate-800">
                           Đánh giá chất lượng sóng Wi-Fi hôm nay:
                         </p>
                         <div className="flex items-center gap-1">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <Star key={star} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                           ))}
-                          <span className="text-[8px] text-amber-700 font-bold ml-1">5/5 - Rất tốt</span>
+                          <span className="text-[10px] text-amber-700 font-bold ml-1">5/5 - Rất tốt</span>
                         </div>
                       </div>
                     )}
 
                     {/* Legal Checkbox */}
-                    <div className="flex items-start gap-1.5 text-[9.5px] text-slate-600">
-                      <div className="w-3.5 h-3.5 rounded border border-slate-300 bg-white mt-0.5 flex-shrink-0 flex items-center justify-center text-[#004b87] text-[8px] font-bold">
+                    <div className="flex items-start gap-2 text-[11px] text-slate-600">
+                      <div className="w-4 h-4 rounded border border-slate-300 bg-white mt-0.5 flex-shrink-0 flex items-center justify-center text-[#004b87] text-[9px] font-bold">
                         ✓
                       </div>
                       <span className="leading-tight">
@@ -1033,36 +1222,31 @@ export const PortalBuilderPage: React.FC = () => {
                       <button
                         type="button"
                         disabled={simCapacityFull}
-                        className={`w-full py-2.5 px-3 rounded-sm text-white font-extrabold text-[11px] tracking-wide uppercase shadow-md flex items-center justify-center gap-1.5 transition ${
+                        className={`w-full py-3.5 px-4 rounded-lg text-white font-extrabold text-sm tracking-wide uppercase shadow-lg flex items-center justify-center gap-2 transition ${
                           simCapacityFull ? 'bg-slate-400 cursor-not-allowed opacity-75' : ''
                         }`}
                         style={{ backgroundColor: simCapacityFull ? undefined : template.themeColor || '#004b87' }}
                       >
-                        <Wifi className="w-3.5 h-3.5 text-yellow-300" />
+                        <Wifi className="w-5 h-5 text-yellow-300" />
                         <span>{simCapacityFull ? 'ĐIỂM PHÁT ĐÃ ĐẦY TẢI (50/50)' : template.buttonText || 'KẾT NỐI WI-FI MIỄN PHÍ'}</span>
                       </button>
-                      <p className="text-[8.5px] text-slate-500 text-center mt-1">
-                        Tốc độ: <strong>20 Mbps</strong> • Thời lượng: <strong>120 phút</strong> • Băng thông ổn định
+                      <p className="text-[10.5px] text-slate-500 text-center mt-2 font-medium">
+                        Tốc độ: <strong>{scope === 'LOCATION' && selectedLocation ? selectedLocation.maxBandwidthMbps : 20} Mbps</strong> • Thời lượng: <strong>{scope === 'LOCATION' && selectedLocation ? selectedLocation.sessionDurationMinutes : 120} phút</strong>
                       </p>
                     </div>
 
                     {/* Collapsible Advanced Toggle Mock */}
-                    <div className="border-t border-slate-200 pt-1.5 flex items-center justify-between text-[9px] text-slate-500">
+                    <div className="border-t border-slate-200 pt-3 flex items-center justify-between text-xs text-slate-500">
                       <span className="flex items-center gap-1">
-                        <Smartphone className="w-3 h-3 text-slate-400" />
+                        <Smartphone className="w-4 h-4 text-slate-400" />
                         Tùy chọn: Định danh số điện thoại & Góp ý kiến
                       </span>
                       <ChevronDown className="w-3 h-3 text-slate-400" />
                     </div>
                   </div>
+                  </div>
                 </div>
 
-                {/* Footer Notice */}
-                <div className="relative z-10 text-center pt-2 text-[9px] text-slate-300 drop-shadow-xs font-mono">
-                  {scope === 'LOCATION' && selectedLocation
-                    ? `Điểm phát: ${selectedLocation.locationCode || selectedLocation.slug}`
-                    : 'Hệ thống Quản lý Wi-Fi Công cộng TP. Hải Phòng'}
-                </div>
               </div>
             </div>
           </div>
@@ -1078,6 +1262,70 @@ export const PortalBuilderPage: React.FC = () => {
         duration={3000}
         onClose={() => setToast((prev) => ({ ...prev, show: false }))}
       />
+
+      {versionsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-md max-w-2xl w-full max-h-[85vh] flex flex-col shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-indigo-50 text-indigo-700 rounded-sm">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Lịch sử thay đổi giao diện</h3>
+                </div>
+              </div>
+              <button
+                onClick={() => setVersionsModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 text-lg font-bold p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 overflow-y-auto space-y-3 flex-1">
+              {loadingVersions ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+                </div>
+              ) : versions.length === 0 ? (
+                <div className="text-center py-10 text-slate-400 text-sm">
+                  Chưa có lịch sử phiên bản nào được ghi nhận
+                </div>
+              ) : (
+                versions.map((ver) => (
+                  <div
+                    key={ver.id}
+                    className="flex items-center justify-between p-3.5 border border-slate-200 rounded-sm hover:border-indigo-300 hover:bg-slate-50 transition"
+                  >
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-slate-900">v{ver.versionNumber}</span>
+                        <span className="text-xs text-slate-700 font-medium">{ver.versionName || 'Bản ghi cấu hình'}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400">
+                        Lưu bởi: <span className="font-semibold text-slate-600">{ver.createdBy}</span> · Thời điểm: {new Date(ver.createdAt).toLocaleString('vi-VN')}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={rollingBack}
+                      onClick={() => handleRollback(ver.versionNumber)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-sm text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      Khôi phục bản này
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };

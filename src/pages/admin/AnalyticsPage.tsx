@@ -7,15 +7,18 @@ import {
   RefreshCw,
   Loader2,
   PieChart,
-  Users
+  Users,
+  Filter
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
-import { DashboardOverviewDto, HourlyTrendDto } from '../../types/models';
+import { DashboardOverviewDto, HourlyTrendDto, AuthFunnelStep } from '../../types/models';
 import { StatusBadge } from '../../components/Badge';
+import { AuthFunnelChart } from '../../components/analytics/AuthFunnelChart';
 
 export const AnalyticsPage: React.FC = () => {
   const [overview, setOverview] = useState<DashboardOverviewDto | null>(null);
   const [trends, setTrends] = useState<HourlyTrendDto[]>([]);
+  const [funnel, setFunnel] = useState<AuthFunnelStep[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,12 +28,14 @@ export const AnalyticsPage: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [ovData, trData] = await Promise.all([
+      const [ovData, trData, fnData] = await Promise.all([
         adminApi.getOverview(),
-        adminApi.getTrends()
+        adminApi.getTrends(),
+        adminApi.getAuthFunnel(),
       ]);
       setOverview(ovData);
       setTrends(trData);
+      setFunnel(fnData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -138,6 +143,20 @@ export const AnalyticsPage: React.FC = () => {
             })}
           </div>
         </div>
+      </div>
+
+      {/* Auth Funnel Section */}
+      <div className="bg-white p-6 rounded border border-slate-300 shadow-xs space-y-4">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2.5 bg-blue-50 text-blue-700 rounded-sm">
+            <Filter className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-slate-900">Phễu Xác Thực Người Dùng</h2>
+            <p className="text-[11px] text-slate-400">Tỷ lệ người dùng qua từng bước xác thực kết nối WiFi công cộng</p>
+          </div>
+        </div>
+        <AuthFunnelChart steps={funnel} />
       </div>
 
       {/* Hourly Trend Chart */}

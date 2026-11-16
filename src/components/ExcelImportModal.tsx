@@ -13,12 +13,39 @@ export const ExcelImportModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [committing, setCommitting] = useState(false);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
+  const [downloadingErrors, setDownloadingErrors] = useState(false);
   const [summary, setSummary] = useState<ExcelImportSummaryDto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [committedCount, setCommittedCount] = useState<number>(0);
 
   if (!isOpen) return null;
+
+  const handleDownloadTemplate = async () => {
+    setDownloadingTemplate(true);
+    setError(null);
+    try {
+      await adminApi.downloadExcelTemplate();
+    } catch (err: any) {
+      setError(err?.message || 'Không thể tải file mẫu Excel');
+    } finally {
+      setDownloadingTemplate(false);
+    }
+  };
+
+  const handleDownloadErrors = async () => {
+    if (!summary?.importSessionId) return;
+    setDownloadingErrors(true);
+    setError(null);
+    try {
+      await adminApi.downloadExcelErrors(summary.importSessionId);
+    } catch (err: any) {
+      setError(err?.message || 'Không thể tải danh sách dòng lỗi');
+    } finally {
+      setDownloadingErrors(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -108,15 +135,24 @@ export const ExcelImportModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
                     Mẫu Excel gồm 13 cột bắt buộc với các dữ liệu mẫu của Hồng Bàng, Ngô Quyền, Cát Bà.
                   </p>
                 </div>
-                <a
-                  href={adminApi.getExcelTemplateUrl()}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-3 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white text-xs font-medium rounded-sm flex items-center gap-1.5 transition-colors shadow-xs"
+                <button
+                  type="button"
+                  onClick={handleDownloadTemplate}
+                  disabled={downloadingTemplate}
+                  className="px-3 py-1.5 bg-[#004b87] hover:bg-[#003865] disabled:opacity-50 text-white text-xs font-medium rounded-sm flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
                 >
-                  <Download className="w-3.5 h-3.5" />
-                  Tải Mẫu Excel (.xlsx)
-                </a>
+                  {downloadingTemplate ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Đang tải...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Tải Mẫu Excel (.xlsx)</span>
+                    </>
+                  )}
+                </button>
               </div>
 
               <div>
@@ -171,14 +207,24 @@ export const ExcelImportModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
                   <div className="text-xs text-amber-800">
                     Phát hiện <strong>{summary.errorRows} dòng có lỗi</strong> (Ngoài ranh giới Hải Phòng, trùng MAC hoặc thiếu mã địa bàn).
                   </div>
-                  <a
-                    href={adminApi.getExcelErrorsUrl(summary.importSessionId)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium rounded flex items-center gap-1"
+                  <button
+                    type="button"
+                    onClick={handleDownloadErrors}
+                    disabled={downloadingErrors}
+                    className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-xs font-medium rounded flex items-center gap-1 cursor-pointer"
                   >
-                    <Download className="w-3.5 h-3.5" /> Tải Danh Sách Lỗi
-                  </a>
+                    {downloadingErrors ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Đang tải...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Tải Danh Sách Lỗi</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               )}
 

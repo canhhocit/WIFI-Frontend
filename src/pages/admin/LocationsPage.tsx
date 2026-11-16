@@ -16,13 +16,17 @@ import {
   Download,
   Upload,
   Globe2,
-  Users
+  Users,
+  GitMerge,
+  Tag
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
-import { LocationDto, CreateLocationRequest, UpdateLocationRequest, AdminUnitDto } from '../../types/models';
+import { LocationDto, CreateLocationRequest, UpdateLocationRequest, AdminUnitDto, LocationGroupDto } from '../../types/models';
 import { Modal } from '../../components/Modal';
 import { AlertBanner } from '../../components/AlertBanner';
 import { ExcelImportModal } from '../../components/ExcelImportModal';
+import { MergeAdminUnitsModal } from '../../components/MergeAdminUnitsModal';
+import { LocationGroupModal } from '../../components/LocationGroupModal';
 import { ImageUploadInput } from '../../components/ImageUploadInput';
 import { DISTRICT_CENTERS } from '../../components/gis/LeafletGisMap';
 
@@ -51,6 +55,10 @@ export const LocationsPage: React.FC = () => {
     return (searchParams.get('status') || 'ALL').toUpperCase();
   });
   const [error, setError] = useState<string | null>(null);
+  const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
+  const [mergeSuccessMsg, setMergeSuccessMsg] = useState<string | null>(null);
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
+  const [locationGroups, setLocationGroups] = useState<LocationGroupDto[]>([]);
 
   useEffect(() => {
     const st = searchParams.get('status');
@@ -63,6 +71,7 @@ export const LocationsPage: React.FC = () => {
 
   // Excel Modal
   const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Modal State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -99,7 +108,17 @@ export const LocationsPage: React.FC = () => {
   useEffect(() => {
     loadLocations();
     loadAdminUnits();
+    loadGroups();
   }, []);
+
+  const loadGroups = async () => {
+    try {
+      const data = await adminApi.getLocationGroups();
+      setLocationGroups(data);
+    } catch (e) {
+      console.error('Failed to load location groups:', e);
+    }
+  };
 
   const loadLocations = async () => {
     setLoading(true);
@@ -108,9 +127,20 @@ export const LocationsPage: React.FC = () => {
       setLocations(resp.content);
       setError(null);
     } catch (err: any) {
-      setError(err?.message || 'Không thể tải danh sách điểm phát Wi-Fi.');
+      setError(err?.message || 'Không thể tải danh sách điểm phát');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    setExporting(true);
+    try {
+      await adminApi.exportLocationsExcel();
+    } catch (err: any) {
+      alert(err?.message || 'Không thể xuất dữ liệu điểm phát');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -317,11 +347,20 @@ export const LocationsPage: React.FC = () => {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={() => window.open(adminApi.getExcelExportUrl(), '_blank')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
+            onClick={handleExportExcel}
+            disabled={exporting}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 disabled:opacity-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
             title="Xuất toàn bộ điểm phát ra file Excel"
           >
-            <Upload className="w-3.5 h-3.5 text-emerald-700" /> Xuất Excel
+            {exporting ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-700" /> Đang xuất...
+              </>
+            ) : (
+              <>
+                <Upload className="w-3.5 h-3.5 text-emerald-700" /> Xuất Excel
+              </>
+            )}
           </button>
           <button
             onClick={() => setIsExcelModalOpen(true)}
@@ -329,6 +368,20 @@ export const LocationsPage: React.FC = () => {
             title="Nhập hàng loạt điểm phát từ file Excel"
           >
             <Download className="w-3.5 h-3.5" /> Nhập Excel các điểm
+          </button>
+          <button
+            onClick={() => setIsMergeModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-sm text-xs font-bold transition shadow-xs cursor-pointer"
+            title="Sáp nhập đơn vị hành chính và điều chuyển điểm Wi-Fi"
+          >
+            <GitMerge className="w-3.5 h-3.5 text-indigo-200" /> Sáp Nhập Địa Bàn
+          </button>
+          <button
+            onClick={() => setIsGroupModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-700 hover:bg-sky-800 text-white rounded-sm text-xs font-bold transition shadow-xs cursor-pointer"
+            title="Quản lý các nhóm điểm tùy biến ngoài ranh giới địa chính"
+          >
+            <Tag className="w-3.5 h-3.5 text-sky-200" /> Nhóm Tùy Biến
           </button>
           <button
             onClick={loadLocations}
@@ -346,6 +399,20 @@ export const LocationsPage: React.FC = () => {
       </div>
 
       {error && <AlertBanner type="error" message={error} />}
+
+      {mergeSuccessMsg && (
+
+        <AlertBanner
+
+          type="success"
+
+          message={mergeSuccessMsg}
+
+          
+
+        />
+
+      )}
 
       {/* Search & Admin Unit Filter */}
       <div className="bg-white p-3.5 rounded border border-slate-300 shadow-xs flex flex-col md:flex-row items-center gap-2.5">
@@ -447,7 +514,7 @@ export const LocationsPage: React.FC = () => {
               <tr className="bg-slate-50/70 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
                 <th className="py-3 px-4">Tên điểm phát</th>
                 <th className="py-3 px-4">Địa chỉ & Tọa độ GPS</th>
-                <th className="py-3 px-4">Nhà mạng & Mã cáp</th>
+                
                 <th className="py-3 px-4">Chính sách phiên & Tải kết nối</th>
                 <th className="py-3 px-4">Trạng thái</th>
                 <th className="py-3 px-4 text-right">Thao tác</th>
@@ -456,14 +523,14 @@ export const LocationsPage: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <td colSpan={5} className="py-12 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#004b87]" />
                     Đang tải danh sách điểm phát Wi-Fi...
                   </td>
                 </tr>
               ) : filteredLocations.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-500">
+                  <td colSpan={5} className="py-12 text-center text-slate-500">
                     {statusFilter === 'ERROR' || statusFilter === 'INACTIVE' ? (
                       <div className="max-w-md mx-auto space-y-2.5">
                         <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200">
@@ -518,9 +585,7 @@ export const LocationsPage: React.FC = () => {
                         <span className="text-[10px] text-amber-600 italic">Chưa gán GPS</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-slate-700">
-                      <div className="font-bold text-slate-800">{loc.ispName || 'Viettel'}</div>
-                    </td>
+
                     <td className="py-3 px-4 font-semibold text-slate-700 min-w-[190px]">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1">
@@ -760,18 +825,7 @@ export const LocationsPage: React.FC = () => {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Nhà mạng cung cấp dịch vụ (ISP)</label>
-            <select
-              value={formData.ispProvider}
-              onChange={(e) => setFormData({ ...formData, ispProvider: e.target.value })}
-              className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
-            >
-              <option value="Viettel">Viettel (Mặc định)</option>
-              <option value="VNPT">VNPT</option>
-              <option value="FPT">FPT Telecom</option>
-            </select>
-          </div>
+
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
@@ -1040,18 +1094,7 @@ export const LocationsPage: React.FC = () => {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Nhà mạng cung cấp dịch vụ (ISP)</label>
-            <select
-              value={formData.ispProvider}
-              onChange={(e) => setFormData({ ...formData, ispProvider: e.target.value })}
-              className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
-            >
-              <option value="Viettel">Viettel (Mặc định)</option>
-              <option value="VNPT">VNPT</option>
-              <option value="FPT">FPT Telecom</option>
-            </select>
-          </div>
+
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
@@ -1254,6 +1297,27 @@ export const LocationsPage: React.FC = () => {
         onSuccess={() => {
           loadLocations();
         }}
+      />
+
+      <MergeAdminUnitsModal
+        isOpen={isMergeModalOpen}
+        onClose={() => setIsMergeModalOpen(false)}
+        onSuccess={() => {
+          loadLocations();
+          loadAdminUnits();
+          setMergeSuccessMsg('Sáp nhập đơn vị hành chính thành công! Các điểm Wi-Fi đã được tự động điều chuyển.');
+          setTimeout(() => setMergeSuccessMsg(null), 8000);
+        }}
+        districts={districts}
+        adminUnits={adminUnits}
+        locations={locations}
+      />
+
+      <LocationGroupModal
+        isOpen={isGroupModalOpen}
+        onClose={() => setIsGroupModalOpen(false)}
+        groups={locationGroups}
+        onRefresh={loadGroups}
       />
     </div>
   );

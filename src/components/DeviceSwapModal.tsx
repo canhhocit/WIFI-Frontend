@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { RefreshCw, AlertTriangle, Loader2 } from 'lucide-react';
+import { RefreshCw, AlertTriangle, Loader2, QrCode } from 'lucide-react';
 import { adminApi } from '../api/adminApi';
 import { NetworkDeviceDto } from '../types/models';
+import { QrCodeScannerModal } from './QrCodeScannerModal';
 
 interface Props {
   isOpen: boolean;
@@ -19,6 +20,9 @@ export const DeviceSwapModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, d
   const [swapReason, setSwapReason] = useState('Hỏng cổng WAN do chập điện / sét đánh');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Camera Scanner State
+  const [scannerTarget, setScannerTarget] = useState<'SN' | 'MAC' | null>(null);
 
   if (!isOpen) return null;
 
@@ -103,25 +107,45 @@ export const DeviceSwapModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, d
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Số Serial mới *</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-gray-700">Số Serial mới *</label>
+                <button
+                  type="button"
+                  onClick={() => setScannerTarget('SN')}
+                  className="text-[10px] text-sky-600 hover:text-sky-800 font-bold flex items-center gap-1 cursor-pointer"
+                  title="Quét camera mã vạch / QR Serial"
+                >
+                  <QrCode className="w-3 h-3" /> Quét QR
+                </button>
+              </div>
               <input
                 type="text"
                 required
                 placeholder="SN-XXXX-XXXX"
                 value={newSerialNumber}
                 onChange={(e) => setNewSerialNumber(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg text-xs focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-1.5 border rounded text-xs focus:ring-1 focus:ring-sky-500 font-mono"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Địa chỉ MAC mới *</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-slate-700">Địa chỉ MAC mới *</label>
+                <button
+                  type="button"
+                  onClick={() => setScannerTarget('MAC')}
+                  className="text-[10px] text-sky-600 hover:text-sky-800 font-bold flex items-center gap-1 cursor-pointer"
+                  title="Quét camera mã vạch MAC"
+                >
+                  <QrCode className="w-3 h-3" /> Quét QR
+                </button>
+              </div>
               <input
                 type="text"
                 required
                 placeholder="XX:XX:XX:XX:XX:XX"
                 value={newMacAddress}
                 onChange={(e) => setNewMacAddress(e.target.value)}
-                className="w-full px-3 py-1.5 border border-slate-300 rounded-sm text-xs font-mono focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] uppercase"
+                className="w-full px-3 py-1.5 border border-slate-300 rounded text-xs font-mono focus:ring-1 focus:ring-sky-500 uppercase"
               />
             </div>
           </div>
@@ -167,6 +191,21 @@ export const DeviceSwapModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, d
           </div>
         </form>
       </div>
+
+      {/* QR Scanner Modal */}
+      <QrCodeScannerModal
+        isOpen={scannerTarget !== null}
+        onClose={() => setScannerTarget(null)}
+        title={scannerTarget === 'SN' ? 'Quét Mã Vạch / QR Số Serial' : 'Quét Mã Vạch Địa Chỉ MAC'}
+        onScanSuccess={(val) => {
+          if (scannerTarget === 'SN') {
+            setNewSerialNumber(val);
+          } else if (scannerTarget === 'MAC') {
+            setNewMacAddress(val);
+          }
+          setScannerTarget(null);
+        }}
+      />
     </div>
   );
 };

@@ -2,6 +2,7 @@ import { request } from './client';
 import {
   DashboardOverviewDto,
   HourlyTrendDto,
+  AuthFunnelStep,
   PageResponse,
   GuestSessionDto,
   LocationDto,
@@ -14,9 +15,13 @@ import {
   AuditEventDto,
   SessionStatus,
   AdminUnitDto,
+  LocationGroupDto,
+  CreateLocationGroupRequest,
   NetworkDeviceDto,
   DeviceSwapRequest,
   DeviceSyncSummaryDto,
+  GwnClientDto,
+  GwnUpgradeResult,
   ExcelImportSummaryDto,
   CampaignDto,
   CreateCampaignRequest,
@@ -25,10 +30,12 @@ import {
   SurveyResponseDto,
   SurveyAnalyticsDto,
   PortalTemplateDto,
+  PortalTemplateVersionDto,
   IncidentTicketDto,
   CreateIncidentRequest,
   AssignIncidentRequest,
   ResolveIncidentRequest,
+  CitizenReportDto,
   GisLocationPinDto,
   MacBlacklistDto,
   CreateBlacklistRequest,
@@ -53,6 +60,9 @@ export const adminApi = {
   },
   getTrends: () => {
     return request<HourlyTrendDto[]>('/admin/analytics/trends');
+  },
+  getAuthFunnel: () => {
+    return request<AuthFunnelStep[]>('/admin/analytics/funnel');
   },
 
   // Sessions
@@ -110,6 +120,24 @@ export const adminApi = {
     return request<LocationDto>('/admin/locations', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  },
+
+  // Location Groups
+  getLocationGroups: () => {
+    return request<LocationGroupDto[]>('/v1/admin/location-groups');
+  },
+
+  createLocationGroup: (data: CreateLocationGroupRequest) => {
+    return request<LocationGroupDto>('/v1/admin/location-groups', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteLocationGroup: (id: number) => {
+    return request<void>(`/v1/admin/location-groups/${id}`, {
+      method: 'DELETE',
     });
   },
 
@@ -210,6 +238,19 @@ export const adminApi = {
     });
   },
 
+  // Lấy danh sách client & RSSI từ GWN Cloud
+  getConnectedClientsFromCloud: (deviceId: number) => {
+    return request<GwnClientDto[]>(`/v1/admin/network-devices/${deviceId}/clients`);
+  },
+
+  // Nâng cấp firmware hàng loạt
+  upgradeFirmwareOnCloud: (deviceIds: number[], targetFirmware: string) => {
+    return request<GwnUpgradeResult>('/v1/admin/network-devices/upgrade-firmware', {
+      method: 'POST',
+      body: JSON.stringify({ deviceIds, targetFirmware }),
+    });
+  },
+
   validateLocationsExcel: async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -239,14 +280,71 @@ export const adminApi = {
     return `${API_BASE_URL}/admin/locations/import/template`;
   },
 
+  downloadExcelTemplate: async () => {
+    const token = localStorage.getItem('admin_token');
+    const res = await fetch('/api/admin/locations/import/template', {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    if (!res.ok) throw new Error('Không thể tải file mẫu Excel (' + res.status + ')');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '1584_Diem_WiFi_HaiPhong_Template.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  },
+
   getExcelErrorsUrl: (sessionId: string) => {
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
     return `${API_BASE_URL}/admin/locations/import/errors/${sessionId}`;
   },
 
+  downloadExcelErrors: async (sessionId: string) => {
+    const token = localStorage.getItem('admin_token');
+    const res = await fetch(`/api/admin/locations/import/errors/${sessionId}`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    if (!res.ok) throw new Error('Không thể tải danh sách dòng lỗi (' + res.status + ')');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Danh_sach_dong_loi.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  },
+
   getExcelExportUrl: () => {
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
     return `${API_BASE_URL}/admin/locations/export`;
+  },
+
+  exportLocationsExcel: async () => {
+    const token = localStorage.getItem('admin_token');
+    const res = await fetch('/api/admin/locations/export', {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    if (!res.ok) throw new Error('Không thể xuất dữ liệu điểm phát sóng (' + res.status + ')');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Danh_sach_1584_Diem_WiFi.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   },
 
   // Audit Events
@@ -414,6 +512,16 @@ export const adminApi = {
     });
   },
 
+  getPortalTemplateVersions: (templateId: number) => {
+    return request<PortalTemplateVersionDto[]>(`/v1/admin/portal-templates/${templateId}/versions`);
+  },
+
+  rollbackPortalTemplateVersion: (templateId: number, versionNumber: number) => {
+    return request<PortalTemplateDto>(`/v1/admin/portal-templates/${templateId}/rollback/${versionNumber}`, {
+      method: 'POST',
+    });
+  },
+
   // GIS Map Pins
   getGisLocations: () => {
     return request<GisLocationPinDto[]>('/v1/admin/gis/locations');
@@ -451,6 +559,16 @@ export const adminApi = {
       method: 'PUT',
       body: JSON.stringify(data),
     });
+  },
+
+  // Quản lý danh sách phản ánh người dân
+  getCitizenReports: (params: { locationId?: number; status?: string; page?: number; size?: number } = {}) => {
+    const sp = new URLSearchParams();
+    if (params.locationId) sp.append('locationId', params.locationId.toString());
+    if (params.status) sp.append('status', params.status);
+    if (params.page !== undefined) sp.append('page', params.page.toString());
+    if (params.size !== undefined) sp.append('size', params.size.toString());
+    return request<PageResponse<CitizenReportDto>>(`/v1/admin/incidents/citizen-reports?${sp.toString()}`);
   },
 
   // MAC Blacklist
@@ -505,6 +623,25 @@ export const adminApi = {
     const a = document.createElement('a');
     a.href = url;
     a.download = `Bao_cao_UBND_So_TTTT_Hai_Phong_${period}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  },
+
+  exportGovernmentReportPdf: async (period = 'MONTH') => {
+    const token = localStorage.getItem('admin_token');
+    const res = await fetch(`/api/v1/admin/reports/government/export/pdf?period=${encodeURIComponent(period)}`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    if (!res.ok) throw new Error('Không thể xuất báo cáo hành chính định dạng PDF chính thức');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Bao_cao_UBND_Hai_Phong_Chinh_Thuc_${period}.pdf`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

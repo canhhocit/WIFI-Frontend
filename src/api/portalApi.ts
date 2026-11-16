@@ -9,7 +9,9 @@ import {
   OtpResultDto,
   SurveyDto,
   SurveyResponseSubmitRequest,
-  SurveyResponseDto
+  SurveyResponseDto,
+  CreateCitizenReportRequest,
+  CitizenReportResponse
 } from '../types/models';
 
 export const portalApi = {
@@ -65,6 +67,14 @@ export const portalApi = {
 
   submitSurvey: (surveyId: number, data: SurveyResponseSubmitRequest) => {
     return request<SurveyResponseDto>(`/v1/portal/surveys/${surveyId}/submit`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Báo lỗi Wi-Fi trực tiếp từ Portal
+  reportIssue: (data: CreateCitizenReportRequest) => {
+    return request<CitizenReportResponse>('/portal/report-issue', {
       method: 'POST',
       body: JSON.stringify(data),
     });

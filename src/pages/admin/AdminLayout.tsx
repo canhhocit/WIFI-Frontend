@@ -12,6 +12,8 @@ import {
   ExternalLink,
   Menu,
   X,
+  PanelLeftClose,
+  PanelLeftOpen,
   Shield,
   ShieldCheck,
   Circle,
@@ -38,6 +40,7 @@ import {
   RolePermissionDto,
 } from "../../types/models";
 import { VietnamFlag } from "../../components/VietnamFlag";
+import { ChangePasswordModal } from "../../components/ChangePasswordModal";
 
 type RbacModule =
   | "LOCATIONS"
@@ -203,10 +206,29 @@ export const AdminLayout: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<AdminUserDto | null>(
     authApi.getCurrentUser(),
   );
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [gatewayStatus, setGatewayStatus] = useState<GatewayStatusDto | null>(
     null,
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [desktopCollapsed, setDesktopCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("wifi_admin_sidebar_collapsed") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleDesktopSidebar = () => {
+    setDesktopCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("wifi_admin_sidebar_collapsed", String(next));
+      } catch {}
+      return next;
+    });
+  };
+
   const [currentTime, setCurrentTime] = useState(
     new Date().toLocaleTimeString("vi-VN"),
   );
@@ -424,132 +446,279 @@ export const AdminLayout: React.FC = () => {
         </button>
       </div>
 
+      {/* Mobile Backdrop */}
+      {mobileMenuOpen && (
+        <div
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 bg-black/60 z-20 md:hidden backdrop-blur-2xs transition-opacity"
+        />
+      )}
+
       {/* Sidebar Navigation */}
       <aside
-        className={`fixed md:sticky top-0 left-0 z-30 h-screen w-72 bg-[#0c2340] text-slate-300 flex flex-col border-r border-[#18365a] transition-transform duration-200 ease-in-out ${
+        className={`fixed md:sticky top-0 left-0 z-30 h-screen bg-[#0c2340] text-slate-300 flex flex-col border-r border-[#18365a] transition-all duration-300 ease-in-out ${
           mobileMenuOpen
-            ? "translate-x-0"
+            ? "translate-x-0 w-72"
             : "-translate-x-full md:translate-x-0"
+        } ${
+          desktopCollapsed
+            ? "md:w-16"
+            : "md:w-72"
         }`}
       >
-        {/* Department / Brand Banner */}
-        <div className="p-4 border-b border-[#18365a] bg-gradient-to-b from-[#0a1e38] via-[#091a30] to-[#071629]">
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0 drop-shadow-md">
-              <VietnamFlag
-                width={45}
-                height={30}
-                className="rounded-xs shadow-md border border-amber-300/40"
-              />
-            </div>
-            <div className="overflow-hidden min-w-0">
-              <div className="text-[10.5px] font-extrabold text-amber-300 uppercase tracking-wider leading-tight truncate">
-                UBND TP. HẢI PHÒNG
-              </div>
-              <div className="text-xs text-white font-bold tracking-tight truncate mt-0.5">
-                Cổng Quản Trị Wi-Fi Công Cộng
-              </div>
-              
-            </div>
-          </div>
-        </div>
-
-        {/* Real-time Gateway Telemetry Status Strip */}
-        <div className="px-4 py-2 border-b border-[#18365a] bg-[#071628] flex items-center justify-between text-[11px]">
-          <div className="flex items-center gap-1.5 font-medium text-slate-300">
-            <Activity className="w-3.5 h-3.5 text-blue-400" />
-            <span>Menu</span>
-          </div>
-          <div className="flex items-center gap-1.5 font-mono">
-            <Circle className="w-2 h-2 fill-current text-emerald-400 animate-pulse" />
-            {/* <span className="text-emerald-400 font-semibold text-[10px]">Trực tuyến (24/7)</span> */}
-          </div>
-        </div>
-
-        {/* Categorized Nav Groups (Generated dynamically by Role) */}
-        <nav className="flex-1 px-3 py-3 space-y-4 overflow-y-auto custom-scrollbar">
-          {filteredNavGroups.map((group) => (
-            <div key={group.groupTitle} className="space-y-1">
-              <div className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                {group.groupTitle}
-              </div>
-              <div className="space-y-0.5">
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = item.end
-                    ? location.pathname === item.to
-                    : location.pathname.startsWith(item.to);
-                  return (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      end={item.end}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-2.5 px-3 py-1.5 rounded text-xs font-medium transition ${
-                        isActive
-                          ? "bg-[#004b87] text-white font-semibold shadow-xs"
-                          : "text-slate-300 hover:text-white hover:bg-[#13355e]"
-                      }`}
-                    >
-                      <Icon
-                        className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-white" : "text-slate-400"}`}
-                      />
-                      <span className="truncate">{item.label}</span>
-                    </NavLink>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </nav>
-
-        {/* Direct Link to Guest Portal */}
-        <div className="p-3 border-t border-[#18365a] bg-[#091a30]">
-          <a
-            href="/portal"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-between px-3 py-2 rounded text-xs font-medium text-slate-300 hover:text-white hover:bg-[#13355e] border border-[#18365a] transition"
+        <div className="flex flex-col h-full flex-1 w-full overflow-hidden">
+          {/* Department / Brand Banner */}
+          <div
+            className={`border-b border-[#18365a] bg-gradient-to-b from-[#0a1e38] via-[#091a30] to-[#071629] flex items-center transition-all ${
+              desktopCollapsed
+                ? "p-2.5 flex-col gap-2 justify-center"
+                : "p-4 justify-between"
+            }`}
           >
-            <span className="flex items-center gap-2 text-[11px]">
-              <ExternalLink className="w-3.5 h-3.5 text-blue-400" />
-              Mở Cổng chào Người dân
-            </span>
-            <span className="text-[10px] font-mono text-slate-400">
-              /portal
-            </span>
-          </a>
-        </div>
+            <div
+              className={`flex items-center gap-3 min-w-0 ${
+                desktopCollapsed ? "justify-center" : ""
+              }`}
+            >
+              <div
+                className="flex-shrink-0 drop-shadow-md cursor-pointer"
+                onClick={desktopCollapsed ? toggleDesktopSidebar : undefined}
+                title="UBND TP. Hải Phòng - Cổng Quản Trị Wi-Fi"
+              >
+                <VietnamFlag
+                  width={desktopCollapsed ? 34 : 45}
+                  height={desktopCollapsed ? 23 : 30}
+                  className="rounded-xs shadow-md border border-amber-300/40"
+                />
+              </div>
+              {!desktopCollapsed && (
+                <div className="overflow-hidden min-w-0">
+                  <div className="text-[10.5px] font-extrabold text-amber-300 uppercase tracking-wider leading-tight truncate">
+                    UBND TP. HẢI PHÒNG
+                  </div>
+                  <div className="text-xs text-white font-bold tracking-tight truncate mt-0.5">
+                    Cổng Quản Trị Wi-Fi
+                  </div>
+                </div>
+              )}
+            </div>
 
-        {/* User Profile & Logout */}
-        <div className="p-3 border-t border-[#18365a] bg-[#071628] flex items-center justify-between gap-2">
-          <div className="truncate pr-1">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-slate-200 truncate">
-                {currentUser?.fullName ||
-                  currentUser?.username ||
-                  "Cán bộ Quản trị"}
+            {/* Mobile Close Button (Chỉ hiển thị trên mobile) */}
+            <div className="md:hidden flex items-center flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-[#13355e] transition cursor-pointer"
+                title="Đóng menu điều hướng"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Real-time Gateway Telemetry Status Strip */}
+          {!desktopCollapsed && (
+            <div className="px-4 py-2 border-b border-[#18365a] bg-[#071628] flex items-center justify-between text-[11px]">
+              <div className="flex items-center gap-1.5 font-medium text-slate-300">
+                <Activity className="w-3.5 h-3.5 text-blue-400" />
+                <span>Menu Điều Hành</span>
+              </div>
+              <div className="flex items-center gap-1.5 font-mono">
+                <Circle className="w-2 h-2 fill-current text-emerald-400 animate-pulse" />
+                <span className="text-emerald-400 font-semibold text-[10px]">Trực tuyến</span>
+              </div>
+            </div>
+          )}
+
+          {/* Categorized Nav Groups (Generated dynamically by Role) */}
+          <nav
+            className={`flex-1 overflow-y-auto custom-scrollbar transition-all ${
+              desktopCollapsed ? "px-2 py-3 space-y-3" : "px-3 py-3 space-y-4"
+            }`}
+          >
+            {filteredNavGroups.map((group, gIdx) => (
+              <div key={group.groupTitle} className="space-y-1">
+                {!desktopCollapsed ? (
+                  <div className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    {group.groupTitle}
+                  </div>
+                ) : (
+                  gIdx > 0 && <div className="h-px bg-[#18365a] my-2 mx-1" />
+                )}
+                <div className="space-y-1">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = item.end
+                      ? location.pathname === item.to
+                      : location.pathname.startsWith(item.to);
+                    return (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        end={item.end}
+                        onClick={() => setMobileMenuOpen(false)}
+                        title={desktopCollapsed ? item.label : undefined}
+                        className={`flex items-center rounded transition group relative ${
+                          desktopCollapsed
+                            ? "justify-center p-2.5"
+                            : "gap-2.5 px-3 py-1.5 text-xs font-medium"
+                        } ${
+                          isActive
+                            ? "bg-[#004b87] text-white font-semibold shadow-xs"
+                            : "text-slate-300 hover:text-white hover:bg-[#13355e]"
+                        }`}
+                      >
+                        <Icon
+                          className={`w-4 h-4 flex-shrink-0 transition-transform ${
+                            isActive
+                              ? "text-white"
+                              : "text-slate-400 group-hover:text-white"
+                          }`}
+                        />
+                        {!desktopCollapsed && (
+                          <span className="truncate">{item.label}</span>
+                        )}
+                      </NavLink>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </nav>
+
+          {/* Direct Link to Guest Portal */}
+          <div
+            className={`border-t border-[#18365a] bg-[#091a30] transition-all ${
+              desktopCollapsed ? "p-2 flex justify-center" : "p-3"
+            }`}
+          >
+            <a
+              href="/portal"
+              target="_blank"
+              rel="noopener noreferrer"
+              title={desktopCollapsed ? "Mở Cổng chào Người dân (/portal)" : undefined}
+              className={`flex items-center rounded text-xs font-medium text-slate-300 hover:text-white hover:bg-[#13355e] border border-[#18365a] transition ${
+                desktopCollapsed
+                  ? "p-2 justify-center w-full"
+                  : "justify-between px-3 py-2"
+              }`}
+            >
+              <span
+                className={`flex items-center gap-2 text-[11px] ${
+                  desktopCollapsed ? "justify-center" : ""
+                }`}
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                {!desktopCollapsed && <span>Mở Cổng chào Người dân</span>}
               </span>
-            </div>
-            <div className="text-[10px] text-slate-400 font-mono truncate mt-0.5">
-              {currentUser?.email || "admin@haiphong.gov.vn"}
-            </div>
+              {!desktopCollapsed && (
+                <span className="text-[10px] font-mono text-slate-400">
+                  /portal
+                </span>
+              )}
+            </a>
           </div>
-          <button
-            onClick={handleLogout}
-            title="Đăng xuất an toàn"
-            className="p-1.5 rounded text-slate-400 hover:text-red-400 hover:bg-[#13355e] border border-transparent hover:border-red-900/30 transition cursor-pointer flex-shrink-0"
+
+          {/* User Profile & Logout */}
+          <div
+            className={`border-t border-[#18365a] bg-[#071628] flex items-center transition-all ${
+              desktopCollapsed
+                ? "p-2 flex-col gap-2 justify-center"
+                : "p-3 justify-between gap-2"
+            }`}
           >
-            <LogOut className="w-4 h-4" />
-          </button>
+            {!desktopCollapsed ? (
+              <>
+                <div className="truncate pr-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-slate-200 truncate">
+                      {currentUser?.fullName ||
+                        currentUser?.username ||
+                        "Cán bộ Quản trị"}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-slate-400 font-mono truncate mt-0.5">
+                    {currentUser?.email || "admin@haiphong.gov.vn"}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    onClick={() => setIsChangePasswordOpen(true)}
+                    title="Đổi mật khẩu tài khoản"
+                    className="p-1.5 rounded text-slate-400 hover:text-amber-400 hover:bg-[#13355e] border border-transparent hover:border-amber-900/30 transition cursor-pointer"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    title="Đăng xuất an toàn"
+                    className="p-1.5 rounded text-slate-400 hover:text-red-400 hover:bg-[#13355e] border border-transparent hover:border-red-900/30 transition cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-2 w-full py-1">
+                <div
+                  className="w-8 h-8 rounded-full bg-[#13355e] border border-blue-400/40 text-blue-300 flex items-center justify-center font-bold text-xs"
+                  title={`${currentUser?.fullName || currentUser?.username || "Cán bộ"} (${currentUser?.email || "admin@haiphong.gov.vn"})`}
+                >
+                  {(
+                    currentUser?.fullName ||
+                    currentUser?.username ||
+                    "AD"
+                  )
+                    .slice(0, 2)
+                    .toUpperCase()}
+                </div>
+                <button
+                  onClick={() => setIsChangePasswordOpen(true)}
+                  title="Đổi mật khẩu tài khoản"
+                  className="p-2 rounded text-slate-400 hover:text-amber-400 hover:bg-[#13355e] transition cursor-pointer"
+                >
+                  <KeyRound className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleLogout}
+                  title="Đăng xuất an toàn"
+                  className="p-2 rounded text-slate-400 hover:text-red-400 hover:bg-[#13355e] transition cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </aside>
 
       {/* Main Content Container with Top Bar */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Desktop Top Header Bar */}
-        <header className="hidden md:flex h-12 bg-white border-b border-slate-300 px-6 items-center justify-between shadow-2xs">
+        <header className="hidden md:flex h-12 bg-white border-b border-slate-300 px-4 lg:px-6 items-center justify-between shadow-2xs">
           <div className="flex items-center gap-3">
+            {/* Desktop Menu Close / Open Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleDesktopSidebar}
+              className="p-1.5 -ml-1 rounded border border-slate-200 hover:border-slate-300 hover:bg-slate-100 text-slate-700 transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold shadow-2xs"
+              title={desktopCollapsed ? "Mở rộng thanh menu bên" : "Thu gọn thanh menu bên (dạng icon)"}
+            >
+              {desktopCollapsed ? (
+                <>
+                  <PanelLeftOpen className="w-4 h-4 text-[#004b87]" />
+                  <span className="text-[11.5px] text-[#004b87]">Mở rộng</span>
+                </>
+              ) : (
+                <>
+                  <PanelLeftClose className="w-4 h-4 text-slate-600" />
+                  <span className="text-[11.5px] text-slate-600">Thu gọn</span>
+                </>
+              )}
+            </button>
+
+            <span className="h-4 w-px bg-slate-200" />
+
             <span className="text-xs font-semibold text-slate-500">
               Trung tâm Điều hành:
             </span>
@@ -568,7 +737,9 @@ export const AdminLayout: React.FC = () => {
             {/* Officer Role Badge */}
             <div
               className={`text-[11px] font-semibold px-2.5 py-1 rounded-sm border flex items-center gap-1.5 ${roleInfo.color}`}
+              title={`Quyền hạn: ${roleInfo.scope}`}
             >
+              <ShieldCheck className="w-3.5 h-3.5" />
               <span>{roleInfo.label}</span>
             </div>
           </div>
@@ -606,6 +777,12 @@ export const AdminLayout: React.FC = () => {
           )}
         </main>
       </div>
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
     </div>
   );
 };

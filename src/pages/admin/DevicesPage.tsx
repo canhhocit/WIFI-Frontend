@@ -18,13 +18,15 @@ import {
   Power,
   CheckCircle2,
   XCircle,
-  Cpu
+  Cpu,
+  Users
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
-import { DeviceDto, NetworkDeviceDto, DeviceTopologySummaryDto } from '../../types/models';
+import { DeviceDto, NetworkDeviceDto, DeviceTopologySummaryDto, GwnClientDto } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
 import { DeviceSwapModal } from '../../components/DeviceSwapModal';
 import { DeviceMonitoringTopology } from '../../components/DeviceMonitoringTopology';
+import { ConnectedClientsModal } from '../../components/ConnectedClientsModal';
 
 export const DevicesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'CLIENT' | 'INFRASTRUCTURE'>('CLIENT');
@@ -60,6 +62,26 @@ export const DevicesPage: React.FC = () => {
   const [syncSuccessMsg, setSyncSuccessMsg] = useState<string | null>(null);
   const [deviceToReboot, setDeviceToReboot] = useState<NetworkDeviceDto | null>(null);
   const [rebootingId, setRebootingId] = useState<number | null>(null);
+
+  // Connected clients state
+  const [clientsModalOpen, setClientsModalOpen] = useState(false);
+  const [selectedDeviceForClients, setSelectedDeviceForClients] = useState<NetworkDeviceDto | null>(null);
+  const [connectedClients, setConnectedClients] = useState<GwnClientDto[]>([]);
+  const [loadingClients, setLoadingClients] = useState(false);
+
+  const handleViewClients = async (dev: NetworkDeviceDto) => {
+    setSelectedDeviceForClients(dev);
+    setClientsModalOpen(true);
+    setLoadingClients(true);
+    try {
+      const data = await adminApi.getConnectedClientsFromCloud(dev.id);
+      setConnectedClients(data);
+    } catch (err: any) {
+      console.error('Failed to load connected clients:', err);
+    } finally {
+      setLoadingClients(false);
+    }
+  };
 
   useEffect(() => {
     if (activeTab === 'CLIENT') {
@@ -537,6 +559,13 @@ export const DevicesPage: React.FC = () => {
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => handleViewClients(nd)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 rounded-sm text-xs font-semibold transition cursor-pointer"
+                              title="Xem danh sách người dân đang bắt sóng thực tế và cường độ sóng RSSI"
+                            >
+                              <Users className="w-3.5 h-3.5 text-sky-600" /> Xem Client
+                            </button>
                             {(nd.deviceType === 'ROUTER' || (nd.vendor && nd.vendor.toLowerCase().includes('grandstream'))) && (
                               <button
                                 onClick={() => setDeviceToReboot(nd)}
@@ -665,6 +694,15 @@ export const DevicesPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Connected Clients Modal */}
+      <ConnectedClientsModal
+        isOpen={clientsModalOpen}
+        onClose={() => setClientsModalOpen(false)}
+        device={selectedDeviceForClients}
+        clients={connectedClients}
+        loading={loadingClients}
+      />
     </div>
   );
 };

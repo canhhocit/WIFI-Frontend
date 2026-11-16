@@ -22,6 +22,7 @@ export const GovernmentReportPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
 
   const [exporting, setExporting] = useState<boolean>(false);
+  const [exportingPdf, setExportingPdf] = useState<boolean>(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
   const loadReport = async () => {
@@ -53,6 +54,18 @@ export const GovernmentReportPage: React.FC = () => {
       setExportError(err?.message || 'Lỗi khi xuất file báo cáo CSV');
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    setExportingPdf(true);
+    setExportError(null);
+    try {
+      await adminApi.exportGovernmentReportPdf(period);
+    } catch (err: any) {
+      setExportError(err?.message || 'Lỗi khi xuất file báo cáo PDF');
+    } finally {
+      setExportingPdf(false);
     }
   };
 
@@ -102,10 +115,20 @@ export const GovernmentReportPage: React.FC = () => {
           <button
             onClick={handleExportCsv}
             disabled={exporting}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-red-700 hover:bg-red-800 disabled:opacity-50 rounded-sm shadow-sm cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 rounded-sm shadow-sm cursor-pointer"
           >
             <Download className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
-            {exporting ? 'Đang xuất file...' : 'Xuất file CSV'}
+            {exporting ? 'Đang xuất file...' : 'Xuất CSV'}
+          </button>
+
+          <button
+            onClick={handleExportPdf}
+            disabled={exportingPdf}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-red-700 hover:bg-red-800 disabled:opacity-50 rounded-sm shadow-sm cursor-pointer"
+            title="Xuất file PDF có Quốc hiệu, Tiêu ngữ và Chữ ký"
+          >
+            <Download className={`w-4 h-4 ${exportingPdf ? 'animate-bounce' : ''}`} />
+            {exportingPdf ? 'Đang xuất PDF...' : 'Tải PDF chính thức'}
           </button>
         </div>
       </div>

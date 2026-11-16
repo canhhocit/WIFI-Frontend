@@ -23,11 +23,17 @@ import {
   Users,
   RefreshCw,
   Star,
+  AlertTriangle,
+  LifeBuoy,
 } from 'lucide-react';
 import { portalApi } from '../../api/portalApi';
 import { PortalInitResponse } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
 import { VietnamFlag } from '../../components/VietnamFlag';
+import { ReportIssueModal } from '../../components/ReportIssueModal';
+import { CitizenDigitalMediaModal } from '../../components/CitizenDigitalMediaModal';
+import { CampaignDto } from '../../types/models';
+import { Play, Tv, Video, Eye, Share2, FileText } from 'lucide-react';
 
 const getOrCreateLocalClientMac = () => {
   try {
@@ -68,6 +74,11 @@ export const PortalPage: React.FC = () => {
   const [otpVerified, setOtpVerified] = useState(false);
   const [macAddress, setMacAddress] = useState('');
   const [consentGiven, setConsentGiven] = useState(true);
+
+  // Báo lỗi Wi-Fi modal state
+  const [showReportModal, setShowReportModal] = useState(false);
+  // Modal hiển thị truyền thông số chi tiết (Video clip / Poster / Văn bản chỉ đạo)
+  const [showMediaModal, setShowMediaModal] = useState(false);
 
   // Ver 1 Mode: Advanced Auth / Survey Collapsible Toggle
   const [showAdvancedAuth, setShowAdvancedAuth] = useState(false);
@@ -351,8 +362,27 @@ export const PortalPage: React.FC = () => {
             >
               <span>🌐 Tiếp tục lướt web (Google)</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setShowReportModal(true)}
+              className="w-full py-2.5 px-3 rounded-xl bg-amber-50 text-amber-900 font-semibold text-xs hover:bg-amber-100 transition flex items-center justify-center gap-1.5 border border-amber-200 cursor-pointer"
+            >
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+              <span>Gặp sự cố kết nối? Báo lỗi kỹ thuật</span>
+            </button>
           </div>
         </div>
+
+        <ReportIssueModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          locationName={portalData?.location.name}
+          locationId={portalData?.location.id}
+          locationSlug={portalData?.location.slug || locationParam}
+          clientMac={effectiveClientMac}
+          clientIp={portalData?.clientIp || rawIp}
+        />
       </div>
     );
   }
@@ -396,7 +426,23 @@ export const PortalPage: React.FC = () => {
           >
             Thử lại kết nối
           </button>
+          <button
+            type="button"
+            onClick={() => setShowReportModal(true)}
+            className="w-full mt-2 py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5"
+          >
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+            <span>Báo lỗi sự cố điểm này</span>
+          </button>
         </div>
+
+        <ReportIssueModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          locationSlug={locationParam}
+          clientMac={effectiveClientMac}
+          clientIp={rawIp}
+        />
       </div>
     );
   }
@@ -407,8 +453,25 @@ export const PortalPage: React.FC = () => {
   };
 
   const template = portalData?.portalTemplate;
-  const campaign = portalData?.activeCampaign;
   const survey = portalData?.activeSurvey;
+
+  // Chiến dịch Truyền thông số Mặc định của UBND TP. Hải Phòng (luôn đảm bảo 100% người dân tiếp cận thông điệp)
+  const defaultCityCampaign: CampaignDto = {
+    id: 0,
+    title: 'Chiến Dịch Chuyển Đổi Số Toàn Dân: Đưa Dịch Vụ Công Trực Tuyến & VNeID Về 1.584 Nhà Văn Hóa Cơ Sở',
+    description: 'UBND Thành phố Hải Phòng đẩy mạnh triển khai cung cấp dịch vụ công trực tuyến toàn trình, kích hoạt tài khoản định danh điện tử VNeID mức 2 cho nhân dân, và cung cấp Internet Wi-Fi công cộng miễn phí phục vụ đời sống văn hóa, học tập và sản xuất.',
+    bannerUrl: '/banners/haiphong_city_bg.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    actionUrl: 'https://dichvucong.haiphong.gov.vn',
+    priority: 10,
+    startTime: '2026-01-01T00:00:00Z',
+    endTime: '2026-12-31T23:59:59Z',
+    status: 'APPROVED',
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-01-01T00:00:00Z',
+  };
+
+  const activeCampaign: CampaignDto = portalData?.activeCampaign || defaultCityCampaign;
 
   // Background Wallpaper Priority:
   const backgroundWallpaperUrl =
@@ -480,7 +543,7 @@ export const PortalPage: React.FC = () => {
           </div>
 
           {/* Location & Speed Meta Strip */}
-          <div className="px-4 py-2.5 bg-slate-100/90 border-b border-slate-200 flex items-center justify-between text-[11px] text-slate-700">
+          <div className="px-4 py-2.5 bg-slate-100/90 border-b border-slate-200 flex flex-wrap items-center justify-between text-[11px] text-slate-700 gap-y-1.5">
             <div className="flex items-center gap-1.5 font-semibold truncate mr-2">
               <MapPin className="w-3.5 h-3.5 text-[#a81c1c] flex-shrink-0" />
               <span className="truncate">{portalData?.location.name || 'Nhà văn hóa thôn, tổ dân phố Hải Phòng'}</span>
@@ -494,17 +557,42 @@ export const PortalPage: React.FC = () => {
                 <Users className="w-3 h-3" />
                 {portalData?.currentActiveUsers ?? 0}/{portalData?.maxConcurrentUsers || portalData?.location.maxConcurrentUsers || 50}
               </span>
+              <span>•</span>
+              <button
+                type="button"
+                onClick={() => setShowReportModal(true)}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-sans font-bold text-[10.5px] transition shadow-2xs cursor-pointer"
+                title="Báo lỗi hoặc phản ánh chất lượng mạng Wi-Fi tại điểm này"
+              >
+                <AlertTriangle className="w-3 h-3 text-amber-600 flex-shrink-0" />
+                <span>Báo lỗi Wi-Fi</span>
+              </button>
             </div>
+          </div>
+
+          {/* Digital Broadcast News Ticker (Dòng tin tức truyền thông số Hải Phòng) */}
+          <div className="bg-[#881313] text-white px-3.5 py-1.5 flex items-center gap-2 text-[11px] font-medium overflow-hidden border-b border-red-950/40 shadow-inner">
+            <div className="flex items-center gap-1 bg-yellow-400 text-red-950 font-black px-1.5 py-0.5 rounded-xs text-[9.5px] uppercase tracking-wider flex-shrink-0 shadow-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping" />
+              TIN TRUYỀN THÔNG SỐ
+            </div>
+            <div className="truncate flex-1 text-yellow-100 font-sans">
+              <span className="font-bold text-white uppercase">{activeCampaign.title}</span> — <span>{activeCampaign.description?.slice(0, 95)}...</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowMediaModal(true)}
+              className="text-[10px] font-bold text-yellow-300 hover:text-white underline flex-shrink-0 cursor-pointer"
+            >
+              Chi tiết
+            </button>
           </div>
 
           {/* Scrollable Content Body on Desktop */}
           <div className="p-4 sm:p-5 space-y-4 flex-1">
             {/* Lời chào mừng chính thức của điểm phát */}
             <div>
-              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs bg-[#a81c1c] text-yellow-300 text-[10px] font-bold uppercase tracking-wider mb-1.5 shadow-2xs">
-                <Sparkles className="w-3 h-3" />
-                <span>Chính quyền số cơ sở</span>
-              </div>
+              
               <h2 className="text-base sm:text-lg font-extrabold text-slate-900 leading-snug">
                 {portalData?.location.welcomeMessage || template?.welcomeText || `Chào mừng Nhân dân đến với ${portalData?.location.name || 'Nhà văn hóa'}`}
               </h2>
@@ -515,7 +603,7 @@ export const PortalPage: React.FC = () => {
             </div>
 
             {/* Bảng tin tuyên truyền & Chuyển đổi số địa phương */}
-            {(portalData?.location.promoTitle || portalData?.location.promoContent) && (
+            {(portalData?.location.promoTitle || portalData?.location.promoContent || portalData?.location.promoActionUrl) && (
               <div className="p-3.5 bg-amber-50/70 rounded-lg border border-amber-300/80 shadow-xs space-y-1.5">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-[#a81c1c]">
                   <Megaphone className="w-4 h-4 text-[#a81c1c] flex-shrink-0" />
@@ -525,6 +613,16 @@ export const PortalPage: React.FC = () => {
                   <p className="text-xs text-slate-700 leading-relaxed font-sans">
                     {portalData.location.promoContent}
                   </p>
+                )}
+                {/^https?:\/\//i.test(portalData.location.promoActionUrl || '') && (
+                  <a
+                    href={portalData.location.promoActionUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-[#004b87] hover:underline"
+                  >
+                    Mở cổng thông tin địa phương <ExternalLink className="w-3 h-3" />
+                  </a>
                 )}
               </div>
             )}
@@ -558,8 +656,7 @@ export const PortalPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="text-[10.5px] text-slate-200 drop-shadow-xs flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 font-mono">
-                  <span>Nhà mạng: <strong className="text-yellow-300">{portalData?.location.ispName || 'Viettel'}</strong></span>
-                  <span>•</span>
+
                   <span>Băng thông: <strong className="text-emerald-300">{portalData?.location.maxBandwidthMbps || 20} Mbps</strong></span>
                   <span>•</span>
                   <span>Mã trạm: <strong className="text-slate-200">{portalData?.location.locationCode || 'LOC-HP'}</strong></span>
@@ -567,58 +664,110 @@ export const PortalPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Campaign Policy Notice (if configured) */}
-            {campaign && (
-              <div className="border border-amber-300/80 bg-gradient-to-r from-red-50/95 via-amber-50/90 to-red-50/95 p-3.5 rounded-lg space-y-2 border-l-4 border-l-[#a81c1c] shadow-xs">
-                <div className="flex items-center justify-between">
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs bg-[#a81c1c] text-yellow-300 text-[10px] font-bold uppercase tracking-wider">
-                    <Megaphone className="w-3 h-3 text-yellow-300 flex-shrink-0" />
-                    <span>Chiến Dịch Tuyên Truyền TP. Hải Phòng</span>
-                  </div>
-                  <span className="text-[9.5px] font-bold text-red-800 bg-red-100/90 px-1.5 py-0.5 rounded border border-red-200">
-                    Chính sách trọng điểm
-                  </span>
+            {/* ================= KHÔNG GIAN TRUYỀN THÔNG SỐ TP. HẢI PHÒNG (DIGITAL MEDIA SPOTLIGHT) ================= */}
+            <div className="rounded-xl border-2 border-red-200/90 bg-gradient-to-br from-red-50/90 via-amber-50/70 to-white p-4 shadow-sm space-y-3 relative overflow-hidden">
+              {/* Header: Huy hiệu Phát sóng số chính thức */}
+              <div className="flex items-center justify-between gap-2 border-b border-red-100 pb-2">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#a81c1c] text-white text-[10.5px] font-extrabold uppercase tracking-wider shadow-xs">
+                  <Megaphone className="w-3.5 h-3.5 text-yellow-300 flex-shrink-0" />
+                  <span>TRUYỀN THÔNG SỐ TỈNH HẢI PHÒNG</span>
                 </div>
+                
+              </div>
 
-                <h3 className="text-xs sm:text-sm font-black text-slate-900 leading-snug uppercase">
-                  {campaign.title}
+              {/* Tiêu đề thông điệp tuyên truyền */}
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-slate-900 leading-snug uppercase tracking-tight">
+                  {activeCampaign.title}
                 </h3>
+                <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 font-mono">
+                  <span className="flex items-center gap-1 text-red-700 font-semibold">
+                    <Sparkles className="w-3 h-3 text-amber-500" />
+                    Chính sách số trọng điểm
+                  </span>
+                  <span>•</span>
+                  <span>Phủ sóng 1.584 Nhà văn hóa</span>
+                </div>
+              </div>
 
-                {/* Poster / Banner chính sách */}
-                {campaign.bannerUrl && (
-                  <div className="relative rounded-lg overflow-hidden border border-amber-200/90 shadow-xs my-2 max-h-56 bg-slate-900 group">
-                    <img
-                      src={campaign.bannerUrl}
-                      alt={campaign.title}
-                      className="w-full h-auto max-h-52 object-cover transition-transform duration-300 group-hover:scale-[1.01]"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLElement).style.display = 'none';
-                      }}
-                    />
+              {/* Poster / Video Visual Media Card */}
+              <div 
+                onClick={() => setShowMediaModal(true)}
+                className="relative rounded-lg overflow-hidden border border-red-200 shadow-sm bg-slate-950 cursor-pointer group max-h-56"
+                title="Bấm để xem toàn màn hình nội dung truyền thông số"
+              >
+                <img
+                  src={activeCampaign.bannerUrl || '/banners/haiphong_city_bg.jpg'}
+                  alt={activeCampaign.title}
+                  className="w-full h-auto max-h-52 object-cover opacity-90 transition-all duration-300 group-hover:scale-101 group-hover:opacity-100"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = '/banners/haiphong_city_bg.jpg';
+                  }}
+                />
+                
+                {/* Overlay nút xem / phát video */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/30 to-transparent flex flex-col justify-end p-3 text-white transition-opacity">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-yellow-300 drop-shadow-sm flex items-center gap-1.5">
+                      {activeCampaign.videoUrl ? (
+                        <>
+                          <div className="w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center shadow-md">
+                            <Play className="w-3 h-3 fill-current ml-0.5" />
+                          </div>
+                          <span>Xem Video Clip Tuyên Truyền</span>
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-4 h-4 text-yellow-300" />
+                          <span>Xem Toàn Văn Thông Điệp Số</span>
+                        </>
+                      )}
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-white/20 text-white backdrop-blur-xs font-mono font-bold">
+                      Chạm để mở
+                    </span>
                   </div>
-                )}
+                </div>
+              </div>
 
-                {campaign.description && (
-                  <p className="text-xs text-slate-700 leading-relaxed font-sans">
-                    {campaign.description}
-                  </p>
-                )}
+              {/* Tóm tắt nội dung */}
+              <p className="text-xs text-slate-700 leading-relaxed font-sans line-clamp-3">
+                {activeCampaign.description}
+              </p>
 
-                {campaign.actionUrl && (
-                  <div className="pt-1">
-                    <a
-                      href={campaign.actionUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#a81c1c] hover:bg-[#881313] text-white rounded text-[11px] font-bold transition shadow-xs cursor-pointer"
-                    >
-                      <span>Xem Chi Tiết Kế Hoạch / Văn Bản Chỉ Đạo</span>
-                      <ExternalLink className="w-3 h-3 text-yellow-300" />
-                    </a>
-                  </div>
+              {/* Bộ nút hành động Truyền thông số */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowMediaModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#a81c1c] hover:bg-[#881313] text-white rounded text-xs font-bold transition shadow-xs cursor-pointer"
+                >
+                  {activeCampaign.videoUrl ? (
+                    <>
+                      <Play className="w-3.5 h-3.5 fill-current text-yellow-300" />
+                      <span>Xem Video & Chi Tiết Bản Tin</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-3.5 h-3.5 text-yellow-300" />
+                      <span>Xem Toàn Văn Thông Điệp Số</span>
+                    </>
+                  )}
+                </button>
+
+                {activeCampaign.actionUrl && (
+                  <a
+                    href={activeCampaign.actionUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-[#004b87] border border-blue-300 rounded text-xs font-bold transition shadow-2xs cursor-pointer"
+                  >
+                    <span>Cổng Dịch Vụ Công Hải Phòng</span>
+                    <ExternalLink className="w-3 h-3 text-blue-600" />
+                  </a>
                 )}
               </div>
-            )}
+            </div>
 
             {/* Desktop-only: Demo Location Switcher inside Left Column */}
             <div className="hidden lg:block pt-2">
@@ -1066,18 +1215,21 @@ export const PortalPage: React.FC = () => {
                 <span className="font-medium text-slate-600">Đường dây nóng DVC Hải Phòng:</span>
                 <span className="font-mono font-bold text-[#004b87]">0225.1022</span>
               </div>
-              <div className="flex items-center gap-1.5 text-[10.5px] text-slate-400">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                <span>Hệ thống bảo vệ an toàn thông tin & dữ liệu công dân.</span>
+              <div className="flex items-center justify-between">
+                
+                <button
+                  type="button"
+                  onClick={() => setShowReportModal(true)}
+                  className="inline-flex items-center gap-1 text-[11px] text-amber-700 hover:text-amber-900 font-semibold cursor-pointer underline decoration-amber-400/80"
+                >
+                  <AlertTriangle className="w-3 h-3 text-amber-600" />
+                  <span>Báo sự cố Wi-Fi</span>
+                </button>
               </div>
             </div>
           </form>
 
-          {/* Right Column Footer */}
-          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 text-center text-[10.5px] text-slate-500 space-y-0.5">
-            <div className="font-bold text-slate-700">Sở Thông tin và Truyền thông Thành phố Hải Phòng</div>
-            <div>Hạ tầng viễn thông phối hợp vận hành cùng Viettel & VNPT</div>
-          </div>
+       
         </div>
 
       </div>
@@ -1112,6 +1264,35 @@ export const PortalPage: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/* Floating "Báo lỗi Wi-Fi" Button (Always accessible) */}
+      <button
+        type="button"
+        onClick={() => setShowReportModal(true)}
+        className="fixed bottom-3 right-3 z-40 bg-white/95 hover:bg-white text-slate-800 shadow-xl border border-slate-300/90 rounded-full px-3.5 py-1.5 flex items-center gap-1.5 text-xs font-bold transition hover:scale-105 cursor-pointer backdrop-blur-xs"
+        title="Báo lỗi hoặc phản ánh chất lượng Wi-Fi"
+      >
+        <AlertTriangle className="w-4 h-4 text-amber-600" />
+        <span className="hidden sm:inline">Báo lỗi Wi-Fi</span>
+        <span className="sm:hidden">Báo lỗi</span>
+      </button>
+
+      <ReportIssueModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        locationName={portalData?.location.name}
+        locationId={portalData?.location.id}
+        locationSlug={portalData?.location.slug || locationParam}
+        clientMac={effectiveClientMac}
+        clientIp={portalData?.clientIp || rawIp}
+      />
+
+      {/* Citizen Digital Media Modal (Trình chiếu Video & Toàn văn truyền thông số) */}
+      <CitizenDigitalMediaModal
+        isOpen={showMediaModal}
+        onClose={() => setShowMediaModal(false)}
+        campaign={activeCampaign}
+      />
     </div>
   );
 };

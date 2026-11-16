@@ -1,5 +1,5 @@
 import { request } from './client';
-import { LoginResponse, AdminUserDto } from '../types/models';
+import { LoginResponse, AdminUserDto, ChangePasswordRequest } from '../types/models';
 
 export const authApi = {
   login: async (username: string, password: string): Promise<LoginResponse> => {
@@ -16,6 +16,13 @@ export const authApi = {
 
   getMe: (): Promise<AdminUserDto> => {
     return request<AdminUserDto>('/auth/me');
+  },
+
+  changePassword: (data: ChangePasswordRequest): Promise<void> => {
+    return request<void>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 
   logout: () => {
