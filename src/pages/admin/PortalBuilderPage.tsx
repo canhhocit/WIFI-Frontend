@@ -31,6 +31,7 @@ import {
   History,
   Maximize2,
   X,
+  Send,
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { PortalTemplateDto, LocationDto, PortalTemplateVersionDto } from '../../types/models';
@@ -250,18 +251,20 @@ export const PortalBuilderPage: React.FC = () => {
     }
   };
 
-  const handleSaveGlobalTemplate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveGlobalTemplate = async (isPublish: boolean = true) => {
     setSaving(true);
     setError(null);
     try {
-      const saved = await adminApi.savePortalTemplate(template);
+      const templateToSave = { ...template, active: isPublish };
+      const saved = await adminApi.savePortalTemplate(templateToSave);
       setTemplate(saved);
       setSavedTemplate(saved);
       setToast({
         show: true,
-        title: 'Lưu thành công',
-        message: 'Đã lưu giao diện Cổng chào toàn thành phố',
+        title: isPublish ? 'Xuất bản thành công' : 'Lưu bản nháp thành công',
+        message: isPublish
+          ? 'Giao diện Cổng chào đã được phát hành và áp dụng trên toàn hệ thống.'
+          : 'Cấu hình đã được lưu an toàn. Bản nháp chưa hiển thị với người dân.',
         type: 'success',
       });
     } catch (err: any) {
@@ -475,7 +478,7 @@ export const PortalBuilderPage: React.FC = () => {
           <div className="lg:col-span-6 bg-white rounded border border-slate-300 shadow-xs flex flex-col lg:max-h-[calc(100vh-175px)] overflow-hidden">
             {scope === 'GLOBAL' ? (
               /* FORM 1: GLOBAL CITYWIDE TEMPLATE */
-              <form onSubmit={handleSaveGlobalTemplate} className="flex flex-col h-full overflow-hidden text-xs">
+              <form onSubmit={(e) => { e.preventDefault(); handleSaveGlobalTemplate(true); }} className="flex flex-col h-full overflow-hidden text-xs">
                 
                 {/* Scrollable Form Body */}
                 <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
@@ -731,19 +734,60 @@ export const PortalBuilderPage: React.FC = () => {
                 </div>
 
                 {/* Sticky Action Footer */}
-                <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between rounded-b flex-shrink-0 gap-3">
-                  <span className={`text-[11px] font-semibold ${hasUnsavedChanges ? 'text-amber-700' : 'text-emerald-700'}`}>
-                    {hasUnsavedChanges ? 'Có thay đổi chưa lưu' : 'Đã lưu'}
-                  </span>
+                <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between rounded-b flex-shrink-0 gap-3">
+                  <div className="flex items-center gap-3">
+                    {template.active ? (
+                      <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-sm bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span className="font-semibold">Đang áp dụng</span>
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-sm bg-slate-100 border border-slate-200 text-slate-700 text-xs">
+                        <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                        <span className="font-semibold">Bản nháp</span>
+                      </div>
+                    )}
+
+                    {hasUnsavedChanges ? (
+                      <span className="text-[11px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                        Chưa lưu thay đổi
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-slate-500">
+                        Đã đồng bộ
+                      </span>
+                    )}
+                  </div>
                  
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition shadow-sm shadow-sky-600/20 cursor-pointer ml-auto"
-                  >
-                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Lưu & Xuất Bản Toàn Hệ Thống
-                  </button>
+                  <div className="flex items-center gap-2 ml-auto">
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() => handleSaveGlobalTemplate(false)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-sm text-xs font-semibold transition cursor-pointer shadow-xs disabled:opacity-50"
+                      title="Lưu lại cấu hình dưới dạng bản nháp nội bộ"
+                    >
+                      <Save className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Lưu nháp</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() => handleSaveGlobalTemplate(true)}
+                      className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
+                      title="Xuất bản và phát hành chính thức cho người dân"
+                    >
+                      {saving ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
+                      )}
+                      <span>Xuất bản</span>
+                    </button>
+                  </div>
                 </div>
               </form>
             ) : (

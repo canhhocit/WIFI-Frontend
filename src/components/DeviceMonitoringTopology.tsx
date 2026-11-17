@@ -566,13 +566,7 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
                   {/* CATEGORY: AP (ACCESS POINT) */}
                   {modalCategory === 'AP' && (
                     <div className="space-y-3">
-                      <div className="text-xs text-slate-600 bg-sky-50 border border-sky-100 p-3 rounded flex items-center gap-2">
-                        <Info className="w-4 h-4 text-sky-600 flex-shrink-0" />
-                        <span>
-                          Toàn bộ <strong>{devicesList.length} trạm phát sóng Wi-Fi 6 (Access Point)</strong> đều do <strong>Viettel High Tech</strong> sản xuất và đấu nối trực tiếp vào Router Gateway GWN7002.
-                        </span>
-                      </div>
-
+                     
                       <div className="border border-slate-200 rounded-lg overflow-hidden">
                         <table className="w-full text-left text-xs">
                           <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">

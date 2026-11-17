@@ -143,14 +143,18 @@ export const PortalPage: React.FC = () => {
   useEffect(() => {
     if (!connectedSession) return;
     if (redirectCountdown <= 0) {
-      window.location.replace(buildExcapUrl(connectedSession.sessionToken));
+      if (rawLoginUrl) {
+        window.location.replace(buildExcapUrl(connectedSession.sessionToken));
+      } else {
+        window.location.replace(targetDestination);
+      }
       return;
     }
     const timer = setTimeout(() => {
       setRedirectCountdown((prev) => prev - 1);
     }, 1000);
     return () => clearTimeout(timer);
-  }, [connectedSession, redirectCountdown, targetDestination]);
+  }, [connectedSession, redirectCountdown, targetDestination, rawLoginUrl]);
 
   useEffect(() => {
     loadPortal();

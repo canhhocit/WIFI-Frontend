@@ -870,6 +870,30 @@ export interface GovernmentReportDto {
   districtBreakdown: DistrictStatDto[];
 }
 
+export interface GovernmentReportHistoryDto {
+  id: number;
+  reportCode: string;
+  title: string;
+  reportPeriod: string;
+  submittedBy: string;
+  submittedByName: string;
+  submissionStatus: string;
+  totalLocations: number;
+  activeLocations: number;
+  availabilityRate: number;
+  totalSessions: number;
+  citizenSatisfactionRate: number;
+  fileUrl?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface SubmitReportRequest {
+  reportPeriod: string;
+  title: string;
+  notes?: string;
+}
+
 
 // ================= Users, Roles, DNS & System Settings =================
 

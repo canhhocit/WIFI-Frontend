@@ -41,6 +41,8 @@ import {
   CreateBlacklistRequest,
   AccessLogRetentionDto,
   GovernmentReportDto,
+  GovernmentReportHistoryDto,
+  SubmitReportRequest,
   DistrictStatDto,
   AdminUserDto,
   CreateAdminUserRequest,
@@ -608,6 +610,17 @@ export const adminApi = {
   // Government Administrative Reports (Sở TT&TT / UBND TP Hải Phòng)
   getGovernmentReportSummary: (period = 'MONTH') => {
     return request<GovernmentReportDto>(`/v1/admin/reports/government/summary?period=${encodeURIComponent(period)}`);
+  },
+
+  getGovernmentReportHistory: () => {
+    return request<GovernmentReportHistoryDto[]>('/v1/admin/reports/government/history');
+  },
+
+  submitGovernmentReport: (data: SubmitReportRequest) => {
+    return request<GovernmentReportHistoryDto>('/v1/admin/reports/government/submit', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 
   exportGovernmentReportCsv: async (period = 'MONTH') => {

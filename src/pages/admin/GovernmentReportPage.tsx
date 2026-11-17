@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { adminApi } from '../../api/adminApi';
-import { GovernmentReportDto, DistrictStatDto } from '../../types/models';
+import { GovernmentReportDto, GovernmentReportHistoryDto, DistrictStatDto } from '../../types/models';
 import {
   FileSpreadsheet,
   Printer,
@@ -13,7 +13,13 @@ import {
   ShieldCheck,
   Clock,
   RefreshCw,
-  Landmark
+  Landmark,
+  Send,
+  History,
+  CheckCircle2,
+  FileText,
+  X,
+  AlertCircle
 } from 'lucide-react';
 
 export const GovernmentReportPage: React.FC = () => {
@@ -24,6 +30,18 @@ export const GovernmentReportPage: React.FC = () => {
   const [exporting, setExporting] = useState<boolean>(false);
   const [exportingPdf, setExportingPdf] = useState<boolean>(false);
   const [exportError, setExportError] = useState<string | null>(null);
+
+  // Lịch sử nộp báo cáo
+  const [historyList, setHistoryList] = useState<GovernmentReportHistoryDto[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'DOCUMENT' | 'HISTORY'>('DOCUMENT');
+
+  // Modal nộp báo cáo
+  const [showSubmitModal, setShowSubmitModal] = useState<boolean>(false);
+  const [submitTitle, setSubmitTitle] = useState<string>('');
+  const [submitNotes, setSubmitNotes] = useState<string>('');
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [submitSuccessMsg, setSubmitSuccessMsg] = useState<string | null>(null);
 
   const loadReport = async () => {
     setLoading(true);
@@ -37,9 +55,25 @@ export const GovernmentReportPage: React.FC = () => {
     }
   };
 
+  const loadHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const history = await adminApi.getGovernmentReportHistory();
+      setHistoryList(history);
+    } catch (err) {
+      console.error('Failed to load report history:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
   useEffect(() => {
     loadReport();
   }, [period]);
+
+  useEffect(() => {
+    loadHistory();
+  }, []);
 
   const handlePrint = () => {
     window.print();
@@ -69,9 +103,38 @@ export const GovernmentReportPage: React.FC = () => {
     }
   };
 
+  const handleOpenSubmitModal = () => {
+    const periodLabel = period === 'MONTH' ? 'Tháng này' : period === 'PREV_MONTH' ? 'Tháng trước' : period;
+    setSubmitTitle(`Báo cáo vận hành mạng Wi-Fi công cộng Hải Phòng - Kỳ ${periodLabel}`);
+    setSubmitNotes('');
+    setShowSubmitModal(true);
+  };
+
+  const handleSubmitReport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!submitTitle.trim()) return;
+    setSubmitting(true);
+    setExportError(null);
+    try {
+      await adminApi.submitGovernmentReport({
+        reportPeriod: period,
+        title: submitTitle.trim(),
+        notes: submitNotes.trim() || undefined,
+      });
+      setShowSubmitModal(false);
+      setSubmitSuccessMsg('Báo cáo đã được lưu trữ và ghi nhận nộp thành công lên Sở TT&TT / UBND Thành phố.');
+      await loadHistory();
+      setTimeout(() => setSubmitSuccessMsg(null), 5000);
+    } catch (err: any) {
+      setExportError(err?.message || 'Lỗi khi lưu vết nộp báo cáo');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Action Bar (hidden when printing) */}
+      {/* Top Header Bar */}
       <div className="print:hidden flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
         <div>
           <h1 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
@@ -79,68 +142,127 @@ export const GovernmentReportPage: React.FC = () => {
             Báo Cáo Hành Chính Sở TT&TT / UBND Thành Phố Hải Phòng
           </h1>
           <p className="text-xs text-gray-500 mt-0.5">
-            Mẫu báo cáo tiến độ và chất lượng khai thác mạng Wi-Fi công cộng 
+            Mẫu báo cáo tiến độ và chất lượng khai thác mạng Wi-Fi công cộng 1.584 Nhà văn hóa thôn, tổ dân phố
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-            className="text-xs border border-gray-300 rounded-sm px-3 py-2 bg-white text-gray-800 font-medium"
-          >
-            <option value="MONTH">Kỳ báo cáo: Tháng này</option>
-            <option value="PREV_MONTH">Kỳ báo cáo: Tháng trước</option>
-            <option value="QUARTER">Kỳ báo cáo: Quý 3/2026</option>
-            <option value="YEAR">Kỳ báo cáo: Năm 2026</option>
-          </select>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Tab Switcher */}
+          <div className="inline-flex rounded-sm border border-gray-300 p-0.5 bg-gray-50 text-xs mr-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab('DOCUMENT')}
+              className={`px-3 py-1.5 font-medium rounded-sm flex items-center gap-1.5 transition-colors ${
+                activeTab === 'DOCUMENT' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5 text-red-700" />
+              Văn Bản Báo Cáo
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('HISTORY');
+                loadHistory();
+              }}
+              className={`px-3 py-1.5 font-medium rounded-sm flex items-center gap-1.5 transition-colors ${
+                activeTab === 'HISTORY' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <History className="w-3.5 h-3.5 text-blue-600" />
+              Lịch Sử Nộp ({historyList.length})
+            </button>
+          </div>
 
-          <button
-            onClick={loadReport}
-            disabled={loading}
-            className="p-2 text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-sm"
-            title="Làm mới"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
+          {activeTab === 'DOCUMENT' && (
+            <>
+              <select
+                value={period}
+                onChange={(e) => setPeriod(e.target.value)}
+                className="text-xs border border-gray-300 rounded-sm px-3 py-2 bg-white text-gray-800 font-medium"
+              >
+                <option value="MONTH">Kỳ báo cáo: Tháng này</option>
+                <option value="PREV_MONTH">Kỳ báo cáo: Tháng trước</option>
+                <option value="QUARTER">Kỳ báo cáo: Quý 3/2026</option>
+                <option value="YEAR">Kỳ báo cáo: Năm 2026</option>
+              </select>
 
-          <button
-            onClick={handlePrint}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 shadow-sm"
-          >
-            <Printer className="w-4 h-4" />
-            In báo cáo
-          </button>
+              <button
+                onClick={loadReport}
+                disabled={loading}
+                className="p-2 text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-sm"
+                title="Làm mới"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              </button>
 
-          <button
-            onClick={handleExportCsv}
-            disabled={exporting}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 rounded-sm shadow-sm cursor-pointer"
-          >
-            <Download className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
-            {exporting ? 'Đang xuất file...' : 'Xuất CSV'}
-          </button>
+              <button
+                onClick={handlePrint}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 shadow-sm"
+              >
+                <Printer className="w-4 h-4" />
+                In báo cáo
+              </button>
 
-          <button
-            onClick={handleExportPdf}
-            disabled={exportingPdf}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-red-700 hover:bg-red-800 disabled:opacity-50 rounded-sm shadow-sm cursor-pointer"
-            title="Xuất file PDF có Quốc hiệu, Tiêu ngữ và Chữ ký"
-          >
-            <Download className={`w-4 h-4 ${exportingPdf ? 'animate-bounce' : ''}`} />
-            {exportingPdf ? 'Đang xuất PDF...' : 'Tải PDF chính thức'}
-          </button>
+              <button
+                onClick={handleExportCsv}
+                disabled={exporting}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 rounded-sm shadow-sm cursor-pointer"
+              >
+                <Download className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
+                {exporting ? 'Đang xuất file...' : 'Xuất CSV'}
+              </button>
+
+              <button
+                onClick={handleExportPdf}
+                disabled={exportingPdf}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-slate-800 hover:bg-slate-900 disabled:opacity-50 rounded-sm shadow-sm cursor-pointer"
+                title="Xuất file PDF có Quốc hiệu, Tiêu ngữ và Chữ ký"
+              >
+                <Download className={`w-4 h-4 ${exportingPdf ? 'animate-bounce' : ''}`} />
+                {exportingPdf ? 'Đang xuất PDF...' : 'Tải PDF'}
+              </button>
+
+              <button
+                onClick={handleOpenSubmitModal}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-red-700 hover:bg-red-800 rounded-sm shadow-xs cursor-pointer"
+                title="Gửi báo cáo số chính thức lên Sở TT&TT / UBND"
+              >
+                <Send className="w-3.5 h-3.5" />
+                Nộp báo cáo
+              </button>
+            </>
+          )}
+
+          {activeTab === 'HISTORY' && (
+            <button
+              onClick={loadHistory}
+              disabled={loadingHistory}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-sm"
+            >
+              <RefreshCw className={`w-4 h-4 ${loadingHistory ? 'animate-spin' : ''}`} />
+              Làm mới lịch sử
+            </button>
+          )}
         </div>
       </div>
 
-      {exportError && (
-        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-sm">
-          {exportError}
+      {submitSuccessMsg && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-sm flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+          <span>{submitSuccessMsg}</span>
         </div>
       )}
 
-      {/* Main Report Document Canvas */}
-      {report && (
+      {exportError && (
+        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-sm flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+          <span>{exportError}</span>
+        </div>
+      )}
+
+      {/* TAB 1: Main Report Document Canvas */}
+      {activeTab === 'DOCUMENT' && report && (
         <div className="bg-white p-8 md:p-12 rounded border border-gray-300 shadow-sm print:border-none print:shadow-none print:p-0 max-w-5xl mx-auto">
           {/* Official Administrative Header */}
           <div className="flex justify-between items-start text-center pb-6 border-b-2 border-red-800 text-xs text-gray-800 font-serif">
@@ -327,7 +449,184 @@ export const GovernmentReportPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* TAB 2: Submission History */}
+      {activeTab === 'HISTORY' && (
+        <div className="bg-white rounded border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-bold text-gray-900">Sổ Lưu Trữ Lịch Sử Nộp Báo Cáo Sở TT&TT</h2>
+              <p className="text-xs text-gray-500">Lưu vết số hóa toàn bộ các đợt phát hành và nộp báo cáo định kỳ</p>
+            </div>
+            <span className="text-xs bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full font-semibold">
+              {historyList.length} lượt nộp
+            </span>
+          </div>
+
+          {loadingHistory ? (
+            <div className="p-8 text-center text-gray-500 text-xs">Đang tải lịch sử báo cáo...</div>
+          ) : historyList.length === 0 ? (
+            <div className="p-8 text-center text-gray-500 text-xs">
+              <History className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+              Chưa có lần nộp báo cáo nào được ghi nhận vào sổ điện tử.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 text-xs">
+                <thead className="bg-gray-50 text-gray-700">
+                  <tr>
+                    <th className="px-3 py-2.5 text-left font-semibold">Mã báo cáo</th>
+                    <th className="px-3 py-2.5 text-left font-semibold">Tiêu đề báo cáo</th>
+                    <th className="px-3 py-2.5 text-center font-semibold">Kỳ báo cáo</th>
+                    <th className="px-3 py-2.5 text-left font-semibold">Cán bộ nộp</th>
+                    <th className="px-3 py-2.5 text-center font-semibold">Thời gian</th>
+                    <th className="px-3 py-2.5 text-center font-semibold">Chỉ số chính</th>
+                    <th className="px-3 py-2.5 text-center font-semibold">Trạng thái</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">Tải lại</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {historyList.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50">
+                      <td className="px-3 py-3 font-mono font-bold text-gray-900 whitespace-nowrap">
+                        {item.reportCode}
+                      </td>
+                      <td className="px-3 py-3 font-medium text-gray-900">
+                        {item.title}
+                        {item.notes && (
+                          <div className="text-[11px] text-gray-500 italic mt-0.5">Ghi chú: {item.notes}</div>
+                        )}
+                      </td>
+                      <td className="px-3 py-3 text-center whitespace-nowrap">
+                        <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded font-mono text-[11px]">
+                          {item.reportPeriod}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <div className="font-medium text-gray-800">{item.submittedByName || item.submittedBy}</div>
+                        <div className="text-[11px] text-gray-400 font-mono">@{item.submittedBy}</div>
+                      </td>
+                      <td className="px-3 py-3 text-center whitespace-nowrap text-gray-500 font-mono text-[11px]">
+                        {new Date(item.createdAt).toLocaleString('vi-VN')}
+                      </td>
+                      <td className="px-3 py-3 text-center whitespace-nowrap">
+                        <span className="text-emerald-700 font-semibold">{item.availabilityRate}% khả dụng</span>
+                        <span className="text-gray-300 mx-1">|</span>
+                        <span className="text-blue-700 font-mono">{item.totalSessions.toLocaleString()} phiên</span>
+                      </td>
+                      <td className="px-3 py-3 text-center whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          Đã lưu trữ
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-right whitespace-nowrap">
+                        <button
+                          onClick={handleExportPdf}
+                          className="px-2 py-1 text-[11px] font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded border border-red-200 mr-1"
+                        >
+                          PDF
+                        </button>
+                        <button
+                          onClick={handleExportCsv}
+                          className="px-2 py-1 text-[11px] font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded border border-gray-200"
+                        >
+                          CSV
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Modal Nộp Báo Cáo */}
+      {showSubmitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center gap-2">
+                <Send className="w-5 h-5 text-red-700" />
+                <h3 className="font-bold text-gray-900 text-sm">Xác Nhận Nộp Báo Cáo Sở TT&TT</h3>
+              </div>
+              <button
+                onClick={() => setShowSubmitModal(false)}
+                className="text-gray-400 hover:text-gray-600 rounded-sm p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitReport} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Kỳ báo cáo <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={period}
+                  disabled
+                  className="w-full text-xs border border-gray-300 rounded px-3 py-2 bg-gray-100 text-gray-600 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Tiêu đề báo cáo hành chính <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={submitTitle}
+                  onChange={(e) => setSubmitTitle(e.target.value)}
+                  className="w-full text-xs border border-gray-300 rounded px-3 py-2 text-gray-900 focus:outline-none focus:ring-1 focus:ring-red-600"
+                  placeholder="Nhập tiêu đề báo cáo..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Ghi chú hoặc giải trình bổ sung (tùy chọn)
+                </label>
+                <textarea
+                  rows={3}
+                  value={submitNotes}
+                  onChange={(e) => setSubmitNotes(e.target.value)}
+                  className="w-full text-xs border border-gray-300 rounded px-3 py-2 text-gray-900 focus:outline-none focus:ring-1 focus:ring-red-600"
+                  placeholder="Ví dụ: Kèm số liệu vận hành 1.584 điểm và giải trình sự cố kỹ thuật..."
+                />
+              </div>
+
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded text-[11px] text-amber-800">
+                Hệ thống sẽ đóng băng snapshot dữ liệu chỉ số tại thời điểm nộp và cấp số hiệu lưu trữ điện tử.
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setShowSubmitModal(false)}
+                  className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-red-700 hover:bg-red-800 disabled:opacity-50 rounded shadow-sm"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  {submitting ? 'Đang gửi...' : 'Xác nhận nộp'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
 

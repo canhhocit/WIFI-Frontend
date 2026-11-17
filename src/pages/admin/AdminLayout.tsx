@@ -224,7 +224,7 @@ export const AdminLayout: React.FC = () => {
       const next = !prev;
       try {
         localStorage.setItem("wifi_admin_sidebar_collapsed", String(next));
-      } catch {}
+      } catch { }
       return next;
     });
   };
@@ -281,7 +281,7 @@ export const AdminLayout: React.FC = () => {
       adminApi
         .getGatewayStatus()
         .then(setGatewayStatus)
-        .catch(() => {});
+        .catch(() => { });
     }, 30000);
 
     const clockTimer = setInterval(() => {
@@ -415,7 +415,7 @@ export const AdminLayout: React.FC = () => {
         const matches = item.end
           ? location.pathname === item.to
           : location.pathname === item.to ||
-            location.pathname.startsWith(`${item.to}/`);
+          location.pathname.startsWith(`${item.to}/`);
         if (matches) {
           return hasModulePermission(item.module);
         }
@@ -425,7 +425,7 @@ export const AdminLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen md:h-screen md:overflow-hidden bg-slate-100 flex flex-col md:flex-row font-sans">
       {/* Mobile Top Header */}
       <div className="md:hidden bg-[#0c2340] text-white px-4 py-3 flex items-center justify-between border-b border-[#18365a] sticky top-0 z-40">
         <div className="flex items-center gap-2.5">
@@ -456,29 +456,25 @@ export const AdminLayout: React.FC = () => {
 
       {/* Sidebar Navigation */}
       <aside
-        className={`fixed md:sticky top-0 left-0 z-30 h-screen bg-[#0c2340] text-slate-300 flex flex-col border-r border-[#18365a] transition-all duration-300 ease-in-out ${
-          mobileMenuOpen
+        className={`fixed md:sticky top-0 left-0 z-30 h-screen bg-[#0c2340] text-slate-300 flex flex-col border-r border-[#18365a] transition-all duration-300 ease-in-out ${mobileMenuOpen
             ? "translate-x-0 w-72"
             : "-translate-x-full md:translate-x-0"
-        } ${
-          desktopCollapsed
+          } ${desktopCollapsed
             ? "md:w-16"
             : "md:w-72"
-        }`}
+          }`}
       >
         <div className="flex flex-col h-full flex-1 w-full overflow-hidden">
           {/* Department / Brand Banner */}
           <div
-            className={`border-b border-[#18365a] bg-gradient-to-b from-[#0a1e38] via-[#091a30] to-[#071629] flex items-center transition-all ${
-              desktopCollapsed
+            className={`border-b border-[#18365a] bg-gradient-to-b from-[#0a1e38] via-[#091a30] to-[#071629] flex items-center transition-all ${desktopCollapsed
                 ? "p-2.5 flex-col gap-2 justify-center"
                 : "p-4 justify-between"
-            }`}
+              }`}
           >
             <div
-              className={`flex items-center gap-3 min-w-0 ${
-                desktopCollapsed ? "justify-center" : ""
-              }`}
+              className={`flex items-center gap-3 min-w-0 ${desktopCollapsed ? "justify-center" : ""
+                }`}
             >
               <div
                 className="flex-shrink-0 drop-shadow-md cursor-pointer"
@@ -516,25 +512,43 @@ export const AdminLayout: React.FC = () => {
             </div>
           </div>
 
-          {/* Real-time Gateway Telemetry Status Strip */}
           {!desktopCollapsed && (
-            <div className="px-4 py-2 border-b border-[#18365a] bg-[#071628] flex items-center justify-between text-[11px]">
-              <div className="flex items-center gap-1.5 font-medium text-slate-300">
-                <Activity className="w-3.5 h-3.5 text-blue-400" />
-                <span>Menu Điều Hành</span>
-              </div>
-              <div className="flex items-center gap-1.5 font-mono">
-                <Circle className="w-2 h-2 fill-current text-emerald-400 animate-pulse" />
-                <span className="text-emerald-400 font-semibold text-[10px]">Trực tuyến</span>
+            <div className="px-4 border-b border-[#18365a] bg-[#071628] flex items-center justify-between text-[11px]">
+              <div
+                className={` transition-all ${desktopCollapsed ? "p-2 flex justify-center" : "p-3"
+                  }`}
+              >
+                <a
+                  href="/portal"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={desktopCollapsed ? "Mở Cổng chào Người dân (/portal)" : undefined}
+                  className={`flex items-center rounded text-xs font-medium text-slate-300 hover:text-white hover:bg-[#13355e] transition ${desktopCollapsed
+                      ? "justify-center w-full"
+                      : "justify-between px-3"
+                    }`}
+                >
+                  <span
+                    className={`flex items-center gap-2 text-[11px] ${desktopCollapsed ? "justify-center" : ""
+                      }`}
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                    {!desktopCollapsed && <span>Mở Trang cổng chào</span>}
+                  </span>
+                  {!desktopCollapsed && (
+                    <span className="text-[10px] font-mono text-slate-400">
+                      /portal
+                    </span>
+                  )}
+                </a>
               </div>
             </div>
           )}
 
           {/* Categorized Nav Groups (Generated dynamically by Role) */}
           <nav
-            className={`flex-1 overflow-y-auto custom-scrollbar transition-all ${
-              desktopCollapsed ? "px-2 py-3 space-y-3" : "px-3 py-3 space-y-4"
-            }`}
+            className={`flex-1 overflow-y-auto custom-scrollbar transition-all ${desktopCollapsed ? "px-2 py-3 space-y-3" : "px-3 py-3 space-y-4"
+              }`}
           >
             {filteredNavGroups.map((group, gIdx) => (
               <div key={group.groupTitle} className="space-y-1">
@@ -558,22 +572,19 @@ export const AdminLayout: React.FC = () => {
                         end={item.end}
                         onClick={() => setMobileMenuOpen(false)}
                         title={desktopCollapsed ? item.label : undefined}
-                        className={`flex items-center rounded transition group relative ${
-                          desktopCollapsed
+                        className={`flex items-center rounded transition group relative ${desktopCollapsed
                             ? "justify-center p-2.5"
                             : "gap-2.5 px-3 py-1.5 text-xs font-medium"
-                        } ${
-                          isActive
+                          } ${isActive
                             ? "bg-[#004b87] text-white font-semibold shadow-xs"
                             : "text-slate-300 hover:text-white hover:bg-[#13355e]"
-                        }`}
+                          }`}
                       >
                         <Icon
-                          className={`w-4 h-4 flex-shrink-0 transition-transform ${
-                            isActive
+                          className={`w-4 h-4 flex-shrink-0 transition-transform ${isActive
                               ? "text-white"
                               : "text-slate-400 group-hover:text-white"
-                          }`}
+                            }`}
                         />
                         {!desktopCollapsed && (
                           <span className="truncate">{item.label}</span>
@@ -585,47 +596,12 @@ export const AdminLayout: React.FC = () => {
               </div>
             ))}
           </nav>
-
-          {/* Direct Link to Guest Portal */}
-          <div
-            className={`border-t border-[#18365a] bg-[#091a30] transition-all ${
-              desktopCollapsed ? "p-2 flex justify-center" : "p-3"
-            }`}
-          >
-            <a
-              href="/portal"
-              target="_blank"
-              rel="noopener noreferrer"
-              title={desktopCollapsed ? "Mở Cổng chào Người dân (/portal)" : undefined}
-              className={`flex items-center rounded text-xs font-medium text-slate-300 hover:text-white hover:bg-[#13355e] border border-[#18365a] transition ${
-                desktopCollapsed
-                  ? "p-2 justify-center w-full"
-                  : "justify-between px-3 py-2"
-              }`}
-            >
-              <span
-                className={`flex items-center gap-2 text-[11px] ${
-                  desktopCollapsed ? "justify-center" : ""
-                }`}
-              >
-                <ExternalLink className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-                {!desktopCollapsed && <span>Mở Cổng chào Người dân</span>}
-              </span>
-              {!desktopCollapsed && (
-                <span className="text-[10px] font-mono text-slate-400">
-                  /portal
-                </span>
-              )}
-            </a>
-          </div>
-
           {/* User Profile & Logout */}
           <div
-            className={`border-t border-[#18365a] bg-[#071628] flex items-center transition-all ${
-              desktopCollapsed
+            className={`border-t border-[#18365a] bg-[#071628] flex items-center transition-all ${desktopCollapsed
                 ? "p-2 flex-col gap-2 justify-center"
                 : "p-3 justify-between gap-2"
-            }`}
+              }`}
           >
             {!desktopCollapsed ? (
               <>
@@ -693,9 +669,9 @@ export const AdminLayout: React.FC = () => {
       </aside>
 
       {/* Main Content Container with Top Bar */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
         {/* Desktop Top Header Bar */}
-        <header className="hidden md:flex h-12 bg-white border-b border-slate-300 px-4 lg:px-6 items-center justify-between shadow-2xs">
+        <header className="hidden md:flex h-12 shrink-0 bg-white border-b border-slate-300 px-4 lg:px-6 items-center justify-between shadow-2xs">
           <div className="flex items-center gap-3">
             {/* Desktop Menu Close / Open Toggle Button */}
             <button
@@ -746,7 +722,7 @@ export const AdminLayout: React.FC = () => {
         </header>
 
         {/* Page Body with RBAC Route Guard */}
-        <main className="flex-1 p-4 sm:p-5 lg:p-6 overflow-y-auto bg-slate-100">
+        <main className="min-h-0 flex-1 p-4 sm:p-5 lg:p-6 overflow-y-auto overscroll-contain bg-slate-100">
           {!isCurrentPathAllowed() ? (
             <div className="max-w-xl mx-auto mt-12 p-6 bg-white border border-slate-300 rounded shadow-xs text-center space-y-4">
               <div className="w-12 h-12 rounded bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto">
