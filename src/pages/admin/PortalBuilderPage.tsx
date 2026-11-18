@@ -44,6 +44,7 @@ import { ImageUploadInput } from '../../components/ImageUploadInput';
 import { Toast } from '../../components/Toast';
 import { VietnamFlag } from '../../components/VietnamFlag';
 import { Modal } from '../../components/Modal';
+import { portalApi } from '../../api/portalApi';
 
 export const PortalBuilderPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -100,8 +101,10 @@ export const PortalBuilderPage: React.FC = () => {
   // Live Studio Simulation State
   const [previewDevice, setPreviewDevice] = useState<'MOBILE' | 'TABLET' | 'DESKTOP'>('MOBILE');
   const [previewExpanded, setPreviewExpanded] = useState(false);
-  const [simCampaign, setSimCampaign] = useState(false);
-  const [simSurvey, setSimSurvey] = useState(false);
+  const [livePortalContent, setLivePortalContent] = useState<PortalInitResponse | null>(null);
+  const [livePortalContentLoading, setLivePortalContentLoading] = useState(false);
+  const [livePortalContentError, setLivePortalContentError] = useState<string | null>(null);
+  const [portalContentReloadKey, setPortalContentReloadKey] = useState(0);
   const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
   const previewStageRef = useRef<HTMLDivElement | null>(null);
   const [previewReady, setPreviewReady] = useState(false);
@@ -180,8 +183,6 @@ export const PortalBuilderPage: React.FC = () => {
       setRollingBack(false);
     }
   };
-  const [simCapacityFull, setSimCapacityFull] = useState(false);
-
   const colorPresets = [
     { name: 'GovTech Hải Phòng', themeColor: '#004b87', bgColor: '#0c2340', bgImg: '/banners/haiphong_city_bg.jpg' },
     { name: 'Cờ Đỏ Chính Quyền', themeColor: '#a81c1c', bgColor: '#450a0a', bgImg: '/banners/haiphong_culture_house.jpg' },
@@ -192,6 +193,38 @@ export const PortalBuilderPage: React.FC = () => {
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  useEffect(() => {
+    const locationSlug = selectedLocation?.slug;
+    if (!locationSlug || !selectedLocation?.active) {
+      setLivePortalContent(null);
+      setLivePortalContentLoading(false);
+      setLivePortalContentError(locationSlug ? 'Điểm phát đang tắt; chưa thể kiểm tra nội dung thực tế.' : null);
+      return;
+    }
+
+    let cancelled = false;
+    setLivePortalContent(null);
+    setLivePortalContentLoading(true);
+    setLivePortalContentError(null);
+
+    portalApi.init(locationSlug)
+      .then((response) => {
+        if (cancelled) return;
+        setLivePortalContent(response);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLivePortalContentError('Không thể tải nội dung đang phát. Hãy kiểm tra kết nối hoặc trạng thái điểm.');
+      })
+      .finally(() => {
+        if (!cancelled) setLivePortalContentLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedLocation?.slug, selectedLocation?.active, portalContentReloadKey]);
 
   const loadInitialData = async () => {
     setLoading(true);
@@ -211,7 +244,7 @@ export const PortalBuilderPage: React.FC = () => {
       if (locsRes?.content) {
         setLocations(locsRes.content);
         if (locsRes.content.length > 0 && !selectedLocationId) {
-          const first = locsRes.content[0];
+          const first = locsRes.content.find((location) => location.active) || locsRes.content[0];
           setSelectedLocationId(first.id);
           setSelectedLocation(first);
           setLocFormData({
@@ -373,93 +406,31 @@ export const PortalBuilderPage: React.FC = () => {
   };
 
   // Preview uses the same PortalPage as citizens. Draft values are sent to the embedded route without saving them.
-  const previewData = useMemo<PortalInitResponse>(() => {
-    const now = new Date().toISOString();
-    const location: LocationDto = selectedLocation
-      ? {
-          ...selectedLocation,
-          welcomeMessage: scope === 'LOCATION' ? locFormData.welcomeMessage || undefined : undefined,
-          promoTitle: scope === 'LOCATION' ? locFormData.promoTitle || undefined : undefined,
-          promoContent: scope === 'LOCATION' ? locFormData.promoContent || undefined : undefined,
-          promoBannerUrl: scope === 'LOCATION' ? locFormData.promoBannerUrl || undefined : undefined,
-          backgroundImageUrl: scope === 'LOCATION' ? locFormData.backgroundImageUrl || undefined : undefined,
-          promoActionUrl: scope === 'LOCATION' ? locFormData.promoActionUrl || undefined : undefined,
-          termsAndConditions: scope === 'LOCATION' ? selectedLocation.termsAndConditions : template.termsText || '',
-        }
-      : {
-          id: 0,
-          slug: 'xem-truoc',
-          name: 'Nhà văn hóa mẫu Hải Phòng',
-          address: 'Thành phố Hải Phòng',
-          sessionDurationMinutes: 120,
-          maxBandwidthMbps: 20,
-          maxConcurrentUsers: 50,
-          termsAndConditions: template.termsText || '',
-          active: true,
-        };
+  const previewData = useMemo<PortalInitResponse | null>(() => {
+    if (!selectedLocation || !livePortalContent) return null;
+
+    const location: LocationDto = {
+      ...livePortalContent.location,
+      ...selectedLocation,
+      welcomeMessage: scope === 'LOCATION' ? locFormData.welcomeMessage || undefined : undefined,
+      promoTitle: scope === 'LOCATION' ? locFormData.promoTitle || undefined : undefined,
+      promoContent: scope === 'LOCATION' ? locFormData.promoContent || undefined : undefined,
+      promoBannerUrl: scope === 'LOCATION' ? locFormData.promoBannerUrl || undefined : undefined,
+      backgroundImageUrl: scope === 'LOCATION' ? locFormData.backgroundImageUrl || undefined : undefined,
+      promoActionUrl: scope === 'LOCATION' ? locFormData.promoActionUrl || undefined : undefined,
+      termsAndConditions: scope === 'LOCATION' ? selectedLocation.termsAndConditions : template.termsText || '',
+    };
 
     return {
+      ...livePortalContent,
       location,
       clientIp: '',
       clientMacHint: '',
-      mockGateway: true,
-      gatewayNotice: '',
-      activeCampaign: simCampaign
-        ? {
-            id: 0,
-            title: 'Tuyên truyền Dịch vụ công và kích hoạt VNeID',
-            description: 'Thông điệp minh họa để xem vị trí chiến dịch trên cổng Wi-Fi.',
-            bannerUrl: template.bannerUrl,
-            actionUrl: 'https://dichvucong.haiphong.gov.vn',
-            priority: 10,
-            startTime: now,
-            endTime: now,
-            status: 'APPROVED',
-            createdAt: now,
-            updatedAt: now,
-          }
-        : undefined,
-      activeSurvey: simSurvey
-        ? {
-            id: 0,
-            title: 'Khảo sát chất lượng Wi-Fi',
-            description: 'Nội dung minh họa trong bản xem trước.',
-            currentResponsesCount: 0,
-            active: true,
-            questions: [
-              {
-                id: 1,
-                questionText: 'Quý vị đánh giá chất lượng Wi-Fi hôm nay như thế nào?',
-                questionType: 'RATING',
-                sortOrder: 0,
-                required: true,
-              },
-            ],
-          }
-        : undefined,
       portalTemplate: { ...template },
       macRemembered: false,
       otpRequired: false,
-      currentActiveUsers: simCapacityFull ? location.maxConcurrentUsers || 50 : 0,
-      maxConcurrentUsers: location.maxConcurrentUsers || 50,
-      capacityReached: simCapacityFull,
     };
-  }, [template, selectedLocation, scope, locFormData, simCampaign, simSurvey, simCapacityFull]);
-
-  const previewWallpaperUrl =
-    previewData.location?.backgroundImageUrl ||
-    previewData.portalTemplate?.backgroundImageUrl ||
-    '/banners/haiphong_city_bg.jpg';
-
-  const previewBannerUrl =
-    previewData.location?.promoBannerUrl ||
-    previewData.portalTemplate?.bannerUrl ||
-    '/banners/haiphong_culture_house.jpg';
-
-  const previewWelcomeText =
-    previewData.location?.welcomeMessage ||
-    previewData.portalTemplate?.welcomeText ||
-    'Chào mừng Nhân dân đến với Nhà văn hóa';
+  }, [template, selectedLocation, scope, locFormData, livePortalContent]);
 
   useEffect(() => {
     const handlePreviewMessage = (event: MessageEvent) => {
@@ -471,7 +442,7 @@ export const PortalBuilderPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!previewReady) return;
+    if (!previewReady || !previewData) return;
     previewFrameRef.current?.contentWindow?.postMessage(
       { type: 'WIFI_PORTAL_PREVIEW_UPDATE', previewData },
       window.location.origin,
@@ -479,6 +450,7 @@ export const PortalBuilderPage: React.FC = () => {
   }, [previewReady, previewData]);
 
   const handleCreatePreviewLink = async () => {
+    if (!previewData) return;
     setCreatingPreviewLink(true);
     setCopyPreviewLinkSuccess(false);
     try {
@@ -508,7 +480,7 @@ export const PortalBuilderPage: React.FC = () => {
       ? { width: 768, height: 1024 }
       : { width: 1366, height: 768 };
   const previewFrameSize = previewDevice === 'MOBILE'
-    ? { width: previewViewport.width + 24, height: previewViewport.height + 24, screenTop: 12, screenLeft: 12 }
+    ? { width: previewViewport.width + 16, height: previewViewport.height + 16, screenTop: 8, screenLeft: 8 }
     : previewDevice === 'TABLET'
       ? { width: previewViewport.width + 20, height: previewViewport.height + 20, screenTop: 10, screenLeft: 10 }
       : { width: previewViewport.width + 16, height: previewViewport.height + 48, screenTop: 40, screenLeft: 8 };
@@ -519,8 +491,9 @@ export const PortalBuilderPage: React.FC = () => {
     const updateScale = () => {
       const availableWidth = Math.max(1, stage.clientWidth - 24);
       const availableHeight = previewExpanded ? Math.max(1, stage.clientHeight - 24) : Number.POSITIVE_INFINITY;
+      const scaleLimit = previewExpanded && previewDevice !== 'DESKTOP' ? 1.15 : 1;
       setPreviewScale(Math.min(
-        1,
+        scaleLimit,
         availableWidth / previewFrameSize.width,
         availableHeight / previewFrameSize.height,
       ));
@@ -529,7 +502,7 @@ export const PortalBuilderPage: React.FC = () => {
     observer.observe(stage);
     updateScale();
     return () => observer.disconnect();
-  }, [previewExpanded, previewFrameSize.width, previewFrameSize.height]);
+  }, [previewExpanded, previewDevice, previewFrameSize.width, previewFrameSize.height]);
 
   const hasUnsavedChanges = scope === 'GLOBAL'
     ? Boolean(savedTemplate && JSON.stringify(template) !== JSON.stringify(savedTemplate))
@@ -553,7 +526,7 @@ export const PortalBuilderPage: React.FC = () => {
               Lịch sử giao diện
             </button>
           )}
-          <label htmlFor="preview-link-duration" className="sr-only">Thời hạn liên kết xem trước</label>
+          <label htmlFor="preview-link-duration" className="whitespace-nowrap text-[11px] font-semibold text-slate-600">Hạn link xem trước:</label>
           <select
             id="preview-link-duration"
             value={previewLinkMinutes}
@@ -657,7 +630,7 @@ export const PortalBuilderPage: React.FC = () => {
               <form onSubmit={(e) => { e.preventDefault(); handleSaveGlobalTemplate(true); }} className="flex flex-col h-full overflow-hidden text-xs">
                 
                 {/* Scrollable Form Body */}
-                <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
+                <div className="flex-1 overflow-y-auto overscroll-y-contain p-5 sm:p-6 space-y-5">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">Tên bộ mẫu giao diện</label>
                     <input
@@ -983,7 +956,7 @@ export const PortalBuilderPage: React.FC = () => {
                 </div>
 
                 {/* Scrollable Form Body */}
-                <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
+                <div className="flex-1 overflow-y-auto overscroll-y-contain p-5 sm:p-6 space-y-5">
                   {/* Location Picker */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -1144,7 +1117,7 @@ export const PortalBuilderPage: React.FC = () => {
           <div
             className={previewExpanded
               ? 'fixed inset-0 z-[60] flex flex-col items-center bg-slate-950/90 p-3 sm:p-5 overflow-hidden'
-              : 'lg:col-span-7 lg:sticky lg:top-4 lg:self-start flex flex-col items-center justify-start min-w-0'}
+              : 'lg:col-span-7 lg:sticky lg:top-4 lg:self-start flex flex-col items-center justify-start min-w-0 lg:rounded-lg lg:border lg:border-slate-200 lg:bg-white lg:p-4 lg:shadow-sm'}
             role={previewExpanded ? 'dialog' : undefined}
             aria-modal={previewExpanded ? true : undefined}
             aria-label={previewExpanded ? 'Xem trước cổng Wi-Fi phóng lớn' : undefined}
@@ -1171,35 +1144,59 @@ export const PortalBuilderPage: React.FC = () => {
                   Đang hiển thị giao diện thật của /portal ở khung {previewViewport.width} × {previewViewport.height} CSS px. Kéo cuộn bên trong khung để kiểm tra toàn trang.
                 </p>
 
-              {/* Scenario Toggles */}
-              <div className="flex items-center justify-between gap-1 bg-white p-1.5 rounded border border-slate-200 text-[10.5px]">
-                <label className="flex items-center gap-1 font-semibold text-slate-700 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={simCampaign}
-                    onChange={(e) => setSimCampaign(e.target.checked)}
-                    className="rounded text-[#004b87] w-3 h-3"
-                  />
-                  <span>Chiến dịch</span>
-                </label>
-                <label className="flex items-center gap-1 font-semibold text-slate-700 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={simSurvey}
-                    onChange={(e) => setSimSurvey(e.target.checked)}
-                    className="rounded text-[#004b87] w-3 h-3"
-                  />
-                  <span>Khảo sát</span>
-                </label>
-                <label className="flex items-center gap-1 font-semibold text-slate-700 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={simCapacityFull}
-                    onChange={(e) => setSimCapacityFull(e.target.checked)}
-                    className="rounded text-[#004b87] w-3 h-3"
-                  />
-                  <span>Đầy tải</span>
-                </label>
+              <div className="rounded border border-slate-200 bg-white p-2.5 space-y-1.5 text-[10.5px]" aria-live="polite">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-2">
+                    <div>
+                      <span className="font-bold text-slate-600">Truyền thông</span>
+                      <p className="truncate text-slate-800" title={livePortalContent?.activeCampaign?.title}>
+                        {livePortalContentLoading
+                          ? 'Đang tải nội dung đang phát…'
+                          : !selectedLocation?.active
+                            ? 'Điểm phát đang tắt'
+                            : livePortalContentError
+                              ? 'Chưa tải được nội dung'
+                            : livePortalContent?.activeCampaign?.title || 'Điểm này chưa có chiến dịch đang phát'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-600">Khảo sát</span>
+                      <p className="truncate text-slate-800" title={livePortalContent?.activeSurvey?.title}>
+                        {livePortalContentLoading
+                          ? 'Đang tải khảo sát…'
+                          : !selectedLocation?.active
+                            ? 'Điểm phát đang tắt'
+                            : livePortalContentError
+                              ? 'Chưa tải được khảo sát'
+                            : livePortalContent?.activeSurvey?.title || 'Điểm này chưa có khảo sát đang áp dụng'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPortalContentReloadKey((key) => key + 1)}
+                    disabled={livePortalContentLoading || !selectedLocation?.slug || !selectedLocation?.active}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    title="Tải lại nội dung truyền thông và khảo sát của điểm này"
+                    aria-label="Tải lại nội dung truyền thông và khảo sát"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${livePortalContentLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
+                  </button>
+                </div>
+                {livePortalContentError && (
+                  <p role="alert" className="text-amber-800">{livePortalContentError}</p>
+                )}
+                <div className="flex items-center justify-end border-t border-slate-100 pt-1.5">
+                  <label className="flex cursor-pointer select-none items-center gap-1.5 font-semibold text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={simCapacityFull}
+                      onChange={(e) => setSimCapacityFull(e.target.checked)}
+                      className="h-3 w-3 rounded text-[#004b87]"
+                    />
+                    <span>Đầy tải</span>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -1207,8 +1204,8 @@ export const PortalBuilderPage: React.FC = () => {
             <div
               ref={previewStageRef}
               className={previewExpanded
-                ? 'flex-1 min-h-0 w-full flex items-start justify-center overflow-auto pt-3'
-                : 'w-full flex justify-center overflow-x-auto pb-3'}
+                ? 'flex-1 min-h-0 w-full flex items-start justify-center overflow-auto overscroll-contain pt-3'
+                : 'w-full flex justify-center overflow-x-auto overscroll-contain pb-3'}
             >
               <div
                 className="relative flex-shrink-0"
@@ -1216,7 +1213,7 @@ export const PortalBuilderPage: React.FC = () => {
               >
                 <div
                   className={"absolute left-0 top-0 origin-top-left overflow-hidden shadow-2xl " + (previewDevice === 'MOBILE'
-                    ? 'rounded-[48px] border-[10px] border-slate-950 bg-slate-950'
+                    ? 'rounded-[40px] border-[6px] border-slate-950 bg-slate-950'
                     : previewDevice === 'TABLET'
                       ? 'rounded-[28px] border-[10px] border-slate-800 bg-slate-900'
                       : 'rounded-xl border border-slate-500 bg-slate-800')}
@@ -1246,7 +1243,8 @@ export const PortalBuilderPage: React.FC = () => {
                       top: previewFrameSize.screenTop,
                       width: previewViewport.width,
                       height: previewViewport.height,
-                      borderRadius: previewDevice === 'MOBILE' ? 38 : previewDevice === 'TABLET' ? 18 : 0,
+                      borderRadius: previewDevice === 'MOBILE' ? 32 : previewDevice === 'TABLET' ? 18 : 0,
+                      overscrollBehavior: 'contain',
                     }}
                   />
                   {previewDevice === 'MOBILE' && (

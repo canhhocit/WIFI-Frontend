@@ -12,6 +12,7 @@ import {
   RefreshCw,
   AlertOctagon
 } from 'lucide-react';
+import { Pagination } from '../../components/Pagination';
 
 export const BlacklistPage: React.FC = () => {
   const [blacklist, setBlacklist] = useState<MacBlacklistDto[]>([]);
@@ -20,6 +21,10 @@ export const BlacklistPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(0);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalElements, setTotalElements] = useState<number>(0);
 
   // Form State
   const [macAddress, setMacAddress] = useState<string>('');
@@ -29,8 +34,10 @@ export const BlacklistPage: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const page = await adminApi.getBlacklist({ active: activeFilter, size: 50 });
-      setBlacklist(page.content);
+      const resp = await adminApi.getBlacklist({ active: activeFilter, page, size: pageSize });
+      setBlacklist(resp.content);
+      setTotalPages(resp.totalPages);
+      setTotalElements(resp.totalElements);
     } catch (err) {
       console.error('Failed to load blacklist:', err);
     } finally {
@@ -40,7 +47,7 @@ export const BlacklistPage: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, [activeFilter]);
+  }, [activeFilter, page, pageSize]);
 
   const handleUnblock = async (id: number, mac: string) => {
     if (!window.confirm(`Bạn có chắc chắn muốn gỡ chặn cho thiết bị MAC [${mac}] không?`)) {
@@ -154,7 +161,10 @@ export const BlacklistPage: React.FC = () => {
 
           <div className="inline-flex rounded-sm border border-gray-200 bg-gray-50 p-0.5">
             <button
-              onClick={() => setActiveFilter(undefined)}
+              onClick={() => {
+                setActiveFilter(undefined);
+                setPage(0);
+              }}
               className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
                 activeFilter === undefined ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
               }`}
@@ -162,7 +172,10 @@ export const BlacklistPage: React.FC = () => {
               Tất cả
             </button>
             <button
-              onClick={() => setActiveFilter(true)}
+              onClick={() => {
+                setActiveFilter(true);
+                setPage(0);
+              }}
               className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
                 activeFilter === true ? 'bg-red-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'
               }`}
@@ -170,7 +183,10 @@ export const BlacklistPage: React.FC = () => {
               Đang bị chặn
             </button>
             <button
-              onClick={() => setActiveFilter(false)}
+              onClick={() => {
+                setActiveFilter(false);
+                setPage(0);
+              }}
               className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
                 activeFilter === false ? 'bg-emerald-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'
               }`}
@@ -256,6 +272,19 @@ export const BlacklistPage: React.FC = () => {
             </tbody>
           </table>
         </div>
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalElements={totalElements}
+          pageSize={pageSize}
+          pageSizeOptions={[5, 10, 15, 20]}
+          onPageChange={setPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setPage(0);
+          }}
+          itemLabel="thiết bị cấm"
+        />
       </div>
 
       {/* Modal Add Blacklist */}

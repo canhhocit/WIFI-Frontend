@@ -28,6 +28,7 @@ import { AlertBanner } from '../../components/AlertBanner';
 import { DeviceSwapModal } from '../../components/DeviceSwapModal';
 import { DeviceMonitoringTopology } from '../../components/DeviceMonitoringTopology';
 import { ConnectedClientsModal } from '../../components/ConnectedClientsModal';
+import { Pagination } from '../../components/Pagination';
 
 export const DevicesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'CLIENT' | 'INFRASTRUCTURE'>('CLIENT');
@@ -41,6 +42,7 @@ export const DevicesPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   const [togglingId, setTogglingId] = useState<number | null>(null);
@@ -49,6 +51,7 @@ export const DevicesPage: React.FC = () => {
   const [networkDevices, setNetworkDevices] = useState<NetworkDeviceDto[]>([]);
   const [loadingNetDev, setLoadingNetDev] = useState(false);
   const [netPage, setNetPage] = useState(0);
+  const [netPageSize, setNetPageSize] = useState(10);
   const [netTotalPages, setNetTotalPages] = useState(1);
   const [netTotalElements, setNetTotalElements] = useState(0);
   const [deviceTypeFilter, setDeviceTypeFilter] = useState<string>('');
@@ -90,12 +93,12 @@ export const DevicesPage: React.FC = () => {
     } else {
       loadNetworkDevices();
     }
-  }, [activeTab, page, netPage]);
+  }, [activeTab, page, pageSize, netPage, netPageSize]);
 
   const loadDevices = async () => {
     setLoading(true);
     try {
-      const resp = await adminApi.getDevices({ search: search.trim() || undefined, page, size: 15 });
+      const resp = await adminApi.getDevices({ search: search.trim() || undefined, page, size: pageSize });
       setDevices(resp.content);
       setTotalPages(resp.totalPages);
       setTotalElements(resp.totalElements);
@@ -124,7 +127,7 @@ export const DevicesPage: React.FC = () => {
         type: deviceTypeFilter || undefined,
         status: statusFilter || undefined,
         page: netPage,
-        size: 15,
+        size: netPageSize,
       });
       setNetworkDevices(resp.content);
       setNetTotalPages(resp.totalPages);
@@ -390,30 +393,19 @@ export const DevicesPage: React.FC = () => {
               </table>
             </div>
 
-            <div className="p-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 bg-slate-50/70">
-              <span>
-                Tổng số: <strong className="font-semibold text-slate-800">{totalElements}</strong> thiết bị
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">
-                  Trang {page + 1} / {totalPages || 1}
-                </span>
-                <button
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  disabled={page === 0}
-                  className="p-1 rounded-sm border border-slate-300 hover:bg-white disabled:opacity-40 cursor-pointer"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                  disabled={page >= totalPages - 1}
-                  className="p-1 rounded-sm border border-slate-300 hover:bg-white disabled:opacity-40 cursor-pointer"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalElements={totalElements}
+              pageSize={pageSize}
+              pageSizeOptions={[5, 10, 15, 20]}
+              onPageChange={setPage}
+              onPageSizeChange={(newSize) => {
+                setPageSize(newSize);
+                setPage(0);
+              }}
+              itemLabel="thiết bị khách"
+            />
           </div>
         </>
       )}
@@ -619,30 +611,19 @@ export const DevicesPage: React.FC = () => {
               </table>
             </div>
 
-            <div className="p-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 bg-slate-50/70">
-              <span>
-                Tổng số: <strong className="font-semibold text-slate-800">{netTotalElements}</strong> thiết bị mạng
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">
-                  Trang {netPage + 1} / {netTotalPages || 1}
-                </span>
-                <button
-                  onClick={() => setNetPage((p) => Math.max(0, p - 1))}
-                  disabled={netPage === 0}
-                  className="p-1 rounded-sm border border-slate-300 hover:bg-white disabled:opacity-40 cursor-pointer"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setNetPage((p) => Math.min(netTotalPages - 1, p + 1))}
-                  disabled={netPage >= netTotalPages - 1}
-                  className="p-1 rounded-sm border border-slate-300 hover:bg-white disabled:opacity-40 cursor-pointer"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+            <Pagination
+              currentPage={netPage}
+              totalPages={netTotalPages}
+              totalElements={netTotalElements}
+              pageSize={netPageSize}
+              pageSizeOptions={[5, 10, 15, 20]}
+              onPageChange={setNetPage}
+              onPageSizeChange={(newSize) => {
+                setNetPageSize(newSize);
+                setNetPage(0);
+              }}
+              itemLabel="thiết bị mạng"
+            />
           </div>
         </>
       )}

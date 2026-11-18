@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, 
   Megaphone, 
@@ -21,6 +22,15 @@ interface Props {
 }
 
 export const CitizenDigitalMediaModal: React.FC<Props> = ({ isOpen, onClose, campaign }) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   // Trích xuất link embed YouTube nếu có
@@ -37,10 +47,15 @@ export const CitizenDigitalMediaModal: React.FC<Props> = ({ isOpen, onClose, cam
 
   const embedVideoUrl = getEmbedUrl(campaign.videoUrl);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
-        className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden transform transition-all"
+        className="fixed inset-0"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div 
+        className="relative z-10 bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden transform transition-all my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header - Phong cách Truyền thông số Chính quyền */}
@@ -158,6 +173,7 @@ export const CitizenDigitalMediaModal: React.FC<Props> = ({ isOpen, onClose, cam
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

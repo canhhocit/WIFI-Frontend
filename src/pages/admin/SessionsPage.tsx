@@ -20,6 +20,7 @@ import { GuestSessionDto, LocationDto, SessionStatus } from '../../types/models'
 import { StatusBadge } from '../../components/Badge';
 import { Modal } from '../../components/Modal';
 import { AlertBanner } from '../../components/AlertBanner';
+import { Pagination } from '../../components/Pagination';
 
 export const SessionsPage: React.FC = () => {
   const [sessions, setSessions] = useState<GuestSessionDto[]>([]);
@@ -32,6 +33,7 @@ export const SessionsPage: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<SessionStatus | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
 
@@ -48,7 +50,7 @@ export const SessionsPage: React.FC = () => {
 
   useEffect(() => {
     loadSessions();
-  }, [page, selectedLocation, selectedStatus]);
+  }, [page, pageSize, selectedLocation, selectedStatus]);
 
   const loadSessions = async () => {
     setLoading(true);
@@ -58,7 +60,7 @@ export const SessionsPage: React.FC = () => {
         status: selectedStatus,
         search: searchTerm.trim() || undefined,
         page,
-        size: 10,
+        size: pageSize,
         sortBy: 'createdAt',
         direction: 'desc',
       });
@@ -277,30 +279,19 @@ export const SessionsPage: React.FC = () => {
         </div>
 
         {/* Pagination Bar */}
-        <div className="p-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 bg-slate-50/70">
-          <span>
-            Tổng số: <strong className="font-semibold text-slate-800">{totalElements}</strong> phiên truy cập
-          </span>
-          <div className="flex items-center gap-2">
-            <span className="font-medium">
-              Trang {page + 1} / {totalPages || 1}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
-              className="p-1 rounded-sm border border-slate-300 hover:bg-white disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={page >= totalPages - 1}
-              className="p-1 rounded-sm border border-slate-300 hover:bg-white disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalElements={totalElements}
+          pageSize={pageSize}
+          pageSizeOptions={[5, 10, 15, 20]}
+          onPageChange={(newPage) => setPage(newPage)}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setPage(0);
+          }}
+          itemLabel="phiên truy cập"
+        />
       </div>
 
       {/* Modal 1: Session Details */}

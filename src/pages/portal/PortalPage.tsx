@@ -32,7 +32,6 @@ import { AlertBanner } from '../../components/AlertBanner';
 import { VietnamFlag } from '../../components/VietnamFlag';
 import { ReportIssueModal } from '../../components/ReportIssueModal';
 import { CitizenDigitalMediaModal } from '../../components/CitizenDigitalMediaModal';
-import { CampaignDto } from '../../types/models';
 import { Play, Tv, Video, Eye, Share2, FileText } from 'lucide-react';
 
 const getOrCreateLocalClientMac = () => {
@@ -554,23 +553,7 @@ export const PortalPage: React.FC = () => {
   const template = portalData?.portalTemplate;
   const survey = portalData?.activeSurvey;
 
-  // Chiến dịch Truyền thông số Mặc định của UBND TP. Hải Phòng (luôn đảm bảo 100% người dân tiếp cận thông điệp)
-  const defaultCityCampaign: CampaignDto = {
-    id: 0,
-    title: 'Chiến Dịch Chuyển Đổi Số Toàn Dân: Đưa Dịch Vụ Công Trực Tuyến & VNeID Về 1.584 Nhà Văn Hóa Cơ Sở',
-    description: 'UBND Thành phố Hải Phòng đẩy mạnh triển khai cung cấp dịch vụ công trực tuyến toàn trình, kích hoạt tài khoản định danh điện tử VNeID mức 2 cho nhân dân, và cung cấp Internet Wi-Fi công cộng miễn phí phục vụ đời sống văn hóa, học tập và sản xuất.',
-    bannerUrl: '/banners/haiphong_city_bg.jpg',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    actionUrl: 'https://dichvucong.haiphong.gov.vn',
-    priority: 10,
-    startTime: '2026-01-01T00:00:00Z',
-    endTime: '2026-12-31T23:59:59Z',
-    status: 'APPROVED',
-    createdAt: '2026-01-01T00:00:00Z',
-    updatedAt: '2026-01-01T00:00:00Z',
-  };
-
-  const activeCampaign: CampaignDto = portalData?.activeCampaign || defaultCityCampaign;
+  const activeCampaign = portalData?.activeCampaign;
 
   // Background Wallpaper Priority:
   const backgroundWallpaperUrl =
@@ -597,7 +580,7 @@ export const PortalPage: React.FC = () => {
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center p-3 sm:p-5 lg:p-6 text-slate-900 font-sans">
-      {isPreviewMode && (
+      {isPreviewMode && !isEmbeddedPreview && (
         <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[100] max-w-[calc(100vw-1rem)] rounded-full bg-slate-950/90 px-3 py-1.5 text-center text-[11px] font-semibold text-white shadow-lg ring-1 ring-white/20">
           Bản xem trước · Các thao tác kết nối, OTP và gửi phản ánh đã tắt
         </div>
@@ -676,6 +659,7 @@ export const PortalPage: React.FC = () => {
           </div>
 
           {/* Digital Broadcast News Ticker (Dòng tin tức truyền thông số Hải Phòng) */}
+          {activeCampaign && (
           <div className="bg-[#881313] text-white px-3.5 py-1.5 flex items-center gap-2 text-[11px] font-medium overflow-hidden border-b border-red-950/40 shadow-inner">
             <div className="flex items-center gap-1 bg-yellow-400 text-red-950 font-black px-1.5 py-0.5 rounded-xs text-[9.5px] uppercase tracking-wider flex-shrink-0 shadow-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping" />
@@ -692,6 +676,7 @@ export const PortalPage: React.FC = () => {
               Chi tiết
             </button>
           </div>
+          )}
 
           {/* Scrollable Content Body on Desktop */}
           <div className="p-4 sm:p-5 space-y-4 flex-1">
@@ -770,6 +755,7 @@ export const PortalPage: React.FC = () => {
             </div>
 
             {/* ================= KHÔNG GIAN TRUYỀN THÔNG SỐ TP. HẢI PHÒNG (DIGITAL MEDIA SPOTLIGHT) ================= */}
+            {activeCampaign && (
             <div className="rounded-xl border-2 border-red-200/90 bg-gradient-to-br from-red-50/90 via-amber-50/70 to-white p-4 shadow-sm space-y-3 relative overflow-hidden">
               {/* Header: Huy hiệu Phát sóng số chính thức */}
               <div className="flex items-center justify-between gap-2 border-b border-red-100 pb-2">
@@ -873,6 +859,7 @@ export const PortalPage: React.FC = () => {
                 )}
               </div>
             </div>
+            )}
 
             {/* Desktop-only: Demo Location Switcher inside Left Column */}
             <div className="hidden lg:block pt-2">
@@ -1395,11 +1382,13 @@ export const PortalPage: React.FC = () => {
       />
 
       {/* Citizen Digital Media Modal (Trình chiếu Video & Toàn văn truyền thông số) */}
-      <CitizenDigitalMediaModal
-        isOpen={showMediaModal}
-        onClose={() => setShowMediaModal(false)}
-        campaign={activeCampaign}
-      />
+      {activeCampaign && (
+        <CitizenDigitalMediaModal
+          isOpen={showMediaModal}
+          onClose={() => setShowMediaModal(false)}
+          campaign={activeCampaign}
+        />
+      )}
     </div>
   );
 };

@@ -44,6 +44,7 @@ import {
 } from '../../types/models';
 import { Modal } from '../../components/Modal';
 import { AlertBanner } from '../../components/AlertBanner';
+import { Pagination } from '../../components/Pagination';
 
 type SurveyQuestionDraft = {
   draftId: number;
@@ -100,6 +101,7 @@ export const SurveysPage: React.FC = () => {
   const [responses, setResponses] = useState<SurveyResponseDto[]>([]);
   const [loadingResponses, setLoadingResponses] = useState(false);
   const [responsePage, setResponsePage] = useState(0);
+  const [responseSize, setResponseSize] = useState(10);
   const [responseTotalPages, setResponseTotalPages] = useState(1);
   const [responseTotalElements, setResponseTotalElements] = useState(0);
   const [filterLocationId, setFilterLocationId] = useState<number | undefined>(undefined);
@@ -293,7 +295,7 @@ export const SurveysPage: React.FC = () => {
     try {
       const [analyticsData, responsesData] = await Promise.all([
         adminApi.getSurveyAnalytics(s.id),
-        adminApi.getSurveyResponses(s.id, undefined, 0, 15),
+        adminApi.getSurveyResponses(s.id, undefined, 0, responseSize),
       ]);
       setAnalytics(analyticsData);
       setResponses(responsesData.content);
@@ -307,11 +309,11 @@ export const SurveysPage: React.FC = () => {
     }
   };
 
-  const loadResponsesWithFilter = async (locId?: number, page = 0) => {
+  const loadResponsesWithFilter = async (locId?: number, page = 0, size = responseSize) => {
     if (!selectedSurveyForResponses) return;
     setLoadingResponses(true);
     try {
-      const data = await adminApi.getSurveyResponses(selectedSurveyForResponses.id, locId, page, 15);
+      const data = await adminApi.getSurveyResponses(selectedSurveyForResponses.id, locId, page, size);
       setResponses(data.content);
       setResponseTotalPages(data.totalPages);
       setResponseTotalElements(data.totalElements);
@@ -326,7 +328,7 @@ export const SurveysPage: React.FC = () => {
   const handleLocationFilterChange = (locIdStr: string) => {
     const locId = locIdStr ? Number(locIdStr) : undefined;
     setFilterLocationId(locId);
-    loadResponsesWithFilter(locId, 0);
+    loadResponsesWithFilter(locId, 0, responseSize);
   };
 
   const handleToggleSurvey = async (s: SurveyDto) => {
@@ -1257,31 +1259,19 @@ export const SurveysPage: React.FC = () => {
               </div>
 
               {/* Pagination */}
-              {responseTotalPages > 1 && (
-                <div className="flex items-center justify-between pt-2">
-                  <span className="text-[11px] text-slate-500">
-                    Trang {responsePage + 1} / {responseTotalPages}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      disabled={responsePage <= 0}
-                      onClick={() => loadResponsesWithFilter(filterLocationId, responsePage - 1)}
-                      className="px-2.5 py-1 border border-slate-200 rounded text-xs hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
-                    >
-                      <ChevronLeft className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      disabled={responsePage >= responseTotalPages - 1}
-                      onClick={() => loadResponsesWithFilter(filterLocationId, responsePage + 1)}
-                      className="px-2.5 py-1 border border-slate-200 rounded text-xs hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
-                    >
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              )}
+              <Pagination
+                currentPage={responsePage}
+                totalPages={responseTotalPages}
+                totalElements={responseTotalElements}
+                pageSize={responseSize}
+                pageSizeOptions={[5, 10, 15, 20]}
+                onPageChange={(p) => loadResponsesWithFilter(filterLocationId, p, responseSize)}
+                onPageSizeChange={(newSize) => {
+                  setResponseSize(newSize);
+                  loadResponsesWithFilter(filterLocationId, 0, newSize);
+                }}
+                itemLabel="phiếu phản hồi"
+              />
             </div>
           )}
 

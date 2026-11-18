@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { adminApi } from '../../api/adminApi';
 import { AccessLogRetentionDto, LocationDto } from '../../types/models';
+import { Pagination } from '../../components/Pagination';
 import {
   FileText,
   Search,
@@ -21,7 +22,9 @@ export const AccessLogsPage: React.FC = () => {
   const [locations, setLocations] = useState<LocationDto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [totalElements, setTotalElements] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(1);
   const [page, setPage] = useState<number>(0);
+  const [pageSize, setPageSize] = useState<number>(10);
 
   // Filters
   const [clientMac, setClientMac] = useState<string>('');
@@ -29,7 +32,7 @@ export const AccessLogsPage: React.FC = () => {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
 
-  const loadLogs = async (pageIndex = 0) => {
+  const loadLogs = async (pageIndex = 0, size = pageSize) => {
     setLoading(true);
     try {
       const parsedLocId = locationId !== 'ALL' ? Number(locationId) : undefined;
@@ -43,13 +46,14 @@ export const AccessLogsPage: React.FC = () => {
           startDate: parsedStart,
           endDate: parsedEnd,
           page: pageIndex,
-          size: 25,
+          size: size,
         }),
         adminApi.getLocations({ page: 0, size: 100 }),
       ]);
 
       setLogs(logPage.content);
       setTotalElements(logPage.totalElements);
+      setTotalPages(logPage.totalPages);
       setPage(logPage.pageNumber);
       setLocations(locPage.content);
     } catch (err) {
@@ -282,26 +286,19 @@ export const AccessLogsPage: React.FC = () => {
         </div>
 
         {/* Pagination summary */}
-        <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 text-xs text-gray-500 flex items-center justify-between">
-          <span>Tổng số bản ghi: <strong className="text-gray-900">{totalElements}</strong> phiên lưu trữ</span>
-          <div className="flex gap-1">
-            <button
-              onClick={() => loadLogs(Math.max(0, page - 1))}
-              disabled={page === 0}
-              className="px-2.5 py-1 bg-white border border-gray-300 rounded text-gray-700 disabled:opacity-40"
-            >
-              Trang trước
-            </button>
-            <span className="px-3 py-1 font-mono">Trang {page + 1}</span>
-            <button
-              onClick={() => loadLogs(page + 1)}
-              disabled={(page + 1) * 25 >= totalElements}
-              className="px-2.5 py-1 bg-white border border-gray-300 rounded text-gray-700 disabled:opacity-40"
-            >
-              Trang sau
-            </button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalElements={totalElements}
+          pageSize={pageSize}
+          pageSizeOptions={[5, 10, 15, 20]}
+          onPageChange={(newPage) => loadLogs(newPage, pageSize)}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            loadLogs(0, newSize);
+          }}
+          itemLabel="phiên lưu trữ"
+        />
       </div>
     </div>
   );

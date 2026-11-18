@@ -453,20 +453,20 @@ export const CampaignsPage: React.FC = () => {
             return (
               <div
                 key={c.id}
-                className="bg-white rounded border border-slate-300 shadow-xs hover:border-slate-400 transition flex flex-col justify-between overflow-hidden"
+                className="bg-white rounded border border-slate-300 shadow-xs hover:border-slate-400 transition flex flex-col justify-between overflow-hidden h-full"
               >
-                <div>
+                <div className="flex flex-col flex-1">
                   {/* Top Header: Title & Badges */}
-                  <div className="p-3.5 border-b border-slate-100 space-y-1.5">
-                    <div className="flex items-center justify-between gap-2">
+                  <div className="p-3.5 border-b border-slate-100 space-y-1.5 shrink-0">
+                    <div className="flex items-center justify-between gap-2 h-6">
                       <div className="flex items-center gap-1.5">
                         {renderStatusBadge(c)}
                         {hasVideo ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.2 rounded-sm">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-sm">
                             <Video className="w-3 h-3 text-red-600" /> Video
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.2 rounded-sm">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-sm">
                             <ImageIcon className="w-3 h-3 text-slate-500" /> Poster
                           </span>
                         )}
@@ -476,13 +476,13 @@ export const CampaignsPage: React.FC = () => {
                       </span>
                     </div>
 
-                    <h3 className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-1" title={c.title}>
+                    <h3 className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-1 h-5" title={c.title}>
                       {c.title}
                     </h3>
                   </div>
 
                   {/* Visual Media Thumbnail Area */}
-                  <div className="relative aspect-video w-full bg-slate-900 overflow-hidden border-b border-slate-200">
+                  <div className="relative aspect-video w-full bg-slate-900 overflow-hidden border-b border-slate-200 shrink-0">
                     <img
                       src={displayBanner}
                       alt={c.title}
@@ -503,27 +503,27 @@ export const CampaignsPage: React.FC = () => {
                   </div>
 
                   {/* Body Content */}
-                  <div className="p-3.5 space-y-2 text-xs">
-                    <p className="text-slate-600 line-clamp-2 leading-relaxed text-[11.5px]">
+                  <div className="p-3.5 space-y-2 text-xs flex-1 flex flex-col justify-between">
+                    <p className="text-slate-600 line-clamp-2 leading-relaxed text-[11.5px] min-h-[2.5rem]">
                       {c.description || 'Chưa cập nhật mô tả chi tiết cho thông điệp này.'}
                     </p>
 
                     {/* Target Scope */}
-                    <div className="pt-1">
+                    <div className="pt-1 h-7 flex items-center">
                       {c.targetLocationId ? (
-                        <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-sm border border-amber-200">
-                          <MapPin className="w-3 h-3 text-amber-600" />
-                          Điểm: {locations.find((l) => l.id === c.targetLocationId)?.name || `ID #${c.targetLocationId}`}
+                        <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-sm border border-amber-200 truncate">
+                          <MapPin className="w-3 h-3 text-amber-600 shrink-0" />
+                          <span className="truncate">Điểm: {locations.find((l) => l.id === c.targetLocationId)?.name || `ID #${c.targetLocationId}`}</span>
                         </span>
                       ) : c.targetAdminUnitId ? (
-                        <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-blue-800 bg-blue-50 px-2 py-0.5 rounded-sm border border-blue-200">
-                          <MapPin className="w-3 h-3 text-blue-600" />
-                          Địa bàn: {adminUnits.find((u) => u.id === c.targetAdminUnitId)?.name || `Cấp #${c.targetAdminUnitId}`}
+                        <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-blue-800 bg-blue-50 px-2 py-0.5 rounded-sm border border-blue-200 truncate">
+                          <MapPin className="w-3 h-3 text-blue-600 shrink-0" />
+                          <span className="truncate">Địa bàn: {adminUnits.find((u) => u.id === c.targetAdminUnitId)?.name || `Cấp #${c.targetAdminUnitId}`}</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-sm border border-slate-200">
-                          <Globe className="w-3 h-3 text-slate-500" />
-                          Toàn TP Hải Phòng (1.584 NVH)
+                        <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-sm border border-slate-200 truncate">
+                          <Globe className="w-3 h-3 text-slate-500 shrink-0" />
+                          <span className="truncate">Toàn TP Hải Phòng (1.584 NVH)</span>
                         </span>
                       )}
                     </div>
@@ -532,24 +532,26 @@ export const CampaignsPage: React.FC = () => {
                     <div className="text-[11px] text-slate-500 font-mono space-y-0.5 pt-1 border-t border-slate-100">
                       <div>Từ: {formatDate(c.startTime)}</div>
                       <div>Đến: {formatDate(c.endTime)}</div>
-                      {c.actionUrl && (
-                        <div className="pt-0.5 font-sans">
+                      <div className="pt-0.5 font-sans h-5 flex items-center">
+                        {c.actionUrl ? (
                           <a
                             href={c.actionUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-[#004b87] hover:underline font-semibold text-[11px]"
+                            className="inline-flex items-center gap-1 text-[#004b87] hover:underline font-semibold text-[11px] truncate"
                           >
-                            <ExternalLink className="w-3 h-3" /> Liên kết Cổng DVC
+                            <ExternalLink className="w-3 h-3 shrink-0" /> Liên kết Cổng DVC
                           </a>
-                        </div>
-                      )}
+                        ) : (
+                          <span className="text-slate-400 italic text-[10.5px]">— Không gắn link —</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Card Action Footer */}
-                <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-1 text-xs">
+                <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-1 text-xs mt-auto shrink-0">
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => setSimulatingCampaign(c)}
@@ -949,7 +951,7 @@ export const CampaignsPage: React.FC = () => {
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         title="Tạo Chiến Dịch Truyền Thông & Chính Sách Số Mới"
-        maxWidth="lg"
+        maxWidth="2xl"
       >
         <form onSubmit={handleCreateSubmit} className="space-y-4 text-xs">
           <div>
@@ -961,7 +963,7 @@ export const CampaignsPage: React.FC = () => {
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="Ví dụ: Tuyên truyền Dịch vụ công trực tuyến VNeID mức 2"
-              className="w-full px-3 py-2 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+              className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
               required
             />
           </div>
@@ -973,7 +975,7 @@ export const CampaignsPage: React.FC = () => {
               value={formData.description || ''}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Nội dung truyền thông phục vụ công dân khi truy cập mạng Wi-Fi tại Nhà văn hóa..."
-              className="w-full px-3 py-2 text-xs border border-slate-300 rounded-sm"
+              className="w-full p-2.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
             />
           </div>
 
@@ -991,24 +993,28 @@ export const CampaignsPage: React.FC = () => {
           {/* Video URL & Action URL */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Video tuyên truyền (YouTube URL)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate" title="Video tuyên truyền (YouTube URL)">
+                Video tuyên truyền (YouTube URL)
+              </label>
               <input
                 type="text"
                 value={formData.videoUrl || ''}
                 onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
                 placeholder="https://www.youtube.com/watch?v=..."
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-sm"
+                className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Link chuyển hướng khi bấm (Action URL)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate" title="Link chuyển hướng khi bấm (Action URL)">
+                Link chuyển hướng khi bấm (Action URL)
+              </label>
               <input
                 type="text"
                 value={formData.actionUrl || ''}
                 onChange={(e) => setFormData({ ...formData, actionUrl: e.target.value })}
                 placeholder="https://dichvucong.haiphong.gov.vn"
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-sm"
+                className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
               />
             </div>
           </div>
@@ -1025,7 +1031,7 @@ export const CampaignsPage: React.FC = () => {
                   setTargetMode('ALL');
                   setFormData({ ...formData, targetAdminUnitId: undefined, targetLocationId: undefined });
                 }}
-                className={`py-1.5 px-2 rounded-sm text-xs font-semibold border transition cursor-pointer ${
+                className={`h-9 px-2 rounded-sm text-xs font-semibold border transition cursor-pointer flex items-center justify-center text-center ${
                   targetMode === 'ALL'
                     ? 'bg-[#004b87] text-white border-[#004b87]'
                     : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
@@ -1039,7 +1045,7 @@ export const CampaignsPage: React.FC = () => {
                   setTargetMode('ADMIN_UNIT');
                   setFormData({ ...formData, targetLocationId: undefined });
                 }}
-                className={`py-1.5 px-2 rounded-sm text-xs font-semibold border transition cursor-pointer ${
+                className={`h-9 px-2 rounded-sm text-xs font-semibold border transition cursor-pointer flex items-center justify-center text-center ${
                   targetMode === 'ADMIN_UNIT'
                     ? 'bg-[#004b87] text-white border-[#004b87]'
                     : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
@@ -1053,7 +1059,7 @@ export const CampaignsPage: React.FC = () => {
                   setTargetMode('LOCATION');
                   setFormData({ ...formData, targetAdminUnitId: undefined });
                 }}
-                className={`py-1.5 px-2 rounded-sm text-xs font-semibold border transition cursor-pointer ${
+                className={`h-9 px-2 rounded-sm text-xs font-semibold border transition cursor-pointer flex items-center justify-center text-center ${
                   targetMode === 'LOCATION'
                     ? 'bg-[#004b87] text-white border-[#004b87]'
                     : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
@@ -1069,7 +1075,7 @@ export const CampaignsPage: React.FC = () => {
                 <select
                   value={formData.targetAdminUnitId || ''}
                   onChange={(e) => setFormData({ ...formData, targetAdminUnitId: e.target.value ? Number(e.target.value) : undefined })}
-                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-sm"
+                  className="w-full h-9 px-2.5 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                 >
                   <option value="">-- Chọn Quận / Huyện phát sóng --</option>
                   {adminUnits.map((u) => (
@@ -1085,7 +1091,7 @@ export const CampaignsPage: React.FC = () => {
                 <select
                   value={formData.targetLocationId || ''}
                   onChange={(e) => setFormData({ ...formData, targetLocationId: e.target.value ? Number(e.target.value) : undefined })}
-                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-sm"
+                  className="w-full h-9 px-2.5 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                 >
                   <option value="">-- Chọn Nhà văn hóa phát sóng --</option>
                   {locations.map((loc) => (
@@ -1099,34 +1105,34 @@ export const CampaignsPage: React.FC = () => {
           {/* Schedule & Priority */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Thời gian bắt đầu</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate">Thời gian bắt đầu <span className="text-red-500 ml-0.5">*</span></label>
               <input
                 type="datetime-local"
                 value={formData.startTime}
                 onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-sm font-mono"
+                className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Thời gian kết thúc</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate">Thời gian kết thúc <span className="text-red-500 ml-0.5">*</span></label>
               <input
                 type="datetime-local"
                 value={formData.endTime}
                 onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-sm font-mono"
+                className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Độ ưu tiên (1 - 10)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate">Độ ưu tiên (1 - 10)</label>
               <input
                 type="number"
                 min="1"
                 max="10"
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: Number(e.target.value) })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-sm font-mono"
+                className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#004b87]"
               />
             </div>
           </div>
@@ -1135,14 +1141,14 @@ export const CampaignsPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsCreateOpen(false)}
-              className="px-4 py-2 border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-sm text-xs font-bold transition cursor-pointer"
+              className="h-9 px-4 border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-sm text-xs font-bold transition cursor-pointer flex items-center justify-center"
             >
               Hủy
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="h-9 px-4 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
             >
               {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               Lưu bản nháp chiến dịch
@@ -1157,7 +1163,7 @@ export const CampaignsPage: React.FC = () => {
           isOpen={!!editingCampaign}
           onClose={() => setEditingCampaign(null)}
           title={`Chỉnh Sửa Chiến Dịch: ${editingCampaign?.title}`}
-          maxWidth="lg"
+          maxWidth="2xl"
         >
           <form onSubmit={handleUpdateSubmit} className="space-y-4 text-xs">
             <div>
@@ -1168,7 +1174,7 @@ export const CampaignsPage: React.FC = () => {
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                 required
               />
             </div>
@@ -1179,7 +1185,7 @@ export const CampaignsPage: React.FC = () => {
                 rows={3}
                 value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-sm"
+                className="w-full p-2.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
               />
             </div>
 
@@ -1195,24 +1201,28 @@ export const CampaignsPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Video tuyên truyền (YouTube URL)</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate" title="Video tuyên truyền (YouTube URL)">
+                  Video tuyên truyền (YouTube URL)
+                </label>
                 <input
                   type="text"
                   value={formData.videoUrl || ''}
                   onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
                   placeholder="https://www.youtube.com/watch?v=..."
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-sm"
+                  className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Link chuyển hướng khi bấm (Action URL)</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate" title="Link chuyển hướng khi bấm (Action URL)">
+                  Link chuyển hướng khi bấm (Action URL)
+                </label>
                 <input
                   type="text"
                   value={formData.actionUrl || ''}
                   onChange={(e) => setFormData({ ...formData, actionUrl: e.target.value })}
                   placeholder="https://dichvucong.haiphong.gov.vn"
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-sm"
+                  className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                 />
               </div>
             </div>
@@ -1229,7 +1239,7 @@ export const CampaignsPage: React.FC = () => {
                     setTargetMode('ALL');
                     setFormData({ ...formData, targetAdminUnitId: undefined, targetLocationId: undefined });
                   }}
-                  className={`py-1.5 px-2 rounded-sm text-xs font-semibold border transition cursor-pointer ${
+                  className={`h-9 px-2 rounded-sm text-xs font-semibold border transition cursor-pointer flex items-center justify-center text-center ${
                     targetMode === 'ALL'
                       ? 'bg-[#004b87] text-white border-[#004b87]'
                       : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
@@ -1243,7 +1253,7 @@ export const CampaignsPage: React.FC = () => {
                     setTargetMode('ADMIN_UNIT');
                     setFormData({ ...formData, targetLocationId: undefined });
                   }}
-                  className={`py-1.5 px-2 rounded-sm text-xs font-semibold border transition cursor-pointer ${
+                  className={`h-9 px-2 rounded-sm text-xs font-semibold border transition cursor-pointer flex items-center justify-center text-center ${
                     targetMode === 'ADMIN_UNIT'
                       ? 'bg-[#004b87] text-white border-[#004b87]'
                       : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
@@ -1257,7 +1267,7 @@ export const CampaignsPage: React.FC = () => {
                     setTargetMode('LOCATION');
                     setFormData({ ...formData, targetAdminUnitId: undefined });
                   }}
-                  className={`py-1.5 px-2 rounded-sm text-xs font-semibold border transition cursor-pointer ${
+                  className={`h-9 px-2 rounded-sm text-xs font-semibold border transition cursor-pointer flex items-center justify-center text-center ${
                     targetMode === 'LOCATION'
                       ? 'bg-[#004b87] text-white border-[#004b87]'
                       : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
@@ -1273,7 +1283,7 @@ export const CampaignsPage: React.FC = () => {
                   <select
                     value={formData.targetAdminUnitId || ''}
                     onChange={(e) => setFormData({ ...formData, targetAdminUnitId: e.target.value ? Number(e.target.value) : undefined })}
-                    className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-sm"
+                    className="w-full h-9 px-2.5 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                   >
                     <option value="">-- Chọn Quận / Huyện phát sóng --</option>
                     {adminUnits.map((u) => (
@@ -1289,7 +1299,7 @@ export const CampaignsPage: React.FC = () => {
                   <select
                     value={formData.targetLocationId || ''}
                     onChange={(e) => setFormData({ ...formData, targetLocationId: e.target.value ? Number(e.target.value) : undefined })}
-                    className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-sm"
+                    className="w-full h-9 px-2.5 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                   >
                     <option value="">-- Chọn Nhà văn hóa phát sóng --</option>
                     {locations.map((loc) => (
@@ -1303,34 +1313,34 @@ export const CampaignsPage: React.FC = () => {
             {/* Schedule & Priority */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Thời gian bắt đầu</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate">Thời gian bắt đầu <span className="text-red-500 ml-0.5">*</span></label>
                 <input
                   type="datetime-local"
                   value={formData.startTime}
                   onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-sm font-mono"
+                  className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Thời gian kết thúc</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate">Thời gian kết thúc <span className="text-red-500 ml-0.5">*</span></label>
                 <input
                   type="datetime-local"
                   value={formData.endTime}
                   onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-sm font-mono"
+                  className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Độ ưu tiên (1 - 10)</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate">Độ ưu tiên (1 - 10)</label>
                 <input
                   type="number"
                   min="1"
                   max="10"
                   value={formData.priority}
                   onChange={(e) => setFormData({ ...formData, priority: Number(e.target.value) })}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-sm font-mono"
+                  className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                 />
               </div>
             </div>
@@ -1339,14 +1349,14 @@ export const CampaignsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setEditingCampaign(null)}
-                className="px-4 py-2 border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-sm text-xs font-bold transition cursor-pointer"
+                className="h-9 px-4 border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-sm text-xs font-bold transition cursor-pointer flex items-center justify-center"
               >
                 Hủy
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-4 py-2 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="h-9 px-4 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
               >
                 {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                 Lưu thay đổi chiến dịch

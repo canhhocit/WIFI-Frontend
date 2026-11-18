@@ -17,19 +17,21 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { AuditEventDto } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
+import { Pagination } from '../../components/Pagination';
 
 export const AuditPage: React.FC = () => {
   const [events, setEvents] = useState<AuditEventDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAction, setSelectedAction] = useState<string>('');
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadAudit();
-  }, [page, selectedAction]);
+  }, [page, pageSize, selectedAction]);
 
   const loadAudit = async () => {
     setLoading(true);
@@ -37,7 +39,7 @@ export const AuditPage: React.FC = () => {
       const resp = await adminApi.getAuditEvents({
         action: selectedAction || undefined,
         page,
-        size: 15,
+        size: pageSize,
       });
       setEvents(resp.content);
       setTotalPages(resp.totalPages);
@@ -274,30 +276,19 @@ export const AuditPage: React.FC = () => {
         </div>
 
         {/* Pagination */}
-        <div className="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50/40">
-          <span>
-            Tổng số: <strong className="font-semibold text-slate-800">{totalElements}</strong> bản ghi nhật ký
-          </span>
-          <div className="flex items-center gap-2">
-            <span className="font-medium">
-              Trang {page + 1} / {totalPages || 1}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
-              className="p-1.5 rounded-sm border border-slate-200 hover:bg-white disabled:opacity-40 cursor-pointer"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={page >= totalPages - 1}
-              className="p-1.5 rounded-sm border border-slate-200 hover:bg-white disabled:opacity-40 cursor-pointer"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalElements={totalElements}
+          pageSize={pageSize}
+          pageSizeOptions={[5, 10, 15, 20]}
+          onPageChange={(newPage) => setPage(newPage)}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setPage(0);
+          }}
+          itemLabel="bản ghi nhật ký"
+        />
       </div>
     </div>
   );

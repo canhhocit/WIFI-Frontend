@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { AdminUserDto, AdminUnitDto, CreateAdminUserRequest, UpdateAdminUserRequest, AdminRoleType } from '../../types/models';
+import { Pagination } from '../../components/Pagination';
 
 const ROLE_LABELS: Record<AdminRoleType, { label: string; color: string; desc: string }> = {
   ROLE_SUPER_ADMIN: {
@@ -59,6 +60,10 @@ export const UsersPage: React.FC = () => {
   const [selectedRole, setSelectedRole] = useState<string>('ALL');
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(0);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalElements, setTotalElements] = useState<number>(0);
 
   // Modal states
   const [showModal, setShowModal] = useState(false);
@@ -78,10 +83,12 @@ export const UsersPage: React.FC = () => {
     try {
       setLoading(true);
       const [usersRes, unitsRes] = await Promise.all([
-        adminApi.getUsers({ search, page: 0, size: 50 }),
+        adminApi.getUsers({ search, page, size: pageSize }),
         adminApi.getAdminTree(),
       ]);
       setUsers(usersRes.content || []);
+      setTotalPages(usersRes.totalPages || 1);
+      setTotalElements(usersRes.totalElements || 0);
       setAdminUnits(unitsRes || []);
     } catch (err: any) {
       setActionError(err.message || 'Lỗi khi tải danh sách người dùng');
@@ -92,7 +99,7 @@ export const UsersPage: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, [search]);
+  }, [search, page, pageSize]);
 
   const handleOpenCreate = () => {
     setEditingUser(null);
@@ -418,6 +425,19 @@ export const UsersPage: React.FC = () => {
             </tbody>
           </table>
         </div>
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalElements={totalElements}
+          pageSize={pageSize}
+          pageSizeOptions={[5, 10, 15, 20]}
+          onPageChange={setPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setPage(0);
+          }}
+          itemLabel="cán bộ"
+        />
       </div>
 
       {/* Modal Create / Edit User */}

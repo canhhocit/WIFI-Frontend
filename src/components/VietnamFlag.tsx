@@ -9,18 +9,13 @@ interface VietnamFlagProps {
   title?: string;
 }
 
-/**
- * Authentic National Flag of Vietnam (Cờ đỏ sao vàng)
- * Accurate standard 3:2 ratio, official red (#DA251D) and golden yellow 5-pointed star (#FFFF00).
- * Supports standard flag, circular avatar, rounded square, and glowing pulse loading effect.
- */
 export const VietnamFlag: React.FC<VietnamFlagProps> = ({
   width = 36,
   height = 24,
   variant = 'flag',
   className = '',
   animate = false,
-  title = 'Quốc kỳ Việt Nam (Cờ đỏ sao vàng)',
+  title = '',
 }) => {
   const isCircle = variant === 'circle';
   const isSquare = variant === 'square';
