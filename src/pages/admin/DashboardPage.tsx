@@ -1,226 +1,321 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Users,
   Activity,
-  MapPin,
-  Radio,
-  Clock,
-  ArrowRight,
-  ShieldCheck,
   AlertCircle,
+  ArrowRight,
+  BellRing,
+  Clock,
+  Map as MapIcon,
+  MapPin,
   RefreshCw,
   Router,
-  Map,
-  Server,
-  Globe,
-  BellRing,
+  ShieldCheck,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
-import { DashboardOverviewDto } from '../../types/models';
+import {
+  DashboardOverviewDto,
+  GisLocationPinDto,
+  IncidentTicketDto,
+  PageResponse,
+} from '../../types/models';
 import { StatusBadge } from '../../components/Badge';
 import { DeviceMonitoringTopology } from '../../components/DeviceMonitoringTopology';
+import { LeafletGisMap } from '../../components/gis/LeafletGisMap';
 
 export const DashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardOverviewDto | null>(null);
+  const [pins, setPins] = useState<GisLocationPinDto[]>([]);
+  const [selectedPin, setSelectedPin] = useState<GisLocationPinDto | null>(null);
+  const [incidents, setIncidents] = useState<IncidentTicketDto[]>([]);
+  const [openIncidentCount, setOpenIncidentCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
+  const [incidentError, setIncidentError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const loadingRef = useRef(false);
 
-  useEffect(() => {
-    loadOverview();
+  const loadOverview = useCallback(async () => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+    setRefreshing(true);
+
+    try {
+      const [overviewResult, gisResult, openResult, assignedResult, inProgressResult] = await Promise.allSettled([
+        adminApi.getOverview(),
+        adminApi.getGisLocations(),
+        adminApi.getIncidents({ status: 'OPEN', page: 0, size: 5 }),
+        adminApi.getIncidents({ status: 'ASSIGNED', page: 0, size: 5 }),
+        adminApi.getIncidents({ status: 'IN_PROGRESS', page: 0, size: 5 }),
+      ]);
+
+      if (overviewResult.status === 'fulfilled') {
+        setData(overviewResult.value);
+        setError(null);
+      } else {
+        setError('Không thể tải số liệu tổng quan. Vui lòng thử làm mới.');
+      }
+
+      if (gisResult.status === 'fulfilled') {
+        setPins(gisResult.value);
+        setMapError(null);
+        setSelectedPin((previous) => previous
+          ? gisResult.value.find((pin) => pin.id === previous.id) || null
+          : null);
+      } else {
+        setMapError('Không tải được dữ liệu bản đồ. Kiểm tra quyền truy cập hoặc thử làm mới.');
+      }
+
+      const incidentResults = [openResult, assignedResult, inProgressResult];
+      const incidentPages: PageResponse<IncidentTicketDto>[] = incidentResults.flatMap((result) =>
+        result.status === 'fulfilled' ? [result.value] : [],
+      );
+      setOpenIncidentCount(incidentPages.reduce((total, page) => total + page.totalElements, 0));
+      setIncidents(
+        incidentPages.flatMap((page) => page.content)
+          .sort((first, second) => new Date(second.reportedAt).getTime() - new Date(first.reportedAt).getTime())
+          .slice(0, 6),
+      );
+      setIncidentError(incidentPages.length === incidentResults.length
+        ? null
+        : 'Một phần dữ liệu sự cố không tải được.');
+      setLastUpdated(new Date());
+    } finally {
+      loadingRef.current = false;
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
 
-  const loadOverview = async () => {
-    setLoading(true);
-    try {
-      const res = await adminApi.getOverview();
-      setData(res);
-      setError(null);
-    } catch (err: any) {
-      setError(err?.message || 'Không thể tải dữ liệu tổng quan bảng điều khiển.');
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    void loadOverview();
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void loadOverview();
+    }, 60_000);
+    return () => window.clearInterval(interval);
+  }, [loadOverview]);
+
+  const mapStats = useMemo(() => ({
+    total: pins.length,
+    online: pins.filter((pin) => pin.status === 'ONLINE').length,
+    degraded: pins.filter((pin) => pin.status === 'DEGRADED').length,
+    offline: pins.filter((pin) => pin.status === 'OFFLINE').length,
+  }), [pins]);
+
+  const incidentStatusLabel: Record<string, string> = {
+    OPEN: 'Mới tiếp nhận',
+    ASSIGNED: 'Đã phân công',
+    IN_PROGRESS: 'Đang xử lý',
   };
 
   if (loading && !data) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <RefreshCw className="w-6 h-6 text-blue-700 animate-spin mb-2" />
-        <span className="text-xs text-slate-500 font-medium">Đang đồng bộ số liệu...</span>
+      <div className="flex min-h-[400px] flex-col items-center justify-center">
+        <RefreshCw className="mb-2 h-6 w-6 animate-spin text-blue-700" />
+        <span className="text-xs font-medium text-slate-500">Đang đồng bộ trạng thái hệ thống...</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto">
-      {/* Top Banner / Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-4 sm:p-5 rounded border border-slate-300 shadow-xs">
+    <div className="mx-auto max-w-7xl space-y-5">
+      <div className="flex flex-col gap-3 rounded border border-slate-300 bg-white p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div>
-          <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
-            Tổng quan
-          </h1>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">Tổng quan vận hành</h1>
+          <p className="mt-1 text-xs text-slate-500">
+            Trạng thái điểm phát, tải mạng và công việc cần xử lý; dữ liệu tự làm mới mỗi 60 giây.
+          </p>
         </div>
-        <button
-          onClick={loadOverview}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer flex-shrink-0"
-        >
-          <RefreshCw className="w-3.5 h-3.5" /> Làm mới
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {lastUpdated && (
+            <span className="text-[11px] text-slate-500">
+              Cập nhật {lastUpdated.toLocaleTimeString('vi-VN')}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => void loadOverview()}
+            disabled={refreshing}
+            className="inline-flex min-h-10 items-center gap-2 rounded border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+          >
+            <RefreshCw className={'h-4 w-4 ' + (refreshing ? 'animate-spin' : '')} />
+            Làm mới
+          </button>
+        </div>
       </div>
 
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-sm text-xs flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
-          <span>{error}</span>
+        <div role="alert" className="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-3 text-xs text-red-800">
+          <AlertCircle className="h-4 w-4 shrink-0" /> {error}
         </div>
       )}
 
-      {/* Hardware & Network Topology Monitoring Block */}
-      <DeviceMonitoringTopology topology={data?.topology} />
+      <DeviceMonitoringTopology topology={data?.topology} showSummaryCards={false} />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        {/* Active Sessions */}
-        <div className="bg-white p-4 rounded border border-slate-300 shadow-xs hover:border-slate-400 transition-all">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Phiên đang kết nối</span>
-            <div className="p-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-sm">
-              <Activity className="w-3.5 h-3.5" />
-            </div>
-          </div>
-          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono">
-            {data?.activeSessions ?? 0}
-          </div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="rounded border border-slate-300 bg-white p-4 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-slate-500"><span>Điểm phát</span><MapPin className="h-4 w-4" /></div>
+          <div className="mt-1 text-2xl font-extrabold text-slate-900">{mapStats.total || data?.totalLocations || 0}</div>
+          <div className="mt-1 text-[11px] text-slate-500">{mapStats.online} đang hoạt động</div>
         </div>
-
-        {/* Today's Logins */}
-        <div className="bg-white p-4 rounded border border-slate-300 shadow-xs hover:border-slate-400 transition-all">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Lượt kết nối hôm nay</span>
-            <div className="p-1.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-sm">
-              <Clock className="w-3.5 h-3.5" />
-            </div>
-          </div>
-          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono">
-            {data?.todaySessions ?? 0}
-          </div>
-          <p className="text-[11px] text-slate-500 font-medium mt-1">
-            Từ {data?.totalDevices ?? 0} thiết bị riêng biệt
-          </p>
+        <div className="rounded border border-emerald-200 bg-white p-4 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-emerald-700"><span>Đang hoạt động</span><Wifi className="h-4 w-4" /></div>
+          <div className="mt-1 text-2xl font-extrabold text-emerald-700">{mapStats.online}</div>
+          <div className="mt-1 text-[11px] text-slate-500">Điểm online</div>
         </div>
-
-        {/* Total Sessions */}
-        <div className="bg-white p-4 rounded border border-slate-300 shadow-xs hover:border-slate-400 transition-all">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Tổng phiên lịch sử</span>
-            <div className="p-1.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-sm">
-              <Users className="w-3.5 h-3.5" />
-            </div>
-          </div>
-          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono">
-            {data?.totalSessions ?? 0}
-          </div>
-          <p className="text-[11px] text-slate-500 font-medium mt-1">
-            Trên tổng số {data?.totalLocations ?? 0} điểm phát sóng
-          </p>
+        <div className="rounded border border-amber-200 bg-white p-4 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-amber-700"><span>Suy giảm</span><BellRing className="h-4 w-4" /></div>
+          <div className="mt-1 text-2xl font-extrabold text-amber-700">{mapStats.degraded}</div>
+          <div className="mt-1 text-[11px] text-slate-500">Điểm cần kiểm tra</div>
         </div>
-
-        {/* Total Unique Devices */}
-        <div className="bg-white p-4 rounded border border-slate-300 shadow-xs hover:border-slate-400 transition-all">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Thiết bị đã ghi nhận</span>
-            <div className="p-1.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-sm">
-              <Radio className="w-3.5 h-3.5" />
-            </div>
-          </div>
-          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono">
-            {data?.totalDevices ?? 0}
-          </div>
-          <p className="text-[11px] text-slate-500 font-medium mt-1">
-            Lưu vết 12 tháng
-          </p>
+        <div className="rounded border border-red-200 bg-white p-4 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-red-700"><span>Mất kết nối</span><WifiOff className="h-4 w-4" /></div>
+          <div className="mt-1 text-2xl font-extrabold text-red-700">{mapStats.offline}</div>
+          <div className="mt-1 text-[11px] text-slate-500">Điểm offline</div>
         </div>
       </div>
 
-      {/* Grid: Status Distribution & Locations Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Session Status Breakdown */}
-        <div className="bg-white p-4 sm:p-5 rounded border border-slate-300 shadow-xs lg:col-span-1">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center justify-between">
-            <span>Phân loại trạng thái phiên</span>
-            <Link to="/admin/sessions" className="text-xs text-[#004b87] hover:underline font-semibold flex items-center gap-1 normal-case">
-              Xem chi tiết <ArrowRight className="w-3 h-3" />
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+        <section className="overflow-hidden rounded border border-slate-300 bg-white shadow-xs xl:col-span-8">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
+            <div>
+              <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                <MapIcon className="h-4 w-4 text-[#004b87]" /> Bản đồ trạng thái điểm phát
+              </h2>
+              <p className="mt-0.5 text-[11px] text-slate-500">Chọn một điểm để mở hồ sơ vận hành.</p>
+            </div>
+            <Link to="/admin/gis" className="inline-flex min-h-9 items-center gap-1 text-xs font-semibold text-[#004b87] hover:underline">
+              Bản đồ đầy đủ <ArrowRight className="h-3.5 w-3.5" />
             </Link>
-          </h2>
+          </div>
+          {mapError ? (
+            <div className="flex min-h-[300px] items-center justify-center p-6 text-center text-xs text-amber-800">{mapError}</div>
+          ) : pins.length ? (
+            <LeafletGisMap pins={pins} selectedPin={selectedPin} onSelectPin={setSelectedPin} heatmapEnabled={false} selectedDistrict="ALL" compact />
+          ) : (
+            <div className="flex min-h-[300px] items-center justify-center text-xs text-slate-500">Chưa có điểm phát có tọa độ để hiển thị.</div>
+          )}
+          {selectedPin && (
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 bg-slate-50 px-4 py-2.5">
+              <div className="min-w-0">
+                <span className="text-xs font-semibold text-slate-800">{selectedPin.name}</span>
+                <span className="ml-2 text-[11px] text-slate-500">{selectedPin.address}</span>
+              </div>
+              <Link to={'/admin/gis?selectLocation=' + selectedPin.id} className="text-xs font-semibold text-[#004b87] hover:underline">Mở hồ sơ điểm</Link>
+            </div>
+          )}
+        </section>
 
+        <section className="rounded border border-slate-300 bg-white shadow-xs xl:col-span-4">
+          <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
+            <div>
+              <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                <ShieldCheck className="h-4 w-4 text-amber-600" /> Sự cố cần xử lý
+              </h2>
+              <p className="mt-0.5 text-[11px] text-slate-500">{openIncidentCount} sự cố đang mở hoặc xử lý</p>
+            </div>
+            <Link to="/admin/incidents" className="text-xs font-semibold text-[#004b87] hover:underline">Tất cả</Link>
+          </div>
+          {incidentError && <div className="px-4 pt-3 text-[11px] text-amber-700">{incidentError}</div>}
+          {incidents.length ? (
+            <ul className="divide-y divide-slate-100">
+              {incidents.map((incident) => (
+                <li key={incident.id} className="px-4 py-3">
+                  <Link to="/admin/incidents" className="block rounded focus:outline-none focus:ring-2 focus:ring-[#004b87]">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-xs font-semibold text-slate-900">{incident.ticketCode}</span>
+                      <span className="text-[10px] font-semibold text-amber-700">{incident.severity}</span>
+                    </div>
+                    <div className="mt-1 line-clamp-2 text-xs text-slate-700">{incident.title}</div>
+                    <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-slate-500">
+                      <span className="truncate">{incident.locationName || 'Chưa xác định điểm'}</span>
+                      <span>{incidentStatusLabel[incident.status] || incident.status}</span>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="px-4 py-10 text-center text-xs text-slate-500">
+              {incidentError ? 'Chưa tải được danh sách sự cố.' : 'Không có sự cố đang mở.'}
+            </div>
+          )}
+        </section>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="rounded border border-slate-300 bg-white p-4 shadow-xs">
+          <div className="mb-2 flex items-center justify-between text-xs text-slate-500"><span>Phiên đang kết nối</span><Activity className="h-4 w-4 text-emerald-700" /></div>
+          <div className="text-2xl font-extrabold text-slate-900">{data?.activeSessions ?? 0}</div>
+          <Link to="/admin/sessions" className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-[#004b87] hover:underline">Xem phiên <ArrowRight className="h-3 w-3" /></Link>
+        </div>
+        <div className="rounded border border-slate-300 bg-white p-4 shadow-xs">
+          <div className="mb-2 flex items-center justify-between text-xs text-slate-500"><span>Lượt kết nối hôm nay</span><Clock className="h-4 w-4" /></div>
+          <div className="text-2xl font-extrabold text-slate-900">{data?.todaySessions ?? 0}</div>
+          <div className="mt-1 text-[11px] text-slate-500">Tổng phiên được tạo trong ngày</div>
+        </div>
+        <div className="rounded border border-slate-300 bg-white p-4 shadow-xs">
+          <div className="mb-2 flex items-center justify-between text-xs text-slate-500"><span>Hạ tầng gateway</span><Router className="h-4 w-4" /></div>
+          <div className="text-sm font-bold text-slate-900">{data?.gatewayStatus?.healthy ? 'Đang hoạt động' : 'Cần kiểm tra'}</div>
+          <div className="mt-1 line-clamp-2 text-[11px] text-slate-500">{data?.gatewayStatus?.statusMessage || 'Chưa có trạng thái gateway.'}</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <section className="rounded border border-slate-300 bg-white p-4 shadow-xs">
+          <h2 className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-slate-700">
+            <span>Phân loại trạng thái phiên</span>
+            <Link to="/admin/sessions" className="normal-case text-[#004b87] hover:underline">Chi tiết</Link>
+          </h2>
           <div className="space-y-3">
             {data?.sessionsByStatus && Object.entries(data.sessionsByStatus).map(([status, count]) => {
               const total = data.totalSessions || 1;
-              const pct = Math.round((count / total) * 100);
+              const percentage = Math.round((count / total) * 100);
               return (
                 <div key={status} className="space-y-1">
-                  <div className="flex justify-between items-center text-xs">
-                    <StatusBadge status={status} />
-                    <span className="font-mono text-slate-700 font-semibold">{count} ({pct}%)</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-slate-100 rounded-xs overflow-hidden border border-slate-200/50">
-                    <div
-                      className={`h-full transition-all ${
-                        status === 'AUTHORIZED' ? 'bg-emerald-600' :
-                        status === 'REVOKED' ? 'bg-rose-600' :
-                        status === 'EXPIRED' ? 'bg-slate-400' :
-                        status === 'FAILED' ? 'bg-red-700' : 'bg-amber-500'
-                      }`}
-                      style={{ width: `${Math.min(100, Math.max(4, pct))}%` }}
-                    />
-                  </div>
+                  <div className="flex items-center justify-between text-xs"><StatusBadge status={status} /><span className="font-mono font-semibold text-slate-700">{count} ({percentage}%)</span></div>
+                  <div className="h-1.5 overflow-hidden rounded bg-slate-100"><div className="h-full bg-[#004b87]" style={{ width: percentage + '%' }} /></div>
                 </div>
               );
             })}
+            {!data?.sessionsByStatus && <p className="text-xs text-slate-500">Chưa có số liệu phiên.</p>}
           </div>
-        </div>
+        </section>
 
-        {/* Location Distribution */}
-        <div className="bg-white p-4 sm:p-5 rounded border border-slate-300 shadow-xs lg:col-span-2">
-          <div className="flex items-center justify-between mb-3">
+        <section className="rounded border border-slate-300 bg-white p-4 shadow-xs lg:col-span-2">
+          <div className="mb-3 flex items-center justify-between gap-2">
             <div>
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">Mật độ phiên theo Địa bàn Nhà văn hóa</h2>
-              <p className="text-[11px] text-slate-500">Thống kê lưu lượng truy cập thực tế tại các điểm phát</p>
+              <h2 className="text-xs font-bold uppercase tracking-wide text-slate-700">Lượt truy cập theo địa bàn</h2>
+              <p className="mt-1 text-[11px] text-slate-500">Dẫn tới hồ sơ điểm và bản đồ GIS.</p>
             </div>
-            <Link to="/admin/locations" className="text-xs text-[#004b87] hover:underline font-semibold flex items-center gap-1">
-              Quản lý các điểm <ArrowRight className="w-3 h-3" />
-            </Link>
+            <Link to="/admin/analytics" className="text-xs font-semibold text-[#004b87] hover:underline">Phân tích</Link>
           </div>
-
-          <div className="space-y-2.5">
-            {data?.locationDistribution && data.locationDistribution.length > 0 ? (
-              data.locationDistribution.map((loc, idx) => (
-                <div key={idx} className="p-2.5 bg-slate-50 border border-slate-200 rounded-sm flex items-center justify-between hover:bg-slate-100/60 transition">
-                  <div className="flex items-center gap-2.5 truncate mr-3">
-                    <div className="p-1.5 bg-white rounded-xs border border-slate-200 text-[#004b87] flex-shrink-0">
-                      <MapPin className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="truncate">
-                      <div className="font-semibold text-xs text-slate-900 truncate">{loc.locationName}</div>
-                      <div className="text-[10px] text-slate-500 font-medium">
-                        {loc.percentage != null ? `${loc.percentage.toFixed(1)}% lưu lượng toàn tỉnh` : 'Điểm phát sóng'}
-                      </div>
+          {data?.locationDistribution?.length ? (
+            <div className="space-y-2">
+              {data.locationDistribution.slice(0, 6).map((location, index) => (
+                <div key={location.locationName + '-' + index} className="flex items-center justify-between gap-3 rounded border border-slate-100 bg-slate-50 px-3 py-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <MapPin className="h-4 w-4 shrink-0 text-[#004b87]" />
+                    <div className="min-w-0">
+                      <div className="truncate text-xs font-semibold text-slate-900">{location.locationName}</div>
+                      <div className="text-[10px] text-slate-500">{location.percentage != null ? location.percentage.toFixed(1) + '% lượt kết nối toàn thành phố' : 'Điểm phát'}</div>
                     </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <div className="font-mono font-bold text-xs text-slate-900">{loc.sessionCount} lượt</div>
-                    <div className="text-[10px] text-emerald-700 font-medium">Phiên hoàn thành</div>
-                  </div>
+                  <span className="shrink-0 text-xs font-bold text-slate-700">{location.sessionCount} lượt</span>
                 </div>
-              ))
-            ) : (
-              <div className="py-10 text-center text-xs text-slate-400">
-                Chưa có dữ liệu thống kê phiên theo địa bàn
-              </div>
-            )}
-          </div>
-        </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-xs text-slate-500">Chưa có dữ liệu truy cập theo địa bàn.</div>
+          )}
+        </section>
       </div>
     </div>
   );
 };
+
+export default DashboardPage;

@@ -31,6 +31,8 @@ import {
   SurveyAnalyticsDto,
   PortalTemplateDto,
   PortalTemplateVersionDto,
+  PortalInitResponse,
+  PortalPreviewLinkResponse,
   IncidentTicketDto,
   CreateIncidentRequest,
   AssignIncidentRequest,
@@ -521,6 +523,13 @@ export const adminApi = {
   rollbackPortalTemplateVersion: (templateId: number, versionNumber: number) => {
     return request<PortalTemplateDto>(`/v1/admin/portal-templates/${templateId}/rollback/${versionNumber}`, {
       method: 'POST',
+    });
+  },
+
+  createPortalPreviewLink: (previewData: PortalInitResponse, expiresInMinutes = 60) => {
+    return request<PortalPreviewLinkResponse>('/v1/admin/portal-templates/preview-links', {
+      method: 'POST',
+      body: JSON.stringify({ previewData, expiresInMinutes }),
     });
   },
 

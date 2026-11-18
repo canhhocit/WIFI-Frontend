@@ -27,6 +27,7 @@ interface ReportIssueModalProps {
   clientMac?: string;
   clientIp?: string;
   onReportSuccess?: (res: CitizenReportResponse) => void;
+  previewMode?: boolean;
 }
 
 const ISSUE_OPTIONS: { type: CitizenIssueType; title: string; desc: string; icon: React.ReactNode }[] = [
@@ -76,7 +77,8 @@ export const ReportIssueModal: React.FC<ReportIssueModalProps> = ({
   locationSlug,
   clientMac,
   clientIp,
-  onReportSuccess
+  onReportSuccess,
+  previewMode = false,
 }) => {
   const [selectedIssue, setSelectedIssue] = useState<CitizenIssueType>('SLOW_CONNECTION');
   const [reporterName, setReporterName] = useState('');
@@ -102,6 +104,7 @@ export const ReportIssueModal: React.FC<ReportIssueModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (previewMode) return;
     setError(null);
     setSubmitting(true);
 
@@ -182,6 +185,12 @@ export const ReportIssueModal: React.FC<ReportIssueModalProps> = ({
             <div className="p-2.5 bg-red-50 border border-red-200 rounded text-xs text-red-700 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
               <span>{error}</span>
+            </div>
+          )}
+
+          {previewMode && (
+            <div className="p-2.5 bg-amber-50 border border-amber-200 rounded text-xs text-amber-900">
+              Chế độ xem trước chỉ hiển thị biểu mẫu. Phản ánh sẽ không được gửi.
             </div>
           )}
 
@@ -276,7 +285,7 @@ export const ReportIssueModal: React.FC<ReportIssueModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || previewMode}
               className="px-5 py-2 bg-[#a81c1c] hover:bg-[#8e1414] text-white rounded text-xs font-bold shadow flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
             >
               {submitting ? (

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Palette,
   Eye,
@@ -23,6 +24,7 @@ import {
   Wifi,
   ChevronDown,
   Monitor,
+  Tablet,
   Check,
   Star,
   Users,
@@ -32,13 +34,16 @@ import {
   Maximize2,
   X,
   Send,
+  Copy,
+  Clock3,
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
-import { PortalTemplateDto, LocationDto, PortalTemplateVersionDto } from '../../types/models';
+import { PortalTemplateDto, LocationDto, PortalTemplateVersionDto, PortalInitResponse } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
 import { ImageUploadInput } from '../../components/ImageUploadInput';
 import { Toast } from '../../components/Toast';
 import { VietnamFlag } from '../../components/VietnamFlag';
+import { Modal } from '../../components/Modal';
 
 export const PortalBuilderPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -93,10 +98,19 @@ export const PortalBuilderPage: React.FC = () => {
   const [savedLocFormData, setSavedLocFormData] = useState<typeof locFormData | null>(null);
 
   // Live Studio Simulation State
-  const [previewDevice, setPreviewDevice] = useState<'MOBILE' | 'DESKTOP'>('MOBILE');
+  const [previewDevice, setPreviewDevice] = useState<'MOBILE' | 'TABLET' | 'DESKTOP'>('MOBILE');
   const [previewExpanded, setPreviewExpanded] = useState(false);
   const [simCampaign, setSimCampaign] = useState(false);
   const [simSurvey, setSimSurvey] = useState(false);
+  const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
+  const previewStageRef = useRef<HTMLDivElement | null>(null);
+  const [previewReady, setPreviewReady] = useState(false);
+  const [previewScale, setPreviewScale] = useState(1);
+  const [previewLink, setPreviewLink] = useState<string | null>(null);
+  const [previewLinkExpiry, setPreviewLinkExpiry] = useState<string | null>(null);
+  const [previewLinkMinutes, setPreviewLinkMinutes] = useState(60);
+  const [creatingPreviewLink, setCreatingPreviewLink] = useState(false);
+  const [copyPreviewLinkSuccess, setCopyPreviewLinkSuccess] = useState(false);
 
   useEffect(() => {
     if (!previewExpanded) return;
@@ -358,30 +372,164 @@ export const PortalBuilderPage: React.FC = () => {
     });
   };
 
-  // Preview Calculations
+  // Preview uses the same PortalPage as citizens. Draft values are sent to the embedded route without saving them.
+  const previewData = useMemo<PortalInitResponse>(() => {
+    const now = new Date().toISOString();
+    const location: LocationDto = selectedLocation
+      ? {
+          ...selectedLocation,
+          welcomeMessage: scope === 'LOCATION' ? locFormData.welcomeMessage || undefined : undefined,
+          promoTitle: scope === 'LOCATION' ? locFormData.promoTitle || undefined : undefined,
+          promoContent: scope === 'LOCATION' ? locFormData.promoContent || undefined : undefined,
+          promoBannerUrl: scope === 'LOCATION' ? locFormData.promoBannerUrl || undefined : undefined,
+          backgroundImageUrl: scope === 'LOCATION' ? locFormData.backgroundImageUrl || undefined : undefined,
+          promoActionUrl: scope === 'LOCATION' ? locFormData.promoActionUrl || undefined : undefined,
+          termsAndConditions: scope === 'LOCATION' ? selectedLocation.termsAndConditions : template.termsText || '',
+        }
+      : {
+          id: 0,
+          slug: 'xem-truoc',
+          name: 'Nhà văn hóa mẫu Hải Phòng',
+          address: 'Thành phố Hải Phòng',
+          sessionDurationMinutes: 120,
+          maxBandwidthMbps: 20,
+          maxConcurrentUsers: 50,
+          termsAndConditions: template.termsText || '',
+          active: true,
+        };
+
+    return {
+      location,
+      clientIp: '',
+      clientMacHint: '',
+      mockGateway: true,
+      gatewayNotice: '',
+      activeCampaign: simCampaign
+        ? {
+            id: 0,
+            title: 'Tuyên truyền Dịch vụ công và kích hoạt VNeID',
+            description: 'Thông điệp minh họa để xem vị trí chiến dịch trên cổng Wi-Fi.',
+            bannerUrl: template.bannerUrl,
+            actionUrl: 'https://dichvucong.haiphong.gov.vn',
+            priority: 10,
+            startTime: now,
+            endTime: now,
+            status: 'APPROVED',
+            createdAt: now,
+            updatedAt: now,
+          }
+        : undefined,
+      activeSurvey: simSurvey
+        ? {
+            id: 0,
+            title: 'Khảo sát chất lượng Wi-Fi',
+            description: 'Nội dung minh họa trong bản xem trước.',
+            currentResponsesCount: 0,
+            active: true,
+            questions: [
+              {
+                id: 1,
+                questionText: 'Quý vị đánh giá chất lượng Wi-Fi hôm nay như thế nào?',
+                questionType: 'RATING',
+                sortOrder: 0,
+                required: true,
+              },
+            ],
+          }
+        : undefined,
+      portalTemplate: { ...template },
+      macRemembered: false,
+      otpRequired: false,
+      currentActiveUsers: simCapacityFull ? location.maxConcurrentUsers || 50 : 0,
+      maxConcurrentUsers: location.maxConcurrentUsers || 50,
+      capacityReached: simCapacityFull,
+    };
+  }, [template, selectedLocation, scope, locFormData, simCampaign, simSurvey, simCapacityFull]);
+
   const previewWallpaperUrl =
-    scope === 'LOCATION'
-      ? (locFormData.backgroundImageUrl && locFormData.backgroundImageUrl !== '/banners/haiphong_city_bg.jpg'
-          ? locFormData.backgroundImageUrl
-          : template.backgroundImageUrl) || '/banners/haiphong_city_bg.jpg'
-      : template.backgroundImageUrl || '/banners/haiphong_city_bg.jpg';
+    previewData.location?.backgroundImageUrl ||
+    previewData.portalTemplate?.backgroundImageUrl ||
+    '/banners/haiphong_city_bg.jpg';
 
   const previewBannerUrl =
-    scope === 'LOCATION'
-      ? (locFormData.promoBannerUrl && locFormData.promoBannerUrl !== '/banners/haiphong_culture_house.jpg'
-          ? locFormData.promoBannerUrl
-          : template.bannerUrl) || template.bannerUrl || '/banners/haiphong_culture_house.jpg'
-      : template.bannerUrl || '/banners/haiphong_culture_house.jpg';
+    previewData.location?.promoBannerUrl ||
+    previewData.portalTemplate?.bannerUrl ||
+    '/banners/haiphong_culture_house.jpg';
 
   const previewWelcomeText =
-    scope === 'LOCATION'
-      ? locFormData.welcomeMessage || template.welcomeText
-      : template.welcomeText;
+    previewData.location?.welcomeMessage ||
+    previewData.portalTemplate?.welcomeText ||
+    'Chào mừng Nhân dân đến với Nhà văn hóa';
 
-  const currentPreviewPortalLink =
-    scope === 'LOCATION' && selectedLocation
-      ? `/portal?location=${selectedLocation.slug}`
-      : '/portal';
+  useEffect(() => {
+    const handlePreviewMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin || event.source !== previewFrameRef.current?.contentWindow) return;
+      if (event.data?.type === 'WIFI_PORTAL_PREVIEW_READY') setPreviewReady(true);
+    };
+    window.addEventListener('message', handlePreviewMessage);
+    return () => window.removeEventListener('message', handlePreviewMessage);
+  }, []);
+
+  useEffect(() => {
+    if (!previewReady) return;
+    previewFrameRef.current?.contentWindow?.postMessage(
+      { type: 'WIFI_PORTAL_PREVIEW_UPDATE', previewData },
+      window.location.origin,
+    );
+  }, [previewReady, previewData]);
+
+  const handleCreatePreviewLink = async () => {
+    setCreatingPreviewLink(true);
+    setCopyPreviewLinkSuccess(false);
+    try {
+      const result = await adminApi.createPortalPreviewLink(previewData, previewLinkMinutes);
+      setPreviewLink(`${window.location.origin}/portal?previewToken=${encodeURIComponent(result.token)}`);
+      setPreviewLinkExpiry(result.expiresAt);
+    } catch (err: any) {
+      setToast({ show: true, title: 'Không thể tạo liên kết', message: err?.message || 'Vui lòng thử lại.', type: 'error' });
+    } finally {
+      setCreatingPreviewLink(false);
+    }
+  };
+
+  const handleCopyPreviewLink = async () => {
+    if (!previewLink) return;
+    try {
+      await navigator.clipboard.writeText(previewLink);
+      setCopyPreviewLinkSuccess(true);
+    } catch {
+      setToast({ show: true, title: 'Không thể sao chép', message: 'Hãy chọn và sao chép liên kết trong ô bên dưới.', type: 'warning' });
+    }
+  };
+
+  const previewViewport = previewDevice === 'MOBILE'
+    ? { width: 390, height: 844 }
+    : previewDevice === 'TABLET'
+      ? { width: 768, height: 1024 }
+      : { width: 1366, height: 768 };
+  const previewFrameSize = previewDevice === 'MOBILE'
+    ? { width: previewViewport.width + 24, height: previewViewport.height + 24, screenTop: 12, screenLeft: 12 }
+    : previewDevice === 'TABLET'
+      ? { width: previewViewport.width + 20, height: previewViewport.height + 20, screenTop: 10, screenLeft: 10 }
+      : { width: previewViewport.width + 16, height: previewViewport.height + 48, screenTop: 40, screenLeft: 8 };
+
+  useEffect(() => {
+    const stage = previewStageRef.current;
+    if (!stage) return;
+    const updateScale = () => {
+      const availableWidth = Math.max(1, stage.clientWidth - 24);
+      const availableHeight = previewExpanded ? Math.max(1, stage.clientHeight - 24) : Number.POSITIVE_INFINITY;
+      setPreviewScale(Math.min(
+        1,
+        availableWidth / previewFrameSize.width,
+        availableHeight / previewFrameSize.height,
+      ));
+    };
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(stage);
+    updateScale();
+    return () => observer.disconnect();
+  }, [previewExpanded, previewFrameSize.width, previewFrameSize.height]);
 
   const hasUnsavedChanges = scope === 'GLOBAL'
     ? Boolean(savedTemplate && JSON.stringify(template) !== JSON.stringify(savedTemplate))
@@ -394,7 +542,7 @@ export const PortalBuilderPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Trình Dựng & Tùy Biến Cổng Chào Wi-Fi</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {scope === 'GLOBAL' && (
             <button
               onClick={openVersionsModal}
@@ -405,14 +553,42 @@ export const PortalBuilderPage: React.FC = () => {
               Lịch sử giao diện
             </button>
           )}
-          <a
-            href={currentPreviewPortalLink}
-            target="_blank"
-            rel="noreferrer"
+          <label htmlFor="preview-link-duration" className="sr-only">Thời hạn liên kết xem trước</label>
+          <select
+            id="preview-link-duration"
+            value={previewLinkMinutes}
+            onChange={(event) => setPreviewLinkMinutes(Number(event.target.value))}
+            className="min-h-9 rounded-sm border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700"
+            title="Thời hạn liên kết xem trước"
+          >
+            <option value={15}>15 phút</option>
+            <option value={60}>60 phút</option>
+            <option value={120}>120 phút</option>
+          </select>
+          <button
+            type="button"
+            onClick={handleCreatePreviewLink}
+            disabled={creatingPreviewLink}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-[#004b87] bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold transition shadow-xs disabled:opacity-60"
+          >
+            {creatingPreviewLink ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
+            Chia sẻ bản xem trước
+          </button>
+          <Link
+            to="/admin/campaigns"
             className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 hover:bg-slate-100 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs"
           >
-            <ExternalLink className="w-3.5 h-3.5 text-[#004b87]" />
-            {scope === 'LOCATION' && selectedLocation ? `Xem Cổng: ${selectedLocation.name}` : 'Xem trực tiếp Cổng khách'}
+            <Megaphone className="w-3.5 h-3.5 text-[#004b87]" />
+            Quản lý chiến dịch
+          </Link>
+          <a
+            href={scope === 'LOCATION' && selectedLocation ? `/portal?location=${selectedLocation.slug}` : '/portal'}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-100 bg-white rounded-sm text-xs font-semibold text-slate-600 transition"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            Mở cổng đang chạy
           </a>
           <button
             onClick={loadInitialData}
@@ -475,7 +651,7 @@ export const PortalBuilderPage: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-6 bg-white rounded border border-slate-300 shadow-xs flex flex-col lg:max-h-[calc(100vh-175px)] overflow-hidden">
+          <div className="lg:col-span-5 bg-white rounded border border-slate-300 shadow-xs flex flex-col lg:max-h-[calc(100vh-175px)] overflow-hidden">
             {scope === 'GLOBAL' ? (
               /* FORM 1: GLOBAL CITYWIDE TEMPLATE */
               <form onSubmit={(e) => { e.preventDefault(); handleSaveGlobalTemplate(true); }} className="flex flex-col h-full overflow-hidden text-xs">
@@ -967,33 +1143,32 @@ export const PortalBuilderPage: React.FC = () => {
           {/* Right Live Preview: Smartphone Mockup (5 cols) - Sticky Centered */}
           <div
             className={previewExpanded
-              ? 'fixed inset-0 z-[60] flex flex-col items-center justify-center bg-slate-950/80 p-3 sm:p-6'
-              : 'lg:col-span-6 lg:sticky lg:top-4 lg:self-start flex flex-col items-center justify-center'}
+              ? 'fixed inset-0 z-[60] flex flex-col items-center bg-slate-950/90 p-3 sm:p-5 overflow-hidden'
+              : 'lg:col-span-7 lg:sticky lg:top-4 lg:self-start flex flex-col items-center justify-start min-w-0'}
             role={previewExpanded ? 'dialog' : undefined}
             aria-modal={previewExpanded ? true : undefined}
             aria-label={previewExpanded ? 'Xem trước cổng Wi-Fi phóng lớn' : undefined}
           >
             {/* Live Studio Toolbar */}
-              <div className={`${previewExpanded ? 'w-full max-w-[1600px]' : previewDevice === 'MOBILE' ? 'w-full max-w-[500px]' : 'w-full max-w-[900px]'} mb-2 px-1 space-y-1.5`}>
+              <div className={`${previewExpanded ? 'w-full max-w-[1600px]' : 'w-full'} mb-2 px-1 space-y-2`}>
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    {previewDevice === 'MOBILE' ? <Smartphone className="w-4 h-4 text-[#004b87]" /> : <Monitor className="w-4 h-4 text-[#004b87]" />}
+                    {previewDevice === 'MOBILE' ? <Smartphone className="w-4 h-4 text-[#004b87]" /> : previewDevice === 'TABLET' ? <Tablet className="w-4 h-4 text-[#004b87]" /> : <Monitor className="w-4 h-4 text-[#004b87]" />}
                   {scope === 'LOCATION' ? 'Xem Trước Điểm Này' : 'Xem Trước Mẫu Chung'}
                 </span>
-                  <div className="inline-flex rounded-sm border border-slate-200 bg-white p-0.5" role="group" aria-label="Kích thước xem trước">
-                    <button type="button" onClick={() => setPreviewDevice('MOBILE')} className={`px-2 py-1 rounded-sm text-[10px] font-semibold ${previewDevice === 'MOBILE' ? 'bg-[#004b87] text-white' : 'text-slate-600'}`}>Điện thoại</button>
-                    <button type="button" onClick={() => setPreviewDevice('DESKTOP')} className={`px-2 py-1 rounded-sm text-[10px] font-semibold ${previewDevice === 'DESKTOP' ? 'bg-[#004b87] text-white' : 'text-slate-600'}`}>Máy tính</button>
-                    <button type="button" onClick={() => setPreviewExpanded((expanded) => !expanded)} className="ml-1 inline-flex items-center gap-1 px-2 py-1 rounded-sm text-[10px] font-semibold text-slate-700 hover:bg-slate-100" aria-label={previewExpanded ? 'Thu nhỏ bản xem trước' : 'Phóng lớn bản xem trước'}>
+                  <div className="inline-flex rounded border border-slate-200 bg-white p-0.5" role="group" aria-label="Kích thước xem trước">
+                    <button type="button" onClick={() => setPreviewDevice('MOBILE')} aria-pressed={previewDevice === 'MOBILE'} className={`px-2 py-1.5 rounded text-[11px] font-semibold ${previewDevice === 'MOBILE' ? 'bg-[#004b87] text-white' : 'text-slate-600'}`}>Điện thoại</button>
+                    <button type="button" onClick={() => setPreviewDevice('TABLET')} aria-pressed={previewDevice === 'TABLET'} className={`px-2 py-1.5 rounded text-[11px] font-semibold ${previewDevice === 'TABLET' ? 'bg-[#004b87] text-white' : 'text-slate-600'}`}>Máy tính bảng</button>
+                    <button type="button" onClick={() => setPreviewDevice('DESKTOP')} aria-pressed={previewDevice === 'DESKTOP'} className={`px-2 py-1.5 rounded text-[11px] font-semibold ${previewDevice === 'DESKTOP' ? 'bg-[#004b87] text-white' : 'text-slate-600'}`}>Máy tính</button>
+                    <button type="button" onClick={() => setPreviewExpanded((expanded) => !expanded)} className="ml-1 inline-flex items-center gap-1 px-2 py-1.5 rounded text-[11px] font-semibold text-slate-700 hover:bg-slate-100" aria-label={previewExpanded ? 'Thu nhỏ bản xem trước' : 'Phóng lớn bản xem trước'}>
                       {previewExpanded ? <X className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
                       {previewExpanded ? 'Đóng' : 'Phóng lớn'}
                     </button>
                   </div>
               </div>
 
-                <p className="text-[10px] text-slate-500">
-                  {previewDevice === 'MOBILE'
-                    ? 'Cuộn trong màn hình để xem phần kết nối. Chiến dịch và khảo sát là nội dung mô phỏng.'
-                    : 'Bố cục máy tính gồm khu vực thông tin và khu vực kết nối như trang khách.'}
+                <p className={`text-[11px] ${previewExpanded ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Đang hiển thị giao diện thật của /portal ở khung {previewViewport.width} × {previewViewport.height} CSS px. Kéo cuộn bên trong khung để kiểm tra toàn trang.
                 </p>
 
               {/* Scenario Toggles */}
@@ -1028,269 +1203,62 @@ export const PortalBuilderPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Phone Bezel */}
+            {/* The preview runs the real public portal route in an isolated same-origin frame. */}
             <div
-              className={previewDevice === 'MOBILE'
-                ? `max-w-full rounded-[48px] xl:rounded-[52px] border-[10px] xl:border-[12px] border-slate-900 bg-white shadow-2xl overflow-hidden flex flex-col relative ${previewExpanded ? '' : 'w-[480px] h-[960px]'}`
-                : `w-full rounded-2xl border-8 border-slate-800 bg-white shadow-2xl overflow-hidden flex flex-col relative ${previewExpanded ? 'max-w-[1600px] h-[calc(92dvh-120px)]' : 'max-w-[1100px] h-[700px]'}`}
-              style={previewExpanded
-                ? previewDevice === 'MOBILE'
-                  ? { width: 'min(480px, 92vw, calc((100dvh - 180px) * 0.5))', height: 'min(900px, calc(100dvh - 180px))' }
-                  : { height: 'calc(92dvh - 120px)' }
-                : undefined}
+              ref={previewStageRef}
+              className={previewExpanded
+                ? 'flex-1 min-h-0 w-full flex items-start justify-center overflow-auto pt-3'
+                : 'w-full flex justify-center overflow-x-auto pb-3'}
             >
-              {/* Phone Speaker & Camera Notch */}
-              {previewDevice === 'MOBILE' && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-5 bg-slate-900 rounded-b-xl z-20 flex items-center justify-center">
-                <div className="w-3 h-3 rounded-full bg-slate-950 mr-2" />
-                <div className="w-10 h-1 bg-slate-800 rounded-full" />
-              </div>}
-
-              {/* Dynamic Preview Content */}
-              <div className={`flex-1 min-h-0 overflow-y-auto overscroll-contain ${previewDevice === 'MOBILE' ? 'px-2.5 pt-6 pb-2' : 'p-0'} relative`}>
-                {/* Background Wallpaper Layer */}
+              <div
+                className="relative flex-shrink-0"
+                style={{ width: previewFrameSize.width * previewScale, height: previewFrameSize.height * previewScale }}
+              >
                 <div
-                  className="absolute inset-0 bg-cover bg-center transition-all duration-300"
+                  className={"absolute left-0 top-0 origin-top-left overflow-hidden shadow-2xl " + (previewDevice === 'MOBILE'
+                    ? 'rounded-[48px] border-[10px] border-slate-950 bg-slate-950'
+                    : previewDevice === 'TABLET'
+                      ? 'rounded-[28px] border-[10px] border-slate-800 bg-slate-900'
+                      : 'rounded-xl border border-slate-500 bg-slate-800')}
                   style={{
-                    backgroundImage: `url('${previewWallpaperUrl}')`,
-                    backgroundColor: template.backgroundColor || '#0c2340',
+                    width: previewFrameSize.width,
+                    height: previewFrameSize.height,
+                    transform: 'scale(' + previewScale + ')',
+                    transformOrigin: 'top left',
                   }}
-                />
-                {/* GovTech dark overlay with slight blur */}
-                <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-900/75 to-slate-950/85 backdrop-blur-[1px]" />
-
-                {/* Portal card follows the guest page's mobile content order. */}
-                <div className={`relative z-10 bg-white rounded-xl border border-slate-300/80 shadow-xl overflow-hidden space-y-0 text-slate-900 font-sans ${previewDevice === 'DESKTOP' ? 'w-full grid grid-cols-12 items-start rounded-none border-0 shadow-none' : ''}`}>
-                  {/* Official Government Header */}
-                  <div className={`bg-[#a81c1c] text-white text-center p-4 border-b border-[#881313] relative ${previewDevice === 'DESKTOP' ? 'col-span-7' : ''}`}>
-                    {template.logoUrl ? (
-                      <div className="flex justify-center mb-1.5">
-                        <img
-                          src={template.logoUrl}
-                          alt="Biểu trưng chính thức"
-                          className="h-10 w-auto max-w-[140px] object-contain drop-shadow-sm"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex justify-center mb-2">
-                        <VietnamFlag width={48} height={32} className="rounded-xs shadow-sm border border-yellow-400/50" />
-                      </div>
-                    )}
-                    <div className="text-[10px] font-bold tracking-widest text-yellow-300 uppercase">
-                      Cộng Hòa Xã Hội Chủ Nghĩa Việt Nam
-                    </div>
-                    <div className="text-[10px] text-red-100 italic">
-                      Độc lập - Tự do - Hạnh phúc
-                    </div>
-                    <div className="h-0.5 w-24 bg-yellow-400/60 mx-auto my-2" />
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-yellow-300">
-                      Ủy Ban Nhân Dân Thành Phố Hải Phòng
-                    </div>
-                    <h2 className="text-sm font-extrabold uppercase text-white mt-0.5 tracking-tight">
-                      {template.title || 'Cổng Truy Cập Wi-Fi'}
-                    </h2>
-                  </div>
-
-                  {/* Location & Speed Meta Strip */}
-                  <div className={`px-3 py-2.5 bg-slate-100/90 border-b border-slate-200 flex flex-wrap items-center justify-between text-[11px] text-slate-700 gap-y-1.5 ${previewDevice === 'DESKTOP' ? 'col-span-7' : ''}`}>
-                    <div className="flex items-center gap-1.5 font-semibold truncate mr-2 max-w-full">
-                      <MapPin className="w-3.5 h-3.5 text-[#a81c1c] flex-shrink-0" />
-                      <span className="truncate">
-                        {scope === 'LOCATION' && selectedLocation
-                          ? selectedLocation.name
-                          : 'Nhà văn hóa thôn, tổ dân phố Hải Phòng'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0 font-mono text-[10px] text-slate-600">
-                      <span>{scope === 'LOCATION' && selectedLocation ? selectedLocation.sessionDurationMinutes : 120} phút</span>
-                      <span>•</span>
-                      <span className="text-emerald-700 font-bold">{scope === 'LOCATION' && selectedLocation ? selectedLocation.maxBandwidthMbps : 20} Mbps</span>
-                      <span>•</span>
-                      <span className="font-semibold text-indigo-700 inline-flex items-center gap-1"><Users className="w-3 h-3" />0/{scope === 'LOCATION' && selectedLocation ? selectedLocation.maxConcurrentUsers || 50 : 50}</span>
-                      <span>•</span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-300 font-sans font-bold text-[10px]"><AlertTriangle className="w-3 h-3 text-amber-600" />Báo lỗi</span>
-                    </div>
-                  </div>
-
-                  {/* 1. Content-First Notice Block */}
-                  <div className={`p-4 space-y-4 bg-gradient-to-b from-slate-50/70 to-white ${previewDevice === 'DESKTOP' ? 'col-span-7' : ''}`}>
-                    <div>
-                     
-                      <h3 className="text-base font-extrabold text-slate-900 leading-snug">
-                        {previewWelcomeText || 'Chào mừng Nhân dân đến với Nhà văn hóa'}
-                      </h3>
-                      <p className="text-xs text-slate-600 flex items-center gap-1.5 mt-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-[#a81c1c] flex-shrink-0" />
-                        <span>
-                          {scope === 'LOCATION' && selectedLocation?.address
-                            ? selectedLocation.address
-                            : 'Thành phố Hải Phòng'}
-                        </span>
-                      </p>
-                    </div>
-
-                    {/* Local Bulletin / Notice (Megaphone card) */}
-                    {(scope === 'LOCATION' && (locFormData.promoTitle || locFormData.promoContent || locFormData.promoActionUrl)) ? (
-                      <div className="p-3.5 bg-amber-50/70 rounded-lg border border-amber-300/80 shadow-xs space-y-1.5">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#a81c1c]">
-                          <Megaphone className="w-4 h-4 text-[#a81c1c] flex-shrink-0" />
-                          <span>{locFormData.promoTitle || 'Bản Tin Chuyển Đổi Số Địa Phương'}</span>
-                        </div>
-                        {locFormData.promoContent && (
-                          <p className="text-xs text-slate-700 leading-relaxed font-sans">
-                            {locFormData.promoContent}
-                          </p>
-                        )}
-                        {/^https?:\/\//i.test(locFormData.promoActionUrl.trim()) && (
-                          <a href={locFormData.promoActionUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-bold text-[#004b87] hover:underline">
-                            Mở cổng thông tin địa phương <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
-                      </div>
-                    ) : null}
-
-                    {/* Dịch vụ công trực tuyến guide */}
-                    <div className="p-3 bg-blue-50/80 rounded-lg border border-blue-200 flex items-start gap-2.5 text-slate-700">
-                      <Landmark className="w-4 h-4 text-[#004b87] flex-shrink-0 mt-0.5" />
-                      <div className="text-xs leading-relaxed">
-                        <span className="font-bold text-[#004b87]">Dịch vụ công trực tuyến:</span> Sau khi kết nối Wi-Fi, hệ thống sẽ mở trực tiếp Cổng Dịch vụ công TP Hải Phòng để tra cứu hồ sơ và nộp thủ tục hành chính miễn phí.
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 2. Banner Photo with Overlay */}
-                  <div className={`relative border-b border-slate-200 bg-slate-900 overflow-hidden ${previewDevice === 'DESKTOP' ? 'col-span-7' : ''}`}>
-                    <img
-                      src={previewBannerUrl}
-                      alt="Banner"
-                      className="w-full h-40 object-cover opacity-95"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = '/banners/haiphong_culture_house.jpg';
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent flex flex-col justify-end p-3.5 text-white">
-                      <div className="text-xs font-bold text-white drop-shadow-sm flex items-center justify-between">
-                        <span className="truncate pr-2 font-extrabold">
-                          Ảnh thực tế: {scope === 'LOCATION' && selectedLocation ? selectedLocation.name : 'Wifi công cộng Hải Phòng'}
-                        </span>
-                        <span className="text-[10px] px-2 py-0.5 bg-emerald-600/90 text-white rounded font-bold flex-shrink-0">
-                          Điểm phát trực tuyến
-                        </span>
-                      </div>
-                      <div className="text-[10.5px] text-slate-200 drop-shadow-xs flex items-center gap-2 mt-1 font-mono">
-                        <span>Băng thông: <strong className="text-emerald-300">{scope === 'LOCATION' && selectedLocation ? selectedLocation.maxBandwidthMbps : 20} Mbps</strong></span>
-                        <span>•</span>
-                        <span>Mã trạm: <strong>{scope === 'LOCATION' && selectedLocation ? selectedLocation.locationCode || selectedLocation.slug : 'LOC-HP'}</strong></span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {simCampaign && (
-                    <div className={`mx-4 mb-4 border border-amber-300/80 bg-gradient-to-r from-red-50/95 via-amber-50/90 to-red-50/95 p-3.5 rounded-lg space-y-2 border-l-4 border-l-[#a81c1c] shadow-xs ${previewDevice === 'DESKTOP' ? 'col-span-7' : ''}`}>
-                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs bg-[#a81c1c] text-yellow-300 text-[10px] font-bold uppercase tracking-wider">
-                        <Megaphone className="w-3 h-3" /> Chiến dịch mô phỏng
-                      </div>
-                      <h4 className="text-xs font-black text-slate-900 leading-snug">Tuyên truyền Dịch vụ công & Kích hoạt VNeID</h4>
-                      <p className="text-xs text-slate-700 leading-relaxed">Đây là nội dung minh họa để xem bố cục chiến dịch trên cổng khách.</p>
+                >
+                  {previewDevice === 'DESKTOP' && (
+                    <div className="absolute inset-x-0 top-0 z-20 flex h-10 items-center gap-1.5 border-b border-slate-600 bg-slate-800 px-3">
+                      <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                      <div className="ml-3 flex-1 rounded bg-slate-700 px-3 py-1 text-[10px] text-slate-300">Cổng Wi-Fi Hải Phòng</div>
                     </div>
                   )}
-
-                  {/* 3. Action Form */}
-                  <div className={previewDevice === 'DESKTOP' ? 'col-span-5 col-start-8 row-start-1 border-l border-slate-200 bg-white min-h-full' : 'contents'}>
-                    {previewDevice === 'DESKTOP' && (
-                      <div className="bg-gradient-to-r from-[#0c2340] to-[#004b87] text-white p-5 border-b border-blue-900">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-10 h-10 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-yellow-300"><Wifi className="w-5 h-5" /></div>
-                          <div>
-                            <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-300">Sóng Wi-Fi sẵn sàng</div>
-                            <div className="text-sm font-bold">Kết nối Internet</div>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-center">
-                          <div className="p-2 rounded bg-white/10 border border-white/15"><div className="text-[10px] text-slate-300">Tốc độ</div><div className="text-xs font-extrabold text-emerald-300">{scope === 'LOCATION' && selectedLocation ? selectedLocation.maxBandwidthMbps : 20} Mbps</div></div>
-                          <div className="p-2 rounded bg-white/10 border border-white/15"><div className="text-[10px] text-slate-300">Thời lượng</div><div className="text-xs font-extrabold text-yellow-300">{scope === 'LOCATION' && selectedLocation ? selectedLocation.sessionDurationMinutes : 120} phút</div></div>
-                        </div>
+                  <iframe
+                    ref={previewFrameRef}
+                    src="/portal?previewMode=embedded"
+                    title={'Bản xem trước cổng Wi-Fi ' + (previewDevice === 'MOBILE' ? 'điện thoại' : previewDevice === 'TABLET' ? 'máy tính bảng' : 'máy tính')}
+                    onLoad={() => setPreviewReady(false)}
+                    className="absolute block border-0 bg-white"
+                    style={{
+                      left: previewFrameSize.screenLeft,
+                      top: previewFrameSize.screenTop,
+                      width: previewViewport.width,
+                      height: previewViewport.height,
+                      borderRadius: previewDevice === 'MOBILE' ? 38 : previewDevice === 'TABLET' ? 18 : 0,
+                    }}
+                  />
+                  {previewDevice === 'MOBILE' && (
+                    <>
+                      <div className="absolute left-1/2 top-[12px] z-30 flex h-6 w-28 -translate-x-1/2 items-center justify-center rounded-full bg-slate-950">
+                        <span className="mr-2 h-2.5 w-2.5 rounded-full bg-slate-800" />
+                        <span className="h-1 w-8 rounded-full bg-slate-800" />
                       </div>
-                    )}
-                  <div className="p-4 sm:p-5 space-y-4 border-t border-slate-200">
-                    {/* Simulated Capacity Limit Warning if toggled */}
-                    {simCapacityFull && (
-                        <div className="p-3.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-xs space-y-2">
-                          <span className="font-bold flex items-center gap-2 text-amber-800">
-                          ⚠️ Điểm phát đã đạt giới hạn tối đa
-                        </span>
-                          <p className="text-[11.5px] leading-relaxed">
-                          Hiện có 50/50 thiết bị đang truy cập mạng. Quý vị vui lòng thử lại sau.
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Simulated Survey Card if toggled */}
-                    {simSurvey && (
-                      <div className="p-3.5 bg-sky-50/70 border border-sky-200 rounded-lg space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#004b87]">
-                            <ClipboardList className="w-2.5 h-2.5" /> Thăm Dò Ý Kiến Nhân Dân
-                          </span>
-                          <span className="text-[10px] font-bold text-sky-700 bg-sky-100 px-1.5 py-0.5 rounded">Khảo sát mô phỏng</span>
-                        </div>
-                        <p className="text-xs font-semibold text-slate-800">
-                          Đánh giá chất lượng sóng Wi-Fi hôm nay:
-                        </p>
-                        <div className="flex items-center gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star key={star} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                          ))}
-                          <span className="text-[10px] text-amber-700 font-bold ml-1">5/5 - Rất tốt</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Legal Checkbox */}
-                    <div className="flex items-start gap-2 text-[11px] text-slate-600">
-                      <div className="w-4 h-4 rounded border border-slate-300 bg-white mt-0.5 flex-shrink-0 flex items-center justify-center text-[#004b87] text-[9px] font-bold">
-                        ✓
-                      </div>
-                      <span className="leading-tight">
-                        {template.termsText ? (
-                          <span className="line-clamp-2">{template.termsText}</span>
-                        ) : (
-                          <>
-                            Tôi đồng ý với <strong>Quy chế sử dụng mạng Wi-Fi công cộng</strong> và Nghị định 13/2023/NĐ-CP.
-                          </>
-                        )}
-                      </span>
-                    </div>
-
-                    {/* Primary Action Button */}
-                    <div>
-                      <button
-                        type="button"
-                        disabled={simCapacityFull}
-                        className={`w-full py-3.5 px-4 rounded-lg text-white font-extrabold text-sm tracking-wide uppercase shadow-lg flex items-center justify-center gap-2 transition ${
-                          simCapacityFull ? 'bg-slate-400 cursor-not-allowed opacity-75' : ''
-                        }`}
-                        style={{ backgroundColor: simCapacityFull ? undefined : template.themeColor || '#004b87' }}
-                      >
-                        <Wifi className="w-5 h-5 text-yellow-300" />
-                        <span>{simCapacityFull ? 'ĐIỂM PHÁT ĐÃ ĐẦY TẢI (50/50)' : template.buttonText || 'KẾT NỐI WI-FI MIỄN PHÍ'}</span>
-                      </button>
-                      <p className="text-[10.5px] text-slate-500 text-center mt-2 font-medium">
-                        Tốc độ: <strong>{scope === 'LOCATION' && selectedLocation ? selectedLocation.maxBandwidthMbps : 20} Mbps</strong> • Thời lượng: <strong>{scope === 'LOCATION' && selectedLocation ? selectedLocation.sessionDurationMinutes : 120} phút</strong>
-                      </p>
-                    </div>
-
-                    {/* Collapsible Advanced Toggle Mock */}
-                    <div className="border-t border-slate-200 pt-3 flex items-center justify-between text-xs text-slate-500">
-                      <span className="flex items-center gap-1">
-                        <Smartphone className="w-4 h-4 text-slate-400" />
-                        Tùy chọn: Định danh số điện thoại & Góp ý kiến
-                      </span>
-                      <ChevronDown className="w-3 h-3 text-slate-400" />
-                    </div>
-                  </div>
-                  </div>
+                      <div className="absolute bottom-[13px] left-1/2 z-30 h-1 w-24 -translate-x-1/2 rounded-full bg-slate-900/70" />
+                    </>
+                  )}
                 </div>
-
               </div>
             </div>
           </div>
@@ -1306,6 +1274,53 @@ export const PortalBuilderPage: React.FC = () => {
         duration={3000}
         onClose={() => setToast((prev) => ({ ...prev, show: false }))}
       />
+
+      <Modal
+        isOpen={Boolean(previewLink)}
+        onClose={() => setPreviewLink(null)}
+        title="Liên kết xem trước cổng Wi-Fi"
+        maxWidth="2xl"
+      >
+        {previewLink && (
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 rounded border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+              <Clock3 className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <div className="font-semibold">Liên kết tự hết hạn</div>
+                <div className="text-xs mt-1">{previewLinkExpiry ? new Date(previewLinkExpiry).toLocaleString('vi-VN') : `Sau ${previewLinkMinutes} phút`}</div>
+              </div>
+            </div>
+            <div>
+              <label htmlFor="portal-preview-link" className="mb-1 block text-xs font-semibold text-slate-700">Đường dẫn xem trước</label>
+              <input
+                id="portal-preview-link"
+                readOnly
+                value={previewLink}
+                onFocus={(event) => event.currentTarget.select()}
+                className="w-full rounded border border-slate-300 bg-slate-50 px-3 py-2 font-mono text-xs text-slate-700"
+              />
+            </div>
+            <div className="flex flex-wrap justify-end gap-2">
+              <a
+                href={previewLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-10 items-center gap-2 rounded border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                <ExternalLink className="h-4 w-4" /> Mở bản xem trước
+              </a>
+              <button
+                type="button"
+                onClick={handleCopyPreviewLink}
+                className="inline-flex min-h-10 items-center gap-2 rounded bg-[#004b87] px-3 text-xs font-semibold text-white hover:bg-[#003865]"
+              >
+                {copyPreviewLinkSuccess ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                {copyPreviewLinkSuccess ? 'Đã sao chép' : 'Sao chép liên kết'}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {versionsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">

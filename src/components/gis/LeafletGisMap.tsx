@@ -9,6 +9,7 @@ interface LeafletGisMapProps {
   onSelectPin: (pin: GisLocationPinDto | null) => void;
   heatmapEnabled: boolean;
   selectedDistrict: string;
+  compact?: boolean;
 }
 
 // Center coordinates for Hai Phong and its 15 administrative districts
@@ -37,6 +38,7 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
   onSelectPin,
   heatmapEnabled,
   selectedDistrict,
+  compact = false,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -292,8 +294,8 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
   }, [selectedPin]);
 
   return (
-    <div className="relative w-full h-full min-h-[580px] rounded-sm overflow-hidden border border-slate-300 shadow-sm z-0">
-      <div ref={mapContainerRef} className="w-full h-full min-h-[580px] z-0" />
+    <div className={`relative w-full h-full ${compact ? 'min-h-[300px]' : 'min-h-[580px]'} rounded-sm overflow-hidden border border-slate-300 shadow-sm z-0`}>
+      <div ref={mapContainerRef} className={`w-full h-full ${compact ? 'min-h-[300px]' : 'min-h-[580px]'} z-0`} />
     </div>
   );
 };

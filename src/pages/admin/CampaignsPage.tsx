@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Megaphone,
   Plus,
@@ -337,10 +338,18 @@ export const CampaignsPage: React.FC = () => {
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
-            title="Mở Cổng chào Người dân để kiểm tra thực tế"
+            title="Mở cổng Wi-Fi đang phát cho người dân"
           >
-            <ExternalLink className="w-3.5 h-3.5 text-blue-600" /> Mở Cổng chào
+            <ExternalLink className="w-3.5 h-3.5 text-blue-600" /> Mở cổng đang chạy
           </a>
+          <Link
+            to="/admin/portal-builder"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs"
+            title="Thiết kế hoặc xem trước giao diện cổng trước khi phát hành chiến dịch"
+          >
+            <Eye className="w-3.5 h-3.5 text-[#004b87]" />
+            Thiết kế / xem trước cổng
+          </Link>
           <button
             onClick={() => {
               resetFormData();
@@ -355,36 +364,11 @@ export const CampaignsPage: React.FC = () => {
 
       {error && <AlertBanner type="error" message={error} />}
 
-      {/* 2. Stat Summary Cards (Exact IncidentsPage & DevicesPage template) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-3.5 sm:p-4 rounded border border-slate-300 shadow-xs">
-          <div className="text-xs text-slate-500 font-medium">Tổng số chiến dịch</div>
-          <div className="mt-1 text-2xl font-bold text-slate-900">{campaigns.length}</div>
-          <div className="text-xs text-slate-500 mt-0.5">Nội dung tuyên truyền đã khởi tạo</div>
-        </div>
+      <p className="text-right text-xs text-slate-500">
+        {multimediaCount} chiến dịch có banner hoặc video
+      </p>
 
-        <div className="bg-white p-3.5 sm:p-4 rounded border border-slate-300 shadow-xs">
-          <div className="text-xs text-emerald-700 font-medium flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Đang phát sóng
-          </div>
-          <div className="mt-1 text-2xl font-bold text-emerald-700">{activeNowCount}</div>
-          <div className="text-xs text-emerald-700/80 mt-0.5">Phủ sóng 1.584 Cổng chào NVH</div>
-        </div>
-
-        <div className="bg-white p-3.5 sm:p-4 rounded border border-slate-300 shadow-xs">
-          <div className="text-xs text-slate-500 font-medium">Nội dung đa phương tiện</div>
-          <div className="mt-1 text-2xl font-bold text-slate-900">{multimediaCount}</div>
-          <div className="text-xs text-slate-500 mt-0.5">Video Clip & Poster đồ họa</div>
-        </div>
-
-        <div className="bg-white p-3.5 sm:p-4 rounded border border-slate-300 shadow-xs">
-          <div className="text-xs text-amber-700 font-medium">Chờ thẩm định duyệt</div>
-          <div className="mt-1 text-2xl font-bold text-amber-700">{pendingCount}</div>
-          <div className="text-xs text-amber-700/80 mt-0.5">Yêu cầu trình duyệt phát sóng</div>
-        </div>
-      </div>
-
-      {/* 3. Filter & Search Toolbar (Exact LocationsPage / DevicesPage template) */}
+      {/* Filter & Search Toolbar */}
       <div className="bg-white p-2.5 sm:p-3 rounded border border-slate-300 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex items-center gap-1 flex-wrap">
           {[

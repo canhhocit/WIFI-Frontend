@@ -1,6 +1,7 @@
 import { request } from './client';
 import {
   PortalInitResponse,
+  PortalPreviewDataResponse,
   GuestLoginRequest,
   GuestLoginResponse,
   GuestSessionStatusResponse,
@@ -15,6 +16,10 @@ import {
 } from '../types/models';
 
 export const portalApi = {
+  getPreview: (token: string) => {
+    return request<PortalPreviewDataResponse>(`/v1/portal/preview/${encodeURIComponent(token)}`);
+  },
+
   init: (locationSlug?: string, apMac?: string, clientMac?: string) => {
     const params = new URLSearchParams();
     if (locationSlug) params.append('location', locationSlug);

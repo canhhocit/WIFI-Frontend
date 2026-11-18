@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ClipboardList,
   Plus,
@@ -27,6 +27,9 @@ import {
   Quote,
   ArrowUp,
   ArrowDown,
+  ArrowRight,
+  ZoomIn,
+  ZoomOut,
   X,
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
@@ -37,9 +40,19 @@ import {
   CampaignDto,
   SurveyAnalyticsDto,
   LocationDto,
+  SurveyBranchingRuleDto,
 } from '../../types/models';
 import { Modal } from '../../components/Modal';
 import { AlertBanner } from '../../components/AlertBanner';
+
+type SurveyQuestionDraft = {
+  draftId: number;
+  questionText: string;
+  questionType: 'SINGLE_CHOICE' | 'MULTI_CHOICE' | 'TEXT' | 'RATING';
+  optionsList: string[];
+  required: boolean;
+  branchingRules: SurveyBranchingRuleDto[];
+};
 
 export const SurveysPage: React.FC = () => {
   const [surveys, setSurveys] = useState<SurveyDto[]>([]);
@@ -55,25 +68,27 @@ export const SurveysPage: React.FC = () => {
   const [newSurveyDesc, setNewSurveyDesc] = useState('');
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | undefined>(undefined);
   const [newSurveyQuota, setNewSurveyQuota] = useState(500);
-  const [questions, setQuestions] = useState<Array<{
-    questionText: string;
-    questionType: 'SINGLE_CHOICE' | 'MULTI_CHOICE' | 'TEXT' | 'RATING';
-    optionsList: string[];
-    required: boolean;
-  }>>([
+  const [questions, setQuestions] = useState<SurveyQuestionDraft[]>([
     {
+      draftId: -1,
       questionText: 'Quý vị đánh giá chất lượng sóng Wi-Fi tại Nhà văn hóa hôm nay như thế nào?',
       questionType: 'SINGLE_CHOICE',
       optionsList: ['Rất tốt', 'Ổn định', 'Chập chờn', 'Không vào được mạng'],
       required: true,
+      branchingRules: [],
     },
     {
+      draftId: -2,
       questionText: 'Ý kiến đóng góp thêm về tiện ích chuyển đổi số tại địa phương:',
       questionType: 'TEXT',
       optionsList: [],
       required: false,
+      branchingRules: [],
     },
   ]);
+  const nextDraftIdRef = useRef(-3);
+  const [builderView, setBuilderView] = useState<'QUESTIONS' | 'FLOW'>('QUESTIONS');
+  const [flowZoom, setFlowZoom] = useState(100);
 
   // View Responses & Analytics Modal State
   const [selectedSurveyForResponses, setSelectedSurveyForResponses] = useState<SurveyDto | null>(null);
@@ -132,16 +147,24 @@ export const SurveysPage: React.FC = () => {
     setQuestions([
       ...questions,
       {
+        draftId: nextDraftIdRef.current--,
         questionText: '',
         questionType: 'SINGLE_CHOICE',
         optionsList: ['Rất hài lòng', 'Hài lòng', 'Chưa hài lòng'],
         required: true,
+        branchingRules: [],
       },
     ]);
   };
 
   const handleRemoveQuestion = (index: number) => {
-    setQuestions(questions.filter((_, i) => i !== index));
+    const removedId = questions[index]?.draftId;
+    setQuestions(questions
+      .filter((_, i) => i !== index)
+      .map((question) => ({
+        ...question,
+        branchingRules: question.branchingRules.filter((rule) => rule.nextQuestionId !== removedId),
+      })));
   };
 
   const handleMoveQuestion = (index: number, direction: 'UP' | 'DOWN') => {
@@ -151,6 +174,18 @@ export const SurveysPage: React.FC = () => {
     const temp = updated[index];
     updated[index] = updated[targetIdx];
     updated[targetIdx] = temp;
+    const indexByDraftId = new Map(updated.map((question, questionIndex) => [question.draftId, questionIndex]));
+    const hasBackwardBranch = updated.some((question, questionIndex) =>
+      question.branchingRules.some((rule) => {
+        if (rule.nextQuestionId == null) return false;
+        const destinationIndex = indexByDraftId.get(rule.nextQuestionId);
+        return destinationIndex != null && destinationIndex <= questionIndex;
+      }),
+    );
+    if (hasBackwardBranch) {
+      window.alert('Không thể đổi thứ tự vì sẽ làm luồng khảo sát quay ngược hoặc lặp câu hỏi. Hãy cập nhật đích nhánh trước.');
+      return;
+    }
     setQuestions(updated);
   };
 
@@ -164,15 +199,35 @@ export const SurveysPage: React.FC = () => {
   const handleUpdateOption = (qIdx: number, optIdx: number, val: string) => {
     const updated = [...questions];
     const list = [...(updated[qIdx].optionsList || [])];
+    const previousValue = list[optIdx];
     list[optIdx] = val;
     updated[qIdx].optionsList = list;
+    updated[qIdx].branchingRules = updated[qIdx].branchingRules.map((rule) =>
+      rule.conditionValue === previousValue ? { ...rule, conditionValue: val } : rule,
+    );
     setQuestions(updated);
   };
 
   const handleRemoveOption = (qIdx: number, optIdx: number) => {
     const updated = [...questions];
     const list = [...(updated[qIdx].optionsList || [])].filter((_, i) => i !== optIdx);
+    const removedOption = updated[qIdx].optionsList[optIdx];
     updated[qIdx].optionsList = list;
+    updated[qIdx].branchingRules = updated[qIdx].branchingRules.filter((rule) => rule.conditionValue !== removedOption);
+    setQuestions(updated);
+  };
+
+  const handleBranchTargetChange = (questionIndex: number, answer: string, target: string) => {
+    const updated = [...questions];
+    const question = { ...updated[questionIndex], branchingRules: [...updated[questionIndex].branchingRules] };
+    question.branchingRules = question.branchingRules.filter((rule) => rule.conditionValue !== answer);
+    if (target === 'END') {
+      question.branchingRules.push({ conditionValue: answer, terminateSurvey: true });
+    } else if (target !== 'NEXT') {
+      question.branchingRules.push({ conditionValue: answer, nextQuestionId: Number(target), terminateSurvey: false });
+    }
+    if (target !== 'NEXT') question.required = true;
+    updated[questionIndex] = question;
     setQuestions(updated);
   };
 
@@ -183,6 +238,7 @@ export const SurveysPage: React.FC = () => {
     setCreating(true);
     try {
       const payloadQuestions: SurveyQuestionDto[] = questions.map((q, idx) => ({
+        id: q.draftId,
         questionText: q.questionText.trim(),
         questionType: q.questionType,
         optionsJson:
@@ -190,7 +246,8 @@ export const SurveysPage: React.FC = () => {
             ? JSON.stringify((q.optionsList || []).map((s) => s.trim()).filter(Boolean))
             : undefined,
         sortOrder: idx,
-        required: q.required,
+        required: q.required || q.branchingRules.length > 0,
+        branchingRules: q.branchingRules,
       }));
 
       await adminApi.createSurvey({
@@ -208,6 +265,12 @@ export const SurveysPage: React.FC = () => {
       setNewSurveyTitle('');
       setNewSurveyDesc('');
       setSelectedCampaignId(undefined);
+      setQuestions([
+        { draftId: -1, questionText: '', questionType: 'SINGLE_CHOICE', optionsList: ['Lựa chọn 1', 'Lựa chọn 2'], required: true, branchingRules: [] },
+      ]);
+      nextDraftIdRef.current = -2;
+      setBuilderView('QUESTIONS');
+      setFlowZoom(100);
       loadSurveys();
     } catch (err: any) {
       alert(err?.message || 'Không thể tạo bài khảo sát mới.');
@@ -361,7 +424,7 @@ export const SurveysPage: React.FC = () => {
             Khảo Sát Ý Kiến Nhân Dân Về Dịch Vụ Số & Mạng Wi-Fi
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Thiết kế phiếu thăm dò ý kiến, kiểm soát hạn ngạch (Quota), tự động phân tích tỷ lệ phần trăm và xuất báo cáo Excel cho UBND Thành phố.
+            Tạo câu hỏi, hạn ngạch và luồng nhánh; theo dõi phân tích từng khảo sát, xuất báo cáo Excel cho UBND thành phố.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -579,17 +642,83 @@ export const SurveysPage: React.FC = () => {
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                <GitBranch className="w-3.5 h-3.5 text-purple-600" /> Danh Sách Câu Hỏi ({questions.length})
+                <GitBranch className="w-3.5 h-3.5 text-purple-600" /> Thiết kế khảo sát ({questions.length} câu)
               </span>
-              <button
-                type="button"
-                onClick={handleAddQuestion}
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-[#004b87] bg-sky-50 hover:bg-sky-100 rounded-sm transition cursor-pointer"
-              >
-                <Plus className="w-3 h-3" /> Thêm câu hỏi
+              {builderView === 'QUESTIONS' && (
+                <button
+                  type="button"
+                  onClick={handleAddQuestion}
+                  className="inline-flex min-h-9 items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-[#004b87] bg-sky-50 hover:bg-sky-100 rounded-sm transition cursor-pointer"
+                >
+                  <Plus className="w-3 h-3" /> Thêm câu hỏi
+                </button>
+              )}
+            </div>
+
+            <div className="inline-flex rounded border border-slate-200 bg-slate-50 p-1" role="tablist" aria-label="Chế độ thiết kế khảo sát">
+              <button type="button" role="tab" aria-selected={builderView === 'QUESTIONS'} onClick={() => setBuilderView('QUESTIONS')} className={`min-h-9 rounded px-3 text-xs font-semibold ${builderView === 'QUESTIONS' ? 'bg-white text-[#004b87] shadow-sm' : 'text-slate-600'}`}>
+                Câu hỏi
+              </button>
+              <button type="button" role="tab" aria-selected={builderView === 'FLOW'} onClick={() => setBuilderView('FLOW')} className={`inline-flex min-h-9 items-center gap-1.5 rounded px-3 text-xs font-semibold ${builderView === 'FLOW' ? 'bg-white text-[#004b87] shadow-sm' : 'text-slate-600'}`}>
+                <GitBranch className="h-3.5 w-3.5" /> Luồng nhánh
               </button>
             </div>
 
+            {builderView === 'FLOW' ? (
+              <div className="rounded border border-slate-200 bg-slate-50 p-3">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <div>
+                    <div className="text-xs font-bold text-slate-800">Luồng trả lời</div>
+                    <p className="mt-0.5 text-[11px] text-slate-500">Mỗi câu trả lời có thể đi tiếp, chuyển tới câu sau hoặc kết thúc khảo sát.</p>
+                  </div>
+                  <div className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white p-1">
+                    <button type="button" title="Thu nhỏ sơ đồ" onClick={() => setFlowZoom((zoom) => Math.max(70, zoom - 10))} className="rounded p-1.5 text-slate-600 hover:bg-slate-100"><ZoomOut className="h-4 w-4" /></button>
+                    <span className="w-10 text-center text-[10px] font-mono text-slate-600">{flowZoom}%</span>
+                    <button type="button" title="Phóng to sơ đồ" onClick={() => setFlowZoom((zoom) => Math.min(120, zoom + 10))} className="rounded p-1.5 text-slate-600 hover:bg-slate-100"><ZoomIn className="h-4 w-4" /></button>
+                  </div>
+                </div>
+                <div className="max-h-[340px] overflow-auto rounded border border-slate-200 bg-white p-3">
+                  <div className="flex w-max items-stretch gap-2 origin-top-left" style={{ transform: `scale(${flowZoom / 100})` }}>
+                    {questions.map((q, idx) => (
+                      <React.Fragment key={q.draftId}>
+                        <article className="w-64 rounded-lg border border-blue-200 bg-white shadow-sm">
+                          <div className="flex items-center justify-between rounded-t-lg bg-blue-50 px-3 py-2">
+                            <span className="text-xs font-bold text-[#004b87]">Câu {idx + 1}</span>
+                            <span className="text-[10px] text-slate-500">{q.questionType.replace('_', ' ')}</span>
+                          </div>
+                          <div className="space-y-2 p-3">
+                            <p className="min-h-10 text-xs font-semibold leading-relaxed text-slate-800">{q.questionText || 'Chưa nhập nội dung câu hỏi'}</p>
+                            <div className="space-y-1.5">
+                              {(q.questionType === 'SINGLE_CHOICE' || q.questionType === 'MULTI_CHOICE' ? q.optionsList : ['Mặc định']).map((answer) => {
+                                const rule = q.branchingRules.find((item) => item.conditionValue === answer);
+                                const targetIndex = rule?.nextQuestionId == null ? -1 : questions.findIndex((item) => item.draftId === rule.nextQuestionId);
+                                const destination = rule?.terminateSurvey
+                                  ? 'Kết thúc'
+                                  : targetIndex >= 0
+                                    ? `Câu ${targetIndex + 1}`
+                                    : idx < questions.length - 1
+                                      ? `Câu ${idx + 2}`
+                                      : 'Kết thúc';
+                                return (
+                                  <div key={`${q.draftId}-${answer}`} className="flex items-start gap-1.5 rounded bg-slate-50 px-2 py-1.5 text-[10px]">
+                                    <span className="min-w-0 flex-1 truncate text-slate-600">{answer}</span>
+                                    <ArrowRight className="mt-0.5 h-3 w-3 shrink-0 text-slate-400" />
+                                    <span className="shrink-0 font-semibold text-[#004b87]">{destination}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </article>
+                      </React.Fragment>
+                    ))}
+                    <article className="flex w-28 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 text-center text-xs font-bold text-slate-500">Kết thúc</article>
+                  </div>
+                </div>
+                <p className="mt-2 text-[11px] text-slate-500">Để đổi đích đến của từng đáp án, quay lại tab “Câu hỏi”. Luồng chỉ cho phép chuyển về phía trước để tránh vòng lặp.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
             {questions.map((q, idx) => (
               <div key={idx} className="p-3.5 bg-slate-50 border border-slate-200 rounded space-y-2.5 relative">
                 <div className="flex items-center justify-between">
@@ -600,13 +729,14 @@ export const SurveysPage: React.FC = () => {
                     <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold text-slate-700 select-none">
                       <input
                         type="checkbox"
-                        checked={q.required}
+                        checked={q.required || q.branchingRules.length > 0}
+                        disabled={q.branchingRules.length > 0}
                         onChange={(e) => {
                           const updated = [...questions];
                           updated[idx].required = e.target.checked;
                           setQuestions(updated);
                         }}
-                        className="rounded text-[#004b87] focus:ring-[#004b87] w-3.5 h-3.5"
+                        className="rounded text-[#004b87] focus:ring-[#004b87] w-3.5 h-3.5 disabled:opacity-70"
                       />
                       <span>Bắt buộc (*)</span>
                     </label>
@@ -666,6 +796,9 @@ export const SurveysPage: React.FC = () => {
                       onChange={(e) => {
                         const updated = [...questions];
                         updated[idx].questionType = e.target.value as any;
+                        if (e.target.value !== 'SINGLE_CHOICE' && e.target.value !== 'MULTI_CHOICE') {
+                          updated[idx].branchingRules = [];
+                        }
                         if ((e.target.value === 'SINGLE_CHOICE' || e.target.value === 'MULTI_CHOICE') && (!q.optionsList || q.optionsList.length === 0)) {
                           updated[idx].optionsList = ['Lựa chọn 1', 'Lựa chọn 2'];
                         }
@@ -695,18 +828,33 @@ export const SurveysPage: React.FC = () => {
                         </button>
                       </div>
 
-                      <div className="space-y-1.5">
+                    <div className="space-y-1.5">
                         {(q.optionsList || []).map((opt, optIdx) => (
-                          <div key={optIdx} className="flex items-center gap-1.5">
+                          <div key={optIdx} className="flex flex-wrap items-center gap-1.5">
                             <span className="text-[10px] text-slate-400 font-mono w-4 text-center">{optIdx + 1}.</span>
                             <input
                               type="text"
                               value={opt}
                               onChange={(e) => handleUpdateOption(idx, optIdx, e.target.value)}
                               placeholder={`Lựa chọn ${optIdx + 1}`}
-                              className="flex-1 px-2 py-1 text-xs bg-slate-50 border border-slate-200 rounded focus:bg-white"
+                              className="min-w-[140px] flex-1 px-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded focus:bg-white"
                               required
                             />
+                            <select
+                              aria-label={`Đích đến nếu trả lời ${opt}`}
+                              value={(() => {
+                                const rule = q.branchingRules.find((item) => item.conditionValue === opt);
+                                return rule?.terminateSurvey ? 'END' : rule?.nextQuestionId?.toString() || 'NEXT';
+                              })()}
+                              onChange={(e) => handleBranchTargetChange(idx, opt, e.target.value)}
+                              className="min-h-9 w-full rounded border border-slate-200 bg-white px-2 text-[11px] text-slate-700 sm:w-44"
+                            >
+                              <option value="NEXT">Đi tiếp theo thứ tự</option>
+                              {questions.slice(idx + 1).map((target, targetOffset) => (
+                                <option key={target.draftId} value={target.draftId}>Chuyển tới câu {idx + targetOffset + 2}</option>
+                              ))}
+                              <option value="END">Kết thúc khảo sát</option>
+                            </select>
                             {q.optionsList.length > 2 && (
                               <button
                                 type="button"
@@ -725,6 +873,8 @@ export const SurveysPage: React.FC = () => {
                 </div>
               </div>
             ))}
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">

@@ -57,6 +57,10 @@ export const PortalPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
+  const previewToken = searchParams.get('previewToken') || undefined;
+  const isEmbeddedPreview = searchParams.get('previewMode') === 'embedded';
+  const isPreviewMode = Boolean(previewToken || isEmbeddedPreview);
+
   const [portalData, setPortalData] = useState<PortalInitResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -87,6 +91,35 @@ export const PortalPage: React.FC = () => {
   const [surveyAnswers, setSurveyAnswers] = useState<Record<string, any>>({});
   const [surveySubmitted, setSurveySubmitted] = useState(false);
   const [missingQuestionId, setMissingQuestionId] = useState<number | null>(null);
+  const visibleSurveyQuestions = useMemo(() => {
+    const questions = portalData?.activeSurvey?.questions || [];
+    if (!questions.some((question) => question.branchingRules?.length)) return questions;
+
+    const questionsById = new Map(questions.filter((question) => question.id != null).map((question) => [question.id as number, question]));
+    const visible: typeof questions = [];
+    const visited = new Set<number>();
+    let current: (typeof questions)[number] | undefined = questions[0];
+
+    while (current && visible.length <= questions.length) {
+      if (current.id == null || visited.has(current.id)) break;
+      visited.add(current.id);
+      visible.push(current);
+
+      const answer = surveyAnswers[current.id.toString()];
+      const answerValues = Array.isArray(answer) ? answer.map(String) : answer == null || answer === '' ? [] : [String(answer)];
+      const matchingRule = current.branchingRules?.find((rule) => answerValues.includes(rule.conditionValue));
+      if (matchingRule?.terminateSurvey) break;
+
+      if (matchingRule?.nextQuestionId != null) {
+        current = questionsById.get(matchingRule.nextQuestionId);
+      } else {
+        const currentIndex = questions.findIndex((question) => question.id === current?.id);
+        current = questions[currentIndex + 1];
+      }
+    }
+
+    return visible;
+  }, [portalData?.activeSurvey?.questions, surveyAnswers]);
 
   // Normalize search query string to handle multiple '?' appended by captive routers
   const normalizedParams = useMemo(() => {
@@ -157,8 +190,35 @@ export const PortalPage: React.FC = () => {
   }, [connectedSession, redirectCountdown, targetDestination, rawLoginUrl]);
 
   useEffect(() => {
+    if (isEmbeddedPreview) {
+      setLoading(true);
+      setError(null);
+      return;
+    }
+    if (previewToken) {
+      loadPreview(previewToken);
+      return;
+    }
     loadPortal();
-  }, [locationParam, rawMac, apMacParam, effectiveClientMac]);
+  }, [locationParam, rawMac, apMacParam, effectiveClientMac, previewToken, isEmbeddedPreview]);
+
+  useEffect(() => {
+    if (!isEmbeddedPreview) return;
+
+    const handlePreviewMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin || event.source !== window.parent) return;
+      if (event.data?.type !== 'WIFI_PORTAL_PREVIEW_UPDATE' || !event.data.previewData?.location) return;
+
+      setPortalData(event.data.previewData as PortalInitResponse);
+      setMacAddress('preview');
+      setError(null);
+      setLoading(false);
+    };
+
+    window.addEventListener('message', handlePreviewMessage);
+    window.parent.postMessage({ type: 'WIFI_PORTAL_PREVIEW_READY' }, window.location.origin);
+    return () => window.removeEventListener('message', handlePreviewMessage);
+  }, [isEmbeddedPreview]);
 
   useEffect(() => {
     let interval: any = null;
@@ -188,7 +248,29 @@ export const PortalPage: React.FC = () => {
     }
   };
 
+  const loadPreview = async (token: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await portalApi.getPreview(token);
+      setPortalData({
+        ...response.previewData,
+        macRemembered: false,
+        otpRequired: false,
+      });
+      setMacAddress('preview');
+    } catch (err: any) {
+      setError(err?.message || 'Liên kết xem trước không hợp lệ hoặc đã hết hạn.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSendOtp = async () => {
+    if (isPreviewMode) {
+      setError('Đây là bản xem trước. Hệ thống không gửi mã OTP.');
+      return;
+    }
     if (!phoneNumber.trim()) {
       setError('Vui lòng nhập số điện thoại để nhận mã xác thực OTP.');
       return;
@@ -212,6 +294,10 @@ export const PortalPage: React.FC = () => {
   };
 
   const handleVerifyOtp = async () => {
+    if (isPreviewMode) {
+      setError('Đây là bản xem trước. Hệ thống không xác thực mã OTP.');
+      return;
+    }
     if (!otpCode.trim()) {
       setError('Vui lòng nhập mã OTP đã nhận.');
       return;
@@ -235,6 +321,10 @@ export const PortalPage: React.FC = () => {
 
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isPreviewMode) {
+      setError('Đây là bản xem trước. Nút kết nối không gửi yêu cầu tới hệ thống.');
+      return;
+    }
     if (!portalData) return;
 
     if (!consentGiven) {
@@ -252,8 +342,8 @@ export const PortalPage: React.FC = () => {
     }
 
     // Validate required survey questions if active survey is present
-    if (portalData.activeSurvey?.questions) {
-      for (const q of portalData.activeSurvey.questions) {
+    if (visibleSurveyQuestions.length) {
+      for (const q of visibleSurveyQuestions) {
         if (q.required) {
           const qKey = q.id?.toString() || '';
           const ans = surveyAnswers[qKey];
@@ -282,12 +372,16 @@ export const PortalPage: React.FC = () => {
 
     try {
       // If survey answers exist and submitted, send in background
-      if (portalData.activeSurvey && Object.keys(surveyAnswers).length > 0 && !surveySubmitted) {
+      const visibleQuestionIds = new Set(visibleSurveyQuestions.map((question) => question.id?.toString()).filter(Boolean));
+      const submittedSurveyAnswers = Object.fromEntries(
+        Object.entries(surveyAnswers).filter(([questionId]) => visibleQuestionIds.has(questionId)),
+      );
+      if (portalData.activeSurvey && Object.keys(submittedSurveyAnswers).length > 0 && !surveySubmitted) {
         try {
           await portalApi.submitSurvey(portalData.activeSurvey.id, {
             locationId: portalData.location.id,
             clientMac: effectiveClientMac,
-            answers: surveyAnswers,
+            answers: submittedSurveyAnswers,
           });
           setSurveySubmitted(true);
         } catch (_) {}
@@ -425,7 +519,7 @@ export const PortalPage: React.FC = () => {
           <h2 className="text-sm font-bold text-slate-900 mb-1">Không thể tải Cổng Wi-Fi</h2>
           <p className="text-xs text-slate-600 mb-4">{error}</p>
           <button
-            onClick={() => loadPortal()}
+            onClick={() => (previewToken ? loadPreview(previewToken) : loadPortal())}
             className="w-full py-2 px-3 bg-[#004b87] hover:bg-[#003865] text-white rounded text-xs font-semibold transition cursor-pointer"
           >
             Thử lại kết nối
@@ -446,6 +540,7 @@ export const PortalPage: React.FC = () => {
           locationSlug={locationParam}
           clientMac={effectiveClientMac}
           clientIp={rawIp}
+          previewMode={isPreviewMode}
         />
       </div>
     );
@@ -502,6 +597,11 @@ export const PortalPage: React.FC = () => {
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center p-3 sm:p-5 lg:p-6 text-slate-900 font-sans">
+      {isPreviewMode && (
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[100] max-w-[calc(100vw-1rem)] rounded-full bg-slate-950/90 px-3 py-1.5 text-center text-[11px] font-semibold text-white shadow-lg ring-1 ring-white/20">
+          Bản xem trước · Các thao tác kết nối, OTP và gửi phản ánh đã tắt
+        </div>
+      )}
       {/* Official City Architectural Wallpaper Background */}
       <div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
@@ -565,6 +665,7 @@ export const PortalPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowReportModal(true)}
+                disabled={isPreviewMode}
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-sans font-bold text-[10.5px] transition shadow-2xs cursor-pointer"
                 title="Báo lỗi hoặc phản ánh chất lượng mạng Wi-Fi tại điểm này"
               >
@@ -872,7 +973,8 @@ export const PortalPage: React.FC = () => {
                   </p>
                   <button
                     type="button"
-                    onClick={() => loadPortal()}
+                    onClick={() => (previewToken ? loadPreview(previewToken) : loadPortal())}
+                    disabled={isPreviewMode}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white rounded text-[11px] font-bold transition shadow-xs cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
@@ -882,7 +984,7 @@ export const PortalPage: React.FC = () => {
               )}
 
               {/* Smart Citizen Survey Block (Khảo sát ý kiến công dân trực tiếp) */}
-              {survey && survey.questions && survey.questions.length > 0 && (
+              {survey && visibleSurveyQuestions.length > 0 && (
                 <div className="p-3.5 bg-gradient-to-b from-sky-50/90 to-blue-50/60 rounded-lg border border-sky-200/90 shadow-xs space-y-2.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-xs font-bold text-[#004b87]">
@@ -898,7 +1000,7 @@ export const PortalPage: React.FC = () => {
                   )}
 
                   <div className="space-y-3 pt-0.5">
-                    {survey.questions.map((q, idx) => {
+                    {visibleSurveyQuestions.map((q, idx) => {
                       let options: string[] = [];
                       try {
                         if (q.optionsJson) options = JSON.parse(q.optionsJson);
@@ -1122,7 +1224,7 @@ export const PortalPage: React.FC = () => {
               <div className="border-t border-slate-200 pt-3">
                 <button
                   type="button"
-                  onClick={() => setShowAdvancedAuth(!showAdvancedAuth)}
+                onClick={() => setShowAdvancedAuth(!showAdvancedAuth)}
                   className="w-full flex items-center justify-between text-xs font-semibold text-slate-600 hover:text-slate-900 py-1 cursor-pointer"
                 >
                   <span className="flex items-center gap-1.5">
@@ -1159,7 +1261,7 @@ export const PortalPage: React.FC = () => {
                             <button
                               type="button"
                               onClick={handleSendOtp}
-                              disabled={submitting}
+                              disabled={submitting || isPreviewMode}
                               className="px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded text-xs font-semibold transition cursor-pointer disabled:opacity-50 flex items-center gap-1"
                             >
                               <Send className="w-3 h-3" /> Gửi OTP
@@ -1179,7 +1281,7 @@ export const PortalPage: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={handleVerifyOtp}
-                                disabled={submitting}
+                                disabled={submitting || isPreviewMode}
                                 className="px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded text-xs font-semibold transition"
                               >
                                 Xác nhận
@@ -1289,6 +1391,7 @@ export const PortalPage: React.FC = () => {
         locationSlug={portalData?.location.slug || locationParam}
         clientMac={effectiveClientMac}
         clientIp={portalData?.clientIp || rawIp}
+        previewMode={isPreviewMode}
       />
 
       {/* Citizen Digital Media Modal (Trình chiếu Video & Toàn văn truyền thông số) */}

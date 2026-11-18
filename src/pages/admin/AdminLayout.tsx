@@ -699,7 +699,7 @@ export const AdminLayout: React.FC = () => {
               Trung tâm Điều hành:
             </span>
             <span className="text-xs font-bold text-slate-800">
-              Mạng Wi-Fi Công cộng tỉnh Hải Phòng
+              Hệ thống Wi-Fi Công cộng thành phố Hải Phòng
             </span>
           </div>
 

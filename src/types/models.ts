@@ -261,6 +261,16 @@ export interface PortalInitResponse {
   capacityReached?: boolean;
 }
 
+export interface PortalPreviewLinkResponse {
+  token: string;
+  expiresAt: string;
+}
+
+export interface PortalPreviewDataResponse {
+  previewData: PortalInitResponse;
+  expiresAt: string;
+}
+
 export interface GuestLoginRequest {
   locationSlug: string;
   macAddress?: string;

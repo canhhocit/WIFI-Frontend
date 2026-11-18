@@ -28,6 +28,7 @@ import { adminApi } from '../api/adminApi';
 interface DeviceMonitoringTopologyProps {
   topology?: DeviceTopologySummaryDto;
   onRefresh?: () => void;
+  showSummaryCards?: boolean;
 }
 
 type ModalCategory = 'ROUTER' | 'SWITCH' | 'AP' | 'CLIENT' | 'ALL_DEVICES' | 'ERROR_DEVICES' | null;
@@ -35,6 +36,7 @@ type ModalCategory = 'ROUTER' | 'SWITCH' | 'AP' | 'CLIENT' | 'ALL_DEVICES' | 'ER
 export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> = ({
   topology,
   onRefresh,
+  showSummaryCards = true,
 }) => {
   const navigate = useNavigate();
 
@@ -170,8 +172,8 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
         </h2>
       </div>
 
-      {/* Row 1: 4 Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      {showSummaryCards && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Card 1: Tổng địa điểm */}
         <div
           onClick={() => navigate('/admin/locations')}
@@ -259,7 +261,8 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
           </div>
           <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all" />
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Row 2: 4-Step Network Topology Flow */}
       <div className="bg-white rounded border border-slate-200 p-5 shadow-xs">

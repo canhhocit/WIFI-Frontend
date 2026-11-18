@@ -483,7 +483,7 @@ export const IncidentsPage: React.FC = () => {
       <div className="p-3 bg-amber-50 border border-amber-200 rounded text-xs text-amber-900 flex items-start gap-2.5">
         <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
         <div>
-          <strong className="font-bold text-amber-800">Cơ chế gom phản ánh:</strong> Khi một điểm nhà văn hóa tiếp nhận <strong>từ 03 phản ánh trong vòng 30 phút</strong>, hệ thống tự động kích hoạt tạo phiếu sự cố kỹ thuật và áp dụng hạn cam kết SLA 8 giờ.
+          Khi một điểm tiếp nhận <strong>từ 03 phản ánh trong vòng 30 phút</strong>, hệ thống tự động kích hoạt tạo phiếu sự cố kỹ thuật và áp dụng hạn cam kết SLA 8 giờ.
         </div>
       </div>
 

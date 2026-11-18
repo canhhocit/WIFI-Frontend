@@ -45,6 +45,9 @@ export const AuditPage: React.FC = () => {
       setError(null);
     } catch (err: any) {
       setError(err?.message || 'Không thể tải nhật ký hệ thống.');
+      setEvents([]);
+      setTotalPages(1);
+      setTotalElements(0);
     } finally {
       setLoading(false);
     }
@@ -146,6 +149,11 @@ export const AuditPage: React.FC = () => {
       case 'USER_UPDATE':
       case 'USER_LOCK':
       case 'USER_UNLOCK':
+      case 'ADMIN_CREATE_USER':
+      case 'ADMIN_UPDATE_USER':
+      case 'ADMIN_DELETE_USER':
+      case 'ADMIN_TOGGLE_USER_STATUS':
+      case 'ADMIN_UNLOCK_USER':
         return (
           <span className="inline-flex items-center gap-1 font-semibold text-[11px] text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-md">
             Tài khoản cán bộ
@@ -207,9 +215,9 @@ export const AuditPage: React.FC = () => {
           <option value="SYSTEM_SETTING_UPDATE">Cập nhật tham số hệ thống (SYSTEM_SETTING_UPDATE)</option>
           <option value="DNS_RULE_CREATE">Tạo quy tắc DNS (DNS_RULE_CREATE)</option>
           <option value="DNS_RULE_UPDATE">Cập nhật quy tắc DNS (DNS_RULE_UPDATE)</option>
-          <option value="USER_CREATE">Tạo tài khoản cán bộ (USER_CREATE)</option>
-          <option value="USER_UPDATE">Cập nhật tài khoản cán bộ (USER_UPDATE)</option>
-          <option value="USER_UNLOCK">Mở khóa tài khoản (USER_UNLOCK)</option>
+          <option value="ADMIN_CREATE_USER">Tạo tài khoản cán bộ (ADMIN_CREATE_USER)</option>
+          <option value="ADMIN_UPDATE_USER">Cập nhật tài khoản cán bộ (ADMIN_UPDATE_USER)</option>
+          <option value="ADMIN_UNLOCK_USER">Mở khóa tài khoản (ADMIN_UNLOCK_USER)</option>
         </select>
       </div>
 
