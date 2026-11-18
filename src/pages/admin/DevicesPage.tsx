@@ -19,7 +19,8 @@ import {
   CheckCircle2,
   XCircle,
   Cpu,
-  Users
+  Users,
+  MapPin
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { DeviceDto, NetworkDeviceDto, DeviceTopologySummaryDto, GwnClientDto } from '../../types/models';
@@ -515,16 +516,34 @@ export const DevicesPage: React.FC = () => {
                       <tr key={nd.id} className="hover:bg-slate-50/80 transition">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-xs bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-600">
+                            <div className="w-8 h-8 rounded bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-600">
                               {renderNetDeviceIcon(nd.deviceType)}
                             </div>
                             <div>
-                              <span className="font-bold text-slate-900 block text-xs">
-                                {nd.locationName || `${nd.deviceType} - ${nd.macAddress.slice(-5)}`}
-                              </span>
-                              <span className="text-[11px] text-slate-500 block">
-                                {nd.vendor} {nd.model}
-                              </span>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-bold text-slate-900 text-xs">
+                                  {nd.deviceType === 'ROUTER'
+                                    ? 'Router Gateway'
+                                    : nd.deviceType === 'ACCESS_POINT'
+                                    ? 'Trạm phát Wi-Fi (AP)'
+                                    : nd.deviceType === 'SWITCH'
+                                    ? 'Switch chia mạng'
+                                    : nd.deviceType === 'ONT'
+                                    ? 'Modem quang (ONT)'
+                                    : 'Thiết bị mạng'}
+                                </span>
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                                  {nd.model || 'Tiêu chuẩn'}
+                                </span>
+                              </div>
+                              <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                                <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                                <span className="truncate max-w-[220px]" title={nd.locationName || 'Chưa gán điểm'}>
+                                  {nd.locationName || 'Chưa gán điểm'}
+                                </span>
+                                <span className="text-slate-300">•</span>
+                                <span className="text-slate-400 font-medium">{nd.vendor}</span>
+                              </div>
                             </div>
                           </div>
                         </td>
