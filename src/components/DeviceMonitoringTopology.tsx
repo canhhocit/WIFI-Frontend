@@ -624,12 +624,7 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
                       </div>
                       <div className="max-w-md mx-auto">
                         <h4 className="text-sm font-bold text-slate-900">Hạ tầng kết nối trực tiếp PoE Gigabit</h4>
-                        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                          Hiện tại mô hình hạ tầng mạng Nhà văn hóa sử dụng Router Gateway <strong>Grandstream GWN7002</strong> cấp nguồn và kết nối trực tiếp tới 3 Access Point Viettel (vAP-32X6V1) qua các cổng LAN PoE Gigabit.
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1.5 italic">
-                          (Không cần sử dụng Switch trung gian, tối ưu hóa độ trễ và giảm thiểu điểm nghẽn phần cứng).
-                        </p>
+                        
                       </div>
                     </div>
                   )}
@@ -640,14 +635,13 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
                       <div className="flex items-center justify-between text-xs text-slate-600 bg-emerald-50 border border-emerald-100 p-3 rounded">
                         <span className="flex items-center gap-2">
                           <Activity className="w-4 h-4 text-emerald-600" />
-                          <span>Đang có <strong>{clientSessions.length} máy khách</strong> đang truy cập Internet qua cổng chào Captive Portal.</span>
+                          <span>Đang có <strong>{clientSessions.length} thiết bị</strong> đang truy cập Internet</span>
                         </span>
-                        <span className="text-[11px] text-slate-500">Giới hạn phiên: 120 phút</span>
                       </div>
 
                       {clientSessions.length === 0 ? (
                         <div className="py-8 text-center text-slate-400 text-sm">
-                          Hiện tại không có phiên máy khách nào đang kết nối.
+                          Hiện tại không có thiết bị nào đang kết nối.
                         </div>
                       ) : (
                         <div className="border border-slate-200 rounded-lg overflow-hidden">

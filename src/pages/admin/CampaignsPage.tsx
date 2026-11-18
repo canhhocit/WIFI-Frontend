@@ -474,7 +474,7 @@ export const CampaignsPage: React.FC = () => {
                         {hasVideo && (c.bannerUrl || (c.galleryUrls && c.galleryUrls.length > 0)) ? (
                           <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-300 px-1.5 py-0.5 rounded-sm">
                             <Sparkles className="w-3 h-3 text-amber-600" />
-                            {c.galleryUrls && c.galleryUrls.length > 1 ? `${c.galleryUrls.length} ảnh + Video` : 'Poster + Video'}
+                            {c.galleryUrls && c.galleryUrls.length > 1 ? `${c.galleryUrls.length} ảnh + Video` : 'Ảnh + Video'}
                           </span>
                         ) : hasVideo ? (
                           <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-sm">
@@ -483,7 +483,7 @@ export const CampaignsPage: React.FC = () => {
                         ) : (
                           <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-sm">
                             <ImageIcon className="w-3 h-3 text-slate-500" />
-                            {c.galleryUrls && c.galleryUrls.length > 1 ? `${c.galleryUrls.length} ảnh` : 'Poster'}
+                            {c.galleryUrls && c.galleryUrls.length > 1 ? `${c.galleryUrls.length} ảnh` : 'Ảnh đại diện'}
                           </span>
                         )}
                       </div>
@@ -941,7 +941,7 @@ export const CampaignsPage: React.FC = () => {
                         {simulatingCampaign.title}
                       </h4>
 
-                      {/* 1. Poster chính & Thư viện ảnh */}
+                      {/* 1. Hình ảnh chiến dịch */}
                       {simulatingCampaign.bannerUrl ? (
                         <div className="relative aspect-video w-full rounded overflow-hidden border border-slate-200 bg-slate-900 group">
                           <img
@@ -952,9 +952,6 @@ export const CampaignsPage: React.FC = () => {
                               (e.currentTarget as HTMLImageElement).src = '/banners/haiphong_city_bg.jpg';
                             }}
                           />
-                          <div className="absolute top-1.5 left-1.5 bg-amber-500 text-slate-950 font-black text-[9px] px-1.5 py-0.2 rounded shadow-xs uppercase">
-                            Poster chính
-                          </div>
                         </div>
                       ) : !simulatingCampaign.videoUrl ? (
                         <div className="aspect-video w-full rounded overflow-hidden border border-slate-200 bg-slate-900">
@@ -1074,14 +1071,14 @@ export const CampaignsPage: React.FC = () => {
             />
           </div>
 
-          {/* Multi-Images & Poster Upload */}
+          {/* Multi-Images & Photo Upload */}
           <div>
             <MultiImageUploadInput
               bannerUrl={formData.bannerUrl || ''}
               galleryUrls={formData.galleryUrls || []}
               onChange={(banner, gallery) => setFormData({ ...formData, bannerUrl: banner, galleryUrls: gallery })}
-              label="Ảnh Poster chính & Album ảnh chiến dịch"
-              helperText="Tải lên một hoặc nhiều ảnh từ máy tính (hoặc dán link). Ảnh đầu tiên sẽ là Poster chính đại diện."
+              label="Hình ảnh & Album ảnh chiến dịch"
+              helperText="Tải lên một hoặc nhiều ảnh từ máy tính (hoặc dán link). Ảnh đầu tiên sẽ là ảnh đại diện hiển thị trên cổng chào."
               category="campaigns"
             />
           </div>
@@ -1281,14 +1278,14 @@ export const CampaignsPage: React.FC = () => {
               />
             </div>
 
-            {/* Multi-Images & Poster Upload */}
+            {/* Multi-Images & Photo Upload */}
             <div>
               <MultiImageUploadInput
                 bannerUrl={formData.bannerUrl || ''}
                 galleryUrls={formData.galleryUrls || []}
                 onChange={(banner, gallery) => setFormData({ ...formData, bannerUrl: banner, galleryUrls: gallery })}
-                label="Ảnh Poster chính & Album ảnh chiến dịch"
-                helperText="Tải lên một hoặc nhiều ảnh từ máy tính (hoặc dán link). Ảnh đầu tiên sẽ là Poster chính đại diện."
+                label="Hình ảnh & Album ảnh chiến dịch"
+                helperText="Tải lên một hoặc nhiều ảnh từ máy tính (hoặc dán link). Ảnh đầu tiên sẽ là ảnh đại diện hiển thị trên cổng chào."
                 category="campaigns"
               />
             </div>

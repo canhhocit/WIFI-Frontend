@@ -31,6 +31,8 @@ import {
   Settings,
   Activity,
   Clock,
+  Compass,
+  Sparkles,
 } from "lucide-react";
 import { authApi } from "../../api/authApi";
 import { adminApi } from "../../api/adminApi";
@@ -41,6 +43,7 @@ import {
 } from "../../types/models";
 import { VietnamFlag } from "../../components/VietnamFlag";
 import { ChangePasswordModal } from "../../components/ChangePasswordModal";
+import { InteractiveTourGuide } from "../../components/InteractiveTourGuide";
 
 type RbacModule =
   | "LOCATIONS"
@@ -56,6 +59,7 @@ interface NavItem {
   icon: any;
   end?: boolean;
   module?: RbacModule;
+  tourId?: string;
 }
 
 interface NavGroup {
@@ -72,24 +76,28 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Tổng quan điều hành",
         icon: LayoutDashboard,
         end: true,
+        tourId: "nav-dashboard",
       },
       {
         to: "/admin/gis",
         label: "Bản đồ số GIS",
         icon: Map,
         module: "LOCATIONS",
+        tourId: "nav-gis",
       },
       {
         to: "/admin/locations",
         label: "Danh bạ Nhà văn hóa",
         icon: MapPin,
         module: "LOCATIONS",
+        tourId: "nav-locations",
       },
       {
         to: "/admin/devices",
         label: "Thiết bị & AP Gateway",
         icon: Smartphone,
         module: "DEVICES",
+        tourId: "nav-devices",
       },
       {
         to: "/admin/sessions",
@@ -107,6 +115,7 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Xử lý sự cố viễn thông",
         icon: ShieldAlert,
         module: "INCIDENTS",
+        tourId: "nav-incidents",
       },
       {
         to: "/admin/blacklist",
@@ -136,18 +145,21 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Chiến dịch tuyên truyền",
         icon: Megaphone,
         module: "CAMPAIGNS",
+        tourId: "nav-campaigns",
       },
       {
         to: "/admin/surveys",
         label: "Khảo sát ý kiến nhân dân",
         icon: ClipboardList,
         module: "CAMPAIGNS",
+        tourId: "nav-surveys",
       },
       {
         to: "/admin/dns-filtering",
         label: "Bộ lọc tên miền DNS & DVC",
         icon: Globe,
         module: "CAMPAIGNS",
+        tourId: "nav-security",
       },
     ],
   },
@@ -165,6 +177,7 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Cán bộ 5 cấp & Địa bàn",
         icon: UserCheck,
         module: "USERS",
+        tourId: "nav-users",
       },
       {
         to: "/admin/role-permissions",
@@ -207,6 +220,9 @@ export const AdminLayout: React.FC = () => {
     authApi.getCurrentUser(),
   );
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [isForcePasswordOpen, setIsForcePasswordOpen] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(false);
+  const [tourWelcomePrompt, setTourWelcomePrompt] = useState(false);
   const [gatewayStatus, setGatewayStatus] = useState<GatewayStatusDto | null>(
     null,
   );
@@ -249,7 +265,17 @@ export const AdminLayout: React.FC = () => {
 
     authApi
       .getMe()
-      .then(setCurrentUser)
+      .then((user) => {
+        setCurrentUser(user);
+        if (user.mustChangePassword) {
+          setIsForcePasswordOpen(true);
+        } else {
+          const tourDone = localStorage.getItem(`wifi_tour_completed_${user.username}`);
+          if (!tourDone) {
+            setTourWelcomePrompt(true);
+          }
+        }
+      })
       .catch(() => navigate("/admin/login"));
 
     adminApi.getGatewayStatus().then(setGatewayStatus).catch(console.error);
@@ -467,6 +493,7 @@ export const AdminLayout: React.FC = () => {
         <div className="flex flex-col h-full flex-1 w-full overflow-hidden">
           {/* Department / Brand Banner */}
           <div
+            data-tour="welcome-card"
             className={`border-b border-[#18365a] bg-gradient-to-b from-[#0a1e38] via-[#091a30] to-[#071629] flex items-center transition-all ${desktopCollapsed
                 ? "p-2.5 flex-col gap-2 justify-center"
                 : "p-4 justify-between"
@@ -570,6 +597,7 @@ export const AdminLayout: React.FC = () => {
                         key={item.to}
                         to={item.to}
                         end={item.end}
+                        data-tour={item.tourId}
                         onClick={() => setMobileMenuOpen(false)}
                         title={desktopCollapsed ? item.label : undefined}
                         className={`flex items-center rounded transition group relative ${desktopCollapsed
@@ -598,6 +626,7 @@ export const AdminLayout: React.FC = () => {
           </nav>
           {/* User Profile & Logout */}
           <div
+            data-tour="user-profile"
             className={`border-t border-[#18365a] bg-[#071628] flex items-center transition-all ${desktopCollapsed
                 ? "p-2 flex-col gap-2 justify-center"
                 : "p-3 justify-between gap-2"
@@ -704,6 +733,18 @@ export const AdminLayout: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Tour Guide Button */}
+            <button
+              type="button"
+              data-tour="tour-button"
+              onClick={() => setIsTourOpen(true)}
+              className="text-xs font-semibold px-2.5 py-1 rounded-sm border border-blue-200 bg-blue-50 hover:bg-blue-100 text-[#004b87] transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              title="Khám phá các tính năng theo phân quyền của bạn"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+              <span>Tour Hướng Dẫn</span>
+            </button>
+
             {/* Clock UTC+7 */}
             <div className="flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 border border-slate-300 px-2.5 py-1 rounded-sm font-mono">
               <Clock className="w-3.5 h-3.5 text-slate-400" />
@@ -754,10 +795,98 @@ export const AdminLayout: React.FC = () => {
         </main>
       </div>
 
-      {/* Change Password Modal */}
+      {/* Welcome Tour Invitation Dialog */}
+      {tourWelcomePrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-xl shadow-2xl border border-slate-300 w-full max-w-md overflow-hidden">
+            <div className="bg-gradient-to-r from-[#004b87] to-[#002d54] p-5 text-white">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/20">
+                  <Compass className="w-6 h-6 text-amber-300 animate-spin-slow" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold uppercase tracking-wide text-white">
+                    Chào Mừng Đến Với Hệ Thống!
+                  </h3>
+                  <p className="text-xs text-blue-100 mt-0.5">
+                    Hệ thống Wi-Fi Công cộng TP. Hải Phòng (1.584 Điểm)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <p className="text-xs text-slate-700 leading-relaxed">
+                Xin chào đồng chí <strong>{currentUser?.fullName || currentUser?.username}</strong> ({roleInfo.label}). Hệ thống đã chuẩn bị sẵn một <strong>Chuyến tham quan tương tác (Interactive Tour)</strong> được may đo riêng cho vai trò và phân quyền tác nghiệp của đồng chí.
+              </p>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-600 space-y-1.5">
+                <div className="flex items-center gap-2 text-slate-800 font-semibold">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span>Điểm nổi bật của Tour:</span>
+                </div>
+                <ul className="list-disc list-inside space-y-1 text-[11.5px] pl-1 text-slate-600">
+                  <li>Làm quen các nghiệp vụ chính theo đúng thẩm quyền.</li>
+                  <li>Chỉ dẫn vị trí các chức năng trọng yếu trên giao diện.</li>
+                  <li>Chỉ mất khoảng 1 phút và có thể mở lại bất cứ lúc nào.</li>
+                </ul>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTourWelcomePrompt(false);
+                    if (currentUser?.username) {
+                      localStorage.setItem(`wifi_tour_completed_${currentUser.username}`, "true");
+                    }
+                  }}
+                  className="px-3.5 py-1.5 rounded-sm border border-slate-300 text-xs font-medium text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                >
+                  Để sau
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTourWelcomePrompt(false);
+                    setIsTourOpen(true);
+                  }}
+                  className="px-4 py-1.5 rounded-sm bg-[#004b87] hover:bg-[#003865] text-white text-xs font-semibold shadow-xs transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Khám phá ngay</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Force Change Password Modal for First Time Login */}
+      <ChangePasswordModal
+        isOpen={isForcePasswordOpen}
+        onClose={() => {}}
+        forceFirstTime={true}
+        onSuccess={() => {
+          setIsForcePasswordOpen(false);
+          const tourDone = localStorage.getItem(`wifi_tour_completed_${currentUser?.username}`);
+          if (!tourDone) {
+            setTourWelcomePrompt(true);
+          }
+        }}
+      />
+
+      {/* User-initiated Change Password Modal */}
       <ChangePasswordModal
         isOpen={isChangePasswordOpen}
         onClose={() => setIsChangePasswordOpen(false)}
+      />
+
+      {/* Interactive Guided Tour */}
+      <InteractiveTourGuide
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+        currentUser={currentUser}
       />
     </div>
   );

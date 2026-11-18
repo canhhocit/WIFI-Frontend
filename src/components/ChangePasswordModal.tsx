@@ -17,9 +17,11 @@ import { authApi } from '../api/authApi';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  forceFirstTime?: boolean;
+  onSuccess?: () => void;
 }
 
-export const ChangePasswordModal: React.FC<Props> = ({ isOpen, onClose }) => {
+export const ChangePasswordModal: React.FC<Props> = ({ isOpen, onClose, forceFirstTime = false, onSuccess }) => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -98,10 +100,17 @@ export const ChangePasswordModal: React.FC<Props> = ({ isOpen, onClose }) => {
         newPassword,
         confirmPassword,
       });
+      // Update local user object
+      const stored = authApi.getCurrentUser();
+      if (stored) {
+        stored.mustChangePassword = false;
+        localStorage.setItem('admin_user', JSON.stringify(stored));
+      }
       setSuccess(true);
       setTimeout(() => {
         handleClose();
-      }, 2000);
+        if (onSuccess) onSuccess();
+      }, 1500);
     } catch (err: any) {
       setError(err?.message || 'Có lỗi xảy ra khi cập nhật mật khẩu.');
     } finally {
@@ -116,27 +125,44 @@ export const ChangePasswordModal: React.FC<Props> = ({ isOpen, onClose }) => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-blue-600 px-6 py-3 text-white flex items-center justify-between">
+        <div className="bg-[#004b87] px-6 py-3.5 text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-white/10 rounded-lg">
-              <KeyRound className="w-5 h-5 text-amber-400" />
+              <KeyRound className="w-5 h-5 text-amber-300" />
             </div>
             <div>
-              <h3 className="font-bold text-sm tracking-wide">Đổi Mật Khẩu</h3>
+              <h3 className="font-bold text-sm tracking-wide">
+                {forceFirstTime ? 'Đổi Mật Khẩu Khởi Tạo (Bắt buộc)' : 'Đổi Mật Khẩu'}
+              </h3>
+              {forceFirstTime && (
+                <p className="text-[11px] text-blue-100">
+                  Lần đầu đăng nhập hệ thống Wi-Fi Hải Phòng
+                </p>
+              )}
             </div>
           </div>
-          <button
-            onClick={handleClose}
-            disabled={loading}
-            className="p-1 rounded text-white/70 hover:text-white hover:bg-white/10 transition cursor-pointer"
-            title="Đóng hộp thoại"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {!forceFirstTime && (
+            <button
+              onClick={handleClose}
+              disabled={loading}
+              className="p-1 rounded text-white/70 hover:text-white hover:bg-white/10 transition cursor-pointer"
+              title="Đóng hộp thoại"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Form Body */}
         <div className="p-6">
+          {forceFirstTime && !success && (
+            <div className="p-3 mb-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-md text-xs flex items-start gap-2.5">
+              <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="leading-relaxed text-[11.5px]">
+                Theo quy chuẩn An toàn thông tin Nhà nước, quý cán bộ vui lòng thay đổi mật khẩu khởi tạo trong lần đầu đăng nhập trước khi bắt đầu làm việc.
+              </div>
+            </div>
+          )}
           {success ? (
             <div className="py-6 text-center space-y-3">
               <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-200">

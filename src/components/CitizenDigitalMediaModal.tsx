@@ -5,16 +5,11 @@ import {
   Megaphone, 
   ExternalLink, 
   Play, 
-  Calendar, 
-  MapPin, 
-  ShieldCheck, 
-  Share2, 
-  Sparkles,
   Landmark,
-  Tv,
   Film,
   Image as ImageIcon,
-  Star
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { CampaignDto } from '../types/models';
 
@@ -68,76 +63,90 @@ export const CitizenDigitalMediaModal: React.FC<Props> = ({ isOpen, onClose, cam
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
         className="fixed inset-0"
         onClick={onClose}
         aria-hidden="true"
       />
       <div 
-        className="relative z-10 bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden transform transition-all my-auto"
+        className="relative z-10 bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden transform transition-all my-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header - Phong cách Truyền thông số Chính quyền */}
-        <div className="bg-gradient-to-r from-[#a81c1c] via-[#881313] to-[#004b87] px-5 py-3.5 text-white flex items-center justify-between border-b border-red-900 shadow-sm flex-shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 bg-yellow-400 text-red-900 rounded-md shadow-xs">
+        {/* Header - Phong cách Cổng thông tin chính quyền Thành phố */}
+        <div className="bg-[#a81c1c] px-5 py-3.5 text-white flex items-center justify-between border-b border-red-900/40 shadow-sm flex-shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-1.5 bg-yellow-400 text-red-950 rounded-md shadow-xs flex-shrink-0">
               <Megaphone className="w-4 h-4" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black tracking-widest text-yellow-300 uppercase">
-                  TRUYỀN THÔNG SỐ TP. HẢI PHÒNG
+                <span className="text-[10px] font-bold tracking-wider text-yellow-300 uppercase">
+                  CỔNG THÔNG TIN TP. HẢI PHÒNG
                 </span>
               </div>
-              <h3 className="font-extrabold text-sm sm:text-base tracking-tight truncate max-w-lg mt-0.5 text-white">
+              <h3 className="font-bold text-sm sm:text-base tracking-tight truncate max-w-xl text-white">
                 {campaign.title}
               </h3>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer"
-            title="Đóng bản tin số"
+            className="p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer flex-shrink-0"
+            title="Đóng bản tin"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Modal Body: Trình chiếu đa phương tiện số */}
+        {/* Modal Body */}
         <div className="p-5 overflow-y-auto space-y-5 flex-1 text-slate-800">
-          {/* ================= 1. POSTER CHỦ ĐẠO & GALLERY ẢNH ================= */}
+          {/* ================= 1. HÌNH ẢNH TUYÊN TRUYỀN & ALBUM ================= */}
           {allImages.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <ImageIcon className="w-4 h-4 text-[#004b87]" />
-                  <span>Poster & Hình ảnh tuyên truyền</span>
-                </span>
-                {allImages.length > 1 && (
-                  <span className="text-[11px] text-slate-500 font-mono">
-                    Ảnh {selectedImageIndex + 1} / {allImages.length}
-                  </span>
-                )}
-              </div>
-
-              {/* Main Poster Display Box */}
-              <div className="relative rounded-lg overflow-hidden border border-slate-300 shadow-md bg-slate-950 group flex items-center justify-center min-h-[220px] max-h-[380px]">
-                {selectedImageIndex === 0 && (
-                  <div className="absolute top-2.5 left-2.5 z-10 bg-amber-500 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded shadow-sm flex items-center gap-1 uppercase tracking-wide">
-                    <Star className="w-3 h-3 fill-slate-950 text-slate-950" />
-                    <span>Poster chính</span>
-                  </div>
-                )}
+            <div className="space-y-3">
+              {/* Media Stage */}
+              <div className="relative rounded-xl overflow-hidden bg-slate-950 shadow-md flex items-center justify-center min-h-[240px] max-h-[460px] group select-none border border-slate-800">
+                {/* Ambient Blurred Backdrop for visual depth */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center filter blur-2xl opacity-25 scale-110 pointer-events-none"
+                  style={{ backgroundImage: `url(${allImages[selectedImageIndex]})` }}
+                />
 
                 <img
                   src={allImages[selectedImageIndex]}
                   alt={campaign.title}
-                  className="w-full h-auto max-h-[380px] object-contain mx-auto transition-transform duration-300"
+                  className="relative z-10 w-full h-auto max-h-[460px] object-contain mx-auto transition-transform duration-300"
                   onError={(e) => {
                     (e.currentTarget as HTMLImageElement).src = '/banners/haiphong_city_bg.jpg';
                   }}
                 />
+
+                {/* Navigation Arrows if multiple images */}
+                {allImages.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : allImages.length - 1))}
+                      className="absolute left-3 z-20 w-9 h-9 rounded-full bg-black/50 hover:bg-black/80 text-white flex items-center justify-center backdrop-blur-md transition shadow-md cursor-pointer border border-white/20"
+                      title="Ảnh trước"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedImageIndex((prev) => (prev < allImages.length - 1 ? prev + 1 : 0))}
+                      className="absolute right-3 z-20 w-9 h-9 rounded-full bg-black/50 hover:bg-black/80 text-white flex items-center justify-center backdrop-blur-md transition shadow-md cursor-pointer border border-white/20"
+                      title="Ảnh tiếp theo"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                    {/* Minimalist image index counter */}
+                    <div className="absolute bottom-3 right-3 z-20 bg-black/60 backdrop-blur-md text-white text-[11px] font-medium px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1.5 border border-white/10">
+                      <ImageIcon className="w-3.5 h-3.5 text-slate-300" />
+                      <span>{selectedImageIndex + 1} / {allImages.length}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Thumbnails Strip if multiple images */}
@@ -148,18 +157,13 @@ export const CitizenDigitalMediaModal: React.FC<Props> = ({ isOpen, onClose, cam
                       key={idx}
                       type="button"
                       onClick={() => setSelectedImageIndex(idx)}
-                      className={`relative flex-shrink-0 w-16 h-11 rounded-md overflow-hidden border-2 transition-all cursor-pointer ${
+                      className={`relative flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
                         selectedImageIndex === idx
-                          ? 'border-[#004b87] ring-2 ring-blue-500/30 scale-105'
+                          ? 'border-[#a81c1c] ring-2 ring-red-500/25 scale-102 shadow-xs'
                           : 'border-slate-200 opacity-70 hover:opacity-100 hover:border-slate-400'
                       }`}
                     >
                       <img src={img} alt="" className="w-full h-full object-cover" />
-                      {idx === 0 && (
-                        <div className="absolute bottom-0 inset-x-0 bg-amber-500 text-[8px] font-black text-slate-950 text-center uppercase py-0.2">
-                          Poster
-                        </div>
-                      )}
                     </button>
                   ))}
                 </div>
@@ -169,18 +173,18 @@ export const CitizenDigitalMediaModal: React.FC<Props> = ({ isOpen, onClose, cam
 
           {/* ================= 2. VIDEO CLIP TUYÊN TRUYỀN (NẾU CÓ) ================= */}
           {hasVideo && (
-            <div className="space-y-2 pt-1 border-t border-slate-200">
+            <div className="space-y-2 pt-2 border-t border-slate-200">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <Film className="w-4 h-4 text-rose-600" />
-                  <span>Video clip tuyên truyền số</span>
+                  <Film className="w-4 h-4 text-[#a81c1c]" />
+                  <span>Video clip tuyên truyền</span>
                 </span>
-                <span className="text-[10px] px-2 py-0.5 bg-rose-50 text-rose-700 font-semibold rounded border border-rose-200">
-                  {isYouTube ? 'YouTube Clip' : 'Video phát trực tiếp'}
+                <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-700 font-medium rounded-full border border-slate-200">
+                  {isYouTube ? 'YouTube' : 'Video phát trực tiếp'}
                 </span>
               </div>
 
-              <div className="relative rounded-lg overflow-hidden border border-slate-300 shadow-md bg-black aspect-video w-full">
+              <div className="relative rounded-xl overflow-hidden border border-slate-200 shadow-md bg-black aspect-video w-full">
                 {isYouTube && embedVideoUrl ? (
                   <iframe
                     src={embedVideoUrl}
@@ -204,39 +208,30 @@ export const CitizenDigitalMediaModal: React.FC<Props> = ({ isOpen, onClose, cam
             </div>
           )}
 
-          {/* 3. Tiêu đề và thông tin chiến dịch */}
+          {/* 3. Tiêu đề và nhãn bản tin */}
           <div className="space-y-2 pt-1">
-            <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500 font-mono">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-semibold border border-amber-200">
-                <Sparkles className="w-3 h-3 text-amber-600" />
-                Chính sách & Tuyên truyền số
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-50 text-[#a81c1c] font-semibold border border-red-200/70">
+                <Landmark className="w-3.5 h-3.5" />
+                UBND Thành phố Hải Phòng
               </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-50 text-blue-800 font-semibold border border-blue-200">
-                <Landmark className="w-3 h-3 text-blue-600" />
-                UBND Thành Phố Hải Phòng
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 font-medium border border-slate-200">
+                Bản tin tuyên truyền số
               </span>
             </div>
 
-            <h2 className="text-base sm:text-lg font-black text-slate-900 leading-snug">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
               {campaign.title}
             </h2>
           </div>
 
           {/* 4. Nội dung bài viết tuyên truyền số */}
-          <div className="p-4 bg-slate-50/80 rounded-lg border border-slate-200 leading-relaxed text-xs sm:text-sm text-slate-700 whitespace-pre-line font-sans space-y-2">
+          <div className="p-4 bg-slate-50/90 rounded-xl border border-slate-200/80 leading-relaxed text-xs sm:text-sm text-slate-700 whitespace-pre-line font-sans space-y-2">
             {campaign.description || (
               <p>
-                Ủy ban Nhân dân Thành phố Hải Phòng phát động chiến dịch tuyên truyền đến toàn thể nhân dân đang sinh hoạt tại 1.584 Nhà văn hóa thôn, tổ dân phố trên địa bàn 15 quận, huyện. Đề nghị bà con tích cực tham gia chuyển đổi số, sử dụng dịch vụ công trực tuyến và bảo vệ an toàn thông tin khi truy cập mạng Wi-Fi công cộng.
+                Ủy ban Nhân dân Thành phố Hải Phòng phát động chiến dịch tuyên truyền đến toàn thể nhân dân đang sinh hoạt tại các Nhà văn hóa thôn, tổ dân phố trên địa bàn thành phố. Đề nghị bà con tích cực tham gia chuyển đổi số, sử dụng dịch vụ công trực tuyến và bảo vệ an toàn thông tin khi truy cập mạng Wi-Fi công cộng.
               </p>
             )}
-          </div>
-
-          {/* 5. Khung hướng dẫn hành động công dân */}
-          <div className="p-3 bg-gradient-to-r from-blue-50 to-sky-50 rounded-lg border border-blue-200 flex items-start gap-3">
-            <ShieldCheck className="w-5 h-5 text-[#004b87] flex-shrink-0 mt-0.5" />
-            <div className="text-xs text-slate-700 leading-relaxed">
-              <strong>Hướng dẫn người dân:</strong> Quý vị có thể mở trực tiếp trang chỉ đạo / Cổng Dịch vụ công thành phố bên dưới để tra cứu chi tiết hoặc nộp hồ sơ trực tuyến hoàn toàn miễn phí ngay tại Nhà văn hóa.
-            </div>
           </div>
         </div>
 
@@ -245,9 +240,9 @@ export const CitizenDigitalMediaModal: React.FC<Props> = ({ isOpen, onClose, cam
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-white rounded text-xs font-semibold cursor-pointer transition"
+            className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-white rounded-lg text-xs font-semibold cursor-pointer transition shadow-2xs"
           >
-            Đóng bản tin
+            Đóng
           </button>
 
           <div className="flex items-center gap-2">
@@ -256,9 +251,9 @@ export const CitizenDigitalMediaModal: React.FC<Props> = ({ isOpen, onClose, cam
                 href={campaign.actionUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[#004b87] hover:bg-[#003865] text-white rounded text-xs font-bold transition shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#a81c1c] hover:bg-[#8f1818] text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer"
               >
-                <span>Mở Cổng Thông Tin / Dịch Vụ Công</span>
+                <span>Cổng Dịch Vụ Công TP. Hải Phòng</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             )}

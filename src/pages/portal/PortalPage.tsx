@@ -32,7 +32,7 @@ import { AlertBanner } from '../../components/AlertBanner';
 import { VietnamFlag } from '../../components/VietnamFlag';
 import { ReportIssueModal } from '../../components/ReportIssueModal';
 import { CitizenDigitalMediaModal } from '../../components/CitizenDigitalMediaModal';
-import { Play, Tv, Video, Eye, Share2, FileText } from 'lucide-react';
+import { Play, Tv, Video, Eye, Share2, FileText, Image as ImageIcon } from 'lucide-react';
 
 const getOrCreateLocalClientMac = () => {
   try {
@@ -80,7 +80,7 @@ export const PortalPage: React.FC = () => {
 
   // Báo lỗi Wi-Fi modal state
   const [showReportModal, setShowReportModal] = useState(false);
-  // Modal hiển thị truyền thông số chi tiết (Video clip / Poster / Văn bản chỉ đạo)
+  // Modal hiển thị truyền thông số chi tiết (Video clip / Hình ảnh / Văn bản chỉ đạo)
   const [showMediaModal, setShowMediaModal] = useState(false);
 
   // Ver 1 Mode: Advanced Auth / Survey Collapsible Toggle
@@ -760,108 +760,96 @@ export const PortalPage: React.FC = () => {
               </div>
             </div>
 
-            {/* ================= KHÔNG GIAN TRUYỀN THÔNG SỐ TP. HẢI PHÒNG (DIGITAL MEDIA SPOTLIGHT) ================= */}
+            {/* ================= KHÔNG GIAN BẢN TIN TUYÊN TRUYỀN TP. HẢI PHÒNG ================= */}
             {activeCampaign && (
-            <div className="rounded-xl border-2 border-red-200/90 bg-gradient-to-br from-red-50/90 via-amber-50/70 to-white p-4 shadow-sm space-y-3 relative overflow-hidden">
-              {/* Header: Huy hiệu Phát sóng số chính thức */}
-              <div className="flex items-center justify-between gap-2 border-b border-red-100 pb-2">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#a81c1c] text-white text-[10.5px] font-extrabold uppercase tracking-wider shadow-xs">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs space-y-3.5 transition hover:shadow-md">
+              {/* Header: Huy hiệu Bản tin tuyên truyền số */}
+              <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#a81c1c] text-white text-[11px] font-bold tracking-wide shadow-2xs">
                   <Megaphone className="w-3.5 h-3.5 text-yellow-300 flex-shrink-0" />
-                  <span>TRUYỀN THÔNG SỐ TỈNH HẢI PHÒNG</span>
+                  <span>BẢN TIN TUYÊN TRUYỀN SỐ</span>
                 </div>
-                
+                <span className="text-[11px] font-medium text-slate-500">UBND TP. Hải Phòng</span>
               </div>
 
               {/* Tiêu đề thông điệp tuyên truyền */}
               <div>
-                <h3 className="text-sm sm:text-base font-black text-slate-900 leading-snug uppercase tracking-tight">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug tracking-tight">
                   {activeCampaign.title}
                 </h3>
-                <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 font-mono">
-                  <span className="flex items-center gap-1 text-red-700 font-semibold">
-                    <Sparkles className="w-3 h-3 text-amber-500" />
-                    Chính sách số trọng điểm
-                  </span>
-                  <span>•</span>
-                  <span>Phủ sóng 1.584 Nhà văn hóa</span>
-                </div>
               </div>
 
-              {/* Poster / Video Visual Media Card */}
+              {/* Media Visual Card Showcase */}
               <div 
                 onClick={() => setShowMediaModal(true)}
-                className="relative rounded-lg overflow-hidden border border-red-200 shadow-sm bg-slate-950 cursor-pointer group max-h-56"
-                title="Bấm để xem toàn màn hình nội dung truyền thông số"
+                className="relative rounded-lg overflow-hidden border border-slate-200 shadow-xs bg-slate-900 cursor-pointer group aspect-[16/9] w-full"
+                title="Chạm để xem bản tin chi tiết"
               >
                 <img
                   src={activeCampaign.bannerUrl || '/banners/haiphong_city_bg.jpg'}
                   alt={activeCampaign.title}
-                  className="w-full h-auto max-h-52 object-cover opacity-90 transition-all duration-300 group-hover:scale-101 group-hover:opacity-100"
+                  className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                   onError={(e) => {
                     (e.currentTarget as HTMLImageElement).src = '/banners/haiphong_city_bg.jpg';
                   }}
                 />
-                
-                {/* Badge số lượng ảnh nếu có nhiều ảnh */}
+
+                {/* Subtle scrim overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent flex flex-col justify-end p-3.5 text-white transition-opacity" />
+
+                {/* Floating Media Badges / Controls */}
                 {activeCampaign.galleryUrls && activeCampaign.galleryUrls.length > 1 && (
-                  <div className="absolute top-2.5 right-2.5 z-10 bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs flex items-center gap-1">
-                    <span>📷 {activeCampaign.galleryUrls.length} ảnh</span>
+                  <div className="absolute top-2.5 right-2.5 z-10 bg-black/60 backdrop-blur-md text-white text-[11px] font-medium px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1.5 border border-white/10">
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    <span>{activeCampaign.galleryUrls.length} ảnh</span>
                   </div>
                 )}
-                
-                {/* Overlay nút xem / phát video */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/30 to-transparent flex flex-col justify-end p-3 text-white transition-opacity">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-yellow-300 drop-shadow-sm flex items-center gap-1.5">
-                      {activeCampaign.videoUrl && activeCampaign.bannerUrl ? (
-                        <>
-                          <div className="w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center shadow-md">
-                            <Play className="w-3 h-3 fill-current ml-0.5" />
-                          </div>
-                          <span>Xem Poster & Video Clip</span>
-                        </>
-                      ) : activeCampaign.videoUrl ? (
-                        <>
-                          <div className="w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center shadow-md">
-                            <Play className="w-3 h-3 fill-current ml-0.5" />
-                          </div>
-                          <span>Xem Video Clip Tuyên Truyền</span>
-                        </>
-                      ) : (
-                        <>
-                          <Eye className="w-4 h-4 text-yellow-300" />
-                          <span>Xem Toàn Văn Thông Điệp Số</span>
-                        </>
-                      )}
-                    </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-white/20 text-white backdrop-blur-xs font-mono font-bold">
-                      Chạm để mở
-                    </span>
+
+                {/* Center Play Button for Video */}
+                {activeCampaign.videoUrl ? (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-white/90 text-[#a81c1c] flex items-center justify-center shadow-lg backdrop-blur-sm group-hover:scale-110 group-hover:bg-[#a81c1c] group-hover:text-white transition-all duration-300">
+                      <Play className="w-5 h-5 fill-current ml-0.5" />
+                    </div>
                   </div>
+                ) : null}
+
+                {/* Bottom Label overlay */}
+                <div className="absolute bottom-2.5 inset-x-3.5 z-10 flex items-center justify-between text-white text-xs">
+                  <span className="font-medium text-slate-100 flex items-center gap-1.5 drop-shadow-sm">
+                    {activeCampaign.videoUrl ? (
+                      <span>Video bản tin tuyên truyền</span>
+                    ) : (
+                      <span>Xem ảnh & toàn văn bản tin</span>
+                    )}
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/20 text-white backdrop-blur-md font-medium border border-white/15">
+                    Chạm để mở
+                  </span>
                 </div>
               </div>
 
               {/* Tóm tắt nội dung */}
-              <p className="text-xs text-slate-700 leading-relaxed font-sans line-clamp-3">
+              <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed font-sans line-clamp-3">
                 {activeCampaign.description}
               </p>
 
               {/* Bộ nút hành động Truyền thông số */}
-              <div className="flex flex-wrap items-center gap-2 pt-1">
+              <div className="flex flex-wrap items-center gap-2.5 pt-1">
                 <button
                   type="button"
                   onClick={() => setShowMediaModal(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#a81c1c] hover:bg-[#881313] text-white rounded text-xs font-bold transition shadow-xs cursor-pointer"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 bg-[#a81c1c] hover:bg-[#8f1818] text-white rounded-lg text-xs font-semibold shadow-xs transition cursor-pointer"
                 >
                   {activeCampaign.videoUrl ? (
                     <>
-                      <Play className="w-3.5 h-3.5 fill-current text-yellow-300" />
+                      <Play className="w-3.5 h-3.5 fill-current" />
                       <span>Xem Video & Chi Tiết Bản Tin</span>
                     </>
                   ) : (
                     <>
-                      <FileText className="w-3.5 h-3.5 text-yellow-300" />
-                      <span>Xem Toàn Văn Thông Điệp Số</span>
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Xem Chi Tiết Bản Tin</span>
                     </>
                   )}
                 </button>
@@ -871,10 +859,10 @@ export const PortalPage: React.FC = () => {
                     href={activeCampaign.actionUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-[#004b87] border border-blue-300 rounded text-xs font-bold transition shadow-2xs cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold transition cursor-pointer"
                   >
-                    <span>Cổng Dịch Vụ Công Hải Phòng</span>
-                    <ExternalLink className="w-3 h-3 text-blue-600" />
+                    <span>Cổng Dịch Vụ Công TP. Hải Phòng</span>
+                    <ExternalLink className="w-3 h-3 text-slate-500" />
                   </a>
                 )}
               </div>

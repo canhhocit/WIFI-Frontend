@@ -179,6 +179,12 @@ export const adminApi = {
     return request<GatewayStatusDto>('/admin/gateway/status');
   },
 
+  togglePortalBypass: (active: boolean, reason?: string) => {
+    return request<GatewayStatusDto>(`/admin/gateway/portal-bypass?active=${active}${reason ? `&reason=${encodeURIComponent(reason)}` : ''}`, {
+      method: 'POST',
+    });
+  },
+
   updateGatewayConfig: (config: MockGatewayConfigDto) => {
     return request<GatewayStatusDto>('/admin/gateway/config', {
       method: 'POST',

@@ -91,8 +91,8 @@ export const MultiImageUploadInput: React.FC<MultiImageUploadInputProps> = ({
   bannerUrl = '',
   galleryUrls = [],
   onChange,
-  label = 'Ảnh Poster chính & Thư viện ảnh chiến dịch',
-  helperText = 'Tải lên một hoặc nhiều ảnh từ máy tính (hoặc dán link). Ảnh đầu tiên sẽ là Poster chính đại diện.',
+  label = 'Hình ảnh & Album ảnh chiến dịch',
+  helperText = 'Tải lên một hoặc nhiều ảnh từ máy tính (hoặc dán link). Ảnh đầu tiên sẽ là ảnh đại diện hiển thị trên cổng chào.',
   category = 'campaigns',
 }) => {
   // Sync list: make sure bannerUrl is at index 0 if not empty
@@ -312,11 +312,11 @@ export const MultiImageUploadInput: React.FC<MultiImageUploadInputProps> = ({
                       : 'border-slate-200 hover:border-slate-400'
                   }`}
                 >
-                  {/* Poster Primary Badge */}
+                  {/* Primary Thumbnail Badge */}
                   {isPrimary ? (
                     <div className="absolute top-1.5 left-1.5 z-10 bg-amber-500 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded shadow-sm flex items-center gap-1 uppercase tracking-wide">
                       <Star className="w-3 h-3 fill-slate-950 text-slate-950" />
-                      <span>Poster chính</span>
+                      <span>Ảnh đại diện</span>
                     </div>
                   ) : (
                     <div className="absolute top-1.5 left-1.5 z-10 bg-black/60 backdrop-blur-xs text-white text-[10px] font-mono px-1.5 py-0.5 rounded">
@@ -349,16 +349,16 @@ export const MultiImageUploadInput: React.FC<MultiImageUploadInputProps> = ({
                   {/* Bottom Action Bar */}
                   <div className="p-1.5 bg-slate-900/90 text-white flex items-center justify-between text-[10.5px]">
                     {isPrimary ? (
-                      <span className="text-amber-300 font-semibold text-[10px]">Ảnh hiển thị đầu</span>
+                      <span className="text-amber-300 font-semibold text-[10px]">Ảnh đại diện</span>
                     ) : (
                       <button
                         type="button"
                         onClick={() => handleSetPrimaryPoster(idx)}
                         className="text-yellow-400 hover:text-yellow-300 font-medium flex items-center gap-1 hover:underline cursor-pointer"
-                        title="Đưa ảnh này lên làm Poster chính của chiến dịch"
+                        title="Đưa ảnh này lên làm ảnh đại diện của chiến dịch"
                       >
                         <Star className="w-3 h-3" />
-                        <span>Đặt làm Poster</span>
+                        <span>Đặt làm ảnh đại diện</span>
                       </button>
                     )}
                     <span className="text-slate-400 font-mono text-[9.5px] truncate max-w-[90px]">

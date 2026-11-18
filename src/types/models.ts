@@ -320,6 +320,7 @@ export interface AdminUserDto {
   failedLoginAttempts?: number;
   lockedUntil?: string;
   locked?: boolean;
+  mustChangePassword?: boolean;
   createdAt: string;
 }
 
