@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { DnsDomainRuleDto, CreateDnsDomainRuleRequest } from '../../types/models';
+import { Pagination } from '../../components/Pagination';
 
 export const DnsFilteringPage: React.FC = () => {
   const [rules, setRules] = useState<DnsDomainRuleDto[]>([]);
@@ -24,6 +25,12 @@ export const DnsFilteringPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Pagination states
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
 
   // Modal create & edit
   const [showModal, setShowModal] = useState(false);
@@ -50,11 +57,13 @@ export const DnsFilteringPage: React.FC = () => {
       setLoading(true);
       const res = await adminApi.getDnsRules({
         ruleType: ruleTypeFilter === 'ALL' ? undefined : ruleTypeFilter,
-        search,
-        page: 0,
-        size: 50,
+        search: search.trim() || undefined,
+        page,
+        size: pageSize,
       });
       setRules(res.content || []);
+      setTotalPages(res.totalPages || 1);
+      setTotalElements(res.totalElements || 0);
     } catch (err: any) {
       setErrorMsg(err.message || 'Lỗi khi tải danh sách quy tắc DNS');
     } finally {
@@ -63,8 +72,12 @@ export const DnsFilteringPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchRules();
+    setPage(0);
   }, [ruleTypeFilter, search]);
+
+  useEffect(() => {
+    fetchRules();
+  }, [ruleTypeFilter, search, page, pageSize]);
 
   const handleToggle = async (rule: DnsDomainRuleDto) => {
     try {
@@ -336,6 +349,21 @@ export const DnsFilteringPage: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Smart Pagination */}
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalElements={totalElements}
+          pageSize={pageSize}
+          pageSizeOptions={[5, 10, 15, 20, 50]}
+          onPageChange={setPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setPage(0);
+          }}
+          itemLabel="quy tắc tên miền"
+        />
       </div>
 
       {/* Modal Add / Edit Rule */}

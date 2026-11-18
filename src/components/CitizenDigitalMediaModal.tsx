@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, 
@@ -11,7 +11,10 @@ import {
   Share2, 
   Sparkles,
   Landmark,
-  Tv
+  Tv,
+  Film,
+  Image as ImageIcon,
+  Star
 } from 'lucide-react';
 import { CampaignDto } from '../types/models';
 
@@ -22,16 +25,29 @@ interface Props {
 }
 
 export const CitizenDigitalMediaModal: React.FC<Props> = ({ isOpen, onClose, campaign }) => {
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      setSelectedImageIndex(0);
     }
     return () => {
       document.body.style.overflow = '';
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  // Trích xuất danh sách tất cả hình ảnh
+  const allImages = useMemo(() => {
+    const list: string[] = [];
+    if (campaign.bannerUrl) list.push(campaign.bannerUrl);
+    if (campaign.galleryUrls && Array.isArray(campaign.galleryUrls)) {
+      campaign.galleryUrls.forEach((u) => {
+        if (u && !list.includes(u)) list.push(u);
+      });
+    }
+    return list;
+  }, [campaign.bannerUrl, campaign.galleryUrls]);
 
   // Trích xuất link embed YouTube nếu có
   const getEmbedUrl = (url?: string): string | null => {
@@ -45,7 +61,11 @@ export const CitizenDigitalMediaModal: React.FC<Props> = ({ isOpen, onClose, cam
     return null;
   };
 
-  const embedVideoUrl = getEmbedUrl(campaign.videoUrl);
+  const hasVideo = !!campaign.videoUrl;
+  const isYouTube = hasVideo && !!getEmbedUrl(campaign.videoUrl);
+  const embedVideoUrl = isYouTube ? getEmbedUrl(campaign.videoUrl) : null;
+
+  if (!isOpen) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
@@ -55,7 +75,7 @@ export const CitizenDigitalMediaModal: React.FC<Props> = ({ isOpen, onClose, cam
         aria-hidden="true"
       />
       <div 
-        className="relative z-10 bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden transform transition-all my-auto"
+        className="relative z-10 bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden transform transition-all my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header - Phong cách Truyền thông số Chính quyền */}
@@ -69,7 +89,6 @@ export const CitizenDigitalMediaModal: React.FC<Props> = ({ isOpen, onClose, cam
                 <span className="text-[10px] font-black tracking-widest text-yellow-300 uppercase">
                   TRUYỀN THÔNG SỐ TP. HẢI PHÒNG
                 </span>
-                
               </div>
               <h3 className="font-extrabold text-sm sm:text-base tracking-tight truncate max-w-lg mt-0.5 text-white">
                 {campaign.title}
@@ -86,34 +105,107 @@ export const CitizenDigitalMediaModal: React.FC<Props> = ({ isOpen, onClose, cam
         </div>
 
         {/* Modal Body: Trình chiếu đa phương tiện số */}
-        <div className="p-5 overflow-y-auto space-y-4 flex-1 text-slate-800">
-          {/* 1. Khung Video Clip tuyên truyền nếu có */}
-          {embedVideoUrl ? (
-            <div className="relative rounded-lg overflow-hidden border border-slate-300 shadow-md bg-black aspect-video w-full">
-              <iframe
-                src={embedVideoUrl}
-                title={campaign.title}
-                className="w-full h-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+        <div className="p-5 overflow-y-auto space-y-5 flex-1 text-slate-800">
+          {/* ================= 1. POSTER CHỦ ĐẠO & GALLERY ẢNH ================= */}
+          {allImages.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <ImageIcon className="w-4 h-4 text-[#004b87]" />
+                  <span>Poster & Hình ảnh tuyên truyền</span>
+                </span>
+                {allImages.length > 1 && (
+                  <span className="text-[11px] text-slate-500 font-mono">
+                    Ảnh {selectedImageIndex + 1} / {allImages.length}
+                  </span>
+                )}
+              </div>
+
+              {/* Main Poster Display Box */}
+              <div className="relative rounded-lg overflow-hidden border border-slate-300 shadow-md bg-slate-950 group flex items-center justify-center min-h-[220px] max-h-[380px]">
+                {selectedImageIndex === 0 && (
+                  <div className="absolute top-2.5 left-2.5 z-10 bg-amber-500 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded shadow-sm flex items-center gap-1 uppercase tracking-wide">
+                    <Star className="w-3 h-3 fill-slate-950 text-slate-950" />
+                    <span>Poster chính</span>
+                  </div>
+                )}
+
+                <img
+                  src={allImages[selectedImageIndex]}
+                  alt={campaign.title}
+                  className="w-full h-auto max-h-[380px] object-contain mx-auto transition-transform duration-300"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = '/banners/haiphong_city_bg.jpg';
+                  }}
+                />
+              </div>
+
+              {/* Thumbnails Strip if multiple images */}
+              {allImages.length > 1 && (
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5">
+                  {allImages.map((img, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setSelectedImageIndex(idx)}
+                      className={`relative flex-shrink-0 w-16 h-11 rounded-md overflow-hidden border-2 transition-all cursor-pointer ${
+                        selectedImageIndex === idx
+                          ? 'border-[#004b87] ring-2 ring-blue-500/30 scale-105'
+                          : 'border-slate-200 opacity-70 hover:opacity-100 hover:border-slate-400'
+                      }`}
+                    >
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      {idx === 0 && (
+                        <div className="absolute bottom-0 inset-x-0 bg-amber-500 text-[8px] font-black text-slate-950 text-center uppercase py-0.2">
+                          Poster
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          ) : campaign.bannerUrl ? (
-            /* 2. Ảnh Poster / Banner Truyền thông số kích thước lớn */
-            <div className="relative rounded-lg overflow-hidden border border-slate-200 shadow-md max-h-80 bg-slate-900 group">
-              <img
-                src={campaign.bannerUrl}
-                alt={campaign.title}
-                className="w-full h-auto max-h-80 object-contain mx-auto"
-                onError={(e) => {
-                  (e.currentTarget as HTMLElement).style.display = 'none';
-                }}
-              />
+          )}
+
+          {/* ================= 2. VIDEO CLIP TUYÊN TRUYỀN (NẾU CÓ) ================= */}
+          {hasVideo && (
+            <div className="space-y-2 pt-1 border-t border-slate-200">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <Film className="w-4 h-4 text-rose-600" />
+                  <span>Video clip tuyên truyền số</span>
+                </span>
+                <span className="text-[10px] px-2 py-0.5 bg-rose-50 text-rose-700 font-semibold rounded border border-rose-200">
+                  {isYouTube ? 'YouTube Clip' : 'Video phát trực tiếp'}
+                </span>
+              </div>
+
+              <div className="relative rounded-lg overflow-hidden border border-slate-300 shadow-md bg-black aspect-video w-full">
+                {isYouTube && embedVideoUrl ? (
+                  <iframe
+                    src={embedVideoUrl}
+                    title={campaign.title}
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video
+                    src={campaign.videoUrl}
+                    controls
+                    playsInline
+                    className="w-full h-full object-contain bg-black"
+                    preload="metadata"
+                  >
+                    Trình duyệt không hỗ trợ xem video trực tiếp.
+                  </video>
+                )}
+              </div>
             </div>
-          ) : null}
+          )}
 
           {/* 3. Tiêu đề và thông tin chiến dịch */}
-          <div className="space-y-2">
+          <div className="space-y-2 pt-1">
             <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500 font-mono">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-semibold border border-amber-200">
                 <Sparkles className="w-3 h-3 text-amber-600" />

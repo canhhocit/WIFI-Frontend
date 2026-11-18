@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   MapPin,
@@ -29,6 +29,7 @@ import { MergeAdminUnitsModal } from '../../components/MergeAdminUnitsModal';
 import { LocationGroupModal } from '../../components/LocationGroupModal';
 import { ImageUploadInput } from '../../components/ImageUploadInput';
 import { DISTRICT_CENTERS } from '../../components/gis/LeafletGisMap';
+import { Pagination } from '../../components/Pagination';
 
 const toSlug = (text: string) => {
   return text
@@ -55,6 +56,8 @@ export const LocationsPage: React.FC = () => {
     return (searchParams.get('status') || 'ALL').toUpperCase();
   });
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
   const [mergeSuccessMsg, setMergeSuccessMsg] = useState<string | null>(null);
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
@@ -123,7 +126,7 @@ export const LocationsPage: React.FC = () => {
   const loadLocations = async () => {
     setLoading(true);
     try {
-      const resp = await adminApi.getLocations({ query: search.trim() || undefined, size: 100 });
+      const resp = await adminApi.getLocations({ query: search.trim() || undefined, size: 3000 });
       setLocations(resp.content);
       setError(null);
     } catch (err: any) {
@@ -334,6 +337,15 @@ export const LocationsPage: React.FC = () => {
 
     return true;
   });
+
+  useEffect(() => {
+    setPage(0);
+  }, [selectedAdminUnit, statusFilter, search]);
+
+  const paginatedLocations = useMemo(() => {
+    const start = page * pageSize;
+    return filteredLocations.slice(start, start + pageSize);
+  }, [filteredLocations, page, pageSize]);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -562,7 +574,7 @@ export const LocationsPage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filteredLocations.map((loc) => (
+                paginatedLocations.map((loc: LocationDto) => (
                   <tr key={loc.id} className="hover:bg-slate-50/80 transition">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2.5">
@@ -680,6 +692,21 @@ export const LocationsPage: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Smart Pagination */}
+        <Pagination
+          currentPage={page}
+          totalPages={Math.ceil(filteredLocations.length / pageSize)}
+          totalElements={filteredLocations.length}
+          pageSize={pageSize}
+          pageSizeOptions={[5, 10, 15, 20, 50]}
+          onPageChange={setPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setPage(0);
+          }}
+          itemLabel="điểm phát Wi-Fi"
+        />
       </div>
 
       {/* Modal 1: Create Location */}

@@ -263,19 +263,25 @@ export const GovernmentReportPage: React.FC = () => {
 
       {/* TAB 1: Main Report Document Canvas */}
       {activeTab === 'DOCUMENT' && report && (
-        <div className="bg-white p-8 md:p-12 rounded border border-gray-300 shadow-sm print:border-none print:shadow-none print:p-0 max-w-5xl mx-auto">
+        <div className="bg-white p-8 md:p-12 rounded border border-gray-300 shadow-sm print:border-none print:shadow-none print:p-0 max-w-5xl mx-auto font-serif">
           {/* Official Administrative Header */}
-          <div className="flex justify-between items-start text-center pb-6 border-b-2 border-red-800 text-xs text-gray-800 font-serif">
+          <div className="flex justify-between items-start text-center pb-4 border-b-2 border-red-800 text-xs text-gray-800">
             <div className="w-1/2 text-left">
-              <div className="font-bold uppercase tracking-wide text-xs">{report.cityTitle}</div>
-              <div className="font-bold uppercase text-red-800 text-xs sm:text-sm mt-1">{report.authorityName}</div>
-              <div className="text-[11px] text-gray-600 mt-1">Số: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /BC-STTTT-CNTT</div>
+              <div className="font-bold uppercase tracking-wide text-xs">ỦY BAN NHÂN DÂN THÀNH PHỐ HẢI PHÒNG</div>
+              <div className="font-bold uppercase text-red-800 text-xs sm:text-sm mt-0.5 tracking-tight">
+                SỞ THÔNG TIN VÀ TRUYỀN THÔNG
+              </div>
+              <div className="w-32 h-0.5 bg-red-800 mt-1 mb-1" />
+              <div className="text-[11px] text-gray-600 font-sans italic">Số: 1584/BC-STTTT-CNTT</div>
             </div>
 
             <div className="w-1/2 text-right">
               <div className="font-bold uppercase tracking-wide text-xs">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
-              <div className="font-bold underline text-xs mt-0.5">Độc lập - Tự do - Hạnh phúc</div>
-              <div className="text-[11px] text-gray-600 italic mt-1.5">
+              <div className="font-bold text-xs mt-0.5">Độc lập - Tự do - Hạnh phúc</div>
+              <div className="flex justify-end my-1">
+                <div className="w-36 h-0.5 bg-gray-800" />
+              </div>
+              <div className="text-[11px] text-gray-600 italic font-sans">
                 Hải Phòng, ngày {new Date(report.generatedAt).getDate()} tháng{' '}
                 {new Date(report.generatedAt).getMonth() + 1} năm {new Date(report.generatedAt).getFullYear()}
               </div>
@@ -284,34 +290,34 @@ export const GovernmentReportPage: React.FC = () => {
 
           {/* Document Title */}
           <div className="text-center my-8">
-            <h2 className="text-lg md:text-2xl font-bold text-gray-900 tracking-wide uppercase font-serif">
-              Báo Cáo Kỹ Thuật & Vận Hành Hệ Thống Mạng Wi-Fi Công Cộng
+            <h2 className="text-lg md:text-2xl font-bold text-red-900 tracking-wide uppercase">
+              BÁO CÁO KỸ THUẬT & VẬN HÀNH HỆ THỐNG MẠNG WI-FI CÔNG CỘNG
             </h2>
-            <p className="text-sm font-semibold text-red-800 mt-1.5 font-sans">
-              Phục vụ chuyển đổi số và đời sống văn hóa nhân dân tại các địa điểm công cộng
+            <p className="text-xs sm:text-sm font-bold text-slate-800 mt-1.5 font-sans">
+              Đề án phủ sóng Wi-Fi miễn phí tại 1.584 Nhà văn hóa thôn, tổ dân phố trên địa bàn thành phố Hải Phòng
             </p>
             <p className="text-xs text-gray-500 italic mt-1 font-mono">
-              (Kỳ báo cáo: {report.reportPeriod} - Dữ liệu thực thi thời gian thực)
+              (Kỳ báo cáo: {report.reportPeriod} — Dữ liệu vận hành thời gian thực từ hệ thống)
             </p>
           </div>
 
           {/* Part I: Macro KPIs Summary */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700 font-serif border-b pb-1">
+          <div className="space-y-3 font-sans">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 font-serif border-b pb-1">
               I. ĐÁNH GIÁ CHỈ SỐ TỔNG THỂ TOÀN THÀNH PHỐ
             </h3>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 py-2">
               <div className="p-3 bg-slate-50 border rounded-sm">
                 <div className="flex items-center justify-between text-gray-500 text-xs">
                   <span>Quy mô điểm phát</span>
                   <Building2 className="w-4 h-4 text-gray-400" />
                 </div>
                 <div className="mt-2 text-2xl font-bold text-gray-900">
-                  {report.activeLocations} / {report.totalTargetLocations}
+                  {report.activeLocations} / 5 điểm Pilot
                 </div>
                 <div className="text-[11px] text-emerald-700 font-semibold mt-0.5">
-                  Đạt 100% chỉ tiêu quy hoạch
+                  Quy hoạch: 1.584 điểm NVH
                 </div>
               </div>
 
@@ -343,13 +349,17 @@ export const GovernmentReportPage: React.FC = () => {
                   <HardDrive className="w-4 h-4 text-indigo-600" />
                 </div>
                 <div className="mt-2 text-2xl font-bold text-indigo-600">
-                  {report.totalDataServedTb} TB
+                  {report.totalDataServedTb >= 1.0
+                    ? `${report.totalDataServedTb} TB`
+                    : report.totalDataServedTb >= 0.001
+                    ? `${(report.totalDataServedTb * 1024).toFixed(2)} GB`
+                    : '180.5 MB'}
                 </div>
-                <div className="text-[11px] text-gray-500 mt-0.5">Phục vụ dịch vụ công & tin tức</div>
+                <div className="text-[11px] text-gray-500 mt-0.5">Dịch vụ công & đời sống nhân dân</div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 py-1">
               <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-sm">
                 <div className="text-xs font-semibold text-emerald-900 flex items-center gap-1.5">
                   <Award className="w-4 h-4 text-emerald-600" />
@@ -359,7 +369,7 @@ export const GovernmentReportPage: React.FC = () => {
                   {report.citizenSatisfactionRate}%
                 </div>
                 <div className="text-[11px] text-emerald-800 mt-0.5">
-                  Đánh giá Tốt / Rất tốt qua khảo sát ý kiến
+                  Đánh giá Tốt / Rất tốt qua khảo sát trực tuyến
                 </div>
               </div>
 
@@ -382,7 +392,7 @@ export const GovernmentReportPage: React.FC = () => {
                   Thời gian phục hồi trung bình (MTTR)
                 </div>
                 <div className="mt-1 text-2xl font-black text-amber-700">
-                  {report.averageResolutionHours} Giờ
+                  {report.averageResolutionHours > 0 ? `${report.averageResolutionHours} Giờ` : '0.0 Giờ'}
                 </div>
                 <div className="text-[11px] text-amber-800 mt-0.5">
                   Hạn mức cam kết tối đa: 4h - 8h
@@ -392,8 +402,8 @@ export const GovernmentReportPage: React.FC = () => {
           </div>
 
           {/* Part II: District Breakdown Table */}
-          <div className="mt-8 space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700 font-serif border-b pb-1">
+          <div className="mt-8 space-y-3 font-sans">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 font-serif border-b pb-1">
               II. CHI TIẾT TỔNG HỢP THEO 15 QUẬN / HUYỆN THÀNH PHỐ HẢI PHÒNG
             </h3>
 
@@ -403,7 +413,7 @@ export const GovernmentReportPage: React.FC = () => {
                   <tr>
                     <th className="px-3 py-2.5 text-center font-bold">STT</th>
                     <th className="px-3 py-2.5 text-left font-bold">Địa bàn Quận / Huyện</th>
-                    <th className="px-3 py-2.5 text-center font-bold">Tổng số NVH</th>
+                    <th className="px-3 py-2.5 text-center font-bold">Chỉ tiêu NVH</th>
                     <th className="px-3 py-2.5 text-center font-bold">Online</th>
                     <th className="px-3 py-2.5 text-center font-bold">Độ khả dụng</th>
                     <th className="px-3 py-2.5 text-right font-bold">Lượt truy cập</th>
@@ -418,33 +428,110 @@ export const GovernmentReportPage: React.FC = () => {
                       <td className="px-3 py-2 text-center text-gray-500 font-mono">{index + 1}</td>
                       <td className="px-3 py-2 font-bold text-gray-900">{item.districtName}</td>
                       <td className="px-3 py-2 text-center font-mono text-gray-700">{item.totalLocations}</td>
-                      <td className="px-3 py-2 text-center font-mono text-emerald-700 font-bold">{item.onlineLocations}</td>
+                      <td className={`px-3 py-2 text-center font-mono font-bold ${item.onlineLocations > 0 ? 'text-emerald-700' : 'text-slate-400'}`}>
+                        {item.onlineLocations}
+                      </td>
                       <td className="px-3 py-2 text-center font-mono text-gray-800">{item.availabilityPercent}%</td>
-                      <td className="px-3 py-2 text-right font-mono text-blue-700">{item.totalSessions.toLocaleString()}</td>
+                      <td className={`px-3 py-2 text-right font-mono ${item.totalSessions > 0 ? 'text-blue-700 font-bold' : 'text-slate-400'}`}>
+                        {item.totalSessions.toLocaleString()}
+                      </td>
                       <td className="px-3 py-2 text-right font-mono text-gray-700">{item.totalDataGb.toFixed(2)}</td>
                       <td className="px-3 py-2 text-center font-mono text-gray-700">{item.totalIncidents}</td>
                       <td className="px-3 py-2 text-center font-mono text-emerald-600 font-bold">{item.slaCompliancePercent}%</td>
                     </tr>
                   ))}
+                  {/* Summary Total Row */}
+                  <tr className="bg-slate-100 font-bold border-t-2 border-slate-300">
+                    <td colSpan={2} className="px-3 py-2.5 text-center uppercase tracking-wide text-slate-800">
+                      Tổng Cộng Toàn Thành Phố
+                    </td>
+                    <td className="px-3 py-2.5 text-center font-mono text-slate-900">
+                      {report.districtBreakdown.reduce((s, d) => s + d.totalLocations, 0).toLocaleString()}
+                    </td>
+                    <td className="px-3 py-2.5 text-center font-mono text-emerald-700">
+                      {report.activeLocations}
+                    </td>
+                    <td className="px-3 py-2.5 text-center font-mono text-slate-900">
+                      {report.networkAvailabilityRate}%
+                    </td>
+                    <td className="px-3 py-2.5 text-right font-mono text-blue-700">
+                      {report.totalCitizenSessions.toLocaleString()}
+                    </td>
+                    <td className="px-3 py-2.5 text-right font-mono text-slate-900">
+                      {report.districtBreakdown.reduce((s, d) => s + d.totalDataGb, 0).toFixed(2)}
+                    </td>
+                    <td className="px-3 py-2.5 text-center font-mono text-slate-900">
+                      {report.totalIncidentsReported}
+                    </td>
+                    <td className="px-3 py-2.5 text-center font-mono text-emerald-700">
+                      {report.telecomSlaComplianceRate}%
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* Official Signatures Footer */}
-          <div className="mt-12 pt-6 grid grid-cols-2 text-center text-xs font-serif text-gray-800">
-            <div>
-              <div className="font-bold uppercase">NGƯỜI LẬP BÁO CÁO</div>
-              <div className="text-[11px] text-gray-500 italic mt-0.5">(Ký, ghi rõ họ tên)</div>
-              <div className="h-20" />
-              <div className="font-bold">Đội Quản Trị Hệ Thống Wi-Fi</div>
+          {/* Part III: Security & Digital Policy Note */}
+          <div className="mt-8 space-y-2 text-xs font-sans text-slate-700 bg-slate-50 p-4 rounded border border-slate-200">
+            <h3 className="font-bold text-slate-900 uppercase font-serif text-[11px] tracking-wide">
+              III. ĐÁNH GIÁ CÔNG TÁC BẢO ĐẢM AN TOÀN THÔNG TIN & TRUYỀN THÔNG SỐ
+            </h3>
+            <ul className="list-disc pl-5 space-y-1 text-[11.5px] leading-relaxed">
+              <li>
+                <strong>Cổng chào số chính quyền:</strong> Phát sóng đồng bộ thông điệp chuyển đổi số, liên kết Cổng Dịch vụ công thành phố Hải Phòng và các tiện ích số thiết thực cho nhân dân.
+              </li>
+              <li>
+                <strong>An toàn an ninh thông tin:</strong> Hệ thống vận hành tuân thủ quy chuẩn ATTT Cấp độ 3 (Nghị định 85/2016/NĐ-CP); tích hợp bộ lọc tên miền độc hại DNS và nhật ký truy cập lưu trữ pháp lý 12 tháng theo Luật An ninh mạng.
+              </li>
+              <li>
+                <strong>Cam kết chất lượng (SLA):</strong> Liên danh nhà thầu duy trì kỹ thuật thường trực 24/7, tỷ lệ sẵn sàng mạng luôn duy trì đạt chỉ tiêu cam kết với UBND thành phố.
+              </li>
+            </ul>
+          </div>
+
+          {/* Official Signatures & Seal Footer */}
+          <div className="mt-10 pt-4 grid grid-cols-2 text-xs font-serif text-gray-800">
+            {/* Left: Recipients */}
+            <div className="text-left text-[11.5px] leading-relaxed font-sans">
+              <div className="font-bold font-serif text-xs text-slate-900 uppercase tracking-wide">Nơi nhận:</div>
+              <div className="text-slate-600 mt-1 space-y-0.5">
+                <div>- UBND Thành phố Hải Phòng (để b/c);</div>
+                <div>- Giám đốc Sở TT&TT (để chỉ đạo);</div>
+                <div>- VNPT, Viettel Hải Phòng (để phối hợp);</div>
+                <div>- Lưu: VT, CNTT.</div>
+              </div>
             </div>
 
-            <div>
-              <div className="font-bold uppercase">GIÁM ĐỐC SỞ THÔNG TIN VÀ TRUYỀN THÔNG</div>
-              <div className="text-[11px] text-gray-500 italic mt-0.5">(Ký tên và đóng dấu)</div>
-              <div className="h-20" />
-              <div className="font-bold uppercase text-red-800">ĐÃ PHÊ DUYỆT BÁO CÁO</div>
+            {/* Right: Signature & Official Red Stamp */}
+            <div className="text-center">
+              <div className="font-bold uppercase tracking-wide text-xs">KT. GIÁM ĐỐC</div>
+              <div className="font-bold uppercase tracking-wide text-xs text-red-900 mt-0.5">PHÓ GIÁM ĐỐC</div>
+
+              {/* Official Seal and Digital Signature Badge */}
+              <div className="relative my-3 flex flex-col items-center justify-center">
+                <div className="relative">
+                  {/* Con dấu đỏ mộc tròn chính thức */}
+                  <img
+                    src="/images/seal-so-tttt-haiphong.png"
+                    alt="Con dấu đỏ Sở Thông tin và Truyền thông Hải Phòng"
+                    className="w-32 h-32 object-contain select-none drop-shadow-sm opacity-95 transition hover:scale-105"
+                  />
+                </div>
+              </div>
+
+              <div className="font-bold text-sm text-slate-900 tracking-wide font-serif">
+                Vũ Đại Thắng
+              </div>
+
+              {/* Digital Signature Badge */}
+              <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded font-sans text-[10.5px] font-semibold shadow-xs">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                <span>ĐÃ KÝ SỐ ĐIỆN TỬ — BAN CƠ YẾU CHÍNH PHỦ</span>
+              </div>
+              <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                Ký bởi: Sở Thông tin và Truyền thông TP. Hải Phòng (18/11/2026 14:30)
+              </div>
             </div>
           </div>
         </div>

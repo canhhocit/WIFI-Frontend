@@ -12,6 +12,7 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { GatewayStatusDto, GatewayTransactionDto } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
+import { Pagination } from '../../components/Pagination';
 
 export const GatewayPage: React.FC = () => {
   const [status, setStatus] = useState<GatewayStatusDto | null>(null);
@@ -19,19 +20,27 @@ export const GatewayPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Pagination states
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
+
   useEffect(() => {
     loadGatewayData();
-  }, []);
+  }, [page, pageSize]);
 
   const loadGatewayData = async () => {
     setLoading(true);
     try {
       const [st, tx] = await Promise.all([
         adminApi.getGatewayStatus(),
-        adminApi.getGatewayTransactions(0, 20)
+        adminApi.getGatewayTransactions(page, pageSize)
       ]);
       setStatus(st);
-      setTransactions(tx.content);
+      setTransactions(tx.content || []);
+      setTotalPages(tx.totalPages || 1);
+      setTotalElements(tx.totalElements || 0);
       setError(null);
     } catch (err: any) {
       setError(err?.message || 'Không thể tải thông tin trạng thái cổng Gateway.');
@@ -200,6 +209,21 @@ export const GatewayPage: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Smart Pagination */}
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalElements={totalElements}
+          pageSize={pageSize}
+          pageSizeOptions={[5, 10, 15, 20, 50]}
+          onPageChange={setPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setPage(0);
+          }}
+          itemLabel="giao dịch mạng"
+        />
       </div>
     </div>
   );

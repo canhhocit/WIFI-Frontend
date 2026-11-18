@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Megaphone,
@@ -29,13 +29,17 @@ import {
   Image as ImageIcon,
   Globe,
   Radio,
+  Sparkles,
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { CampaignDto, CreateCampaignRequest, AdminUnitDto, LocationDto } from '../../types/models';
 import { Modal } from '../../components/Modal';
 import { AlertBanner } from '../../components/AlertBanner';
 import { ImageUploadInput } from '../../components/ImageUploadInput';
+import { MultiImageUploadInput } from '../../components/MultiImageUploadInput';
+import { VideoUploadInput } from '../../components/VideoUploadInput';
 import { VietnamFlag } from '../../components/VietnamFlag';
+import { Pagination } from '../../components/Pagination';
 
 export const CampaignsPage: React.FC = () => {
   const [campaigns, setCampaigns] = useState<CampaignDto[]>([]);
@@ -66,6 +70,7 @@ export const CampaignsPage: React.FC = () => {
     title: '',
     description: '',
     bannerUrl: '',
+    galleryUrls: [],
     videoUrl: '',
     actionUrl: '',
     targetAdminUnitId: undefined,
@@ -123,6 +128,7 @@ export const CampaignsPage: React.FC = () => {
       title: '',
       description: '',
       bannerUrl: '',
+      galleryUrls: [],
       videoUrl: '',
       actionUrl: '',
       targetAdminUnitId: undefined,
@@ -156,10 +162,14 @@ export const CampaignsPage: React.FC = () => {
   const openEdit = (c: CampaignDto) => {
     setEditingCampaign(c);
     setTargetMode(c.targetLocationId ? 'LOCATION' : (c.targetAdminUnitId ? 'ADMIN_UNIT' : 'ALL'));
+    const gallery = c.galleryUrls && c.galleryUrls.length > 0 
+      ? c.galleryUrls 
+      : (c.bannerUrl ? [c.bannerUrl] : []);
     setFormData({
       title: c.title,
       description: c.description || '',
-      bannerUrl: c.bannerUrl || '',
+      bannerUrl: c.bannerUrl || (gallery.length > 0 ? gallery[0] : ''),
+      galleryUrls: gallery,
       videoUrl: c.videoUrl || '',
       actionUrl: c.actionUrl || '',
       targetAdminUnitId: c.targetAdminUnitId,
@@ -317,6 +327,18 @@ export const CampaignsPage: React.FC = () => {
     return titleMatch || descMatch || creatorMatch;
   });
 
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(9);
+
+  useEffect(() => {
+    setPage(0);
+  }, [statusFilter, searchTerm]);
+
+  const paginatedCampaigns = useMemo(() => {
+    const start = page * pageSize;
+    return filteredCampaigns.slice(start, start + pageSize);
+  }, [filteredCampaigns, page, pageSize]);
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* 1. Header (Follows exact DevicesPage / LocationsPage template) */}
@@ -333,15 +355,7 @@ export const CampaignsPage: React.FC = () => {
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Làm mới
           </button>
-          <a
-            href="/portal"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
-            title="Mở cổng Wi-Fi đang phát cho người dân"
-          >
-            <ExternalLink className="w-3.5 h-3.5 text-blue-600" /> Mở cổng đang chạy
-          </a>
+         
           <Link
             to="/admin/portal-builder"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs"
@@ -363,10 +377,6 @@ export const CampaignsPage: React.FC = () => {
       </div>
 
       {error && <AlertBanner type="error" message={error} />}
-
-      <p className="text-right text-xs text-slate-500">
-        {multimediaCount} chiến dịch có banner hoặc video
-      </p>
 
       {/* Filter & Search Toolbar */}
       <div className="bg-white p-2.5 sm:p-3 rounded border border-slate-300 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -445,7 +455,7 @@ export const CampaignsPage: React.FC = () => {
       ) : viewMode === 'GRID' ? (
         /* ================= CHẾ ĐỘ DẠNG THẺ (GRID) - ĐÚNG CHUẨN DESIGN SYSTEM HIỆN TẠI ================= */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredCampaigns.map((c) => {
+          {paginatedCampaigns.map((c: CampaignDto) => {
             const ytThumbnail = getYouTubeThumbnail(c.videoUrl);
             const displayBanner = c.bannerUrl || ytThumbnail || '/banners/haiphong_city_bg.jpg';
             const hasVideo = !!c.videoUrl;
@@ -461,18 +471,31 @@ export const CampaignsPage: React.FC = () => {
                     <div className="flex items-center justify-between gap-2 h-6">
                       <div className="flex items-center gap-1.5">
                         {renderStatusBadge(c)}
-                        {hasVideo ? (
+                        {hasVideo && (c.bannerUrl || (c.galleryUrls && c.galleryUrls.length > 0)) ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-300 px-1.5 py-0.5 rounded-sm">
+                            <Sparkles className="w-3 h-3 text-amber-600" />
+                            {c.galleryUrls && c.galleryUrls.length > 1 ? `${c.galleryUrls.length} ảnh + Video` : 'Poster + Video'}
+                          </span>
+                        ) : hasVideo ? (
                           <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-sm">
                             <Video className="w-3 h-3 text-red-600" /> Video
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded-sm">
-                            <ImageIcon className="w-3 h-3 text-slate-500" /> Poster
+                            <ImageIcon className="w-3 h-3 text-slate-500" />
+                            {c.galleryUrls && c.galleryUrls.length > 1 ? `${c.galleryUrls.length} ảnh` : 'Poster'}
                           </span>
                         )}
                       </div>
-                      <span className="text-[11px] font-mono font-bold text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded-sm border border-slate-200">
-                        Ưu tiên: P{c.priority}
+                      <span
+                        className={`text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-sm border ${
+                          c.priority === 1
+                            ? 'text-red-700 bg-red-50 border-red-200 shadow-xs'
+                            : 'text-slate-500 bg-slate-50 border-slate-200'
+                        }`}
+                        title={c.priority === 1 ? 'Độ ưu tiên P1 (Cao nhất)' : `Mức ưu tiên P${c.priority}`}
+                      >
+                        Ưu tiên: P{c.priority}{c.priority === 1 ? ' (Cao nhất)' : ''}
                       </span>
                     </div>
 
@@ -629,7 +652,7 @@ export const CampaignsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredCampaigns.map((c) => (
+                {paginatedCampaigns.map((c: CampaignDto) => (
                   <tr key={c.id} className="hover:bg-slate-50/80 transition">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2.5">
@@ -692,8 +715,15 @@ export const CampaignsPage: React.FC = () => {
                       <div>Đến: {formatDate(c.endTime)}</div>
                     </td>
                     <td className="py-3 px-4">
-                      <span className="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-sm font-mono text-[11px]">
-                        P{c.priority}
+                      <span
+                        className={`font-bold px-2 py-0.5 rounded-sm font-mono text-[11px] border ${
+                          c.priority === 1
+                            ? 'text-red-700 bg-red-50 border-red-200 shadow-xs'
+                            : 'text-slate-700 bg-slate-100 border-slate-200'
+                        }`}
+                        title={c.priority === 1 ? 'Độ ưu tiên P1 (Cao nhất)' : `Mức ưu tiên P${c.priority}`}
+                      >
+                        P{c.priority}{c.priority === 1 ? ' (Cao nhất)' : ''}
                       </span>
                     </td>
                     <td className="py-3 px-4">
@@ -767,6 +797,39 @@ export const CampaignsPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={page}
+            totalPages={Math.ceil(filteredCampaigns.length / pageSize)}
+            totalElements={filteredCampaigns.length}
+            pageSize={pageSize}
+            pageSizeOptions={[5, 10, 15, 20]}
+            onPageChange={setPage}
+            onPageSizeChange={(newSize) => {
+              setPageSize(newSize);
+              setPage(0);
+            }}
+            itemLabel="chiến dịch"
+          />
+        </div>
+      )}
+
+      {/* Smart Pagination for Grid Mode */}
+      {viewMode === 'GRID' && filteredCampaigns.length > 0 && (
+        <div className="bg-white rounded-lg border border-slate-200/90 shadow-2xs overflow-hidden">
+          <Pagination
+            currentPage={page}
+            totalPages={Math.ceil(filteredCampaigns.length / pageSize)}
+            totalElements={filteredCampaigns.length}
+            pageSize={pageSize}
+            pageSizeOptions={[6, 9, 12, 18, 24]}
+            onPageChange={setPage}
+            onPageSizeChange={(newSize) => {
+              setPageSize(newSize);
+              setPage(0);
+            }}
+            itemLabel="chiến dịch"
+            className="border-t-0"
+          />
         </div>
       )}
 
@@ -878,24 +941,56 @@ export const CampaignsPage: React.FC = () => {
                         {simulatingCampaign.title}
                       </h4>
 
-                      {/* Video or Image */}
-                      {getEmbedUrl(simulatingCampaign.videoUrl) ? (
-                        <div className="aspect-video w-full rounded overflow-hidden border border-slate-300 bg-black">
-                          <iframe
-                            src={getEmbedUrl(simulatingCampaign.videoUrl)!}
-                            title={simulatingCampaign.title}
-                            className="w-full h-full border-0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
+                      {/* 1. Poster chính & Thư viện ảnh */}
+                      {simulatingCampaign.bannerUrl ? (
+                        <div className="relative aspect-video w-full rounded overflow-hidden border border-slate-200 bg-slate-900 group">
+                          <img
+                            src={simulatingCampaign.bannerUrl}
+                            alt={simulatingCampaign.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).src = '/banners/haiphong_city_bg.jpg';
+                            }}
                           />
+                          <div className="absolute top-1.5 left-1.5 bg-amber-500 text-slate-950 font-black text-[9px] px-1.5 py-0.2 rounded shadow-xs uppercase">
+                            Poster chính
+                          </div>
                         </div>
-                      ) : (
+                      ) : !simulatingCampaign.videoUrl ? (
                         <div className="aspect-video w-full rounded overflow-hidden border border-slate-200 bg-slate-900">
                           <img
-                            src={simulatingCampaign.bannerUrl || getYouTubeThumbnail(simulatingCampaign.videoUrl) || '/banners/haiphong_city_bg.jpg'}
+                            src="/banners/haiphong_city_bg.jpg"
                             alt=""
                             className="w-full h-full object-cover"
                           />
+                        </div>
+                      ) : null}
+
+                      {/* 2. Video clip tuyên truyền nếu có (Hiển thị đồng thời cả Poster & Video) */}
+                      {simulatingCampaign.videoUrl && (
+                        <div className="space-y-1">
+                          <div className="text-[10px] font-bold text-slate-700 flex items-center gap-1">
+                            <Video className="w-3 h-3 text-red-600" />
+                            <span>Video clip tuyên truyền</span>
+                          </div>
+                          <div className="aspect-video w-full rounded overflow-hidden border border-slate-300 bg-black">
+                            {getEmbedUrl(simulatingCampaign.videoUrl) ? (
+                              <iframe
+                                src={getEmbedUrl(simulatingCampaign.videoUrl)!}
+                                title={simulatingCampaign.title}
+                                className="w-full h-full border-0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            ) : (
+                              <video
+                                src={simulatingCampaign.videoUrl}
+                                controls
+                                playsInline
+                                className="w-full h-full object-contain"
+                              />
+                            )}
+                          </div>
                         </div>
                       )}
 
@@ -979,44 +1074,41 @@ export const CampaignsPage: React.FC = () => {
             />
           </div>
 
-          {/* Banner Upload */}
+          {/* Multi-Images & Poster Upload */}
           <div>
-            <ImageUploadInput
-              value={formData.bannerUrl || ''}
-              onChange={(url) => setFormData({ ...formData, bannerUrl: url })}
-              label="Ảnh Banner / Poster chiến dịch"
-              helperText="Tải poster từ máy tính hoặc nhập liên kết ảnh"
+            <MultiImageUploadInput
+              bannerUrl={formData.bannerUrl || ''}
+              galleryUrls={formData.galleryUrls || []}
+              onChange={(banner, gallery) => setFormData({ ...formData, bannerUrl: banner, galleryUrls: gallery })}
+              label="Ảnh Poster chính & Album ảnh chiến dịch"
+              helperText="Tải lên một hoặc nhiều ảnh từ máy tính (hoặc dán link). Ảnh đầu tiên sẽ là Poster chính đại diện."
               category="campaigns"
             />
           </div>
 
-          {/* Video URL & Action URL */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate" title="Video tuyên truyền (YouTube URL)">
-                Video tuyên truyền (YouTube URL)
-              </label>
-              <input
-                type="text"
-                value={formData.videoUrl || ''}
-                onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                placeholder="https://www.youtube.com/watch?v=..."
-                className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
-              />
-            </div>
+          {/* Video Upload & Embed */}
+          <div>
+            <VideoUploadInput
+              value={formData.videoUrl || ''}
+              onChange={(url) => setFormData({ ...formData, videoUrl: url })}
+              label="Video clip tuyên truyền số"
+              helperText="Có thể tải video trực tiếp từ máy tính (MP4, WebM, MOV) hoặc gắn link YouTube"
+              category="campaign_videos"
+            />
+          </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate" title="Link chuyển hướng khi bấm (Action URL)">
-                Link chuyển hướng khi bấm (Action URL)
-              </label>
-              <input
-                type="text"
-                value={formData.actionUrl || ''}
-                onChange={(e) => setFormData({ ...formData, actionUrl: e.target.value })}
-                placeholder="https://dichvucong.haiphong.gov.vn"
-                className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
-              />
-            </div>
+          {/* Action URL */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1" title="Link chuyển hướng khi bấm (Action URL)">
+              Link chuyển hướng khi bấm (Action URL - Cổng Dịch vụ công / Tin tức chỉ đạo)
+            </label>
+            <input
+              type="text"
+              value={formData.actionUrl || ''}
+              onChange={(e) => setFormData({ ...formData, actionUrl: e.target.value })}
+              placeholder="https://dichvucong.haiphong.gov.vn"
+              className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+            />
           </div>
 
           {/* Target Scope Selection */}
@@ -1125,7 +1217,7 @@ export const CampaignsPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate">Độ ưu tiên (1 - 10)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate">Độ ưu tiên (P1: Cao nhất → P10: Thấp nhất)</label>
               <input
                 type="number"
                 min="1"
@@ -1189,42 +1281,41 @@ export const CampaignsPage: React.FC = () => {
               />
             </div>
 
+            {/* Multi-Images & Poster Upload */}
             <div>
-              <ImageUploadInput
-                value={formData.bannerUrl || ''}
-                onChange={(url) => setFormData({ ...formData, bannerUrl: url })}
-                label="Ảnh Banner / Poster chiến dịch"
-                helperText="Tải poster từ máy tính hoặc nhập liên kết ảnh"
+              <MultiImageUploadInput
+                bannerUrl={formData.bannerUrl || ''}
+                galleryUrls={formData.galleryUrls || []}
+                onChange={(banner, gallery) => setFormData({ ...formData, bannerUrl: banner, galleryUrls: gallery })}
+                label="Ảnh Poster chính & Album ảnh chiến dịch"
+                helperText="Tải lên một hoặc nhiều ảnh từ máy tính (hoặc dán link). Ảnh đầu tiên sẽ là Poster chính đại diện."
                 category="campaigns"
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate" title="Video tuyên truyền (YouTube URL)">
-                  Video tuyên truyền (YouTube URL)
-                </label>
-                <input
-                  type="text"
-                  value={formData.videoUrl || ''}
-                  onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
-                />
-              </div>
+            {/* Video Upload & Embed */}
+            <div>
+              <VideoUploadInput
+                value={formData.videoUrl || ''}
+                onChange={(url) => setFormData({ ...formData, videoUrl: url })}
+                label="Video clip tuyên truyền số"
+                helperText="Có thể tải video trực tiếp từ máy tính (MP4, WebM, MOV) hoặc gắn link YouTube"
+                category="campaign_videos"
+              />
+            </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate" title="Link chuyển hướng khi bấm (Action URL)">
-                  Link chuyển hướng khi bấm (Action URL)
-                </label>
-                <input
-                  type="text"
-                  value={formData.actionUrl || ''}
-                  onChange={(e) => setFormData({ ...formData, actionUrl: e.target.value })}
-                  placeholder="https://dichvucong.haiphong.gov.vn"
-                  className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
-                />
-              </div>
+            {/* Action URL */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1" title="Link chuyển hướng khi bấm (Action URL)">
+                Link chuyển hướng khi bấm (Action URL - Cổng Dịch vụ công / Tin tức chỉ đạo)
+              </label>
+              <input
+                type="text"
+                value={formData.actionUrl || ''}
+                onChange={(e) => setFormData({ ...formData, actionUrl: e.target.value })}
+                placeholder="https://dichvucong.haiphong.gov.vn"
+                className="w-full h-9 px-3 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+              />
             </div>
 
             {/* Target Scope Selection */}
@@ -1333,7 +1424,7 @@ export const CampaignsPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate">Độ ưu tiên (1 - 10)</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1 h-5 flex items-center truncate">Độ ưu tiên (P1: Cao nhất → P10: Thấp nhất)</label>
                 <input
                   type="number"
                   min="1"

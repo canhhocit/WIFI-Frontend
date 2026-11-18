@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { adminApi } from '../../api/adminApi';
+import { Pagination } from '../../components/Pagination';
 import {
   IncidentTicketDto,
   IncidentSeverity,
@@ -71,9 +72,9 @@ export const IncidentsPage: React.FC = () => {
     setLoading(true);
     try {
       const [ticketsPage, locsPage, reportsPage] = await Promise.all([
-        adminApi.getIncidents({ size: 50 }),
-        adminApi.getLocations({ page: 0, size: 100 }),
-        adminApi.getCitizenReports({ size: 50 }).catch(() => ({ content: [], totalElements: 0 })),
+        adminApi.getIncidents({ size: 500 }),
+        adminApi.getLocations({ page: 0, size: 500 }),
+        adminApi.getCitizenReports({ size: 500 }).catch(() => ({ content: [], totalElements: 0 })),
       ]);
       setIncidents(ticketsPage.content);
       setLocations(locsPage.content);
@@ -119,6 +120,31 @@ export const IncidentsPage: React.FC = () => {
       return matchStatus && matchSearch;
     });
   }, [citizenReports, citizenStatusFilter, searchQuery]);
+
+  // Pagination states
+  const [ticketPage, setTicketPage] = useState(0);
+  const [ticketPageSize, setTicketPageSize] = useState(10);
+
+  const [citizenPage, setCitizenPage] = useState(0);
+  const [citizenPageSize, setCitizenPageSize] = useState(10);
+
+  useEffect(() => {
+    setTicketPage(0);
+  }, [selectedStatus, selectedSeverity, searchQuery]);
+
+  useEffect(() => {
+    setCitizenPage(0);
+  }, [citizenStatusFilter, searchQuery]);
+
+  const paginatedIncidents = useMemo(() => {
+    const start = ticketPage * ticketPageSize;
+    return filteredIncidents.slice(start, start + ticketPageSize);
+  }, [filteredIncidents, ticketPage, ticketPageSize]);
+
+  const paginatedCitizenReports = useMemo(() => {
+    const start = citizenPage * citizenPageSize;
+    return filteredCitizenReports.slice(start, start + citizenPageSize);
+  }, [filteredCitizenReports, citizenPage, citizenPageSize]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -373,7 +399,7 @@ export const IncidentsPage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filteredIncidents.map((t) => {
+                paginatedIncidents.map((t) => {
                   const sla = calculateRemainingSla(t.slaDeadline, t.status);
                   return (
                     <tr key={t.id} className="hover:bg-gray-50">
@@ -475,6 +501,21 @@ export const IncidentsPage: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Smart Pagination for Incidents */}
+        <Pagination
+          currentPage={ticketPage}
+          totalPages={Math.ceil(filteredIncidents.length / ticketPageSize)}
+          totalElements={filteredIncidents.length}
+          pageSize={ticketPageSize}
+          pageSizeOptions={[5, 10, 15, 20, 50]}
+          onPageChange={setTicketPage}
+          onPageSizeChange={(newSize) => {
+            setTicketPageSize(newSize);
+            setTicketPage(0);
+          }}
+          itemLabel="phiếu sự cố"
+        />
       </div>
     </>
   ) : (
@@ -537,7 +578,7 @@ export const IncidentsPage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filteredCitizenReports.map((r) => {
+                paginatedCitizenReports.map((r) => {
                   const issueBadge =
                     r.issueType === 'CANNOT_CONNECT'
                       ? { text: 'Mất Internet', color: 'bg-red-100 text-red-800' }
@@ -613,6 +654,21 @@ export const IncidentsPage: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Smart Pagination for Citizen Reports */}
+        <Pagination
+          currentPage={citizenPage}
+          totalPages={Math.ceil(filteredCitizenReports.length / citizenPageSize)}
+          totalElements={filteredCitizenReports.length}
+          pageSize={citizenPageSize}
+          pageSizeOptions={[5, 10, 15, 20, 50]}
+          onPageChange={setCitizenPage}
+          onPageSizeChange={(newSize) => {
+            setCitizenPageSize(newSize);
+            setCitizenPage(0);
+          }}
+          itemLabel="phản ánh dân sinh"
+        />
       </div>
     </div>
   )}

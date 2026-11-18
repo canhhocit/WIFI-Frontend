@@ -98,7 +98,7 @@ export const PortalBuilderPage: React.FC = () => {
   });
   const [savedLocFormData, setSavedLocFormData] = useState<typeof locFormData | null>(null);
 
-  // Live Studio Simulation State
+  // Live preview state
   const [previewDevice, setPreviewDevice] = useState<'MOBILE' | 'TABLET' | 'DESKTOP'>('MOBILE');
   const [previewExpanded, setPreviewExpanded] = useState(false);
   const [livePortalContent, setLivePortalContent] = useState<PortalInitResponse | null>(null);
@@ -407,7 +407,7 @@ export const PortalBuilderPage: React.FC = () => {
 
   // Preview uses the same PortalPage as citizens. Draft values are sent to the embedded route without saving them.
   const previewData = useMemo<PortalInitResponse | null>(() => {
-    if (!selectedLocation || !livePortalContent) return null;
+    if (!selectedLocation || !livePortalContent || livePortalContent.location.slug !== selectedLocation.slug) return null;
 
     const location: LocationDto = {
       ...livePortalContent.location,
@@ -442,7 +442,7 @@ export const PortalBuilderPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!previewReady || !previewData) return;
+    if (!previewReady) return;
     previewFrameRef.current?.contentWindow?.postMessage(
       { type: 'WIFI_PORTAL_PREVIEW_UPDATE', previewData },
       window.location.origin,
@@ -480,7 +480,7 @@ export const PortalBuilderPage: React.FC = () => {
       ? { width: 768, height: 1024 }
       : { width: 1366, height: 768 };
   const previewFrameSize = previewDevice === 'MOBILE'
-    ? { width: previewViewport.width + 16, height: previewViewport.height + 16, screenTop: 8, screenLeft: 8 }
+    ? { width: previewViewport.width + 12, height: previewViewport.height + 12, screenTop: 6, screenLeft: 6 }
     : previewDevice === 'TABLET'
       ? { width: previewViewport.width + 20, height: previewViewport.height + 20, screenTop: 10, screenLeft: 10 }
       : { width: previewViewport.width + 16, height: previewViewport.height + 48, screenTop: 40, screenLeft: 8 };
@@ -541,8 +541,8 @@ export const PortalBuilderPage: React.FC = () => {
           <button
             type="button"
             onClick={handleCreatePreviewLink}
-            disabled={creatingPreviewLink}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-[#004b87] bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold transition shadow-xs disabled:opacity-60"
+            disabled={creatingPreviewLink || !previewData}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-[#004b87] bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold transition shadow-xs disabled:cursor-not-allowed disabled:opacity-60"
           >
             {creatingPreviewLink ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
             Chia sẻ bản xem trước
@@ -1116,35 +1116,52 @@ export const PortalBuilderPage: React.FC = () => {
           {/* Right Live Preview: Smartphone Mockup (5 cols) - Sticky Centered */}
           <div
             className={previewExpanded
-              ? 'fixed inset-0 z-[60] flex flex-col items-center bg-slate-950/90 p-3 sm:p-5 overflow-hidden'
+              ? 'fixed inset-0 z-[60] flex flex-col items-center overflow-hidden bg-slate-100 p-3 sm:p-5'
               : 'lg:col-span-7 lg:sticky lg:top-4 lg:self-start flex flex-col items-center justify-start min-w-0 lg:rounded-lg lg:border lg:border-slate-200 lg:bg-white lg:p-4 lg:shadow-sm'}
             role={previewExpanded ? 'dialog' : undefined}
             aria-modal={previewExpanded ? true : undefined}
             aria-label={previewExpanded ? 'Xem trước cổng Wi-Fi phóng lớn' : undefined}
           >
             {/* Live Studio Toolbar */}
-              <div className={`${previewExpanded ? 'w-full max-w-[1600px]' : 'w-full'} mb-2 px-1 space-y-2`}>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    {previewDevice === 'MOBILE' ? <Smartphone className="w-4 h-4 text-[#004b87]" /> : previewDevice === 'TABLET' ? <Tablet className="w-4 h-4 text-[#004b87]" /> : <Monitor className="w-4 h-4 text-[#004b87]" />}
-                  {scope === 'LOCATION' ? 'Xem Trước Điểm Này' : 'Xem Trước Mẫu Chung'}
-                </span>
-                  <div className="inline-flex rounded border border-slate-200 bg-white p-0.5" role="group" aria-label="Kích thước xem trước">
-                    <button type="button" onClick={() => setPreviewDevice('MOBILE')} aria-pressed={previewDevice === 'MOBILE'} className={`px-2 py-1.5 rounded text-[11px] font-semibold ${previewDevice === 'MOBILE' ? 'bg-[#004b87] text-white' : 'text-slate-600'}`}>Điện thoại</button>
-                    <button type="button" onClick={() => setPreviewDevice('TABLET')} aria-pressed={previewDevice === 'TABLET'} className={`px-2 py-1.5 rounded text-[11px] font-semibold ${previewDevice === 'TABLET' ? 'bg-[#004b87] text-white' : 'text-slate-600'}`}>Máy tính bảng</button>
-                    <button type="button" onClick={() => setPreviewDevice('DESKTOP')} aria-pressed={previewDevice === 'DESKTOP'} className={`px-2 py-1.5 rounded text-[11px] font-semibold ${previewDevice === 'DESKTOP' ? 'bg-[#004b87] text-white' : 'text-slate-600'}`}>Máy tính</button>
-                    <button type="button" onClick={() => setPreviewExpanded((expanded) => !expanded)} className="ml-1 inline-flex items-center gap-1 px-2 py-1.5 rounded text-[11px] font-semibold text-slate-700 hover:bg-slate-100" aria-label={previewExpanded ? 'Thu nhỏ bản xem trước' : 'Phóng lớn bản xem trước'}>
-                      {previewExpanded ? <X className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-                      {previewExpanded ? 'Đóng' : 'Phóng lớn'}
-                    </button>
-                  </div>
+            <div className={previewExpanded
+              ? 'mb-3 w-full max-w-[1600px] rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm'
+              : 'mb-2 w-full space-y-2 px-1'}>
+              <div className={`flex items-center justify-between ${previewExpanded ? 'gap-4' : ''}`}>
+                <div className="min-w-0">
+                  <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700">
+                    {previewDevice === 'MOBILE' ? <Smartphone className="h-4 w-4 text-[#004b87]" /> : previewDevice === 'TABLET' ? <Tablet className="h-4 w-4 text-[#004b87]" /> : <Monitor className="h-4 w-4 text-[#004b87]" />}
+                    {previewExpanded ? 'Xem trước cổng chào Wi-Fi' : scope === 'LOCATION' ? 'Xem trước điểm này' : 'Xem trước mẫu chung'}
+                  </span>
+                  {previewExpanded && (
+                    <p className="mt-1 truncate text-xs text-slate-500">
+                      {livePortalContentLoading
+                        ? 'Đang tải dữ liệu thật từ điểm phát…'
+                        : livePortalContentError
+                          ? livePortalContentError
+                          : selectedLocation
+                            ? `Dữ liệu thực tế · ${selectedLocation.name} · ${previewViewport.width} × ${previewViewport.height} CSS px`
+                            : 'Chọn điểm phát đang hoạt động để xem dữ liệu thực tế'}
+                    </p>
+                  )}
+                </div>
+                <div className="inline-flex shrink-0 rounded-lg border border-slate-200 bg-slate-50 p-1" role="group" aria-label="Kích thước xem trước">
+                  <button type="button" onClick={() => setPreviewDevice('MOBILE')} aria-pressed={previewDevice === 'MOBILE'} className={`rounded-md px-3 py-2 text-xs font-semibold ${previewDevice === 'MOBILE' ? 'bg-[#004b87] text-white shadow-sm' : 'text-slate-600 hover:bg-white'}`}>Điện thoại</button>
+                  <button type="button" onClick={() => setPreviewDevice('TABLET')} aria-pressed={previewDevice === 'TABLET'} className={`rounded-md px-3 py-2 text-xs font-semibold ${previewDevice === 'TABLET' ? 'bg-[#004b87] text-white shadow-sm' : 'text-slate-600 hover:bg-white'}`}>Máy tính bảng</button>
+                  <button type="button" onClick={() => setPreviewDevice('DESKTOP')} aria-pressed={previewDevice === 'DESKTOP'} className={`rounded-md px-3 py-2 text-xs font-semibold ${previewDevice === 'DESKTOP' ? 'bg-[#004b87] text-white shadow-sm' : 'text-slate-600 hover:bg-white'}`}>Máy tính</button>
+                  <button type="button" onClick={() => setPreviewExpanded((expanded) => !expanded)} className={`ml-1 inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-semibold ${previewExpanded ? 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-100' : 'text-slate-700 hover:bg-white'}`} aria-label={previewExpanded ? 'Thu nhỏ bản xem trước' : 'Phóng lớn bản xem trước'}>
+                    {previewExpanded ? <X className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+                    {previewExpanded ? 'Đóng' : 'Phóng lớn'}
+                  </button>
+                </div>
               </div>
 
-                <p className={`text-[11px] ${previewExpanded ? 'text-slate-300' : 'text-slate-500'}`}>
-                  Đang hiển thị giao diện thật của /portal ở khung {previewViewport.width} × {previewViewport.height} CSS px. Kéo cuộn bên trong khung để kiểm tra toàn trang.
-                </p>
+              {!previewExpanded && (
+                <>
+                  <p className="text-[11px] text-slate-500">
+                    Hiển thị giao diện /portal; dữ liệu lấy từ điểm phát đang chọn. Kéo cuộn trong khung để xem toàn trang.
+                  </p>
 
-              <div className="rounded border border-slate-200 bg-white p-2.5 space-y-1.5 text-[10.5px]" aria-live="polite">
+                  <div className="space-y-1.5 rounded border border-slate-200 bg-white p-2.5 text-[10.5px]" aria-live="polite">
                 <div className="flex items-center justify-between gap-3">
                   <div className="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-2">
                     <div>
@@ -1186,25 +1203,19 @@ export const PortalBuilderPage: React.FC = () => {
                 {livePortalContentError && (
                   <p role="alert" className="text-amber-800">{livePortalContentError}</p>
                 )}
-                <div className="flex items-center justify-end border-t border-slate-100 pt-1.5">
-                  <label className="flex cursor-pointer select-none items-center gap-1.5 font-semibold text-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={simCapacityFull}
-                      onChange={(e) => setSimCapacityFull(e.target.checked)}
-                      className="h-3 w-3 rounded text-[#004b87]"
-                    />
-                    <span>Đầy tải</span>
-                  </label>
+                <div className="border-t border-slate-100 pt-1.5 text-slate-500">
+                  Dữ liệu hiển thị được lấy từ điểm phát đang chọn.
                 </div>
               </div>
+                </>
+              )}
             </div>
 
             {/* The preview runs the real public portal route in an isolated same-origin frame. */}
             <div
               ref={previewStageRef}
               className={previewExpanded
-                ? 'flex-1 min-h-0 w-full flex items-start justify-center overflow-auto overscroll-contain pt-3'
+                ? 'flex-1 min-h-0 w-full max-w-[1600px] flex items-center justify-center overflow-auto overscroll-contain rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 p-3'
                 : 'w-full flex justify-center overflow-x-auto overscroll-contain pb-3'}
             >
               <div
@@ -1213,7 +1224,7 @@ export const PortalBuilderPage: React.FC = () => {
               >
                 <div
                   className={"absolute left-0 top-0 origin-top-left overflow-hidden shadow-2xl " + (previewDevice === 'MOBILE'
-                    ? 'rounded-[40px] border-[6px] border-slate-950 bg-slate-950'
+                    ? 'rounded-[36px] border-[4px] border-slate-950 bg-slate-950'
                     : previewDevice === 'TABLET'
                       ? 'rounded-[28px] border-[10px] border-slate-800 bg-slate-900'
                       : 'rounded-xl border border-slate-500 bg-slate-800')}
@@ -1243,10 +1254,32 @@ export const PortalBuilderPage: React.FC = () => {
                       top: previewFrameSize.screenTop,
                       width: previewViewport.width,
                       height: previewViewport.height,
-                      borderRadius: previewDevice === 'MOBILE' ? 32 : previewDevice === 'TABLET' ? 18 : 0,
+                      borderRadius: previewDevice === 'MOBILE' ? 30 : previewDevice === 'TABLET' ? 18 : 0,
                       overscrollBehavior: 'contain',
                     }}
                   />
+                  {!previewData && (
+                    <div
+                      className="absolute z-40 flex items-center justify-center bg-white px-6 text-center text-sm text-slate-600"
+                      style={{
+                        left: previewFrameSize.screenLeft,
+                        top: previewFrameSize.screenTop,
+                        width: previewViewport.width,
+                        height: previewViewport.height,
+                        borderRadius: previewDevice === 'MOBILE' ? 30 : previewDevice === 'TABLET' ? 18 : 0,
+                      }}
+                      aria-live="polite"
+                    >
+                      {livePortalContentLoading ? (
+                        <span className="inline-flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin text-[#004b87]" />
+                          Đang tải dữ liệu thật từ điểm phát…
+                        </span>
+                      ) : (
+                        <span>{livePortalContentError || (!selectedLocation?.active ? 'Điểm phát đang tắt; chưa có dữ liệu để xem.' : 'Chưa có dữ liệu từ điểm phát để hiển thị.')}</span>
+                      )}
+                    </div>
+                  )}
                   {previewDevice === 'MOBILE' && (
                     <>
                       <div className="absolute left-1/2 top-[12px] z-30 flex h-6 w-28 -translate-x-1/2 items-center justify-center rounded-full bg-slate-950">

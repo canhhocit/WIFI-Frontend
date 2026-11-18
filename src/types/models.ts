@@ -440,6 +440,7 @@ export interface CampaignDto {
   title: string;
   description?: string;
   bannerUrl?: string;
+  galleryUrls?: string[];
   videoUrl?: string;
   actionUrl?: string;
   targetAdminUnitId?: number;
@@ -460,6 +461,7 @@ export interface CreateCampaignRequest {
   title: string;
   description?: string;
   bannerUrl?: string;
+  galleryUrls?: string[];
   videoUrl?: string;
   actionUrl?: string;
   targetAdminUnitId?: number;

@@ -206,7 +206,13 @@ export const PortalPage: React.FC = () => {
 
     const handlePreviewMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin || event.source !== window.parent) return;
-      if (event.data?.type !== 'WIFI_PORTAL_PREVIEW_UPDATE' || !event.data.previewData?.location) return;
+      if (event.data?.type !== 'WIFI_PORTAL_PREVIEW_UPDATE') return;
+      if (!event.data.previewData?.location) {
+        setPortalData(null);
+        setLoading(true);
+        setError(null);
+        return;
+      }
 
       setPortalData(event.data.previewData as PortalInitResponse);
       setMacAddress('preview');
@@ -796,11 +802,25 @@ export const PortalPage: React.FC = () => {
                   }}
                 />
                 
+                {/* Badge số lượng ảnh nếu có nhiều ảnh */}
+                {activeCampaign.galleryUrls && activeCampaign.galleryUrls.length > 1 && (
+                  <div className="absolute top-2.5 right-2.5 z-10 bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs flex items-center gap-1">
+                    <span>📷 {activeCampaign.galleryUrls.length} ảnh</span>
+                  </div>
+                )}
+                
                 {/* Overlay nút xem / phát video */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/30 to-transparent flex flex-col justify-end p-3 text-white transition-opacity">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-yellow-300 drop-shadow-sm flex items-center gap-1.5">
-                      {activeCampaign.videoUrl ? (
+                      {activeCampaign.videoUrl && activeCampaign.bannerUrl ? (
+                        <>
+                          <div className="w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center shadow-md">
+                            <Play className="w-3 h-3 fill-current ml-0.5" />
+                          </div>
+                          <span>Xem Poster & Video Clip</span>
+                        </>
+                      ) : activeCampaign.videoUrl ? (
                         <>
                           <div className="w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center shadow-md">
                             <Play className="w-3 h-3 fill-current ml-0.5" />
