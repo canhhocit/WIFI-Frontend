@@ -277,7 +277,3 @@ Trước khi đẩy lên hệ thống quản lý mã nguồn Git hoặc đóng g
    npm.cmd run preview
    ```
 
----
-
-## 📄 Bản Quyền & Giấy Phép
-Dự án được phát triển và bàn giao phục vụ **Ủy Ban Nhân Dân Thành Phố Hải Phòng**. Mọi quyền sở hữu trí tuệ thuộc quyền quản lý của UBND Thành phố và Sở Thông tin & Truyền thông Hải Phòng.
