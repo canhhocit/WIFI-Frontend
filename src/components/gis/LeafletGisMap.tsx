@@ -15,10 +15,48 @@ import {
   Wifi, 
   Activity,
   Flame,
-  Check
+  Check,
+  ChevronDown
 } from 'lucide-react';
 
 export type GisBasemap = 'google_hybrid' | 'cyber_dark' | 'clean_light' | 'osm';
+
+export const BASEMAP_OPTIONS: Array<{
+  id: GisBasemap;
+  label: string;
+  desc: string;
+  icon: React.ComponentType<{ className?: string }>;
+  iconColor: string;
+}> = [
+  {
+    id: 'google_hybrid',
+    label: 'Google Vệ tinh',
+    desc: 'Ảnh vệ tinh HD & Tên đường tiếng Việt',
+    icon: Satellite,
+    iconColor: 'text-amber-400',
+  },
+  {
+    id: 'cyber_dark',
+    label: 'IOC Cyber Dark',
+    desc: 'Nền tối phát quang cho trung tâm điều hành',
+    icon: Moon,
+    iconColor: 'text-cyan-400',
+  },
+  {
+    id: 'clean_light',
+    label: 'Bản đồ Sáng',
+    desc: 'Bản đồ giao thông rõ ràng 100% tiếng Việt',
+    icon: Sun,
+    iconColor: 'text-amber-300',
+  },
+  {
+    id: 'osm',
+    label: 'OpenStreetMap',
+    desc: 'Bản đồ đường phố tiêu chuẩn toàn cầu',
+    icon: MapIcon,
+    iconColor: 'text-emerald-400',
+  },
+];
 
 interface LeafletGisMapProps {
   pins: GisLocationPinDto[];
@@ -97,6 +135,21 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
     }
   });
 
+  // State dropdown Combobox chọn lớp bản đồ nền
+  const [basemapDropdownOpen, setBasemapDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Đóng dropdown khi click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setBasemapDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Chế độ đo khoảng cách (Measurement tool)
   const [isMeasuring, setIsMeasuring] = useState(false);
   const [measurePoints, setMeasurePoints] = useState<[number, number][]>([]);
@@ -116,23 +169,25 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Định nghĩa 4 lớp Tile chuyên nghiệp (Google Hybrid từ bandoso, Cyber Dark, Clean Light, OSM)
+    // Định nghĩa 4 lớp Tile chuyên nghiệp (Google Hybrid từ bandoso, IOC Cyber Dark, Google Bản đồ Sáng, OSM)
+    // 100% Miễn phí, 0 API key, Tiếng Việt đầy đủ sắc nét, không watermark
     const googleHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
       maxZoom: 20,
       subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
       attribution: '© Google Maps',
     });
 
-    const cyberDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    const cyberDark = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
       maxZoom: 20,
-      subdomains: 'abcd',
-      attribution: '© CARTO Dark Matter',
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      className: 'leaflet-cyber-dark-tiles',
+      attribution: '© Google Maps (IOC Dark)',
     });
 
-    const cleanLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    const cleanLight = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
       maxZoom: 20,
-      subdomains: 'abcd',
-      attribution: '© CARTO Positron',
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      attribution: '© Google Maps',
     });
 
     const osmStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -205,6 +260,15 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
 
     const targetLayer = tileLayersRef.current[activeBasemap] || tileLayersRef.current.google_hybrid;
     targetLayer.addTo(map);
+
+    // Cập nhật background container để tránh chớp sáng khi tải tiles
+    if (mapContainerRef.current) {
+      if (activeBasemap === 'cyber_dark') {
+        mapContainerRef.current.classList.add('dark-basemap');
+      } else {
+        mapContainerRef.current.classList.remove('dark-basemap');
+      }
+    }
 
     try {
       localStorage.setItem('wifi_map_basemap', activeBasemap);
@@ -578,55 +642,86 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
     mapRef.current.flyTo([c.lat, c.lng], c.zoom, { duration: 1 });
   };
 
+  const currentBasemapOption = BASEMAP_OPTIONS.find((o) => o.id === activeBasemap) || BASEMAP_OPTIONS[0];
+  const ActiveBasemapIcon = currentBasemapOption.icon;
+
   return (
     <div className={`relative w-full h-full ${compact ? 'min-h-[340px]' : 'min-h-[620px]'} rounded-lg overflow-hidden border border-slate-300 shadow-md group z-0`}>
+      {/* Dynamic CSS styles for Cyber Dark and Leaflet Map */}
+      <style>{`
+        .leaflet-cyber-dark-tiles {
+          filter: invert(100%) hue-rotate(180deg) brightness(88%) contrast(92%) saturate(130%) !important;
+        }
+        .dark-basemap {
+          background-color: #0b1329 !important;
+        }
+      `}</style>
+
       {/* Map Container */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
-      {/* 🌟 Floating Top-Right HUD Toolbar: Đầy đủ các chế độ bản đồ như bandoso */}
-      <div className="absolute top-3 right-3 z-[400] flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-900/85 backdrop-blur-md border border-white/20 shadow-xl text-white">
-        <div className="flex items-center gap-1 bg-white/10 p-1 rounded-md">
+      {/* 🌟 Floating Top-Right HUD Toolbar: Combobox Lớp Bản Đồ Gọn Gàng + Đo khoảng cách + Reset */}
+      <div className="absolute top-3 right-3 z-[400] flex items-center gap-1.5 p-1 rounded-lg bg-slate-900/90 backdrop-blur-md border border-white/20 shadow-xl text-white">
+        {/* Combobox chọn Chế độ bản đồ */}
+        <div ref={dropdownRef} className="relative">
           <button
             type="button"
-            onClick={() => setActiveBasemap('google_hybrid')}
-            className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-              activeBasemap === 'google_hybrid'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-300 hover:text-white hover:bg-white/10'
-            }`}
-            title="Google Vệ tinh độ nét cao có tiếng Việt (bandoso)"
+            onClick={() => setBasemapDropdownOpen((prev) => !prev)}
+            className="px-2.5 py-1.5 rounded-md bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-semibold flex items-center gap-2 shadow-xs transition cursor-pointer"
+            title="Chọn chế độ bản đồ nền"
           >
-            <Satellite className="w-3.5 h-3.5 text-amber-300" />
-            <span className="hidden sm:inline">Google Vệ tinh</span>
+            <ActiveBasemapIcon className={`w-3.5 h-3.5 ${currentBasemapOption.iconColor}`} />
+            <span className="font-medium">{currentBasemapOption.label}</span>
+            <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${basemapDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveBasemap('cyber_dark')}
-            className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-              activeBasemap === 'cyber_dark'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-300 hover:text-white hover:bg-white/10'
-            }`}
-            title="Trung tâm điều hành IOC Cyber Dark (Nền tối phát quang)"
-          >
-            <Moon className="w-3.5 h-3.5 text-cyan-300" />
-            <span className="hidden sm:inline">IOC Dark</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveBasemap('clean_light')}
-            className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-              activeBasemap === 'clean_light'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-300 hover:text-white hover:bg-white/10'
-            }`}
-            title="Hành chính số Tối giản (Carto Light)"
-          >
-            <Sun className="w-3.5 h-3.5 text-yellow-300" />
-            <span className="hidden sm:inline">Sáng</span>
-          </button>
+          {/* Dropdown Menu */}
+          {basemapDropdownOpen && (
+            <div className="absolute top-full right-0 mt-1.5 w-60 bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-lg shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+              <div className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-800 mb-1">
+                <Layers className="w-3 h-3 text-blue-400" />
+                <span>Chế độ bản đồ nền</span>
+              </div>
+              <div className="space-y-0.5">
+                {BASEMAP_OPTIONS.map((opt) => {
+                  const Icon = opt.icon;
+                  const isSelected = activeBasemap === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveBasemap(opt.id);
+                        setBasemapDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-2 py-1.5 rounded-md text-xs transition cursor-pointer flex items-center justify-between group ${
+                        isSelected
+                          ? 'bg-blue-600/30 text-blue-200 border border-blue-500/40'
+                          : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`p-1 rounded bg-slate-800 border border-slate-700/60 ${opt.iconColor}`}>
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold leading-tight text-white flex items-center gap-1">
+                            {opt.label}
+                          </div>
+                          <div className="text-[10px] text-slate-400 leading-tight mt-0.5">
+                            {opt.desc}
+                          </div>
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <Check className="w-3.5 h-3.5 text-blue-400 ml-2 shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Thước đo khoảng cách (Measurement Tool) */}
@@ -668,7 +763,7 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
           <span className="h-3 w-px bg-white/20" />
           <div className="flex items-center gap-1.5 text-emerald-300 font-semibold font-mono">
             <span>{pinStats.sessions}</span>
-            <span className="text-[11px] font-sans text-slate-300">dân online</span>
+            <span className="text-[11px] font-sans text-slate-300">thiết bị kết nối</span>
           </div>
           {pinStats.offline > 0 && (
             <>
