@@ -140,7 +140,7 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
         id: 'gis',
         targetSelector: '[data-tour="nav-gis"]',
         title: 'Bản Đồ Số GIS Toàn Thành Phố',
-        content: 'Trực quan hóa mạng lưới 1.584 Nhà văn hóa theo bản đồ nhiệt và ranh giới hành chính 15 Quận / Huyện TP Hải Phòng.',
+        content: 'Trực quan hóa mạng lưới 1.584 Nhà văn hóa theo bản đồ nhiệt và ranh giới hành chính của TP Hải Phòng.',
         placement: 'right',
         badge: 'Bản đồ GIS'
       },
@@ -148,7 +148,7 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
         id: 'locations',
         targetSelector: '[data-tour="nav-locations"]',
         title: 'Danh Bạ & Cấu Hình Điểm Phát',
-        content: 'Quản lý danh sách điểm phát, phân cấp địa bàn Quận/Xã/Thôn, xuất nhập Excel và kiểm soát hạn mức băng thông từng điểm.',
+        content: 'Quản lý danh sách điểm phát, phân cấp địa bàn Quận/Xã/Thôn, xuất nhập Excel và kiểm soát số lượng người truy cập theo từng điểm phát.',
         placement: 'right',
         badge: 'Danh bạ điểm'
       },
@@ -180,7 +180,7 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
         id: 'finish',
         targetSelector: '[data-tour="tour-button"]',
         title: 'Hoàn Tất Chuyến Tham Quan!',
-        content: 'Hệ thống đã sẵn sàng phục vụ. Quý cán bộ có thể mở lại Tour này bất cứ lúc nào qua nút "Tour hướng dẫn" trên thanh tiêu đề.',
+        content: 'Hệ thống đã sẵn sàng phục vụ. Bạn có thể mở lại chức năng này bất cứ lúc nào qua nút "Tour hướng dẫn" trên thanh tiêu đề',
         placement: 'bottom',
         badge: 'Hoàn tất'
       }
@@ -190,14 +190,27 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
   const steps = getStepsForRole();
   const currentStep = steps[currentStepIndex] || steps[0];
 
+  // Highlight targeted DOM element dynamically with vibrant active style
+  useEffect(() => {
+    if (!isOpen || !currentStep) return;
+
+    const el = document.querySelector(currentStep.targetSelector) as HTMLElement | null;
+    if (el) {
+      el.classList.add('tour-spotlight-active');
+      return () => {
+        el.classList.remove('tour-spotlight-active');
+      };
+    }
+  }, [isOpen, currentStep]);
+
   const updateTargetPosition = useCallback(() => {
     if (!isOpen || !currentStep) return;
 
-    const el = document.querySelector(currentStep.targetSelector);
+    const el = document.querySelector(currentStep.targetSelector) as HTMLElement | null;
     if (el) {
+      el.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
       const rect = el.getBoundingClientRect();
       setTargetRect(rect);
-      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
     } else {
       // Fallback if target element not found on page
       setTargetRect(null);
@@ -206,9 +219,11 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
 
   useEffect(() => {
     updateTargetPosition();
+    const timer = setTimeout(updateTargetPosition, 60);
     window.addEventListener('resize', updateTargetPosition);
     window.addEventListener('scroll', updateTargetPosition, true);
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('resize', updateTargetPosition);
       window.removeEventListener('scroll', updateTargetPosition, true);
     };
@@ -308,119 +323,189 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden pointer-events-auto">
-      {/* 1. Backdrop Overlay */}
-      <div 
-        className="fixed inset-0 bg-slate-900/65 backdrop-blur-[2px] transition-opacity duration-300"
-        onClick={handleFinish}
-      />
+    <div className="fixed inset-0 z-50 overflow-hidden pointer-events-none">
+      {/* Dynamic CSS styles for the targeted element */}
+      <style>{`
+        .tour-spotlight-active {
+          position: relative !important;
+          z-index: 55 !important;
+          background: linear-gradient(135deg, #005fa3 0%, #004080 100%) !important;
+          color: #ffffff !important;
+          font-weight: 700 !important;
+          box-shadow: 0 0 20px rgba(0, 150, 255, 0.8), 0 0 0 2px #38bdf8 !important;
+          border-radius: 6px !important;
+          transition: all 0.25s ease-in-out !important;
+        }
+        .tour-spotlight-active * {
+          color: #ffffff !important;
+        }
+        .tour-spotlight-active svg {
+          stroke: #ffffff !important;
+          color: #ffffff !important;
+          filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8)) !important;
+        }
+      `}</style>
 
-      {/* 2. Target Spotlight cutout / highlight ring */}
+      {/* 1. Backdrop Overlay with SVG Cutout Mask: dims everything EXCEPT targetRect */}
+      <svg
+        className="fixed inset-0 w-full h-full z-40 transition-all duration-300 pointer-events-auto"
+        style={{ width: '100vw', height: '100vh' }}
+        onClick={handleFinish}
+      >
+        <defs>
+          <mask id="tour-spotlight-mask" x="0" y="0" width="100%" height="100%">
+            {/* White area = visible dark backdrop */}
+            <rect x="0" y="0" width="100%" height="100%" fill="#ffffff" />
+            {/* Black cutout = completely transparent hole revealing target element */}
+            {targetRect && (
+              <rect
+                x={Math.max(0, targetRect.left - 6)}
+                y={Math.max(0, targetRect.top - 6)}
+                width={targetRect.width + 12}
+                height={targetRect.height + 12}
+                rx="8"
+                ry="8"
+                fill="#000000"
+              />
+            )}
+          </mask>
+        </defs>
+        {/* Dark backdrop rect with mask applied */}
+        <rect
+          x="0"
+          y="0"
+          width="100%"
+          height="100%"
+          fill="rgba(15, 23, 42, 0.72)"
+          mask="url(#tour-spotlight-mask)"
+        />
+      </svg>
+
+      {/* 2. Target Spotlight cutout glowing border & high-visibility beacon */}
       {targetRect && (
         <div
-          className="fixed pointer-events-none transition-all duration-300 rounded-lg ring-4 ring-[#004b87] ring-offset-2 ring-offset-white shadow-2xl z-50 bg-transparent animate-pulse"
+          className="fixed pointer-events-none transition-all duration-300 rounded-lg ring-2 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.65)] z-50 animate-pulse"
           style={{
-            top: `${targetRect.top - 4}px`,
-            left: `${targetRect.left - 4}px`,
-            width: `${targetRect.width + 8}px`,
-            height: `${targetRect.height + 8}px`,
+            top: `${targetRect.top - 6}px`,
+            left: `${targetRect.left - 6}px`,
+            width: `${targetRect.width + 12}px`,
+            height: `${targetRect.height + 12}px`,
           }}
-        />
+        >
+          {/* Beacon Floating Tag */}
+          <div className="absolute -top-3 -right-3 flex items-center gap-1 bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full text-[10px] font-black shadow-lg border-2 border-white uppercase tracking-wider">
+            <Sparkles className="w-3 h-3 text-slate-950" />
+            <span>Mục này</span>
+          </div>
+        </div>
       )}
 
       {/* 3. Floating Tooltip Card */}
       <div
         style={getTooltipStyle()}
-        className="bg-white rounded-xl border border-slate-200/90 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="pointer-events-auto bg-white rounded-xl border border-slate-200/90 shadow-2xl overflow-visible animate-in fade-in zoom-in-95 duration-200"
       >
-        {/* Header with Step indicator */}
-        <div className="bg-[#004b87] px-4 py-3 text-white flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold font-mono">
-              {currentStepIndex + 1}
+        {/* Visual pointer arrow pointing from card to target */}
+        {currentStep.placement === 'right' && (
+          <div className="absolute -left-1.5 top-5 w-3 h-3 bg-[#004b87] rotate-45 transform z-10" />
+        )}
+        {currentStep.placement === 'left' && (
+          <div className="absolute -right-1.5 top-5 w-3 h-3 bg-[#004b87] rotate-45 transform z-10" />
+        )}
+        {currentStep.placement === 'bottom' && (
+          <div className="absolute -top-1.5 left-8 w-3 h-3 bg-[#004b87] rotate-45 transform z-10" />
+        )}
+
+        <div className="rounded-xl overflow-hidden">
+          {/* Header with Step indicator */}
+          <div className="bg-[#004b87] px-4 py-3 text-white flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold font-mono">
+                {currentStepIndex + 1}
+              </div>
+              <div>
+                <span className="text-[10px] tracking-wider uppercase font-semibold text-blue-200">
+                  {currentStep.badge || `Bước ${currentStepIndex + 1} / ${steps.length}`}
+                </span>
+                <h4 className="font-bold text-xs text-white leading-tight">
+                  {currentStep.title}
+                </h4>
+              </div>
             </div>
-            <div>
-              <span className="text-[10px] tracking-wider uppercase font-semibold text-blue-200">
-                {currentStep.badge || `Bước ${currentStepIndex + 1} / ${steps.length}`}
+            <button
+              onClick={handleFinish}
+              className="p-1 rounded text-white/70 hover:text-white hover:bg-white/10 transition cursor-pointer"
+              title="Đóng tour hướng dẫn (Esc)"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Body content */}
+          <div className="p-4 space-y-3">
+            <p className="text-xs text-slate-600 leading-relaxed font-sans">
+              {currentStep.content}
+            </p>
+
+            {/* Progress dots bar */}
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-1">
+                {steps.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1.5 rounded-full transition-all duration-200 ${
+                      i === currentStepIndex
+                        ? 'w-5 bg-[#004b87]'
+                        : i < currentStepIndex
+                        ? 'w-2 bg-emerald-500'
+                        : 'w-2 bg-slate-200'
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-[11px] font-mono text-slate-400">
+                {currentStepIndex + 1}/{steps.length}
               </span>
-              <h4 className="font-bold text-xs text-white leading-tight">
-                {currentStep.title}
-              </h4>
             </div>
           </div>
-          <button
-            onClick={handleFinish}
-            className="p-1 rounded text-white/70 hover:text-white hover:bg-white/10 transition cursor-pointer"
-            title="Đóng tour hướng dẫn (Esc)"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
 
-        {/* Body content */}
-        <div className="p-4 space-y-3">
-          <p className="text-xs text-slate-600 leading-relaxed font-sans">
-            {currentStep.content}
-          </p>
-
-          {/* Progress dots bar */}
-          <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center gap-1">
-              {steps.map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-1.5 rounded-full transition-all duration-200 ${
-                    i === currentStepIndex
-                      ? 'w-5 bg-[#004b87]'
-                      : i < currentStepIndex
-                      ? 'w-2 bg-emerald-500'
-                      : 'w-2 bg-slate-200'
-                  }`}
-                />
-              ))}
-            </div>
-            <span className="text-[11px] font-mono text-slate-400">
-              {currentStepIndex + 1}/{steps.length}
-            </span>
-          </div>
-        </div>
-
-        {/* Footer buttons */}
-        <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
-          <button
-            type="button"
-            onClick={handleFinish}
-            className="text-slate-400 hover:text-slate-700 text-xs font-medium transition cursor-pointer"
-          >
-            Bỏ qua
-          </button>
-
-          <div className="flex items-center gap-1.5">
-            {currentStepIndex > 0 && (
-              <button
-                type="button"
-                onClick={handlePrev}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition cursor-pointer"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" /> Trước
-              </button>
-            )}
-
+          {/* Footer buttons */}
+          <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
             <button
               type="button"
-              onClick={handleNext}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-[#004b87] hover:bg-[#003865] text-white font-bold text-xs shadow-xs transition cursor-pointer"
+              onClick={handleFinish}
+              className="text-slate-400 hover:text-slate-700 text-xs font-medium transition cursor-pointer"
             >
-              {currentStepIndex === steps.length - 1 ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-emerald-300" /> Bắt đầu ngay
-                </>
-              ) : (
-                <>
-                  Tiếp tục <ChevronRight className="w-3.5 h-3.5" />
-                </>
-              )}
+              Bỏ qua
             </button>
+
+            <div className="flex items-center gap-1.5">
+              {currentStepIndex > 0 && (
+                <button
+                  type="button"
+                  onClick={handlePrev}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition cursor-pointer"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" /> Trước
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={handleNext}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-[#004b87] hover:bg-[#003865] text-white font-bold text-xs shadow-xs transition cursor-pointer"
+              >
+                {currentStepIndex === steps.length - 1 ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-300" /> Bắt đầu ngay
+                  </>
+                ) : (
+                  <>
+                    Tiếp tục <ChevronRight className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

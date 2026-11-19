@@ -245,6 +245,13 @@ export const AdminLayout: React.FC = () => {
     });
   };
 
+  // Tự động mở rộng thanh bên khi mở Tour để hiển thị rõ toàn bộ tên mục nghiệp vụ
+  useEffect(() => {
+    if (isTourOpen && desktopCollapsed) {
+      setDesktopCollapsed(false);
+    }
+  }, [isTourOpen, desktopCollapsed]);
+
   const [currentTime, setCurrentTime] = useState(
     new Date().toLocaleTimeString("vi-VN"),
   );
@@ -809,7 +816,7 @@ export const AdminLayout: React.FC = () => {
                     Chào Mừng Đến Với Hệ Thống!
                   </h3>
                   <p className="text-xs text-blue-100 mt-0.5">
-                    Hệ thống Wi-Fi Công cộng TP. Hải Phòng (1.584 Điểm)
+                    Hệ thống Quản lý Wi-Fi Công cộng TP. Hải Phòng
                   </p>
                 </div>
               </div>
@@ -817,16 +824,16 @@ export const AdminLayout: React.FC = () => {
 
             <div className="p-5 space-y-4">
               <p className="text-xs text-slate-700 leading-relaxed">
-                Xin chào đồng chí <strong>{currentUser?.fullName || currentUser?.username}</strong> ({roleInfo.label}). Hệ thống đã chuẩn bị sẵn một <strong>Chuyến tham quan tương tác (Interactive Tour)</strong> được may đo riêng cho vai trò và phân quyền tác nghiệp của đồng chí.
+                Xin chào <strong>{currentUser?.fullName || currentUser?.username}</strong> ({roleInfo.label}). Hệ thống đã chuẩn bị sẵn một <strong>Chuyến tham quan tương tác (Interactive Tour)</strong> được thiết kế riêng cho bạn.
               </p>
 
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-600 space-y-1.5">
                 <div className="flex items-center gap-2 text-slate-800 font-semibold">
                   <Sparkles className="w-4 h-4 text-amber-500" />
-                  <span>Điểm nổi bật của Tour:</span>
+                  <span>Trải nghiệm này nhằm:</span>
                 </div>
                 <ul className="list-disc list-inside space-y-1 text-[11.5px] pl-1 text-slate-600">
-                  <li>Làm quen các nghiệp vụ chính theo đúng thẩm quyền.</li>
+                  <li>Làm quen các nghiệp vụ chính theo đúng quyền .</li>
                   <li>Chỉ dẫn vị trí các chức năng trọng yếu trên giao diện.</li>
                   <li>Chỉ mất khoảng 1 phút và có thể mở lại bất cứ lúc nào.</li>
                 </ul>
