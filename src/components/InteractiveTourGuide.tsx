@@ -47,25 +47,25 @@ interface Props {
 const MODULE_TOUR_DEFINITIONS: Record<string, { title: string; content: string; badge: string; placement?: 'top' | 'bottom' | 'left' | 'right' }> = {
   'nav-dashboard': {
     title: 'Trung Tâm Điều Hành Tổng Quan',
-    content: 'Theo dõi nhịp đập số toàn thành phố: số lượng trạm phát hoạt động, lưu lượng data phục vụ miễn phí, số phiên truy cập đồng thời và tình trạng các điểm nóng.',
+    content: 'Theo dõi nhịp đập số toàn thành phố: số lượng trạm phát hoạt động, lưu lượng data phục vụ miễn phí, số phiên truy cập đồng thời và tình trạng các điểm.',
     badge: 'Tổng quan điều hành',
     placement: 'right'
   },
   'nav-gis': {
     title: 'Bản Đồ Số GIS 1.584 Điểm Phát',
-    content: 'Trực quan hóa mạng lưới điểm phát Nhà văn hóa theo tọa độ GPS, ranh giới hành chính 15 Quận / Huyện và bản đồ nhiệt mật độ thiết bị kết nối.',
+    content: 'Trực quan hóa mạng lưới điểm phát theo tọa độ GPS, ranh giới hành chính và bản đồ nhiệt mật độ thiết bị kết nối.',
     badge: 'Bản đồ GIS',
     placement: 'right'
   },
   'nav-locations': {
     title: 'Danh Bạ Nhà Văn Hóa Cơ Sở',
-    content: 'Quản lý hồ sơ 1.584 Nhà văn hóa, phân cấp địa bàn hành chính, cấu hình tên mạng Wi-Fi (SSID), quản lý hạn mức băng thông và trạng thái từng điểm phát.',
+    content: 'Quản lý hồ sơ 1.584 điểm, phân cấp địa bàn hành chính.',
     badge: 'Danh bạ địa bàn',
     placement: 'right'
   },
   'nav-devices': {
-    title: 'Quản Lý Thiết Bị & Hoán Đổi (Swap AP)',
-    content: 'Giám sát trạng thái Online/Offline của trạm phát Grandstream AP và Gateway OPNsense, kiểm tra Ping, reboot từ xa và quy trình hoán đổi thiết bị dự phòng khi có hỏng hóc.',
+    title: 'Quản Lý Thiết Bị',
+    content: 'Giám sát trạng thái Online/Offline của trạm phát Grandstream AP, kiểm tra Ping, reboot từ xa.',
     badge: 'Hạ tầng thiết bị',
     placement: 'right'
   },
@@ -95,37 +95,37 @@ const MODULE_TOUR_DEFINITIONS: Record<string, { title: string; content: string; 
   },
   'nav-portal-builder': {
     title: 'Trình Dựng & Tùy Biến Cổng Chào',
-    content: 'Tùy biến giao diện Cổng chào công dân (/portal), biểu trưng thành phố, khẩu hiệu số hóa, biểu ngữ tuyên truyền theo các ngày lễ lớn.',
+    content: 'Tùy biến giao diện Cổng chào công dân (/portal), biểu trưng thành phố, biểu ngữ tuyên truyền.',
     badge: 'Cổng chào số',
     placement: 'right'
   },
   'nav-campaigns': {
     title: 'Chiến Dịch Tuyên Truyền & Chính Sách',
-    content: 'Đăng tải video, áp phích tuyên truyền Dịch vụ công trực tuyến, đề án 06, phân bổ phát sóng chính xác theo từng Quận/Huyện/Xã.',
+    content: 'Đăng tải video, áp phích tuyên truyền Dịch vụ công trực tuyến, phân bổ phát sóng chính xác theo từng Quận/Huyện/Xã.',
     badge: 'Truyền thông số',
     placement: 'right'
   },
   'nav-surveys': {
     title: 'Khảo Sát Ý Kiến Nhân Dân',
-    content: 'Thu thập và phân tích mức độ hài lòng của người dân về các dịch vụ công và đời sống văn hóa tại Nhà văn hóa ngay tại trang chào Wi-Fi.',
+    content: 'Tạo, thu thập khảo sát ý kiến của nhân dân',
     badge: 'Khảo sát dân ý',
     placement: 'right'
   },
   'nav-dns-filtering': {
     title: 'Bộ Lọc Tên Miền DNS & Điều Hướng DVC',
-    content: 'Chặn truy cập website độc hại, cờ bạc, lừa đảo trực tuyến; cấu hình danh sách trắng ưu tiên truy cập cổng Dịch vụ công quốc gia và cổng TP Hải Phòng.',
+    content: 'Chặn truy cập website độc hại, cấu hình danh sách ưu tiên truy cập.',
     badge: 'An toàn thông tin',
     placement: 'right'
   },
   'nav-government-report': {
     title: 'Báo Cáo Sở TT&TT & UBND Thành Phố',
-    content: 'Tổng hợp số liệu chỉ tiêu phục vụ công dân, kết xuất báo cáo hành chính chuẩn thể thức văn bản Nghị định 30/2020/NĐ-CP kèm dấu mộc đỏ số và xuất file Excel/PDF.',
+    content: 'Tổng hợp số liệu chỉ tiêu phục vụ công dân, kết xuất báo cáo hành chính.',
     badge: 'Báo cáo hành chính',
     placement: 'right'
   },
   'nav-users': {
     title: 'Cán Bộ 5 Cấp & Phân Bổ Địa Bàn',
-    content: 'Cấp phát và quản lý tài khoản cán bộ phân cấp 5 cấp (Sở TT&TT, Quận/Huyện, Xã/Phường, Kỹ thuật), phân quyền địa bàn tác nghiệp và quản lý chính sách bảo mật tài khoản.',
+    content: 'Cấp phát và quản lý tài khoản cán bộ phân cấp 5 cấp.',
     badge: 'Quản trị nhân sự',
     placement: 'right'
   },
@@ -137,7 +137,7 @@ const MODULE_TOUR_DEFINITIONS: Record<string, { title: string; content: string; 
   },
   'nav-system-settings': {
     title: 'Cấu Hình Tham Số Hệ Thống',
-    content: 'Thiết lập thời gian hết hạn phiên (Session TTL), hạn mức băng thông mặc định, cấu hình xác thực OTP Zalo/SMS và tích hợp hạ tầng MinIO/Redis.',
+    content: 'Thiết lập thời gian hết hạn phiên (Session TTL), hạn mức băng thông mặc định, cấu hình xác thực OTP Zalo/SMS.',
     badge: 'Tham số hệ thống',
     placement: 'right'
   },
@@ -149,7 +149,7 @@ const MODULE_TOUR_DEFINITIONS: Record<string, { title: string; content: string; 
   },
   'nav-audit': {
     title: 'Nhật Ký Kiểm Toán Hệ Thống (Audit Log)',
-    content: 'Ghi vết chi tiết 100% thao tác của cán bộ trên hệ thống (đăng nhập, thay đổi cấu hình, tạo mới, xóa bản ghi) đảm bảo tính minh bạch và an toàn pháp lý.',
+    content: 'Ghi vết chi tiết thao tác của cán bộ trên hệ thống đảm bảo tính minh bạch.',
     badge: 'Kiểm toán hệ thống',
     placement: 'right'
   },
@@ -165,21 +165,18 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
 
-  // Xây dựng danh sách bước Tour ĐỘNG 100% theo đúng các chức năng mà quyền hạn tài khoản được phép thấy
   const steps: TourStep[] = useMemo(() => {
     const dynamicSteps: TourStep[] = [];
 
-    // 1. Bước mở đầu: Giới thiệu hệ thống
     dynamicSteps.push({
       id: 'welcome',
       targetSelector: '[data-tour="welcome-card"]',
-      title: 'Chào Mừng Đến Với Hệ Thống Wi-Fi Hải Phòng',
-      content: `Xin chào đồng chí ${currentUser?.fullName || currentUser?.username || 'Cán bộ'}! Sau đây là chuyến tham quan đầy đủ toàn bộ các chức năng mà tài khoản của đồng chí được phân quyền tác nghiệp trên hệ thống 1.584 điểm phát sóng.`,
+      title: 'Chào Mừng Đến Với Hệ Thống Quản Lý Wi-Fi Công Cộng TP Hải Phòng',
+      content: `Xin chào ${currentUser?.fullName || currentUser?.username || 'Cán bộ'}! Sau đây là chuyến tham quan đầy đủ toàn bộ các chức năng mà tài khoản của bạn được phân quyền tác nghiệp trên hệ thống.`,
       placement: 'bottom',
-      badge: 'Khởi đầu'
+      badge: ''
     });
 
-    // 2. Đi qua TỪNG chức năng thực tế có trên thanh điều hướng của người dùng
     if (navGroups && navGroups.length > 0) {
       navGroups.forEach((group) => {
         group.items.forEach((item) => {
@@ -199,22 +196,20 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
       });
     }
 
-    // 3. Bước thông tin tài khoản & Đổi mật khẩu
     dynamicSteps.push({
       id: 'user-profile',
       targetSelector: '[data-tour="user-profile"]',
       title: 'Tài Khoản Tác Nghiệp & Đổi Mật Khẩu',
-      content: 'Xem thông tin vai trò, phạm vi phụ trách và thực hiện đổi mật khẩu định kỳ để đảm bảo an toàn thông tin theo quy chế Nhà nước.',
+      content: 'Xem thông tin vai trò, phạm vi phụ trách và thực hiện đổi mật khẩu.',
       placement: 'bottom',
       badge: 'Tài khoản'
     });
 
-    // 4. Bước hoàn tất & Nút mở lại Tour
     dynamicSteps.push({
       id: 'tour-button',
       targetSelector: '[data-tour="tour-button"]',
-      title: 'Hoàn Tất & Sẵn Sàng Tác Nghiệp!',
-      content: 'Đồng chí đã nắm bắt toàn bộ các phân hệ chức năng theo đúng quyền hạn. Đồng chí có thể mở lại chuyến tham quan này bất cứ lúc nào qua nút "Tour Hướng Dẫn" trên thanh tiêu đề.',
+      title: 'Hoàn Tất!',
+      content: 'Bạn vừa lướt qua toàn bộ chức năng nghiệp vụ theo đúng quyền hạn. Bạn có thể mở lại chuyến tham quan này bất cứ lúc nào qua nút "Tour Hướng Dẫn" trên thanh tiêu đề.',
       placement: 'bottom',
       badge: 'Sẵn sàng'
     });
@@ -224,7 +219,6 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
 
   const currentStep = steps[currentStepIndex] || steps[0];
 
-  // Highlight targeted DOM element dynamically with vibrant active style
   useEffect(() => {
     if (!isOpen || !currentStep) return;
 
@@ -263,7 +257,6 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
     };
   }, [updateTargetPosition]);
 
-  // Keyboard navigation (Escape, ArrowRight, ArrowLeft)
   useEffect(() => {
     if (!isOpen) return;
 
@@ -305,7 +298,6 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
 
   if (!isOpen) return null;
 
-  // Compute tooltip position
   const getTooltipStyle = (): React.CSSProperties => {
     if (!targetRect) {
       // Centered fallback
@@ -353,6 +345,7 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
       left: `${left}px`,
       width: `${tooltipWidth}px`,
       zIndex: 1000,
+      transition: 'top 0.35s cubic-bezier(0.16, 1, 0.3, 1), left 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
     };
   };
 
@@ -400,6 +393,7 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
                 rx="8"
                 ry="8"
                 fill="#000000"
+                style={{ transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)' }}
               />
             )}
           </mask>
@@ -418,12 +412,13 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
       {/* 2. Target Spotlight cutout glowing border & high-visibility beacon */}
       {targetRect && (
         <div
-          className="fixed pointer-events-none transition-all duration-300 rounded-lg ring-2 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.65)] z-50 animate-pulse"
+          className="fixed pointer-events-none rounded-lg ring-2 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.65)] z-50 animate-pulse"
           style={{
             top: `${targetRect.top - 6}px`,
             left: `${targetRect.left - 6}px`,
             width: `${targetRect.width + 12}px`,
             height: `${targetRect.height + 12}px`,
+            transition: 'top 0.35s cubic-bezier(0.16, 1, 0.3, 1), left 0.35s cubic-bezier(0.16, 1, 0.3, 1), width 0.35s ease, height 0.35s ease',
           }}
         >
           {/* Beacon Floating Tag */}
@@ -439,17 +434,6 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
         style={getTooltipStyle()}
         className="pointer-events-auto bg-white rounded-xl border border-slate-200/90 shadow-2xl overflow-visible animate-in fade-in zoom-in-95 duration-200"
       >
-        {/* Visual pointer arrow pointing from card to target */}
-        {currentStep.placement === 'right' && (
-          <div className="absolute -left-1.5 top-6 w-3 h-3 bg-[#004b87] rotate-45 transform z-10" />
-        )}
-        {currentStep.placement === 'left' && (
-          <div className="absolute -right-1.5 top-6 w-3 h-3 bg-[#004b87] rotate-45 transform z-10" />
-        )}
-        {currentStep.placement === 'bottom' && (
-          <div className="absolute -top-1.5 left-8 w-3 h-3 bg-[#004b87] rotate-45 transform z-10" />
-        )}
-
         <div className="rounded-xl overflow-hidden">
           {/* Header with Step indicator & Group Title */}
           <div className="bg-[#004b87] px-4 py-3 text-white flex items-center justify-between">
@@ -457,7 +441,7 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
               <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold font-mono shadow-xs">
                 {currentStepIndex + 1}
               </div>
-              <div>
+              <div key={`header-${currentStep.id}`} className="animate-in fade-in duration-200">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] tracking-wider uppercase font-semibold text-amber-300">
                     {currentStep.badge}
@@ -485,11 +469,13 @@ export const InteractiveTourGuide: React.FC<Props> = ({ isOpen, onClose, current
             </button>
           </div>
 
-          {/* Body content */}
+          {/* Body content with smooth step transition */}
           <div className="p-4 space-y-3.5">
-            <p className="text-xs text-slate-700 leading-relaxed font-sans">
-              {currentStep.content}
-            </p>
+            <div key={`body-${currentStep.id}`} className="animate-in fade-in slide-in-from-right-2 duration-250">
+              <p className="text-xs text-slate-700 leading-relaxed font-sans min-h-[40px]">
+                {currentStep.content}
+              </p>
+            </div>
 
             {/* Continuous Sleek Progress Bar */}
             <div className="space-y-1.5 pt-1 border-t border-slate-100">
