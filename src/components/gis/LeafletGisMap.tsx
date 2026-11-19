@@ -1,7 +1,24 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { GisLocationPinDto } from '../../types/models';
+import { 
+  Layers, 
+  Satellite, 
+  Moon, 
+  Sun, 
+  Map as MapIcon, 
+  Ruler, 
+  RotateCcw, 
+  Compass, 
+  X, 
+  Wifi, 
+  Activity,
+  Flame,
+  Check
+} from 'lucide-react';
+
+export type GisBasemap = 'google_hybrid' | 'cyber_dark' | 'clean_light' | 'osm';
 
 interface LeafletGisMapProps {
   pins: GisLocationPinDto[];
@@ -12,7 +29,7 @@ interface LeafletGisMapProps {
   compact?: boolean;
 }
 
-// Center coordinates for Hai Phong and its 15 administrative districts
+// Tọa độ trung tâm TP. Hải Phòng và 15 Quận / Huyện
 export const DISTRICT_CENTERS: Record<string, { lat: number; lng: number; zoom: number }> = {
   ALL: { lat: 20.8449, lng: 106.6881, zoom: 11 },
   'Quận Hồng Bàng': { lat: 20.8651, lng: 106.6838, zoom: 14 },
@@ -32,6 +49,29 @@ export const DISTRICT_CENTERS: Record<string, { lat: number; lng: number; zoom: 
   'Huyện Bạch Long Vĩ': { lat: 20.1333, lng: 107.7167, zoom: 14 },
 };
 
+function distanceInMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371e3;
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+interface ClusterNode {
+  lat: number;
+  lng: number;
+  pins: GisLocationPinDto[];
+  totalSessions: number;
+  hasOffline: boolean;
+  hasDegraded: boolean;
+}
+
 export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
   pins,
   selectedPin,
@@ -44,63 +84,98 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
   const mapRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
   const heatmapLayerRef = useRef<L.LayerGroup | null>(null);
+  const measureLayerRef = useRef<L.LayerGroup | null>(null);
   const markersMapRef = useRef<Map<number, L.Marker>>(new Map());
+  const tileLayersRef = useRef<Record<GisBasemap, L.TileLayer>>({} as any);
 
-  // 1. Initialize Leaflet Map once
+  // Lưu tùy chọn chế độ bản đồ (mặc định lấy Google Vệ tinh từ bandoso)
+  const [activeBasemap, setActiveBasemap] = useState<GisBasemap>(() => {
+    try {
+      return (localStorage.getItem('wifi_map_basemap') as GisBasemap) || 'google_hybrid';
+    } catch {
+      return 'google_hybrid';
+    }
+  });
+
+  // Chế độ đo khoảng cách (Measurement tool)
+  const [isMeasuring, setIsMeasuring] = useState(false);
+  const [measurePoints, setMeasurePoints] = useState<[number, number][]>([]);
+  const [measureDistance, setMeasureDistance] = useState<number | null>(null);
+
+  // Thống kê nhanh trên bản đồ
+  const pinStats = useMemo(() => {
+    const total = pins.length;
+    const online = pins.filter(p => p.status === 'ONLINE').length;
+    const offline = pins.filter(p => p.status === 'OFFLINE').length;
+    const degraded = pins.filter(p => p.status === 'DEGRADED').length;
+    const sessions = pins.reduce((sum, p) => sum + (p.activeSessionsCount || 0), 0);
+    return { total, online, offline, degraded, sessions };
+  }, [pins]);
+
+  // 1. Khởi tạo Bản đồ Leaflet
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Base Tile Layers
+    // Định nghĩa 4 lớp Tile chuyên nghiệp (Google Hybrid từ bandoso, Cyber Dark, Clean Light, OSM)
+    const googleHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+      maxZoom: 20,
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      attribution: '© Google Maps',
+    });
+
+    const cyberDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20,
+      subdomains: 'abcd',
+      attribution: '© CARTO Dark Matter',
+    });
+
+    const cleanLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20,
+      subdomains: 'abcd',
+      attribution: '© CARTO Positron',
+    });
+
     const osmStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '',
+      attribution: '© OpenStreetMap',
     });
-    const esriSatellite = L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      {
-        maxZoom: 18,
-        attribution: '',
-      }
-    );
 
-    // Create Map Instance (Centered on Hai Phong Opera House / City Hall)
+    tileLayersRef.current = {
+      google_hybrid: googleHybrid,
+      cyber_dark: cyberDark,
+      clean_light: cleanLight,
+      osm: osmStandard,
+    };
+
+    const initialLayer = tileLayersRef.current[activeBasemap] || googleHybrid;
+
     const map = L.map(mapContainerRef.current, {
       center: [20.8449, 106.6881],
       zoom: 11,
       minZoom: 9,
-      maxZoom: 18,
-      layers: [osmStandard],
+      maxZoom: 19,
+      layers: [initialLayer],
       zoomControl: false,
     });
 
-    // Add Zoom Control to Top-Left
-    L.control.zoom({ position: 'topleft' }).addTo(map);
-
-    // Add Scale
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
     L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
 
-    // Add Layer Control
-    const baseMaps = {
-      'Bản đồ Tiêu chuẩn': osmStandard,
-      'Bản đồ Vệ tinh': esriSatellite,
-    };
-    L.control.layers(baseMaps, undefined, { position: 'topright' }).addTo(map);
-
-    // Initialize LayerGroups
     const markersLayer = L.layerGroup().addTo(map);
     const heatmapLayer = L.layerGroup().addTo(map);
+    const measureLayer = L.layerGroup().addTo(map);
 
     mapRef.current = map;
     markersLayerRef.current = markersLayer;
     heatmapLayerRef.current = heatmapLayer;
+    measureLayerRef.current = measureLayer;
 
-    // Invalidate map size to prevent gray tiles and layout miscalculation
+    // Invalidate map size
     const t1 = setTimeout(() => { map.invalidateSize(); }, 150);
     const t2 = setTimeout(() => { map.invalidateSize(); }, 500);
     const handleResize = () => { map.invalidateSize(); };
     window.addEventListener('resize', handleResize);
 
-    // Cleanup on unmount
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
@@ -109,6 +184,7 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
       mapRef.current = null;
       markersLayerRef.current = null;
       heatmapLayerRef.current = null;
+      measureLayerRef.current = null;
       markersMapRef.current.clear();
       if (mapContainerRef.current) {
         delete (mapContainerRef.current as any)._leaflet_id;
@@ -116,7 +192,26 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
     };
   }, []);
 
-  // 2. Fly to District Center when selected
+  // 2. Chuyển đổi Basemap mượt mà
+  useEffect(() => {
+    if (!mapRef.current || !tileLayersRef.current) return;
+    const map = mapRef.current;
+
+    Object.values(tileLayersRef.current).forEach((layer) => {
+      if (map.hasLayer(layer)) {
+        map.removeLayer(layer);
+      }
+    });
+
+    const targetLayer = tileLayersRef.current[activeBasemap] || tileLayersRef.current.google_hybrid;
+    targetLayer.addTo(map);
+
+    try {
+      localStorage.setItem('wifi_map_basemap', activeBasemap);
+    } catch {}
+  }, [activeBasemap]);
+
+  // 3. Bay tới vị trí Quận/Huyện được chọn
   useEffect(() => {
     if (!mapRef.current) return;
     const target = DISTRICT_CENTERS[selectedDistrict] || DISTRICT_CENTERS.ALL;
@@ -126,127 +221,304 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
     });
   }, [selectedDistrict]);
 
-  // 3. Render Markers & Popups when pins or selectedPin change
+  // 4. Đo đạc khoảng cách (Measurement Tool)
   useEffect(() => {
+    if (!mapRef.current) return;
+    const map = mapRef.current;
+
+    const handleMapClick = (e: L.LeafletMouseEvent) => {
+      if (!isMeasuring) return;
+
+      const newPoint: [number, number] = [e.latlng.lat, e.latlng.lng];
+      setMeasurePoints((prev) => {
+        if (prev.length >= 2) {
+          return [newPoint];
+        }
+        return [...prev, newPoint];
+      });
+    };
+
+    map.on('click', handleMapClick);
+    return () => {
+      map.off('click', handleMapClick);
+    };
+  }, [isMeasuring]);
+
+  // Vẽ đường đo khoảng cách
+  useEffect(() => {
+    if (!measureLayerRef.current) return;
+    const layer = measureLayerRef.current;
+    layer.clearLayers();
+
+    if (!isMeasuring || measurePoints.length === 0) {
+      setMeasureDistance(null);
+      return;
+    }
+
+    measurePoints.forEach((pt, idx) => {
+      const circle = L.circleMarker([pt[0], pt[1]], {
+        radius: 6,
+        color: '#ffffff',
+        weight: 2,
+        fillColor: '#f59e0b',
+        fillOpacity: 1,
+      });
+      circle.addTo(layer);
+    });
+
+    if (measurePoints.length === 2) {
+      const p1 = measurePoints[0];
+      const p2 = measurePoints[1];
+      const dist = distanceInMeters(p1[0], p1[1], p2[0], p2[1]);
+      setMeasureDistance(dist);
+
+      const polyline = L.polyline([p1, p2], {
+        color: '#f59e0b',
+        weight: 3.5,
+        dashArray: '4, 6',
+      });
+      polyline.addTo(layer);
+    } else {
+      setMeasureDistance(null);
+    }
+  }, [measurePoints, isMeasuring]);
+
+  const resetMeasurement = () => {
+    setMeasurePoints([]);
+    setMeasureDistance(null);
+    if (measureLayerRef.current) measureLayerRef.current.clearLayers();
+  };
+
+  // 5. Render Marker & Clustering theo chuẩn đồ họa bandoso
+  const renderMarkers = useCallback(() => {
     if (!mapRef.current || !markersLayerRef.current) return;
+    const map = mapRef.current;
+    const zoom = map.getZoom();
 
     markersLayerRef.current.clearLayers();
     markersMapRef.current.clear();
 
-    const validCoords: [number, number][] = [];
-
-    pins.forEach((pin) => {
-      const lat = typeof pin.latitude === 'number' ? pin.latitude : parseFloat(String(pin.latitude));
-      const lng = typeof pin.longitude === 'number' ? pin.longitude : parseFloat(String(pin.longitude));
-      if (isNaN(lat) || isNaN(lng)) return;
-
-      validCoords.push([lat, lng]);
-      const isSelected = selectedPin?.id === pin.id;
-
-      // Color coding
-      let bgHex = '#10b981'; // emerald
-      let pulseHex = '#34d399';
-      let statusText = 'Hoạt động tốt';
-      let statusBg = '#ecfdf5';
-      let statusColor = '#065f46';
-
-      if (pin.status === 'OFFLINE') {
-        bgHex = '#e11d48'; // rose
-        pulseHex = '#f43f5e';
-        statusText = 'Mất mạng';
-        statusBg = '#fff1f2';
-        statusColor = '#9f1239';
-      } else if (pin.status === 'DEGRADED') {
-        bgHex = '#f59e0b'; // amber
-        pulseHex = '#fbbf24';
-        statusText = 'Suy giảm';
-        statusBg = '#fffbeb';
-        statusColor = '#92400e';
+    const validPins: { pin: GisLocationPinDto; lat: number; lng: number }[] = [];
+    pins.forEach((p) => {
+      const lat = typeof p.latitude === 'number' ? p.latitude : parseFloat(String(p.latitude));
+      const lng = typeof p.longitude === 'number' ? p.longitude : parseFloat(String(p.longitude));
+      if (!isNaN(lat) && !isNaN(lng)) {
+        validPins.push({ pin: p, lat, lng });
       }
-
-      const pulseElement =
-        pin.status !== 'ONLINE'
-          ? `<span style="position: absolute; inset: -4px; border-radius: 9999px; background: ${pulseHex}; opacity: 0.6; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>`
-          : '';
-
-      const scaleClass = isSelected ? 'transform: scale(1.3); z-index: 999;' : '';
-
-      const customIcon = L.divIcon({
-        className: 'leaflet-govtech-marker',
-        html: `
-          <div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s; ${scaleClass}">
-            ${pulseElement}
-            <div style="width: 32px; height: 32px; border-radius: 9999px; background: ${bgHex}; border: 2.5px solid #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ffffff;">
-              <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
-                <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
-                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-                <line x1="12" y1="20" x2="12.01" y2="20"/>
-              </svg>
-              ${pin.activeSessionsCount > 0 ? `<span style="font-size: 8px; font-weight: 800; font-family: monospace; line-height: 1;">${pin.activeSessionsCount}</span>` : ''}
-            </div>
-          </div>
-        `,
-        iconSize: [34, 34],
-        iconAnchor: [17, 17],
-        popupAnchor: [0, -20],
-      });
-
-      const marker = L.marker([lat, lng], { icon: customIcon });
-
-      // Rich GovTech Popup
-      const popupHtml = `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 220px; padding: 2px;">
-          <div style="font-size: 10px; font-weight: 800; color: #004b87; text-transform: uppercase; letter-spacing: 0.5px;">
-            ${pin.districtName || 'Thành phố Hải Phòng'}
-          </div>
-          <div style="font-size: 13px; font-weight: 700; color: #0f172a; margin-top: 3px; line-height: 1.3;">
-            ${pin.name}
-          </div>
-          <div style="font-size: 11px; color: #64748b; margin-top: 3px; line-height: 1.3;">
-            ${pin.address || 'Hải Phòng'}
-          </div>
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #f1f5f9; font-size: 11px;">
-            <span style="background: ${statusBg}; color: ${statusColor}; padding: 2px 7px; border-radius: 4px; font-weight: 700;">
-              ${statusText}
-            </span>
-            <span style="background: #eff6ff; color: #1e40af; padding: 2px 7px; border-radius: 4px; font-weight: 700;">
-              ${pin.activeSessionsCount || 0} phiên
-            </span>
-          </div>
-          <div style="margin-top: 8px; display: flex; gap: 4px;">
-            <a href="/portal?location=${pin.slug}" target="_blank" rel="noreferrer" style="flex: 1; text-align: center; background: #004b87; color: #ffffff; text-decoration: none; padding: 5px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 600;">
-              Xem Cổng chào ↗
-            </a>
-          </div>
-        </div>
-      `;
-
-      marker.bindPopup(popupHtml);
-
-      marker.on('click', () => {
-        onSelectPin(pin);
-      });
-
-      marker.addTo(markersLayerRef.current!);
-      markersMapRef.current.set(pin.id, marker);
     });
 
-    // Auto fit bounds to visible pins if ALL district is selected and user hasn't selected a single pin
-    if (selectedDistrict === 'ALL' && !selectedPin && validCoords.length > 0) {
-      try {
-        mapRef.current.fitBounds(L.latLngBounds(validCoords), { padding: [50, 50], maxZoom: 13 });
-      } catch (err) {
-        // Silently ignore if container has zero size
-      }
-    }
-  }, [pins, selectedPin, onSelectPin, selectedDistrict]);
+    // Gom cụm thông minh khi zoom xa (< 13) để không dính chùm
+    if (zoom < 13 && validPins.length > 5) {
+      const clusterDistancePx = 60;
+      const clusters: ClusterNode[] = [];
 
-  // 4. Render Heatmap Density Layer when enabled
+      validPins.forEach(({ pin, lat, lng }) => {
+        const point = map.latLngToLayerPoint([lat, lng]);
+        let matchedCluster: ClusterNode | null = null;
+
+        for (const c of clusters) {
+          const cPoint = map.latLngToLayerPoint([c.lat, c.lng]);
+          const distPx = Math.hypot(point.x - cPoint.x, point.y - cPoint.y);
+          if (distPx < clusterDistancePx) {
+            matchedCluster = c;
+            break;
+          }
+        }
+
+        if (matchedCluster) {
+          matchedCluster.pins.push(pin);
+          matchedCluster.totalSessions += pin.activeSessionsCount || 0;
+          if (pin.status === 'OFFLINE') matchedCluster.hasOffline = true;
+          if (pin.status === 'DEGRADED') matchedCluster.hasDegraded = true;
+          // Re-calculate weighted center
+          matchedCluster.lat = (matchedCluster.lat * (matchedCluster.pins.length - 1) + lat) / matchedCluster.pins.length;
+          matchedCluster.lng = (matchedCluster.lng * (matchedCluster.pins.length - 1) + lng) / matchedCluster.pins.length;
+        } else {
+          clusters.push({
+            lat,
+            lng,
+            pins: [pin],
+            totalSessions: pin.activeSessionsCount || 0,
+            hasOffline: pin.status === 'OFFLINE',
+            hasDegraded: pin.status === 'DEGRADED',
+          });
+        }
+      });
+
+      // Render từng cụm Donut Cluster
+      clusters.forEach((cluster) => {
+        const count = cluster.pins.length;
+        if (count === 1) {
+          // Chỉ 1 điểm thì vẽ marker đơn
+          renderSinglePin(cluster.pins[0], cluster.lat, cluster.lng);
+          return;
+        }
+
+        const clusterSize = count < 15 ? 42 : count < 50 ? 50 : 58;
+        let ringBorder = '#10b981';
+        let bgGradient = 'linear-gradient(135deg, #065f46 0%, #047857 100%)';
+
+        if (cluster.hasOffline) {
+          ringBorder = '#f43f5e';
+          bgGradient = 'linear-gradient(135deg, #881337 0%, #be123c 100%)';
+        } else if (cluster.hasDegraded) {
+          ringBorder = '#f59e0b';
+          bgGradient = 'linear-gradient(135deg, #78350f 0%, #b45309 100%)';
+        }
+
+        const clusterIcon = L.divIcon({
+          className: 'leaflet-bandoso-cluster',
+          html: `
+            <div style="width: ${clusterSize}px; height: ${clusterSize}px; border-radius: 9999px; background: ${bgGradient}; border: 3px solid ${ringBorder}; box-shadow: 0 6px 16px rgba(0,0,0,0.45); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ffffff; cursor: pointer; transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);">
+              <span style="font-size: 13px; font-weight: 900; line-height: 1; font-family: monospace;">${count}</span>
+              ${cluster.totalSessions > 0 ? `<span style="font-size: 8px; font-weight: 700; color: #a7f3d0; margin-top: 1px;">${cluster.totalSessions} onl</span>` : ''}
+            </div>
+          `,
+          iconSize: [clusterSize, clusterSize],
+          iconAnchor: [clusterSize / 2, clusterSize / 2],
+        });
+
+        const clusterMarker = L.marker([cluster.lat, cluster.lng], { icon: clusterIcon });
+        clusterMarker.on('click', () => {
+          map.flyTo([cluster.lat, cluster.lng], Math.min(16, zoom + 2), { duration: 0.8 });
+        });
+
+        clusterMarker.addTo(markersLayerRef.current!);
+      });
+      return;
+    }
+
+    // Render từng điểm riêng lẻ khi zoom gần
+    validPins.forEach(({ pin, lat, lng }) => {
+      renderSinglePin(pin, lat, lng);
+    });
+  }, [pins, selectedPin, onSelectPin]);
+
+  const renderSinglePin = (pin: GisLocationPinDto, lat: number, lng: number) => {
+    if (!markersLayerRef.current) return;
+    const isSelected = selectedPin?.id === pin.id;
+
+    let bgGradient = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
+    let ringColor = '#10b981';
+    let statusText = 'Hoạt động tốt';
+    let statusColor = '#059669';
+    let statusDotHex = '#10b981';
+    let pulseHtml = '';
+
+    if (pin.status === 'OFFLINE') {
+      bgGradient = 'linear-gradient(135deg, #b91c1c 0%, #e11d48 100%)';
+      ringColor = '#e11d48';
+      statusText = 'Mất mạng';
+      statusColor = '#e11d48';
+      statusDotHex = '#e11d48';
+      // Hiệu ứng sóng radar loang cảnh báo sự cố
+      pulseHtml = `<span style="position: absolute; inset: -6px; border-radius: 9999px; background: #f43f5e; opacity: 0.75; animation: ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>`;
+    } else if (pin.status === 'DEGRADED') {
+      bgGradient = 'linear-gradient(135deg, #b45309 0%, #f59e0b 100%)';
+      ringColor = '#f59e0b';
+      statusText = 'Suy giảm';
+      statusColor = '#d97706';
+      statusDotHex = '#f59e0b';
+    } else {
+      // Soft glow cho trạm online
+      pulseHtml = `<span style="position: absolute; inset: -2px; border-radius: 9999px; background: #10b981; opacity: 0.3; filter: blur(2px);"></span>`;
+    }
+
+    const scaleStyle = isSelected
+      ? 'transform: scale(1.35); z-index: 999;'
+      : 'transform: scale(1);';
+    const selectedRing = isSelected ? 'box-shadow: 0 0 0 4px #f59e0b, 0 8px 20px rgba(0,0,0,0.5);' : 'box-shadow: 0 4px 12px rgba(0,0,0,0.35);';
+
+    const customIcon = L.divIcon({
+      className: 'leaflet-bandoso-marker',
+      html: `
+        <div style="position: relative; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1); ${scaleStyle}">
+          ${pulseHtml}
+          <div style="width: 36px; height: 36px; border-radius: 9999px; background: ${bgGradient}; border: 2.5px solid #ffffff; ${selectedRing} display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ffffff;">
+            <svg style="width: 15px; height: 15px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+              <line x1="12" y1="20" x2="12.01" y2="20"/>
+            </svg>
+            ${pin.activeSessionsCount > 0 ? `<span style="font-size: 8px; font-weight: 900; font-family: monospace; line-height: 1; letter-spacing: -0.5px;">${pin.activeSessionsCount}</span>` : ''}
+          </div>
+        </div>
+      `,
+      iconSize: [38, 38],
+      iconAnchor: [19, 19],
+      popupAnchor: [0, -22],
+    });
+
+    const marker = L.marker([lat, lng], { icon: customIcon });
+
+    // Glassmorphism Card Popup cao cấp
+    const popupHtml = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 235px; padding: 2px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+          <span style="font-size: 9.5px; font-weight: 800; color: #004b87; text-transform: uppercase; letter-spacing: 0.5px;">
+            ${pin.districtName || 'TP. Hải Phòng'}
+          </span>
+          <span style="font-size: 9px; font-family: monospace; color: #64748b; background: #f1f5f9; padding: 1px 5px; border-radius: 3px;">
+            NVH-${pin.id}
+          </span>
+        </div>
+        <div style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin-top: 4px; line-height: 1.3;">
+          ${pin.name}
+        </div>
+        <div style="font-size: 11px; color: #64748b; margin-top: 3px; line-height: 1.35;">
+          📍 ${pin.address || 'Nhà văn hóa cơ sở Hải Phòng'}
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding: 6px 8px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11px;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <span style="display: inline-block; width: 7px; height: 7px; border-radius: 999px; background: ${statusDotHex};"></span>
+            <span style="font-weight: 700; color: ${statusColor}; font-size: 11px;">${statusText}</span>
+          </div>
+          <span style="color: #0369a1; font-weight: 800; font-family: monospace;">
+            ${pin.activeSessionsCount || 0} online
+          </span>
+        </div>
+        <div style="margin-top: 10px; display: flex; gap: 6px;">
+          <a href="/portal?location=${pin.slug}" target="_blank" rel="noreferrer" style="flex: 1; text-align: center; background: #004b87; color: #ffffff; text-decoration: none; padding: 6px 10px; border-radius: 5px; font-size: 11px; font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+            Mở Cổng chào ↗
+          </a>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" rel="noreferrer" style="text-align: center; background: #ffffff; color: #334155; text-decoration: none; padding: 6px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; border: 1px solid #cbd5e1;">
+            Chỉ đường
+          </a>
+        </div>
+      </div>
+    `;
+
+    marker.bindPopup(popupHtml);
+    marker.on('click', () => {
+      onSelectPin(pin);
+    });
+
+    marker.addTo(markersLayerRef.current!);
+    markersMapRef.current.set(pin.id, marker);
+  };
+
+  // Re-render markers khi pins hoặc zoom thay đổi
+  useEffect(() => {
+    renderMarkers();
+    if (!mapRef.current) return;
+    const map = mapRef.current;
+
+    const handleZoomOrMove = () => {
+      renderMarkers();
+    };
+
+    map.on('zoomend', handleZoomOrMove);
+    return () => {
+      map.off('zoomend', handleZoomOrMove);
+    };
+  }, [renderMarkers]);
+
+  // 6. Bản đồ nhiệt Heatmap đa tầng phát quang
   useEffect(() => {
     if (!mapRef.current || !heatmapLayerRef.current) return;
-
-    heatmapLayerRef.current.clearLayers();
+    const layer = heatmapLayerRef.current;
+    layer.clearLayers();
 
     if (!heatmapEnabled) return;
 
@@ -256,32 +528,39 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
       if (isNaN(lat) || isNaN(lng)) return;
 
       const sessions = pin.activeSessionsCount || 0;
-      // Graduated radius and color based on active sessions
-      const radiusMeters = Math.max(300, Math.min(2500, 300 + sessions * 50));
-      let circleColor = '#3b82f6';
-      let fillColor = '#60a5fa';
+      const radiusMeters = Math.max(350, Math.min(2200, 350 + sessions * 45));
+
+      let coreColor = '#38bdf8';
+      let haloColor = '#0284c7';
 
       if (sessions >= 20) {
-        circleColor = '#dc2626';
-        fillColor = '#f87171';
+        coreColor = '#f43f5e';
+        haloColor = '#e11d48';
       } else if (sessions >= 10) {
-        circleColor = '#d97706';
-        fillColor = '#fbbf24';
+        coreColor = '#fbbf24';
+        haloColor = '#d97706';
       }
 
-      const circle = L.circle([lat, lng], {
+      // Outer Glow Halo
+      L.circle([lat, lng], {
         radius: radiusMeters,
-        color: circleColor,
-        fillColor: fillColor,
-        fillOpacity: 0.25,
-        weight: 1.5,
-      });
+        color: 'transparent',
+        fillColor: haloColor,
+        fillOpacity: 0.18,
+      }).addTo(layer);
 
-      circle.addTo(heatmapLayerRef.current!);
+      // Inner Core Circle
+      L.circle([lat, lng], {
+        radius: radiusMeters * 0.45,
+        color: coreColor,
+        weight: 1.5,
+        fillColor: coreColor,
+        fillOpacity: 0.38,
+      }).addTo(layer);
     });
   }, [pins, heatmapEnabled]);
 
-  // 5. Open popup when selectedPin changes from outside
+  // 7. Tự động Focus vào pin được chọn từ bên ngoài
   useEffect(() => {
     if (!selectedPin || !mapRef.current) return;
     const marker = markersMapRef.current.get(selectedPin.id);
@@ -293,10 +572,153 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
     }
   }, [selectedPin]);
 
+  const handleCenterCity = () => {
+    if (!mapRef.current) return;
+    const c = DISTRICT_CENTERS.ALL;
+    mapRef.current.flyTo([c.lat, c.lng], c.zoom, { duration: 1 });
+  };
+
   return (
-    <div className={`relative w-full h-full ${compact ? 'min-h-[300px]' : 'min-h-[580px]'} rounded-sm overflow-hidden border border-slate-300 shadow-sm z-0`}>
-      <div ref={mapContainerRef} className={`w-full h-full ${compact ? 'min-h-[300px]' : 'min-h-[580px]'} z-0`} />
+    <div className={`relative w-full h-full ${compact ? 'min-h-[340px]' : 'min-h-[620px]'} rounded-lg overflow-hidden border border-slate-300 shadow-md group z-0`}>
+      {/* Map Container */}
+      <div ref={mapContainerRef} className="w-full h-full z-0" />
+
+      {/* 🌟 Floating Top-Right HUD Toolbar: Đầy đủ các chế độ bản đồ như bandoso */}
+      <div className="absolute top-3 right-3 z-[400] flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-900/85 backdrop-blur-md border border-white/20 shadow-xl text-white">
+        <div className="flex items-center gap-1 bg-white/10 p-1 rounded-md">
+          <button
+            type="button"
+            onClick={() => setActiveBasemap('google_hybrid')}
+            className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+              activeBasemap === 'google_hybrid'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-300 hover:text-white hover:bg-white/10'
+            }`}
+            title="Google Vệ tinh độ nét cao có tiếng Việt (bandoso)"
+          >
+            <Satellite className="w-3.5 h-3.5 text-amber-300" />
+            <span className="hidden sm:inline">Google Vệ tinh</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveBasemap('cyber_dark')}
+            className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+              activeBasemap === 'cyber_dark'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-300 hover:text-white hover:bg-white/10'
+            }`}
+            title="Trung tâm điều hành IOC Cyber Dark (Nền tối phát quang)"
+          >
+            <Moon className="w-3.5 h-3.5 text-cyan-300" />
+            <span className="hidden sm:inline">IOC Dark</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveBasemap('clean_light')}
+            className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+              activeBasemap === 'clean_light'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-300 hover:text-white hover:bg-white/10'
+            }`}
+            title="Hành chính số Tối giản (Carto Light)"
+          >
+            <Sun className="w-3.5 h-3.5 text-yellow-300" />
+            <span className="hidden sm:inline">Sáng</span>
+          </button>
+        </div>
+
+        {/* Thước đo khoảng cách (Measurement Tool) */}
+        <button
+          type="button"
+          onClick={() => {
+            setIsMeasuring(!isMeasuring);
+            if (isMeasuring) resetMeasurement();
+          }}
+          className={`p-1.5 rounded-md text-xs font-medium transition cursor-pointer flex items-center gap-1 ${
+            isMeasuring
+              ? 'bg-amber-500 text-slate-950 font-bold shadow-md animate-pulse'
+              : 'bg-white/10 text-slate-300 hover:text-white hover:bg-white/20'
+          }`}
+          title={isMeasuring ? 'Đang bật thước đo (Click 2 điểm)' : 'Thước đo khoảng cách'}
+        >
+          <Ruler className="w-4 h-4" />
+        </button>
+
+        {/* Nút Reset về trung tâm Hải Phòng */}
+        <button
+          type="button"
+          onClick={handleCenterCity}
+          className="p-1.5 rounded-md bg-white/10 text-slate-300 hover:text-white hover:bg-white/20 transition cursor-pointer"
+          title="Về trung tâm TP. Hải Phòng"
+        >
+          <RotateCcw className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* 🧭 Top-Left Quick Info Badge (Nếu không compact) */}
+      {!compact && (
+        <div className="absolute top-3 left-3 z-[400] hidden md:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-slate-900/80 backdrop-blur-md border border-white/20 shadow-xl text-white text-xs font-sans">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-bold">{pinStats.total}</span>
+            <span className="text-slate-300">điểm phát</span>
+          </div>
+          <span className="h-3 w-px bg-white/20" />
+          <div className="flex items-center gap-1.5 text-emerald-300 font-semibold font-mono">
+            <span>{pinStats.sessions}</span>
+            <span className="text-[11px] font-sans text-slate-300">dân online</span>
+          </div>
+          {pinStats.offline > 0 && (
+            <>
+              <span className="h-3 w-px bg-white/20" />
+              <div className="flex items-center gap-1.5 text-rose-400 font-bold">
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                <span>{pinStats.offline} mất mạng</span>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* 📏 Pill kết quả đo khoảng cách */}
+      {isMeasuring && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400] flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/90 text-white text-xs font-semibold shadow-2xl border border-amber-400 backdrop-blur-md animate-in fade-in zoom-in-95">
+          <Ruler className="w-4 h-4 text-amber-400 animate-bounce" />
+          {measureDistance !== null ? (
+            <span>
+              Khoảng cách:{' '}
+              <strong className="text-amber-300 font-mono text-sm">
+                {measureDistance >= 1000 ? `${(measureDistance / 1000).toFixed(2)} km` : `${Math.round(measureDistance)} m`}
+              </strong>
+            </span>
+          ) : (
+            <span className="text-slate-300 text-[11.5px]">
+              {measurePoints.length === 0 ? 'Click điểm thứ nhất trên bản đồ...' : 'Click điểm thứ hai để đo...'}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={resetMeasurement}
+            className="p-1 hover:bg-white/20 rounded-full text-slate-400 hover:text-white transition cursor-pointer ml-1"
+            title="Đo lại"
+          >
+            <RotateCcw className="w-3 h-3" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setIsMeasuring(false);
+              resetMeasurement();
+            }}
+            className="p-1 hover:bg-white/20 rounded-full text-slate-400 hover:text-white transition cursor-pointer"
+            title="Đóng thước đo"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
-

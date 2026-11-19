@@ -107,8 +107,8 @@ export const GisMapPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            <MapPin className="w-7 h-7 text-blue-600" />
-            Bản đồ Số GIS và và các điểm phát sóng wifi
+            <MapPin className="w-7 h-7 text-[#004b87]" />
+            Bản đồ Số GIS & Trực quan Mạng lưới Điểm phát sóng
           </h1>
           
         </div>
