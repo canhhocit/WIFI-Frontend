@@ -104,6 +104,7 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Quản lý phiên truy cập",
         icon: Users,
         module: "LOCATIONS",
+        tourId: "nav-sessions",
       },
     ],
   },
@@ -122,12 +123,14 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Danh sách cấm MAC",
         icon: Ban,
         module: "INCIDENTS",
+        tourId: "nav-blacklist",
       },
       {
         to: "/admin/access-logs",
         label: "Nhật ký 12 tháng pháp lý",
         icon: Lock,
         module: "INCIDENTS",
+        tourId: "nav-access-logs",
       },
     ],
   },
@@ -139,6 +142,7 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Trình dựng Cổng chào",
         icon: Palette,
         module: "CAMPAIGNS",
+        tourId: "nav-portal-builder",
       },
       {
         to: "/admin/campaigns",
@@ -159,7 +163,7 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Bộ lọc tên miền DNS & DVC",
         icon: Globe,
         module: "CAMPAIGNS",
-        tourId: "nav-security",
+        tourId: "nav-dns-filtering",
       },
     ],
   },
@@ -171,6 +175,7 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Báo cáo Sở TT&TT / UBND",
         icon: Landmark,
         module: "SETTINGS",
+        tourId: "nav-government-report",
       },
       {
         to: "/admin/users",
@@ -184,30 +189,35 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Ma trận phân quyền RBAC",
         icon: KeyRound,
         module: "USERS",
+        tourId: "nav-role-permissions",
       },
       {
         to: "/admin/system-settings",
         label: "Cấu hình tham số hệ thống",
         icon: Settings,
         module: "SETTINGS",
+        tourId: "nav-system-settings",
       },
       {
         to: "/admin/analytics",
         label: "Thống kê & Báo cáo",
         icon: BarChart3,
         module: "SETTINGS",
+        tourId: "nav-analytics",
       },
       {
         to: "/admin/audit",
         label: "Nhật ký hệ thống",
         icon: ScrollText,
         module: "USERS",
+        tourId: "nav-audit",
       },
       {
         to: "/admin/gateway",
         label: "Chẩn đoán kết nối Gateway",
         icon: Radio,
         module: "DEVICES",
+        tourId: "nav-gateway",
       },
     ],
   },
@@ -894,6 +904,7 @@ export const AdminLayout: React.FC = () => {
         isOpen={isTourOpen}
         onClose={() => setIsTourOpen(false)}
         currentUser={currentUser}
+        navGroups={filteredNavGroups}
       />
     </div>
   );
