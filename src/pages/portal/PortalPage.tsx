@@ -236,18 +236,47 @@ export const PortalPage: React.FC = () => {
   }, [otpTimer]);
 
   const loadPortal = async (overrideSlug?: string) => {
-    setLoading(true);
     setError(null);
+    const slug = overrideSlug !== undefined ? overrideSlug : locationParam;
+    const cacheKey = `wifi_portal_init_${slug || 'default'}_${effectiveClientMac || 'guest'}`;
+
+    // Fast local memory cache: if citizen opened portal recently, display immediately without spinner
+    if (!isEmbeddedPreview && !previewToken) {
+      try {
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.data && (Date.now() - parsed.timestamp < 300000)) { // 5 mins TTL
+            setPortalData(parsed.data);
+            setMacAddress(effectiveClientMac);
+            if (parsed.data.macRemembered) {
+              setOtpVerified(true);
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (!portalData) {
+      setLoading(true);
+    }
+
     try {
-      const slug = overrideSlug !== undefined ? overrideSlug : locationParam;
       const data = await portalApi.init(slug, apMacParam, effectiveClientMac);
       setPortalData(data);
       setMacAddress(effectiveClientMac);
       if (data.macRemembered) {
         setOtpVerified(true);
       }
+      if (!isEmbeddedPreview && !previewToken) {
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: Date.now() }));
+        } catch (_) {}
+      }
     } catch (err: any) {
-      setError(err?.message || 'Không thể kết nối tới cổng dịch vụ Wi-Fi Nhà văn hóa.');
+      if (!portalData) {
+        setError(err?.message || 'Không thể kết nối tới cổng dịch vụ Wi-Fi Nhà văn hóa.');
+      }
     } finally {
       setLoading(false);
     }
