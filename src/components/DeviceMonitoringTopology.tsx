@@ -56,6 +56,7 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
 
   const apOnline = topology?.apOnline ?? 0;
   const apOffline = topology?.apOffline ?? 0;
+  const apUnmonitored = topology?.apUnmonitored ?? 0;
 
   const clientWired = topology?.clientWired ?? 0;
   const clientWireless = topology?.clientWireless ?? 0;
@@ -378,6 +379,13 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
               <span className="text-slate-300">|</span>
               <span className="font-bold text-slate-700">{apOffline}</span>
               <span className="text-slate-500 text-[11px]">Offline</span>
+              {apUnmonitored > 0 && (
+                <>
+                  <span className="text-slate-300">|</span>
+                  <span className="font-bold text-slate-500" title="AP chưa được giám sát trực tiếp trên máy chủ này">{apUnmonitored}</span>
+                  <span className="text-slate-500 text-[11px]">Chưa giám sát</span>
+                </>
+              )}
             </div>
           </div>
 

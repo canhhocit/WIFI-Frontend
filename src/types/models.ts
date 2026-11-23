@@ -464,6 +464,7 @@ export interface DeviceTopologySummaryDto {
   switchOffline: number;
   apOnline: number;
   apOffline: number;
+  apUnmonitored?: number;
   clientWired: number;
   clientWireless: number;
 }
