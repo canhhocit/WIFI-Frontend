@@ -646,8 +646,8 @@ export interface AlertRuleDto {
 }
 
 export type IncidentSeverity = 'CRITICAL' | 'MAJOR' | 'MINOR';
-export type IncidentStatus = 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
-export type RootCauseCategory = 'POWER_OUTAGE' | 'FIBER_CUT' | 'HARDWARE_FAILURE' | 'CONFIG_ERROR' | 'UNKNOWN';
+export type IncidentStatus = 'OPEN' | 'NEW' | 'ASSIGNED' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+export type RootCauseCategory = 'POWER_OUTAGE' | 'FIBER_CUT' | 'HARDWARE_FAILURE' | 'CONFIG_ERROR' | 'UNKNOWN' | string;
 
 export interface IncidentTicketDto {
   id: number;
@@ -662,9 +662,12 @@ export interface IncidentTicketDto {
   status: IncidentStatus;
   assignedTo?: string;
   assignedGroup?: string;
-  reportedAt: string;
+  reportedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
   slaDeadline: string;
   resolvedAt?: string;
+  resolutionNotes?: string;
   resolutionSummary?: string;
   rootCauseCategory?: RootCauseCategory;
   slaBreached: boolean;
@@ -677,9 +680,10 @@ export interface IncidentUpdateDto {
   updatedBy: string;
   previousStatus?: string;
   newStatus?: string;
+  action?: string;
   note: string;
   attachmentUrl?: string;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface CreateIncidentRequest {

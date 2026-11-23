@@ -573,8 +573,22 @@ export const adminApi = {
 
   resolveIncident: (id: number, data: ResolveIncidentRequest) => {
     return request<IncidentTicketDto>(`/v1/admin/incidents/${id}/resolve`, {
-      method: 'PUT',
+      method: 'POST',
       body: JSON.stringify(data),
+    });
+  },
+
+  closeIncident: (id: number, data?: { note?: string }) => {
+    return request<IncidentTicketDto>(`/v1/admin/incidents/${id}/close`, {
+      method: 'POST',
+      body: JSON.stringify(data || {}),
+    });
+  },
+
+  reopenIncident: (id: number, data?: { reason?: string }) => {
+    return request<IncidentTicketDto>(`/v1/admin/incidents/${id}/reopen`, {
+      method: 'POST',
+      body: JSON.stringify(data || {}),
     });
   },
 

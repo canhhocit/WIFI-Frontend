@@ -151,8 +151,43 @@ export const PortalPage: React.FC = () => {
   }, [rawMac]);
 
   const rawIp = normalizedParams.get('client_ip') || normalizedParams.get('ip') || searchParams.get('client_ip') || undefined;
-  const targetUrlParam = normalizedParams.get('url') || normalizedParams.get('target') || searchParams.get('url') || undefined;
-  const rawLoginUrl = normalizedParams.get('login_url') || normalizedParams.get('loginurl') || searchParams.get('login_url') || undefined;
+  const targetUrlParam = normalizedParams.get('url') || normalizedParams.get('target') || normalizedParams.get('redir') || searchParams.get('url') || searchParams.get('redir') || undefined;
+
+  // Grandstream GWN sends gw_address + gw_port, or gwn_login, or authaction, or login_url
+  const gwAddressParam =
+    normalizedParams.get('gw_address') ||
+    normalizedParams.get('gwaddress') ||
+    normalizedParams.get('gw_addr') ||
+    searchParams.get('gw_address') ||
+    undefined;
+
+  const gwPortParam =
+    normalizedParams.get('gw_port') ||
+    normalizedParams.get('gwport') ||
+    searchParams.get('gw_port') ||
+    undefined;
+
+  const excapDirectUrl =
+    normalizedParams.get('gwn_login') ||
+    normalizedParams.get('login_url') ||
+    normalizedParams.get('loginurl') ||
+    normalizedParams.get('authaction') ||
+    searchParams.get('gwn_login') ||
+    searchParams.get('login_url') ||
+    undefined;
+
+  const rawLoginUrl = useMemo(() => {
+    if (excapDirectUrl) return excapDirectUrl;
+    if (gwAddressParam) {
+      const port = gwPortParam || '8080';
+      return `http://${gwAddressParam}:${port}/gwn_login`;
+    }
+    // If router redirected client (has mac, client_mac or ap_mac parameter), fallback to local router gateway
+    if (rawMac || apMacParam) {
+      return 'http://192.168.80.1:8080/gwn_login';
+    }
+    return undefined;
+  }, [excapDirectUrl, gwAddressParam, gwPortParam, rawMac, apMacParam]);
 
   const [redirectCountdown, setRedirectCountdown] = useState<number>(3);
 
@@ -405,6 +440,8 @@ export const PortalPage: React.FC = () => {
         try {
           const authUrl = buildExcapUrl(session.sessionToken);
           fetch(authUrl, { mode: 'no-cors' }).catch(() => {});
+          const img = new Image();
+          img.src = authUrl;
         } catch (_) {}
       }
 

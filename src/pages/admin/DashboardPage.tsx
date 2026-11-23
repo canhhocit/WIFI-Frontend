@@ -77,7 +77,11 @@ export const DashboardPage: React.FC = () => {
       setOpenIncidentCount(incidentPages.reduce((total, page) => total + page.totalElements, 0));
       setIncidents(
         incidentPages.flatMap((page) => page.content)
-          .sort((first, second) => new Date(second.reportedAt).getTime() - new Date(first.reportedAt).getTime())
+          .sort((first, second) => {
+            const timeA = new Date(second.reportedAt || second.createdAt || 0).getTime();
+            const timeB = new Date(first.reportedAt || first.createdAt || 0).getTime();
+            return timeA - timeB;
+          })
           .slice(0, 6),
       );
       setIncidentError(incidentPages.length === incidentResults.length
@@ -107,9 +111,18 @@ export const DashboardPage: React.FC = () => {
   }), [pins]);
 
   const incidentStatusLabel: Record<string, string> = {
+    NEW: 'Mới tiếp nhận',
     OPEN: 'Mới tiếp nhận',
     ASSIGNED: 'Đã phân công',
     IN_PROGRESS: 'Đang xử lý',
+    RESOLVED: 'Đã khắc phục',
+    CLOSED: 'Đã đóng phiếu',
+  };
+
+  const incidentSeverityLabel: Record<string, string> = {
+    CRITICAL: 'Khẩn cấp',
+    MAJOR: 'Nghiêm trọng',
+    MINOR: 'Bình thường',
   };
 
   if (loading && !data) {
@@ -228,7 +241,7 @@ export const DashboardPage: React.FC = () => {
                   <Link to="/admin/incidents" className="block rounded focus:outline-none focus:ring-2 focus:ring-[#004b87]">
                     <div className="flex items-start justify-between gap-2">
                       <span className="text-xs font-semibold text-slate-900">{incident.ticketCode}</span>
-                      <span className="text-[10px] font-semibold text-amber-700">{incident.severity}</span>
+                      <span className="text-[10px] font-semibold text-amber-700">{incidentSeverityLabel[incident.severity] || incident.severity}</span>
                     </div>
                     <div className="mt-1 line-clamp-2 text-xs text-slate-700">{incident.title}</div>
                     <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-slate-500">
