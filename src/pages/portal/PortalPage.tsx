@@ -201,7 +201,19 @@ export const PortalPage: React.FC = () => {
   const [redirectCountdown, setRedirectCountdown] = useState<number>(3);
 
   const targetDestination = useMemo(() => {
-    if (targetUrlParam && !targetUrlParam.includes('/portal') && !targetUrlParam.includes('gwn_login')) {
+    const isProbeUrl = (u: string) =>
+      u.includes('/portal') ||
+      u.includes('gwn_login') ||
+      u.includes('generate_204') ||
+      u.includes('connectivitycheck') ||
+      u.includes('gstatic.com') ||
+      u.includes('captive.apple.com') ||
+      u.includes('hotspot-detect') ||
+      u.includes('msftconnecttest') ||
+      u.includes('detectportal') ||
+      u.includes('clients3.google.com');
+
+    if (targetUrlParam && !isProbeUrl(targetUrlParam)) {
       return targetUrlParam;
     }
     return 'https://dichvucong.haiphong.gov.vn/';
@@ -574,7 +586,7 @@ export const PortalPage: React.FC = () => {
           <div className="space-y-3 pt-2">
             <button
               type="button"
-              onClick={() => { window.location.href = targetDestination; }}
+              onClick={() => { window.location.href = 'https://dichvucong.haiphong.gov.vn/'; }}
               className="w-full py-3.5 px-4 rounded-xl bg-[#a81c1c] text-white font-bold text-sm tracking-wide shadow-lg hover:bg-[#8b1414] transition flex items-center justify-center gap-2 cursor-pointer"
             >
               <Landmark className="w-4 h-4 text-yellow-300" />
