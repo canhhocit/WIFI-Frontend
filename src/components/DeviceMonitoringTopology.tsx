@@ -24,6 +24,8 @@ import {
   GuestSessionDto
 } from '../types/models';
 import { adminApi } from '../api/adminApi';
+import { MeshApModal } from './MeshApModal';
+import { DeviceStatusBadge } from './DeviceStatusBadge';
 
 interface DeviceMonitoringTopologyProps {
   topology?: DeviceTopologySummaryDto;
@@ -69,6 +71,7 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
   const [rebootingId, setRebootingId] = useState<number | null>(null);
   const [revokingId, setRevokingId] = useState<number | null>(null);
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
+  const [meshDevice, setMeshDevice] = useState<NetworkDeviceDto | null>(null);
 
   const handleOpenModal = async (cat: ModalCategory) => {
     if (!cat) return;
@@ -166,6 +169,7 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
 
   return (
     <div className="space-y-3.5">
+      <MeshApModal device={meshDevice} onClose={() => setMeshDevice(null)} />
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
           <span>Giám sát thiết bị</span>
@@ -539,11 +543,11 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
                               </div>
                               <div>
                                 <span className="text-slate-400 block text-[11px]">Địa chỉ IP WAN/LAN:</span>
-                                <span className="font-mono font-medium text-slate-800">{dev.ipAddress || '192.168.80.1'}</span>
+                                <span className="font-mono font-medium text-slate-800">{dev.ipAddress || '—'}</span>
                               </div>
                               <div>
                                 <span className="text-slate-400 block text-[11px]">Phiên bản Firmware:</span>
-                                <span className="font-medium text-slate-800">{dev.firmwareVersion || '1.0.11.18'}</span>
+                                <span className="font-medium text-slate-800">{dev.firmwareVersion || '—'}</span>
                               </div>
                               <div>
                                 <span className="text-slate-400 block text-[11px]">Thời gian hoạt động (Uptime):</span>
@@ -554,7 +558,7 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
                             <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
                               <span className="flex items-center gap-1.5">
                                 <Activity className="w-3.5 h-3.5 text-emerald-600" />
-                                Tải CPU: <strong className="text-slate-700">{dev.cpuUsagePercent ?? 14}%</strong> | RAM: <strong className="text-slate-700">{dev.memoryUsagePercent ?? 46}%</strong>
+                                Tải CPU: <strong className="text-slate-700">{dev.cpuUsagePercent != null ? `${dev.cpuUsagePercent}%` : '—'}</strong> | RAM: <strong className="text-slate-700">{dev.memoryUsagePercent != null ? `${dev.memoryUsagePercent}%` : '—'}</strong>
                               </span>
                               <span className="text-slate-400">
                                 Quản lý qua: <strong className="text-slate-600">Grandstream GDMS / GWN Cloud</strong>
@@ -579,6 +583,7 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
                               <th className="py-2.5 px-3">Địa điểm / Vị trí</th>
                               <th className="py-2.5 px-3">Nhà sản xuất</th>
                               <th className="py-2.5 px-3">Trạng thái</th>
+                              <th className="py-2.5 px-3 text-right">Chi tiết</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
@@ -598,15 +603,15 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
                                   {dev.vendor || 'Viettel'}
                                 </td>
                                 <td className="py-2.5 px-3">
-                                  <span
-                                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                      dev.status === 'ONLINE'
-                                        ? 'bg-emerald-100 text-emerald-800'
-                                        : 'bg-rose-100 text-rose-800'
-                                    }`}
+                                  <DeviceStatusBadge status={dev.status} monitoringSource={dev.monitoringSource} compact />
+                                </td>
+                                <td className="py-2.5 px-3 text-right">
+                                  <button
+                                    onClick={() => setMeshDevice(dev)}
+                                    className="px-2 py-1 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 rounded text-[11px] font-semibold"
                                   >
-                                    {dev.status}
-                                  </span>
+                                    Xem mesh
+                                  </button>
                                 </td>
                               </tr>
                             ))}

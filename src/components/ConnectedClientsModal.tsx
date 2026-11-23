@@ -21,7 +21,8 @@ export const ConnectedClientsModal: React.FC<Props> = ({ isOpen, onClose, device
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  const getRssiColor = (rssi: number) => {
+  const getRssiColor = (rssi: number | null) => {
+    if (rssi == null) return 'text-slate-500 bg-slate-50 border-slate-200';
     if (rssi >= -65) return 'text-emerald-600 bg-emerald-50 border-emerald-200';
     if (rssi >= -75) return 'text-amber-600 bg-amber-50 border-amber-200';
     return 'text-rose-600 bg-rose-50 border-rose-200';
@@ -62,14 +63,19 @@ export const ConnectedClientsModal: React.FC<Props> = ({ isOpen, onClose, device
               </span>
             </div>
             <div className="p-3 bg-slate-50 border border-slate-200 rounded-sm">
-              <span className="text-[10px] font-mono text-slate-400 block uppercase">CHẤT LƯỢNG TRUYỀN DẪN</span>
-              <span className="text-lg font-bold text-emerald-600 mt-0.5 block">Rất tốt (SLA 20M)</span>
+              <span className="text-[10px] font-mono text-slate-400 block uppercase">RSSI TRUNG BÌNH</span>
+              <span className="text-lg font-bold text-emerald-600 mt-0.5 block">
+                {(() => {
+                  const vals = clients.map(c => c.rssi).filter((v): v is number => v != null);
+                  return vals.length ? `${Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)} dBm` : '—';
+                })()}
+              </span>
             </div>
           </div>
 
           {loading ? (
             <div className="text-center py-12 text-slate-400 text-xs">
-              Đang tải danh sách kết nối từ Grandstream Cloud...
+              Đang tải danh sách kết nối...
             </div>
           ) : clients.length === 0 ? (
             <div className="text-center py-10 text-slate-400 text-xs">
@@ -109,7 +115,7 @@ export const ConnectedClientsModal: React.FC<Props> = ({ isOpen, onClose, device
                       </td>
                       <td className="py-2.5 px-3 text-center">
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold font-mono border ${getRssiColor(c.rssi)}`}>
-                          <Signal className="w-3 h-3" /> {c.rssi} dBm
+                          <Signal className="w-3 h-3" /> {c.rssi != null ? `${c.rssi} dBm` : '—'}
                         </span>
                       </td>
                       <td className="py-2.5 px-3 text-right font-mono text-[11px] text-slate-600">
@@ -130,7 +136,7 @@ export const ConnectedClientsModal: React.FC<Props> = ({ isOpen, onClose, device
 
         {/* Footer */}
         <div className="flex items-center justify-between px-6 py-3 border-t border-slate-200 bg-slate-50 text-xs">
-          <span className="text-slate-500 text-[11px]">Dữ liệu truyền phát và RSSI đồng bộ từ Grandstream Cloud Open API</span>
+          <span className="text-slate-500 text-[11px]">Nguồn: Grandstream Cloud Open API (trống nếu chưa cấu hình App ID/Secret)</span>
           <button
             type="button"
             onClick={onClose}

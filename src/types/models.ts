@@ -95,6 +95,67 @@ export interface NetworkDeviceDto {
   uptimeSeconds?: number;
   lastSeenAt?: string;
   installedAt?: string;
+  /** MESH_LIVE | MESH_UNREACHABLE | MESH_AUTH_FAILED | MESH_PENDING | GWN_CLOUD | GWN_SIMULATED | NOT_MONITORED */
+  monitoringSource?: string;
+  /** FACTORY = mesh đang dùng S/N gốc, MANAGED = đã đổi sang mật khẩu quản lý chung */
+  meshCredentialState?: string;
+  meshPasswordRotatedAt?: string;
+}
+
+export interface NetworkDeviceImportResultDto {
+  dryRun: boolean;
+  totalRows: number;
+  created: number;
+  updated: number;
+  unchanged: number;
+  errors: { row: number; mac?: string; message: string }[];
+}
+
+export interface MeshApSsid {
+  ssid?: string;
+  bssid?: string;
+  security?: string;
+  hidden: boolean;
+}
+
+export interface MeshApRadio {
+  band?: string;
+  channel?: number;
+  ssids: MeshApSsid[];
+}
+
+export interface MeshApClient {
+  mac: string;
+  ip?: string;
+  hostname?: string;
+  band?: string;
+  ssid?: string;
+  bssid?: string;
+  linkSpeedMbps?: number | null;
+  rssi?: number | null;
+  txKbps?: number | null;
+  rxKbps?: number | null;
+}
+
+/** Trạng thái mesh AP đọc trực tiếp từ thiết bị (API ubus) */
+export interface MeshApSnapshotDto {
+  deviceId: number;
+  host?: string;
+  monitoringMode: 'LIVE' | 'UNREACHABLE' | 'AUTH_FAILED' | 'ERROR' | 'NOT_CONFIGURED' | 'DISABLED' | string;
+  message?: string;
+  fetchedAt?: string;
+  lastSuccessAt?: string;
+  serialNumber?: string;
+  model?: string;
+  firmwareVersion?: string;
+  hostname?: string;
+  osRelease?: string;
+  uptimeSeconds?: number;
+  memoryUsagePercent?: number;
+  loadAverage1m?: number;
+  radios: MeshApRadio[];
+  clients: MeshApClient[];
+  credentialState?: string;
 }
 
 export interface DeviceSyncSummaryDto {
@@ -125,7 +186,7 @@ export interface GwnClientDto {
   apMac: string;
   apName: string;
   radioBand: string;
-  rssi: number;
+  rssi: number | null;
   bytesRx: number;
   bytesTx: number;
   connectTimeSeconds: number;

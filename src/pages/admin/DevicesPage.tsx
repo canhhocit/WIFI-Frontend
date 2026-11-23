@@ -20,7 +20,9 @@ import {
   XCircle,
   Cpu,
   Users,
-  MapPin
+  MapPin,
+  Upload,
+  KeyRound
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { DeviceDto, NetworkDeviceDto, DeviceTopologySummaryDto, GwnClientDto } from '../../types/models';
@@ -28,6 +30,9 @@ import { AlertBanner } from '../../components/AlertBanner';
 import { DeviceSwapModal } from '../../components/DeviceSwapModal';
 import { DeviceMonitoringTopology } from '../../components/DeviceMonitoringTopology';
 import { ConnectedClientsModal } from '../../components/ConnectedClientsModal';
+import { MeshApModal } from '../../components/MeshApModal';
+import { NetworkDeviceImportModal } from '../../components/NetworkDeviceImportModal';
+import { DeviceStatusBadge } from '../../components/DeviceStatusBadge';
 import { Pagination } from '../../components/Pagination';
 
 export const DevicesPage: React.FC = () => {
@@ -73,7 +78,15 @@ export const DevicesPage: React.FC = () => {
   const [connectedClients, setConnectedClients] = useState<GwnClientDto[]>([]);
   const [loadingClients, setLoadingClients] = useState(false);
 
+  // Mesh AP: đọc trực tiếp từ thiết bị
+  const [meshDevice, setMeshDevice] = useState<NetworkDeviceDto | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+
   const handleViewClients = async (dev: NetworkDeviceDto) => {
+    if (dev.deviceType === 'ACCESS_POINT' || dev.deviceType === 'AP') {
+      setMeshDevice(dev);
+      return;
+    }
     setSelectedDeviceForClients(dev);
     setClientsModalOpen(true);
     setLoadingClients(true);
@@ -458,6 +471,13 @@ export const DevicesPage: React.FC = () => {
 
             <div className="ml-auto flex items-center gap-2">
               <button
+                onClick={() => setImportOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-sm text-xs font-semibold transition cursor-pointer shadow-xs"
+                title="Import danh sách thiết bị bàn giao (MAC + S/N) từ file Excel/CSV"
+              >
+                <Upload className="w-3.5 h-3.5" /> Import danh sách thiết bị
+              </button>
+              <button
                 onClick={handleSyncGrandstream}
                 disabled={syncingGwn}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-700 hover:bg-sky-800 disabled:opacity-50 text-white rounded-sm text-xs font-semibold transition cursor-pointer shadow-xs"
@@ -547,22 +567,15 @@ export const DevicesPage: React.FC = () => {
                           {nd.serialNumber}
                         </td>
                         <td className="py-3 px-4">
-                          {nd.status === 'ONLINE' ? (
-                            <span className="inline-flex items-center gap-1 font-semibold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-sm text-[11px]">
-                              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> ONLINE
-                            </span>
-                          ) : nd.status === 'REBOOTING' ? (
-                            <span className="inline-flex items-center gap-1 font-semibold text-sky-800 bg-sky-50 border border-sky-300 px-2 py-0.5 rounded-sm text-[11px] animate-pulse">
-                              <Loader2 className="w-3 h-3 text-sky-600 animate-spin" /> REBOOTING
-                            </span>
-                          ) : nd.status === 'OFFLINE' ? (
-                            <span className="inline-flex items-center gap-1 font-semibold text-rose-800 bg-rose-50 border border-rose-300 px-2 py-0.5 rounded-sm text-[11px]">
-                              <XCircle className="w-3 h-3 text-rose-600" /> OFFLINE
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 font-semibold text-amber-800 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-sm text-[11px]">
-                              {nd.status}
-                            </span>
+                          <DeviceStatusBadge status={nd.status} monitoringSource={nd.monitoringSource} />
+                          {nd.deviceType === 'ACCESS_POINT' && nd.meshCredentialState && (
+                            <div
+                              className="mt-1 inline-flex items-center gap-1 text-[10px] text-slate-500"
+                              title={nd.meshCredentialState === 'MANAGED' ? 'Đã đổi sang mật khẩu quản lý chung' : 'Đang dùng mật khẩu gốc = S/N in trên nhãn'}
+                            >
+                              <KeyRound className="w-3 h-3" />
+                              {nd.meshCredentialState === 'MANAGED' ? 'MK quản lý chung' : 'MK gốc (S/N)'}
+                            </div>
                           )}
                         </td>
                         <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">
@@ -575,7 +588,7 @@ export const DevicesPage: React.FC = () => {
                               className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 rounded-sm text-xs font-semibold transition cursor-pointer"
                               title="Xem danh sách người dân đang bắt sóng thực tế và cường độ sóng RSSI"
                             >
-                              <Users className="w-3.5 h-3.5 text-sky-600" /> Xem Client
+                              <Users className="w-3.5 h-3.5 text-sky-600" /> {nd.deviceType === 'ACCESS_POINT' ? 'Chi tiết mesh' : 'Xem Client'}
                             </button>
                             {(nd.deviceType === 'ROUTER' || (nd.vendor && nd.vendor.toLowerCase().includes('grandstream'))) && (
                               <button
@@ -696,6 +709,16 @@ export const DevicesPage: React.FC = () => {
       )}
 
       {/* Connected Clients Modal */}
+      <NetworkDeviceImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={() => { loadNetworkDevices(); }}
+      />
+      <MeshApModal
+        device={meshDevice}
+        onClose={() => setMeshDevice(null)}
+        onRefreshed={() => { loadNetworkDevices(); }}
+      />
       <ConnectedClientsModal
         isOpen={clientsModalOpen}
         onClose={() => setClientsModalOpen(false)}

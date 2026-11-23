@@ -18,6 +18,8 @@ import {
   LocationGroupDto,
   CreateLocationGroupRequest,
   NetworkDeviceDto,
+  MeshApSnapshotDto,
+  NetworkDeviceImportResultDto,
   DeviceSwapRequest,
   DeviceSyncSummaryDto,
   GwnClientDto,
@@ -251,6 +253,45 @@ export const adminApi = {
   // Lấy danh sách client & RSSI từ GWN Cloud
   getConnectedClientsFromCloud: (deviceId: number) => {
     return request<GwnClientDto[]>(`/v1/admin/network-devices/${deviceId}/clients`);
+  },
+
+  // Import danh sách thiết bị bàn giao (MAC + S/N); dryRun=true chỉ kiểm tra
+  importNetworkDevices: async (file: File, dryRun: boolean) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = localStorage.getItem('admin_token');
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+    const res = await fetch(`${API_BASE_URL}/v1/admin/network-devices/import?dryRun=${dryRun}`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.message || `Lỗi import (${res.status})`);
+    return json.data as NetworkDeviceImportResultDto;
+  },
+
+  downloadNetworkDeviceTemplate: async () => {
+    const token = localStorage.getItem('admin_token');
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+    const res = await fetch(`${API_BASE_URL}/v1/admin/network-devices/import/template`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error('Không thể tải file mẫu (' + res.status + ')');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Danh_sach_thiet_bi_ban_giao.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  },
+
+  // Đọc trực tiếp mesh AP (SSID, kênh, client, RSSI, uptime) qua API của thiết bị
+  getMeshApSnapshot: (deviceId: number, refresh = true) => {
+    return request<MeshApSnapshotDto>(`/v1/admin/network-devices/${deviceId}/mesh?refresh=${refresh}`);
   },
 
   // Nâng cấp firmware hàng loạt
