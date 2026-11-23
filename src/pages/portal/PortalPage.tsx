@@ -620,7 +620,6 @@ export const PortalPage: React.FC = () => {
                 Nhấp vào đây nếu trang không tự chuyển tiếp
               </button>
             </div>
-            </div>
 
             <button
               type="button"
