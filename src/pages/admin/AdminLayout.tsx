@@ -734,17 +734,9 @@ export const AdminLayout: React.FC = () => {
 
             <span className="h-4 w-px bg-slate-200" />
 
-            <span className="text-xs font-semibold text-slate-500">
-              Trung tâm Điều hành:
-            </span>
             <span className="text-xs font-bold text-slate-800">
               Hệ thống Wi-Fi Công cộng Hải Phòng
             </span>
-
-            <div className="hidden lg:flex items-center gap-1.5 px-2 py-0.5 rounded bg-red-50 border border-red-200">
-              <ViettelLogo height={14} variant="simple" color="red" showTagline={false} />
-              <span className="text-[10.5px] font-bold text-[#ee0033]">Viettel Hải Phòng</span>
-            </div>
           </div>
 
           <div className="flex items-center gap-3">
