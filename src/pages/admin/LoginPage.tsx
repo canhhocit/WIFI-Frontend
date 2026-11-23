@@ -51,7 +51,7 @@ export const LoginPage: React.FC = () => {
           <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
             Ủy Ban Nhân Dân Thành Phố Hải Phòng
           </h2>
-          <h1 className="text-base font-extrabold text-[#004b87] uppercase tracking-tight">
+          <h1 className="text-base font-extrabold text-[#ee0033] uppercase tracking-tight">
             Hệ Thống Quản Trị Wi-Fi Công Cộng
           </h1>
         </div>
@@ -59,7 +59,7 @@ export const LoginPage: React.FC = () => {
         {/* Main Login Card */}
         <div className="bg-white rounded border border-slate-300 shadow-sm overflow-hidden">
           {/* Official Top Accent Line */}
-          <div className="h-1 bg-[#004b87] w-full" />
+          <div className="h-1 bg-[#ee0033] w-full" />
 
         
 
@@ -74,7 +74,7 @@ export const LoginPage: React.FC = () => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:border-[#004b87] focus:ring-1 focus:ring-[#004b87] text-slate-900 font-mono transition"
+                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:border-[#ee0033] focus:ring-1 focus:ring-[#ee0033] text-slate-900 font-mono transition"
                 placeholder="vd: admin hoặc sotttt_admin"
                 required
               />
@@ -90,7 +90,7 @@ export const LoginPage: React.FC = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:border-[#004b87] focus:ring-1 focus:ring-[#004b87] text-slate-900 transition"
+                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:border-[#ee0033] focus:ring-1 focus:ring-[#ee0033] text-slate-900 transition"
                 placeholder="••••••••"
                 required
               />
@@ -99,7 +99,7 @@ export const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 bg-[#004b87] hover:bg-[#003865] active:bg-[#002848] text-white rounded-sm text-xs font-bold tracking-wider transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50 uppercase"
+              className="w-full py-2.5 px-4 bg-[#ee0033] hover:bg-[#c4002b] active:bg-[#99001f] text-white rounded-sm text-xs font-bold tracking-wider transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50 uppercase"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
               ĐĂNG NHẬP HỆ THỐNG
@@ -117,7 +117,7 @@ export const LoginPage: React.FC = () => {
                 onClick={() => handleSelectQuickAccount('admin', 'admin123')}
                 className={`p-2 rounded-sm border text-left transition flex items-start gap-1.5 cursor-pointer ${
                   username === 'admin'
-                    ? 'border-[#004b87] bg-blue-50 text-[#004b87] font-semibold'
+                    ? 'border-[#ee0033] bg-red-50 text-[#ee0033] font-semibold'
                     : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                 }`}
               >
@@ -133,7 +133,7 @@ export const LoginPage: React.FC = () => {
                 onClick={() => handleSelectQuickAccount('sotttt_admin', 'password123')}
                 className={`p-2 rounded-sm border text-left transition flex items-start gap-1.5 cursor-pointer ${
                   username === 'sotttt_admin'
-                    ? 'border-[#004b87] bg-blue-50 text-[#004b87] font-semibold'
+                    ? 'border-[#ee0033] bg-red-50 text-[#ee0033] font-semibold'
                     : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                 }`}
               >
@@ -149,7 +149,7 @@ export const LoginPage: React.FC = () => {
                 onClick={() => handleSelectQuickAccount('hongbang_officer', 'password123')}
                 className={`p-2 rounded-sm border text-left transition flex items-start gap-1.5 cursor-pointer ${
                   username === 'hongbang_officer'
-                    ? 'border-[#004b87] bg-blue-50 text-[#004b87] font-semibold'
+                    ? 'border-[#ee0033] bg-red-50 text-[#ee0033] font-semibold'
                     : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                 }`}
               >
@@ -165,7 +165,7 @@ export const LoginPage: React.FC = () => {
                 onClick={() => handleSelectQuickAccount('viettel_tech01', 'password123')}
                 className={`p-2 rounded-sm border text-left transition flex items-start gap-1.5 cursor-pointer ${
                   username === 'viettel_tech01'
-                    ? 'border-[#004b87] bg-blue-50 text-[#004b87] font-semibold'
+                    ? 'border-[#ee0033] bg-red-50 text-[#ee0033] font-semibold'
                     : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                 }`}
               >
@@ -181,7 +181,7 @@ export const LoginPage: React.FC = () => {
           <div className="px-5 py-2.5 bg-slate-100 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
             <a
               href="/portal"
-              className="text-[#004b87] hover:underline font-semibold inline-flex items-center gap-1 transition"
+              className="text-[#ee0033] hover:underline font-semibold inline-flex items-center gap-1 transition"
             >
               <ArrowLeft className="w-3.5 h-3.5" /> Trang portal
             </a>

@@ -219,8 +219,8 @@ export const PortalPage: React.FC = () => {
     return 'https://dichvucong.haiphong.gov.vn/';
   }, [targetUrlParam]);
 
-  const buildExcapUrl = (sessionToken?: string, forceLocal = false) => {
-    const finalDest = targetDestination;
+  const buildExcapUrl = (sessionToken?: string, forceLocal = false, overrideDest?: string) => {
+    const finalDest = overrideDest || targetDestination;
     let baseLogin = rawLoginUrl || 'http://192.168.80.1:8080/gwn_login';
     if (forceLocal || baseLogin.includes('cwp.gwnportal.cloud')) {
       baseLogin = localRouterLoginUrl;
@@ -231,11 +231,20 @@ export const PortalPage: React.FC = () => {
     return `${baseLogin}${sep}username=${encodeURIComponent(cleanMac + '@gwn')}&password=${encodeURIComponent(token)}&redirect=${encodeURIComponent(finalDest)}`;
   };
 
+  const executePostAuthRedirect = (overrideDest?: string) => {
+    const isFromRouter = Boolean(rawLoginUrl || rawMac || gwAddressParam || excapDirectUrl || apMacParam);
+    if (isFromRouter) {
+      const excapUrl = buildExcapUrl(connectedSession?.sessionToken, false, overrideDest);
+      window.location.href = excapUrl;
+    } else {
+      window.location.href = overrideDest || targetDestination;
+    }
+  };
+
   useEffect(() => {
     if (!connectedSession) return;
     if (redirectCountdown <= 0) {
-      // Khi đã xác thực xong (Backend đã bypass MAC trên GWN Cloud), điều hướng thẳng tới Dịch vụ công hoặc đích đến của công dân
-      window.location.href = targetDestination;
+      executePostAuthRedirect();
       return;
     }
     const timer = setTimeout(() => {
@@ -586,8 +595,8 @@ export const PortalPage: React.FC = () => {
           <div className="space-y-3 pt-2">
             <button
               type="button"
-              onClick={() => { window.location.href = 'https://dichvucong.haiphong.gov.vn/'; }}
-              className="w-full py-3.5 px-4 rounded-xl bg-[#a81c1c] text-white font-bold text-sm tracking-wide shadow-lg hover:bg-[#8b1414] transition flex items-center justify-center gap-2 cursor-pointer"
+              onClick={() => { executePostAuthRedirect('https://dichvucong.haiphong.gov.vn/'); }}
+              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#ee0033] to-[#c4002b] hover:from-[#c4002b] hover:to-[#99001f] text-white font-bold text-sm tracking-wide shadow-lg shadow-red-500/25 active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer"
             >
               <Landmark className="w-4 h-4 text-yellow-300" />
               <span>{redirectCountdown > 0 ? `VÀO DỊCH VỤ CÔNG HẢI PHÒNG (${redirectCountdown}s)` : 'VÀO DỊCH VỤ CÔNG HẢI PHÒNG NGAY'}</span>
@@ -595,20 +604,22 @@ export const PortalPage: React.FC = () => {
             
             <button
               type="button"
-              onClick={() => { window.location.href = 'https://www.google.com'; }}
+              onClick={() => { executePostAuthRedirect('https://www.google.com'); }}
               className="w-full py-3 px-4 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition flex items-center justify-center gap-2 border border-slate-300 cursor-pointer"
             >
-              <Globe className="w-4 h-4 text-sky-600" />
+              <Globe className="w-4 h-4 text-[#ee0033]" />
               <span>Tiếp tục lướt web (Google)</span>
             </button>
 
             <div className="text-center pt-1">
-              <a
-                href={targetDestination}
-                className="text-[11px] text-slate-500 hover:text-slate-800 underline transition"
+              <button
+                type="button"
+                onClick={() => { executePostAuthRedirect(); }}
+                className="text-[11px] text-slate-500 hover:text-[#ee0033] underline transition cursor-pointer bg-transparent border-0"
               >
                 Nhấp vào đây nếu trang không tự chuyển tiếp
-              </a>
+              </button>
+            </div>
             </div>
 
             <button
@@ -670,7 +681,7 @@ export const PortalPage: React.FC = () => {
           <p className="text-xs text-slate-600 mb-4">{error}</p>
           <button
             onClick={() => (previewToken ? loadPreview(previewToken) : loadPortal())}
-            className="w-full py-2 px-3 bg-[#004b87] hover:bg-[#003865] text-white rounded text-xs font-semibold transition cursor-pointer"
+            className="w-full py-2 px-3 bg-[#ee0033] hover:bg-[#c4002b] text-white rounded text-xs font-semibold transition cursor-pointer"
           >
             Thử lại kết nối
           </button>
@@ -751,7 +762,7 @@ export const PortalPage: React.FC = () => {
         <div className="lg:col-span-7 flex flex-col bg-gradient-to-b from-slate-50/70 to-white border-b lg:border-b-0 lg:border-r border-slate-200">
           
           {/* Official Government Header */}
-          <div className="bg-[#a81c1c] text-white text-center p-4 sm:p-5 border-b border-[#881313] relative">
+          <div className="bg-[#ee0033] text-white text-center p-4 sm:p-5 border-b border-[#c4002b] relative">
             {template?.logoUrl ? (
               <div className="flex justify-center mb-1.5">
                 <img
@@ -783,7 +794,7 @@ export const PortalPage: React.FC = () => {
           {/* Location & Speed Meta Strip */}
           <div className="px-4 py-2.5 bg-slate-100/90 border-b border-slate-200 flex flex-wrap items-center justify-between text-[11px] text-slate-700 gap-y-1.5">
             <div className="flex items-center gap-1.5 font-semibold truncate mr-2">
-              <MapPin className="w-3.5 h-3.5 text-[#a81c1c] flex-shrink-0" />
+              <MapPin className="w-3.5 h-3.5 text-[#ee0033] flex-shrink-0" />
               <span className="truncate">{portalData?.location.name || 'Nhà văn hóa thôn, tổ dân phố Hải Phòng'}</span>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0 font-mono text-[10.5px] text-slate-600">
@@ -811,7 +822,7 @@ export const PortalPage: React.FC = () => {
 
           {/* Digital Broadcast News Ticker (Dòng tin tức truyền thông số Hải Phòng) */}
           {activeCampaign && (
-          <div className="bg-[#881313] text-white px-3.5 py-1.5 flex items-center gap-2 text-[11px] font-medium overflow-hidden border-b border-red-950/40 shadow-inner">
+          <div className="bg-[#c4002b] text-white px-3.5 py-1.5 flex items-center gap-2 text-[11px] font-medium overflow-hidden border-b border-red-950/40 shadow-inner">
             <div className="flex items-center gap-1 bg-yellow-400 text-red-950 font-black px-1.5 py-0.5 rounded-xs text-[9.5px] uppercase tracking-wider flex-shrink-0 shadow-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping" />
               TIN TRUYỀN THÔNG SỐ
@@ -838,7 +849,7 @@ export const PortalPage: React.FC = () => {
                 {portalData?.location.welcomeMessage || template?.welcomeText || `Chào mừng Nhân dân đến với ${portalData?.location.name || 'Nhà văn hóa'}`}
               </h2>
               <p className="text-xs text-slate-600 flex items-center gap-1.5 mt-1.5">
-                <MapPin className="w-3.5 h-3.5 text-[#a81c1c] flex-shrink-0" />
+                <MapPin className="w-3.5 h-3.5 text-[#ee0033] flex-shrink-0" />
                 <span>{portalData?.location.address || 'Thành phố Hải Phòng'}</span>
               </p>
             </div>
@@ -846,8 +857,8 @@ export const PortalPage: React.FC = () => {
             {/* Bảng tin tuyên truyền & Chuyển đổi số địa phương */}
             {(portalData?.location.promoTitle || portalData?.location.promoContent || portalData?.location.promoActionUrl) && (
               <div className="p-3.5 bg-amber-50/70 rounded-lg border border-amber-300/80 shadow-xs space-y-1.5">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-[#a81c1c]">
-                  <Megaphone className="w-4 h-4 text-[#a81c1c] flex-shrink-0" />
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#ee0033]">
+                  <Megaphone className="w-4 h-4 text-[#ee0033] flex-shrink-0" />
                   <span>{portalData.location.promoTitle || 'Bản Tin Chuyển Đổi Số Địa Phương'}</span>
                 </div>
                 {portalData.location.promoContent && (
@@ -860,7 +871,7 @@ export const PortalPage: React.FC = () => {
                     href={portalData.location.promoActionUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[#004b87] hover:underline"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-[#ee0033] hover:underline"
                   >
                     Mở cổng thông tin địa phương <ExternalLink className="w-3 h-3" />
                   </a>
@@ -870,9 +881,9 @@ export const PortalPage: React.FC = () => {
 
             {/* Hướng dẫn Dịch vụ hành chính công Thành phố */}
             <div className="p-3 bg-blue-50/80 rounded-lg border border-blue-200 flex items-start gap-2.5 text-slate-700">
-              <Landmark className="w-4 h-4 text-[#004b87] flex-shrink-0 mt-0.5" />
+              <Landmark className="w-4 h-4 text-[#ee0033] flex-shrink-0 mt-0.5" />
               <div className="text-xs leading-relaxed">
-                <span className="font-bold text-[#004b87]">Dịch vụ công trực tuyến:</span> Sau khi kết nối Wi-Fi, hệ thống sẽ mở trực tiếp <strong>Cổng Dịch vụ công TP Hải Phòng</strong> để bà con tra cứu hồ sơ và nộp thủ tục hành chính miễn phí.
+                <span className="font-bold text-[#ee0033]">Dịch vụ công trực tuyến:</span> Sau khi kết nối Wi-Fi, hệ thống sẽ mở trực tiếp <strong>Cổng Dịch vụ công TP Hải Phòng</strong> để bà con tra cứu hồ sơ và nộp thủ tục hành chính miễn phí.
               </div>
             </div>
 
@@ -910,7 +921,7 @@ export const PortalPage: React.FC = () => {
             <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs space-y-3.5 transition hover:shadow-md">
               {/* Header: Huy hiệu Bản tin tuyên truyền số */}
               <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#a81c1c] text-white text-[11px] font-bold tracking-wide shadow-2xs">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#ee0033] text-white text-[11px] font-bold tracking-wide shadow-2xs">
                   <Megaphone className="w-3.5 h-3.5 text-yellow-300 flex-shrink-0" />
                   <span>BẢN TIN TUYÊN TRUYỀN SỐ</span>
                 </div>
@@ -953,7 +964,7 @@ export const PortalPage: React.FC = () => {
                 {/* Center Play Button for Video */}
                 {activeCampaign.videoUrl ? (
                   <div className="absolute inset-0 z-10 flex items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-white/90 text-[#a81c1c] flex items-center justify-center shadow-lg backdrop-blur-sm group-hover:scale-110 group-hover:bg-[#a81c1c] group-hover:text-white transition-all duration-300">
+                    <div className="w-12 h-12 rounded-full bg-white/90 text-[#ee0033] flex items-center justify-center shadow-lg backdrop-blur-sm group-hover:scale-110 group-hover:bg-[#ee0033] group-hover:text-white transition-all duration-300">
                       <Play className="w-5 h-5 fill-current ml-0.5" />
                     </div>
                   </div>
@@ -984,7 +995,7 @@ export const PortalPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowMediaModal(true)}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 bg-[#a81c1c] hover:bg-[#8f1818] text-white rounded-lg text-xs font-semibold shadow-xs transition cursor-pointer"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 bg-[#ee0033] hover:bg-[#c4002b] text-white rounded-lg text-xs font-semibold shadow-xs transition cursor-pointer"
                 >
                   {activeCampaign.videoUrl ? (
                     <>
@@ -1034,7 +1045,7 @@ export const PortalPage: React.FC = () => {
                         onClick={() => handleSwitchDemoLocation(item.slug)}
                         className={`px-2 py-1.5 rounded text-center transition cursor-pointer flex flex-col items-center justify-center border ${
                           isActive
-                            ? 'bg-[#004b87] text-white border-blue-400 font-bold shadow-md ring-1 ring-blue-300'
+                            ? 'bg-[#ee0033] text-white border-blue-400 font-bold shadow-md ring-1 ring-blue-300'
                             : 'bg-white/10 hover:bg-white/20 text-slate-200 border-white/10 hover:border-white/25 text-[11px]'
                         }`}
                       >
@@ -1054,7 +1065,7 @@ export const PortalPage: React.FC = () => {
         <div className="lg:col-span-5 flex flex-col bg-white">
           
           {/* Laptop Top Banner / Telemetry Status Card (Visible on lg screens) */}
-          <div className="hidden lg:block bg-gradient-to-r from-[#0c2340] to-[#004b87] text-white p-5 border-b border-blue-900 shadow-sm">
+          <div className="hidden lg:block bg-gradient-to-r from-[#14141e] to-[#ee0033] text-white p-5 border-b border-blue-900 shadow-sm">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-yellow-300 shadow-inner">
                 <Wifi className="w-5 h-5 animate-pulse" />
@@ -1127,8 +1138,8 @@ export const PortalPage: React.FC = () => {
               {survey && visibleSurveyQuestions.length > 0 && (
                 <div className="p-3.5 bg-gradient-to-b from-sky-50/90 to-blue-50/60 rounded-lg border border-sky-200/90 shadow-xs space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-[#004b87]">
-                      <ClipboardList className="w-4 h-4 text-[#004b87] flex-shrink-0" />
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-[#ee0033]">
+                      <ClipboardList className="w-4 h-4 text-[#ee0033] flex-shrink-0" />
                       <span>{survey.title}</span>
                     </div>
                     <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 font-bold uppercase tracking-wider">
@@ -1159,7 +1170,7 @@ export const PortalPage: React.FC = () => {
                           }`}
                         >
                           <p className="font-semibold text-slate-800 text-[11.5px] leading-snug">
-                            <span className="text-[#004b87] font-bold mr-1">Câu {idx + 1}:</span>
+                            <span className="text-[#ee0033] font-bold mr-1">Câu {idx + 1}:</span>
                             {q.questionText} {q.required ? (
                               <span className="text-rose-600 font-bold ml-1 text-[10px] bg-rose-50 border border-rose-200 px-1 py-0.5 rounded">Bắt buộc</span>
                             ) : (
@@ -1223,19 +1234,19 @@ export const PortalPage: React.FC = () => {
                                     }}
                                     className={`w-full px-2.5 py-1.5 rounded text-[11px] border text-left transition cursor-pointer flex items-center justify-between ${
                                       isChecked
-                                        ? 'bg-blue-50 text-[#004b87] border-[#004b87] font-semibold shadow-xs'
+                                        ? 'bg-blue-50 text-[#ee0033] border-[#ee0033] font-semibold shadow-xs'
                                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                                     }`}
                                   >
                                     <div className="flex items-center gap-2">
                                       <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center text-[10px] font-bold ${
-                                        isChecked ? 'bg-[#004b87] border-[#004b87] text-white' : 'border-slate-400 bg-white'
+                                        isChecked ? 'bg-[#ee0033] border-[#ee0033] text-white' : 'border-slate-400 bg-white'
                                       }`}>
                                         {isChecked && '✓'}
                                       </div>
                                       <span>{opt}</span>
                                     </div>
-                                    {isChecked && <span className="text-[9.5px] text-[#004b87] font-bold">Đã chọn</span>}
+                                    {isChecked && <span className="text-[9.5px] text-[#ee0033] font-bold">Đã chọn</span>}
                                   </button>
                                 );
                               })}
@@ -1256,7 +1267,7 @@ export const PortalPage: React.FC = () => {
                                     }
                                     className={`px-2.5 py-1.5 rounded text-[11px] border text-left transition cursor-pointer flex items-center justify-between ${
                                       isSelected
-                                        ? 'bg-[#004b87] text-white border-[#004b87] font-bold shadow-xs'
+                                        ? 'bg-[#ee0033] text-white border-[#ee0033] font-bold shadow-xs'
                                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                                     }`}
                                   >
@@ -1279,7 +1290,7 @@ export const PortalPage: React.FC = () => {
                                 onChange={(e) =>
                                   setSurveyAnswers({ ...surveyAnswers, [qKey]: e.target.value })
                                 }
-                                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:border-[#004b87] bg-white font-sans resize-none"
+                                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:border-[#ee0033] bg-white font-sans resize-none"
                               />
                               <div className="flex justify-end text-[10px] text-slate-400 font-mono">
                                 {typeof currentVal === 'string' ? currentVal.length : 0}/300
@@ -1300,7 +1311,7 @@ export const PortalPage: React.FC = () => {
                     type="checkbox"
                     checked={consentGiven}
                     onChange={(e) => setConsentGiven(e.target.checked)}
-                    className="mt-0.5 rounded-xs border-slate-300 text-[#004b87] focus:ring-[#004b87] w-4 h-4 cursor-pointer flex-shrink-0"
+                    className="mt-0.5 rounded-xs border-slate-300 text-[#ee0033] focus:ring-[#ee0033] w-4 h-4 cursor-pointer flex-shrink-0"
                   />
                   <span className="leading-relaxed">
                     {template?.termsText ? (
@@ -1335,7 +1346,7 @@ export const PortalPage: React.FC = () => {
                   style={{
                     backgroundColor: portalData?.capacityReached
                       ? undefined
-                      : template?.themeColor || '#004b87',
+                      : template?.themeColor || '#ee0033',
                   }}
                 >
                   {submitting ? (
@@ -1387,7 +1398,7 @@ export const PortalPage: React.FC = () => {
                     ) : (
                       <div className="space-y-2">
                         <span className="font-bold text-slate-800 text-[11px] flex items-center gap-1">
-                          <Smartphone className="w-3.5 h-3.5 text-[#004b87]" /> Xác thực SĐT (Nhớ thiết bị 30 ngày):
+                          <Smartphone className="w-3.5 h-3.5 text-[#ee0033]" /> Xác thực SĐT (Nhớ thiết bị 30 ngày):
                         </span>
                         {!otpSent ? (
                           <div className="flex gap-2">
@@ -1396,13 +1407,13 @@ export const PortalPage: React.FC = () => {
                               value={phoneNumber}
                               onChange={(e) => setPhoneNumber(e.target.value)}
                               placeholder="Nhập số điện thoại"
-                              className="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-300 rounded focus:outline-none focus:border-[#004b87] font-mono"
+                              className="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-300 rounded focus:outline-none focus:border-[#ee0033] font-mono"
                             />
                             <button
                               type="button"
                               onClick={handleSendOtp}
                               disabled={submitting || isPreviewMode}
-                              className="px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded text-xs font-semibold transition cursor-pointer disabled:opacity-50 flex items-center gap-1"
+                              className="px-3.5 py-1.5 bg-[#ee0033] hover:bg-[#c4002b] text-white rounded text-xs font-semibold transition cursor-pointer disabled:opacity-50 flex items-center gap-1"
                             >
                               <Send className="w-3 h-3" /> Gửi OTP
                             </button>
@@ -1422,7 +1433,7 @@ export const PortalPage: React.FC = () => {
                                 type="button"
                                 onClick={handleVerifyOtp}
                                 disabled={submitting || isPreviewMode}
-                                className="px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded text-xs font-semibold transition"
+                                className="px-3.5 py-1.5 bg-[#ee0033] hover:bg-[#c4002b] text-white rounded text-xs font-semibold transition"
                               >
                                 Xác nhận
                               </button>
@@ -1447,7 +1458,7 @@ export const PortalPage: React.FC = () => {
                         value={guestName}
                         onChange={(e) => setGuestName(e.target.value)}
                         placeholder="vd: Nguyễn Văn A"
-                        className="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded focus:outline-none focus:border-[#004b87]"
+                        className="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded focus:outline-none focus:border-[#ee0033]"
                       />
                     </div>
                   </div>
@@ -1459,7 +1470,7 @@ export const PortalPage: React.FC = () => {
             <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-500 space-y-2">
               <div className="flex items-center justify-between p-2 rounded bg-slate-50 border border-slate-200/80">
                 <span className="font-medium text-slate-600">Đường dây nóng DVC Hải Phòng:</span>
-                <span className="font-mono font-bold text-[#004b87]">0225.1022</span>
+                <span className="font-mono font-bold text-[#ee0033]">0225.1022</span>
               </div>
               <div className="flex items-center justify-between">
                 
@@ -1499,7 +1510,7 @@ export const PortalPage: React.FC = () => {
                 onClick={() => handleSwitchDemoLocation(item.slug)}
                 className={`px-2 py-1.5 rounded text-center transition cursor-pointer flex flex-col items-center justify-center border ${
                   isActive
-                    ? 'bg-[#004b87] text-white border-blue-400 font-bold shadow-md ring-1 ring-blue-300'
+                    ? 'bg-[#ee0033] text-white border-blue-400 font-bold shadow-md ring-1 ring-blue-300'
                     : 'bg-white/10 hover:bg-white/20 text-slate-200 border-white/10 hover:border-white/25 text-[11px]'
                 }`}
               >

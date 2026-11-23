@@ -359,7 +359,7 @@ export const AdminLayout: React.FC = () => {
         return {
           label: "Sở TT&TT Hải Phòng",
           scope: "Toàn Thành phố",
-          color: "bg-[#004b87] text-white border-[#003865]",
+          color: "bg-[#ee0033] text-white border-[#c4002b]",
         };
       case "ROLE_DISTRICT_OFFICER":
         return {
@@ -377,7 +377,7 @@ export const AdminLayout: React.FC = () => {
         return {
           label: "Kỹ sư Viettel",
           scope: "Hạ tầng Viễn thông",
-          color: "bg-[#003865] text-blue-100 border-blue-700",
+          color: "bg-[#c4002b] text-blue-100 border-blue-700",
         };
       default:
         return {
@@ -471,7 +471,7 @@ export const AdminLayout: React.FC = () => {
   return (
     <div className="min-h-screen md:h-screen md:overflow-hidden bg-slate-100 flex flex-col md:flex-row font-sans">
       {/* Mobile Top Header */}
-      <div className="md:hidden bg-[#0c2340] text-white px-4 py-3 flex items-center justify-between border-b border-[#18365a] sticky top-0 z-40">
+      <div className="md:hidden bg-[#14141e] text-white px-4 py-3 flex items-center justify-between border-b border-[#222232] sticky top-0 z-40">
         <div className="flex items-center gap-2.5">
           <VietnamFlag width={30} height={20} className="shadow-xs rounded-xs" />
           <span className="font-bold text-xs uppercase tracking-wide text-slate-100">
@@ -500,7 +500,7 @@ export const AdminLayout: React.FC = () => {
 
       {/* Sidebar Navigation */}
       <aside
-        className={`fixed md:sticky top-0 left-0 z-30 h-screen bg-[#0c2340] text-slate-300 flex flex-col border-r border-[#18365a] transition-all duration-300 ease-in-out ${mobileMenuOpen
+        className={`fixed md:sticky top-0 left-0 z-30 h-screen bg-[#14141e] text-slate-300 flex flex-col border-r border-[#222232] transition-all duration-300 ease-in-out ${mobileMenuOpen
             ? "translate-x-0 w-72"
             : "-translate-x-full md:translate-x-0"
           } ${desktopCollapsed
@@ -512,7 +512,7 @@ export const AdminLayout: React.FC = () => {
           {/* Department / Brand Banner */}
           <div
             data-tour="welcome-card"
-            className={`border-b border-[#18365a] bg-gradient-to-b from-[#0a1e38] via-[#091a30] to-[#071629] flex items-center transition-all ${desktopCollapsed
+            className={`border-b border-[#222232] bg-gradient-to-b from-[#0a1e38] via-[#091a30] to-[#071629] flex items-center transition-all ${desktopCollapsed
                 ? "p-2.5 flex-col gap-2 justify-center"
                 : "p-4 justify-between"
               }`}
@@ -558,7 +558,7 @@ export const AdminLayout: React.FC = () => {
           </div>
 
           {!desktopCollapsed && (
-            <div className="px-4 border-b border-[#18365a] bg-[#071628] flex items-center justify-between text-[11px]">
+            <div className="px-4 border-b border-[#222232] bg-[#071628] flex items-center justify-between text-[11px]">
               <div
                 className={` transition-all ${desktopCollapsed ? "p-2 flex justify-center" : "p-3"
                   }`}
@@ -602,7 +602,7 @@ export const AdminLayout: React.FC = () => {
                     {group.groupTitle}
                   </div>
                 ) : (
-                  gIdx > 0 && <div className="h-px bg-[#18365a] my-2 mx-1" />
+                  gIdx > 0 && <div className="h-px bg-[#222232] my-2 mx-1" />
                 )}
                 <div className="space-y-1">
                   {group.items.map((item) => {
@@ -622,7 +622,7 @@ export const AdminLayout: React.FC = () => {
                             ? "justify-center p-2.5"
                             : "gap-2.5 px-3 py-1.5 text-xs font-medium"
                           } ${isActive
-                            ? "bg-[#004b87] text-white font-semibold shadow-xs"
+                            ? "bg-[#ee0033] text-white font-semibold shadow-xs"
                             : "text-slate-300 hover:text-white hover:bg-[#13355e]"
                           }`}
                       >
@@ -645,7 +645,7 @@ export const AdminLayout: React.FC = () => {
           {/* User Profile & Logout */}
           <div
             data-tour="user-profile"
-            className={`border-t border-[#18365a] bg-[#071628] flex items-center transition-all ${desktopCollapsed
+            className={`border-t border-[#222232] bg-[#071628] flex items-center transition-all ${desktopCollapsed
                 ? "p-2 flex-col gap-2 justify-center"
                 : "p-3 justify-between gap-2"
               }`}
@@ -729,8 +729,8 @@ export const AdminLayout: React.FC = () => {
             >
               {desktopCollapsed ? (
                 <>
-                  <PanelLeftOpen className="w-4 h-4 text-[#004b87]" />
-                  <span className="text-[11.5px] text-[#004b87]">Mở rộng</span>
+                  <PanelLeftOpen className="w-4 h-4 text-[#ee0033]" />
+                  <span className="text-[11.5px] text-[#ee0033]">Mở rộng</span>
                 </>
               ) : (
                 <>
@@ -756,7 +756,7 @@ export const AdminLayout: React.FC = () => {
               type="button"
               data-tour="tour-button"
               onClick={() => setIsTourOpen(true)}
-              className="text-xs font-semibold px-2.5 py-1 rounded-sm border border-blue-200 bg-blue-50 hover:bg-blue-100 text-[#004b87] transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              className="text-xs font-semibold px-2.5 py-1 rounded-sm border border-red-200 bg-red-50 hover:bg-red-100 text-[#ee0033] transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
               title="Khám phá các tính năng theo phân quyền của bạn"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
@@ -801,7 +801,7 @@ export const AdminLayout: React.FC = () => {
               <div className="pt-2">
                 <button
                   onClick={() => navigate("/admin")}
-                  className="px-4 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold cursor-pointer shadow-xs transition"
+                  className="px-4 py-1.5 bg-[#ee0033] hover:bg-[#c4002b] text-white rounded-sm text-xs font-semibold cursor-pointer shadow-xs transition"
                 >
                   Trở Về Bảng Điều Hành Trung Tâm
                 </button>
@@ -817,7 +817,7 @@ export const AdminLayout: React.FC = () => {
       {tourWelcomePrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-white rounded-xl shadow-2xl border border-slate-300 w-full max-w-md overflow-hidden">
-            <div className="bg-gradient-to-r from-[#004b87] to-[#002d54] p-5 text-white">
+            <div className="bg-gradient-to-r from-[#ee0033] to-[#99001f] p-5 text-white">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/20">
                   <Compass className="w-6 h-6 text-amber-300 animate-spin-slow" />
@@ -869,7 +869,7 @@ export const AdminLayout: React.FC = () => {
                     setTourWelcomePrompt(false);
                     setIsTourOpen(true);
                   }}
-                  className="px-4 py-1.5 rounded-sm bg-[#004b87] hover:bg-[#003865] text-white text-xs font-semibold shadow-xs transition cursor-pointer flex items-center gap-1.5"
+                  className="px-4 py-1.5 rounded-sm bg-[#ee0033] hover:bg-[#c4002b] text-white text-xs font-semibold shadow-xs transition cursor-pointer flex items-center gap-1.5"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                   <span>Khám phá ngay</span>

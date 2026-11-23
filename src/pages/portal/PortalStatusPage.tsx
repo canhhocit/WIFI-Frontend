@@ -128,7 +128,7 @@ export const PortalStatusPage: React.FC = () => {
           <p className="text-xs text-slate-500 mb-4">{error}</p>
           <button
             onClick={() => navigate('/portal')}
-            className="w-full py-2 px-3 bg-[#004b87] hover:bg-[#003865] text-white rounded text-xs font-semibold transition cursor-pointer"
+            className="w-full py-2 px-3 bg-[#ee0033] hover:bg-[#c4002b] text-white rounded text-xs font-semibold transition cursor-pointer"
           >
             Quay lại cổng Wi-Fi
           </button>
@@ -179,7 +179,7 @@ export const PortalStatusPage: React.FC = () => {
 
             <button
               onClick={() => navigate('/portal')}
-              className="w-full py-2.5 px-4 bg-[#004b87] hover:bg-[#003865] text-white rounded text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+              className="w-full py-2.5 px-4 bg-[#ee0033] hover:bg-[#c4002b] text-white rounded text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
             >
               <ArrowLeft className="w-4 h-4" /> Kết nối lại Wi-Fi Nhà văn hóa
             </button>
@@ -192,7 +192,7 @@ export const PortalStatusPage: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-slate-100 font-sans">
       {/* 1. Official Sticky Telemetry Status Bar */}
-      <header className="sticky top-0 z-50 bg-[#0c2340] text-white border-b border-[#18365a] shadow-md px-3 sm:px-6 py-2">
+      <header className="sticky top-0 z-50 bg-[#14141e] text-white border-b border-[#222232] shadow-md px-3 sm:px-6 py-2">
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           {/* Left: Emblem and Live Network Status */}
           <div className="flex items-center gap-2.5">
@@ -216,7 +216,7 @@ export const PortalStatusPage: React.FC = () => {
           {/* Right: Real-time countdown & Quick actions */}
           <div className="flex items-center gap-2 sm:gap-3 text-xs">
             {/* Countdown Badge */}
-            <div className="flex items-center gap-1.5 bg-[#13355e] border border-[#234c82] px-2.5 py-1 rounded-xs font-mono text-[11px] text-emerald-300">
+            <div className="flex items-center gap-1.5 bg-[#2a1520] border border-[#234c82] px-2.5 py-1 rounded-xs font-mono text-[11px] text-emerald-300">
               <Clock className="w-3.5 h-3.5 text-emerald-400" />
               <span>{formatRemainingTime(remainingSec)}</span>
               <span className="text-slate-400 text-[10px] hidden sm:inline">• 20 Mbps</span>
@@ -227,7 +227,7 @@ export const PortalStatusPage: React.FC = () => {
               href="https://dichvucong.haiphong.gov.vn"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#004b87] hover:bg-[#003865] text-white rounded-xs text-[11px] font-semibold border border-blue-400/30 transition shadow-2xs"
+              className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#ee0033] hover:bg-[#c4002b] text-white rounded-xs text-[11px] font-semibold border border-blue-400/30 transition shadow-2xs"
               title="Mở Cổng DVC trong tab mới"
             >
               <ExternalLink className="w-3.5 h-3.5 text-blue-200" />
@@ -238,7 +238,7 @@ export const PortalStatusPage: React.FC = () => {
             <button
               onClick={handleDisconnect}
               disabled={disconnecting}
-              className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-slate-300 hover:text-red-300 hover:bg-[#18365a] rounded-xs border border-slate-600/40 transition cursor-pointer"
+              className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-slate-300 hover:text-red-300 hover:bg-[#222232] rounded-xs border border-slate-600/40 transition cursor-pointer"
               title="Ngắt kết nối Wi-Fi"
             >
               <LogOut className="w-3 h-3 text-red-400" />
@@ -249,7 +249,7 @@ export const PortalStatusPage: React.FC = () => {
       </header>
 
       {/* 2. Quick Administrative Action Ribbon (Lối tắt Dịch vụ công thiết yếu) */}
-      <nav className="bg-[#091a30] text-slate-300 border-b border-[#18365a] px-3 sm:px-6 py-1.5 overflow-x-auto custom-scrollbar flex items-center justify-between text-[11px] gap-3">
+      <nav className="bg-[#091a30] text-slate-300 border-b border-[#222232] px-3 sm:px-6 py-1.5 overflow-x-auto custom-scrollbar flex items-center justify-between text-[11px] gap-3">
         <div className="flex items-center gap-1 text-slate-400 flex-shrink-0 text-[10.5px]">
           <Globe className="w-3.5 h-3.5 text-blue-400" />
           <span className="font-bold text-slate-200 uppercase tracking-wide">Cổng Dịch vụ công Hải Phòng:</span>
@@ -260,7 +260,7 @@ export const PortalStatusPage: React.FC = () => {
             href="https://dichvucong.haiphong.gov.vn/dichvucong/tracuu"
             target="_blank"
             rel="noreferrer"
-            className="px-2 py-0.5 rounded-xs bg-[#13355e] hover:bg-[#1c4578] text-blue-100 border border-blue-400/20 flex items-center gap-1 transition"
+            className="px-2 py-0.5 rounded-xs bg-[#2a1520] hover:bg-[#3d1b28] text-blue-100 border border-blue-400/20 flex items-center gap-1 transition"
           >
             <Search className="w-3 h-3 text-yellow-300" />
             <span>Tra cứu hồ sơ</span>
@@ -270,7 +270,7 @@ export const PortalStatusPage: React.FC = () => {
             href="https://dichvucong.haiphong.gov.vn/dichvucong/dichvu"
             target="_blank"
             rel="noreferrer"
-            className="px-2 py-0.5 rounded-xs bg-[#13355e] hover:bg-[#1c4578] text-blue-100 border border-blue-400/20 flex items-center gap-1 transition"
+            className="px-2 py-0.5 rounded-xs bg-[#2a1520] hover:bg-[#3d1b28] text-blue-100 border border-blue-400/20 flex items-center gap-1 transition"
           >
             <FileText className="w-3 h-3 text-blue-300" />
             <span>Nộp hồ sơ trực tuyến</span>
@@ -280,7 +280,7 @@ export const PortalStatusPage: React.FC = () => {
             href="https://dichvucong.dancuquocgia.gov.vn/"
             target="_blank"
             rel="noreferrer"
-            className="px-2 py-0.5 rounded-xs bg-[#13355e] hover:bg-[#1c4578] text-blue-100 border border-blue-400/20 flex items-center gap-1 transition hidden sm:flex"
+            className="px-2 py-0.5 rounded-xs bg-[#2a1520] hover:bg-[#3d1b28] text-blue-100 border border-blue-400/20 flex items-center gap-1 transition hidden sm:flex"
           >
             <Building className="w-3 h-3 text-emerald-300" />
             <span>Cư trú & Hộ tịch</span>
@@ -290,7 +290,7 @@ export const PortalStatusPage: React.FC = () => {
             href="https://dichvucong.haiphong.gov.vn/dichvucong/thanhtoan"
             target="_blank"
             rel="noreferrer"
-            className="px-2 py-0.5 rounded-xs bg-[#13355e] hover:bg-[#1c4578] text-blue-100 border border-blue-400/20 flex items-center gap-1 transition hidden md:flex"
+            className="px-2 py-0.5 rounded-xs bg-[#2a1520] hover:bg-[#3d1b28] text-blue-100 border border-blue-400/20 flex items-center gap-1 transition hidden md:flex"
           >
             <CreditCard className="w-3 h-3 text-amber-300" />
             <span>Thanh toán trực tuyến</span>
@@ -302,7 +302,7 @@ export const PortalStatusPage: React.FC = () => {
       <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         {/* Hero Success & Session Telemetry Card */}
         <div className="bg-white rounded-lg border border-slate-200/90 shadow-sm overflow-hidden">
-          <div className="h-1.5 bg-gradient-to-r from-emerald-500 via-[#004b87] to-blue-600" />
+          <div className="h-1.5 bg-gradient-to-r from-emerald-500 via-[#ee0033] to-blue-600" />
           <div className="p-5 sm:p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
               <div className="flex items-start gap-3">
@@ -328,7 +328,7 @@ export const PortalStatusPage: React.FC = () => {
               <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2 bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded border sm:border-0 border-slate-200">
                 <div className="text-left sm:text-right">
                   <span className="text-[10.5px] font-medium text-slate-400 block">Thời gian phiên mạng còn:</span>
-                  <span className="text-base sm:text-lg font-mono font-extrabold text-[#004b87]">
+                  <span className="text-base sm:text-lg font-mono font-extrabold text-[#ee0033]">
                     {formatRemainingTime(remainingSec)}
                   </span>
                 </div>
@@ -352,7 +352,7 @@ export const PortalStatusPage: React.FC = () => {
                   href="https://dichvucong.haiphong.gov.vn"
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#004b87] hover:bg-[#003865] text-white rounded text-xs font-bold transition shadow-sm cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#ee0033] hover:bg-[#c4002b] text-white rounded text-xs font-bold transition shadow-sm cursor-pointer"
                 >
                   <Globe className="w-4 h-4 text-yellow-300" />
                   <span>Mở Cổng Dịch Vụ Công Hải Phòng</span>
@@ -366,7 +366,7 @@ export const PortalStatusPage: React.FC = () => {
 
         {/* Active City Campaign Highlight (Chiến dịch Truyền thông TP đang phát sóng) */}
         {session.activeCampaign && (
-          <div className="bg-gradient-to-r from-red-950 via-[#7a1212] to-[#0c2340] rounded-lg border border-red-700/80 text-white shadow-md overflow-hidden">
+          <div className="bg-gradient-to-r from-red-950 via-[#7a1212] to-[#14141e] rounded-lg border border-red-700/80 text-white shadow-md overflow-hidden">
             <div className="flex flex-col md:flex-row">
               {session.activeCampaign.bannerUrl && (
                 <div className="md:w-5/12 relative min-h-[170px] md:min-h-full bg-slate-950 overflow-hidden flex-shrink-0">
@@ -455,18 +455,18 @@ export const PortalStatusPage: React.FC = () => {
               className="p-4 bg-white rounded-lg border border-slate-200 hover:border-blue-400 hover:shadow-md transition group flex flex-col justify-between"
             >
               <div className="space-y-2">
-                <div className="w-10 h-10 rounded bg-blue-50 text-[#004b87] flex items-center justify-center group-hover:scale-105 transition">
+                <div className="w-10 h-10 rounded bg-red-50 text-[#ee0033] flex items-center justify-center group-hover:scale-105 transition">
                   <Search className="w-5 h-5" />
                 </div>
-                <h3 className="text-xs font-bold text-slate-900 group-hover:text-[#004b87] transition flex items-center justify-between">
+                <h3 className="text-xs font-bold text-slate-900 group-hover:text-[#ee0033] transition flex items-center justify-between">
                   <span>Tra Cứu Tiến Độ Hồ Sơ</span>
-                  <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-[#004b87]" />
+                  <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-[#ee0033]" />
                 </h3>
                 <p className="text-[11.5px] text-slate-500 leading-relaxed">
                   Nhập mã số biên nhận Một cửa điện tử để theo dõi tiến độ xử lý thủ tục hành chính mọi lúc.
                 </p>
               </div>
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#004b87] mt-3 pt-2 border-t border-slate-100">
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#ee0033] mt-3 pt-2 border-t border-slate-100">
                 Tra cứu ngay <ChevronRight className="w-3.5 h-3.5" />
               </span>
             </a>
@@ -565,14 +565,14 @@ export const PortalStatusPage: React.FC = () => {
 
           {/* Box 2: Cyber Safety & Hotlines */}
           <div className="p-4 bg-white rounded-lg border border-slate-200 space-y-2.5">
-            <div className="flex items-center gap-2 text-xs font-bold text-[#004b87] uppercase">
-              <HelpCircle className="w-4 h-4 text-[#004b87] flex-shrink-0" />
+            <div className="flex items-center gap-2 text-xs font-bold text-[#ee0033] uppercase">
+              <HelpCircle className="w-4 h-4 text-[#ee0033] flex-shrink-0" />
               <span>Đường Dây Nóng Hỗ Trợ Kỹ Thuật & TTHC</span>
             </div>
             <div className="space-y-2 text-xs text-slate-700">
               <div className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-100">
                 <span className="font-semibold text-slate-800">Tổng đài Dịch vụ công TP. Hải Phòng:</span>
-                <span className="font-mono font-bold text-[#004b87]">0225.1022</span>
+                <span className="font-mono font-bold text-[#ee0033]">0225.1022</span>
               </div>
               <div className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-100">
                 <span className="font-semibold text-slate-800">Hỗ trợ kỹ thuật mạng Wi-Fi (Viettel Hải Phòng):</span>
