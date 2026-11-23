@@ -175,38 +175,38 @@ export const ImageUploadInput: React.FC<ImageUploadInputProps> = ({
   return (
     <div className="space-y-2">
       {/* Label & Tabs Header */}
-      <div className="flex items-center justify-between">
-        <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <label className="text-xs font-bold text-slate-700 flex flex-wrap items-center gap-1.5 min-w-0">
           <span>{label}</span>
           {aspectRatio === '16:9' && (
-            <span className="text-[10px] font-normal px-1.5 py-0.2 bg-blue-50 text-blue-700 rounded border border-blue-200">
+            <span className="text-[10px] font-normal px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded border border-blue-200 whitespace-nowrap shrink-0">
               Chuẩn 16:9
             </span>
           )}
         </label>
-        <div className="inline-flex rounded-sm bg-slate-100 p-0.5 border border-slate-200 text-[11px]">
+        <div className="inline-flex shrink-0 rounded-sm bg-slate-100 p-0.5 border border-slate-200 text-[11px]">
           <button
             type="button"
             onClick={() => setMode('upload')}
-            className={`px-2 py-0.5 rounded-xs font-semibold transition cursor-pointer flex items-center gap-1 ${
+            className={`px-2 py-0.5 rounded-xs font-semibold transition cursor-pointer flex items-center gap-1 whitespace-nowrap ${
               mode === 'upload'
                 ? 'bg-white text-[#004b87] shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <UploadCloud className="w-3 h-3" />
+            <UploadCloud className="w-3 h-3 shrink-0" />
             <span>Tải từ máy</span>
           </button>
           <button
             type="button"
             onClick={() => setMode('url')}
-            className={`px-2 py-0.5 rounded-xs font-semibold transition cursor-pointer flex items-center gap-1 ${
+            className={`px-2 py-0.5 rounded-xs font-semibold transition cursor-pointer flex items-center gap-1 whitespace-nowrap ${
               mode === 'url'
                 ? 'bg-white text-[#004b87] shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <LinkIcon className="w-3 h-3" />
+            <LinkIcon className="w-3 h-3 shrink-0" />
             <span>Điền Link</span>
           </button>
         </div>

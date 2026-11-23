@@ -48,7 +48,7 @@ export const Modal: React.FC<ModalProps> = ({
   }[maxWidth] || 'max-w-md';
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] overflow-y-auto bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 transition-all animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-[9999] overflow-y-auto bg-slate-950/65 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 transition-opacity duration-200">
       {/* Click outside to close backdrop */}
       <div
         className="fixed inset-0"
@@ -58,14 +58,14 @@ export const Modal: React.FC<ModalProps> = ({
 
       {/* Modal Dialog Box */}
       <div
-        className={`relative bg-white rounded-lg border border-slate-300 shadow-2xl w-full ${maxWidthClasses} overflow-hidden transform transition-all z-10 my-auto max-h-[90vh] flex flex-col`}
+        className={`relative bg-white rounded-xl border border-slate-200/90 shadow-2xl w-full ${maxWidthClasses} overflow-hidden animate-scale-in z-10 my-auto max-h-[90vh] flex flex-col`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-slate-50 shrink-0">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-slate-50/80 shrink-0">
           <h3 className="text-sm font-bold text-slate-900 tracking-tight">{title}</h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-sm hover:bg-slate-200 cursor-pointer"
+            className="text-slate-400 hover:text-slate-700 transition-all duration-150 p-1.5 rounded-lg hover:bg-slate-200/80 active:scale-95 cursor-pointer"
             aria-label="Đóng cửa sổ"
           >
             <X className="w-4 h-4" />

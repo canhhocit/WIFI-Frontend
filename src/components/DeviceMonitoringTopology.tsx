@@ -270,7 +270,7 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
       )}
 
       {/* Row 2: 4-Step Network Topology Flow */}
-      <div className="bg-white rounded border border-slate-200 p-5 shadow-xs">
+      <div className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-card">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Node 1: Router */}
           <div
@@ -311,7 +311,9 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
           </div>
 
           {/* Connector 1 */}
-          <div className="hidden sm:block flex-shrink-0 w-8 md:w-16 h-px bg-slate-200" />
+          <div className="hidden sm:flex flex-shrink-0 w-8 md:w-16 items-center">
+            <div className="w-full h-[2px] text-sky-500/70 signal-flow-line rounded-full" />
+          </div>
 
           {/* Node 2: Switch */}
           <div
@@ -350,7 +352,9 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
           </div>
 
           {/* Connector 2 */}
-          <div className="hidden sm:block flex-shrink-0 w-8 md:w-16 h-px bg-slate-200" />
+          <div className="hidden sm:flex flex-shrink-0 w-8 md:w-16 items-center">
+            <div className="w-full h-[2px] text-sky-500/70 signal-flow-line rounded-full" />
+          </div>
 
           {/* Node 3: AP (Access Point) */}
           <div
@@ -390,7 +394,9 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
           </div>
 
           {/* Connector 3 */}
-          <div className="hidden sm:block flex-shrink-0 w-8 md:w-16 h-px bg-slate-200" />
+          <div className="hidden sm:flex flex-shrink-0 w-8 md:w-16 items-center">
+            <div className="w-full h-[2px] text-emerald-500/75 signal-flow-line rounded-full" />
+          </div>
 
           {/* Node 4: Client */}
           <div

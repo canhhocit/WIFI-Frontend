@@ -763,7 +763,16 @@ export const PortalPage: React.FC = () => {
   ];
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center p-3 sm:p-5 lg:p-6 text-slate-900 font-sans">
+    <div
+      className={`relative min-h-screen flex flex-col items-center justify-center text-slate-900 font-sans ${
+        isEmbeddedPreview ? 'p-2 sm:p-4' : 'p-2.5 sm:p-5 lg:p-6'
+      }`}
+      style={
+        template?.backgroundColor
+          ? { backgroundColor: template.backgroundColor }
+          : undefined
+      }
+    >
       {isPreviewMode && !isEmbeddedPreview && (
         <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[100] max-w-[calc(100vw-1rem)] rounded-full bg-slate-950/90 px-3 py-1.5 text-center text-[11px] font-semibold text-white shadow-lg ring-1 ring-white/20">
           Bản xem trước · Các thao tác kết nối, OTP và gửi phản ánh đã tắt
@@ -775,22 +784,44 @@ export const PortalPage: React.FC = () => {
         style={{ backgroundImage: `url('${backgroundWallpaperUrl}')` }}
       />
       {/* GovTech Dark Overlay with Restrained Glassmorphism */}
-      <div className="fixed inset-0 bg-gradient-to-b from-slate-950/80 via-slate-900/75 to-slate-950/85 backdrop-blur-[2px]" />
+      <div
+        className="fixed inset-0 backdrop-blur-[2px] transition-colors duration-500"
+        style={{
+          background: template?.backgroundColor
+            ? `linear-gradient(180deg, ${template.backgroundColor}cc 0%, #020617d9 100%)`
+            : 'linear-gradient(180deg, rgba(2,6,23,0.8) 0%, rgba(15,23,42,0.75) 50%, rgba(2,6,23,0.88) 100%)',
+        }}
+      />
 
-      {/* Main Responsive Container: Mobile = Single Column max-w-md, Laptop = Full Screen 2-Column Split max-w-6xl */}
-      <div className="relative z-10 bg-white rounded-xl lg:rounded-2xl border border-slate-300/80 shadow-2xl max-w-md lg:max-w-5xl xl:max-w-6xl w-full overflow-hidden lg:grid lg:grid-cols-12">
+      {/* Main Responsive Container: Mobile = Sleek App Card, Laptop = 2-Column Split */}
+      <div className="relative z-10 bg-white rounded-2xl border border-white/20 shadow-2xl max-w-md lg:max-w-5xl xl:max-w-6xl w-full overflow-hidden lg:grid lg:grid-cols-12">
         
         {/* ================= LEFT COLUMN: CITIZEN INFORMATION & CITY CAMPAIGN (lg:col-span-7) ================= */}
         <div className="lg:col-span-7 flex flex-col bg-gradient-to-b from-slate-50/70 to-white border-b lg:border-b-0 lg:border-r border-slate-200">
           
           {/* Official Viettel & Government Dual-Branded Header */}
-          <div className="bg-gradient-to-r from-[#EE0033] via-[#E0002F] to-[#C4002B] text-white p-4 sm:p-5 border-b border-[#B30022] relative shadow-md overflow-hidden">
+          <div
+            className="text-white p-4 sm:p-5 border-b border-[#B30022] relative shadow-md overflow-hidden transition-colors duration-300"
+            style={{
+              background: template?.themeColor
+                ? `linear-gradient(135deg, ${template.themeColor} 0%, ${template.backgroundColor || '#C4002B'} 100%)`
+                : 'linear-gradient(to right, #EE0033, #E0002F, #C4002B)',
+            }}
+          >
             <div className="absolute -top-12 -right-12 w-36 h-36 bg-white/10 rounded-full blur-xl pointer-events-none" />
             
             {/* Top Co-Branding Bar: Hai Phong City x Viettel */}
             <div className="flex items-center justify-between pb-3 mb-2.5 border-b border-white/20">
               <div className="flex items-center gap-2">
-                <VietnamFlag width={36} height={24} className="rounded-xs shadow-sm border border-yellow-400/50 flex-shrink-0" />
+                {template?.logoUrl ? (
+                  <img
+                    src={template.logoUrl}
+                    alt="Biểu trưng chính thức"
+                    className="h-7 w-auto max-w-[110px] object-contain drop-shadow-sm"
+                  />
+                ) : (
+                  <VietnamFlag width={36} height={24} className="rounded-xs shadow-sm border border-yellow-400/50 flex-shrink-0" />
+                )}
                 <div className="text-left">
                   <div className="text-[9.5px] sm:text-[10.5px] font-black tracking-widest text-yellow-300 uppercase leading-tight">
                     UBND TP. HẢI PHÒNG
@@ -870,32 +901,79 @@ export const PortalPage: React.FC = () => {
           <div className="bg-[#c4002b] text-white px-3.5 py-1.5 flex items-center gap-2 text-[11px] font-medium overflow-hidden border-b border-red-950/40 shadow-inner">
             <div className="flex items-center gap-1 bg-yellow-400 text-red-950 font-black px-1.5 py-0.5 rounded-xs text-[9.5px] uppercase tracking-wider flex-shrink-0 shadow-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping" />
-              TIN TRUYỀN THÔNG SỐ
+              TIN MỚI
             </div>
-            <div className="truncate flex-1 text-yellow-100 font-sans">
-              <span className="font-bold text-white uppercase">{activeCampaign.title}</span> — <span>{activeCampaign.description?.slice(0, 95)}...</span>
+            <div className="truncate flex-1 text-slate-100">
+              <span className="font-bold text-white">{activeCampaign.title}</span>
             </div>
             <button
               type="button"
               onClick={() => setShowMediaModal(true)}
               className="text-[10px] font-bold text-yellow-300 hover:text-white underline flex-shrink-0 cursor-pointer"
             >
-              Chi tiết
+              Xem
             </button>
           </div>
           )}
 
-          {/* Scrollable Content Body on Desktop */}
-          <div className="p-4 sm:p-5 space-y-4 flex-1">
+          {/* Hero Banner with Overlaid Location & Telemetry Pills */}
+          <div className="relative h-32 sm:h-44 lg:h-48 bg-slate-900 overflow-hidden border-b border-slate-200">
+            <img
+              src={localBannerUrl}
+              alt={portalData?.location.name || 'Wifi công cộng Hải Phòng'}
+              className="w-full h-full object-cover opacity-95"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = '/banners/haiphong_culture_house.jpg';
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/35 to-transparent flex flex-col justify-between p-3 sm:p-4 text-white">
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/90 backdrop-blur-xs text-white text-[10px] font-bold shadow-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  Điểm phát trực tuyến
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowReportModal(true)}
+                  disabled={isPreviewMode}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-xs text-amber-300 border border-white/15 text-[10px] font-semibold transition cursor-pointer"
+                >
+                  <AlertTriangle className="w-2.5 h-2.5" />
+                  <span>Báo lỗi</span>
+                </button>
+              </div>
+
+              <div>
+                <div className="text-xs sm:text-sm font-extrabold text-white drop-shadow-xs truncate flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-amber-300 flex-shrink-0" />
+                  <span className="truncate">{portalData?.location.name || 'Nhà văn hóa Hải Phòng'}</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-[10px] font-mono">
+                  <span className="px-2 py-0.5 rounded bg-white/15 backdrop-blur-xs text-emerald-300 font-bold border border-white/10">
+                    {portalData?.location.maxBandwidthMbps || 20} Mbps
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-white/15 backdrop-blur-xs text-white border border-white/10">
+                    {portalData?.location.sessionDurationMinutes || 120} phút
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-white/15 backdrop-blur-xs text-sky-200 border border-white/10 flex items-center gap-1">
+                    <Users className="w-2.5 h-2.5" />
+                    {portalData?.currentActiveUsers ?? 0}/{portalData?.maxConcurrentUsers || portalData?.location.maxConcurrentUsers || 50}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Body */}
+          <div className="p-3.5 sm:p-5 space-y-3 flex-1">
             {/* Lời chào mừng chính thức của điểm phát */}
             <div>
-              
-              <h2 className="text-base sm:text-lg font-extrabold text-slate-900 leading-snug">
+              <h2 className="text-xs sm:text-base font-bold text-slate-800 leading-snug">
                 {portalData?.location.welcomeMessage || template?.welcomeText || `Chào mừng Nhân dân đến với ${portalData?.location.name || 'Nhà văn hóa'}`}
               </h2>
               <p className="text-xs text-slate-600 flex items-center gap-1.5 mt-1.5">
                 <MapPin className="w-3.5 h-3.5 text-[#ee0033] flex-shrink-0" />
-                <span>{portalData?.location.address || 'Thành phố Hải Phòng'}</span>
+                <span className="truncate">{portalData?.location.address || 'Thành phố Hải Phòng'}</span>
               </p>
             </div>
 
@@ -904,10 +982,10 @@ export const PortalPage: React.FC = () => {
               <div className="p-3.5 bg-amber-50/70 rounded-lg border border-amber-300/80 shadow-xs space-y-1.5">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-[#ee0033]">
                   <Megaphone className="w-4 h-4 text-[#ee0033] flex-shrink-0" />
-                  <span>{portalData.location.promoTitle || 'Bản Tin Chuyển Đổi Số Địa Phương'}</span>
+                  <span className="truncate">{portalData.location.promoTitle || 'Bản Tin Chuyển Đổi Số Địa Phương'}</span>
                 </div>
                 {portalData.location.promoContent && (
-                  <p className="text-xs text-slate-700 leading-relaxed font-sans">
+                  <p className="text-[11px] text-slate-700 leading-relaxed line-clamp-2 sm:line-clamp-none">
                     {portalData.location.promoContent}
                   </p>
                 )}
@@ -925,39 +1003,10 @@ export const PortalPage: React.FC = () => {
             )}
 
             {/* Hướng dẫn Dịch vụ hành chính công Thành phố */}
-            <div className="p-3 bg-blue-50/80 rounded-lg border border-blue-200 flex items-start gap-2.5 text-slate-700">
+            <div className="hidden sm:flex p-3 bg-blue-50/80 rounded-lg border border-blue-200 items-start gap-2.5 text-slate-700">
               <Landmark className="w-4 h-4 text-[#ee0033] flex-shrink-0 mt-0.5" />
               <div className="text-xs leading-relaxed">
                 <span className="font-bold text-[#ee0033]">Dịch vụ công trực tuyến:</span> Sau khi kết nối Wi-Fi, hệ thống sẽ mở trực tiếp <strong>Cổng Dịch vụ công TP Hải Phòng</strong> để bà con tra cứu hồ sơ và nộp thủ tục hành chính miễn phí.
-              </div>
-            </div>
-
-            {/* Ảnh minh họa Nhà văn hóa thực tế của từng điểm phát */}
-            <div className="relative rounded-lg border border-slate-200 bg-slate-900 overflow-hidden shadow-sm">
-              <img
-                src={localBannerUrl}
-                alt={portalData?.location.name || 'Wifi công cộng Hải Phòng'}
-                className="w-full h-40 sm:h-48 lg:h-52 object-cover opacity-95 transition hover:scale-101 duration-300"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = '/banners/haiphong_culture_house.jpg';
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent flex flex-col justify-end p-3.5 text-white">
-                <div className="text-xs sm:text-sm font-bold text-white drop-shadow-sm flex items-center justify-between">
-                  <span className="truncate pr-2 font-extrabold flex items-center gap-1.5">
-                    <Landmark className="w-4 h-4 text-amber-300 flex-shrink-0" />
-                    <span>Ảnh thực tế: {portalData?.location.name || 'Nhà văn hóa'}</span>
-                  </span>
-                  <span className="text-[10px] px-2 py-0.5 bg-emerald-600/90 text-white rounded font-bold flex-shrink-0 shadow-2xs">
-                    Điểm phát trực tuyến
-                  </span>
-                </div>
-                <div className="text-[10.5px] text-slate-200 drop-shadow-xs flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 font-mono">
-
-                  <span>Băng thông: <strong className="text-emerald-300">{portalData?.location.maxBandwidthMbps || 20} Mbps</strong></span>
-                  <span>•</span>
-                  <span>Mã trạm: <strong className="text-slate-200">{portalData?.location.locationCode || 'LOC-HP'}</strong></span>
-                </div>
               </div>
             </div>
 
@@ -1152,9 +1201,13 @@ export const PortalPage: React.FC = () => {
           </div>
 
           {/* Connect Action Form Container */}
-          <form onSubmit={handleConnect} className="p-4 sm:p-6 space-y-4 text-xs flex-1 flex flex-col justify-between">
+          <form onSubmit={handleConnect} className="p-4 sm:p-6 space-y-4 text-xs flex-1 flex flex-col justify-between animate-fade-in-up">
             <div className="space-y-4">
-              {error && <AlertBanner type="error" message={error} />}
+              {error && (
+                <div className="animate-shake">
+                  <AlertBanner type="error" message={error} />
+                </div>
+              )}
               {successInfo && <AlertBanner type="success" message={successInfo} />}
 
               {/* Capacity Limit Reached Warning Alert */}
@@ -1540,7 +1593,8 @@ export const PortalPage: React.FC = () => {
 
       </div>
 
-      {/* Demo Location Switcher for Mobile (Hidden on laptop/lg:hidden) */}
+      {/* Demo Location Switcher for Mobile (Hidden on laptop/lg:hidden and in embedded studio preview) */}
+      {!isEmbeddedPreview && (
       <div className="lg:hidden relative z-10 mt-3 max-w-md w-full bg-slate-900/90 backdrop-blur-md rounded-lg p-2.5 border border-white/20 text-white shadow-xl">
         <div className="flex items-center justify-between mb-1.5 px-0.5">
           <span className="text-[10.5px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
@@ -1570,8 +1624,10 @@ export const PortalPage: React.FC = () => {
           })}
         </div>
       </div>
+      )}
 
-      {/* Floating "Báo lỗi Wi-Fi" Button (Always accessible) */}
+      {/* Floating "Báo lỗi Wi-Fi" Button (Hidden inside embedded studio preview) */}
+      {!isEmbeddedPreview && (
       <button
         type="button"
         onClick={() => setShowReportModal(true)}
@@ -1582,6 +1638,7 @@ export const PortalPage: React.FC = () => {
         <span className="hidden sm:inline">Báo lỗi Wi-Fi</span>
         <span className="sm:hidden">Báo lỗi</span>
       </button>
+      )}
 
       <ReportIssueModal
         isOpen={showReportModal}

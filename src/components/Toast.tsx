@@ -62,9 +62,9 @@ export const Toast: React.FC<ToastProps> = ({
   }[type];
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 max-w-sm w-full transition-all duration-300 ease-out transform translate-y-0 opacity-100">
+    <div className="fixed bottom-5 right-5 z-50 max-w-sm w-full animate-slide-in-right">
       <div
-        className={`relative overflow-hidden rounded-md border-l-4 ${typeConfig.bg} shadow-2xl p-4 text-xs flex items-start gap-3 border border-slate-200/90`}
+        className={`relative overflow-hidden rounded-xl border-l-4 ${typeConfig.bg} shadow-2xl p-4 text-xs flex items-start gap-3 border border-slate-200/90 backdrop-blur-sm`}
         role="alert"
       >
         {/* Type Icon */}

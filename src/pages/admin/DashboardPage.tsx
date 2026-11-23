@@ -127,25 +127,48 @@ export const DashboardPage: React.FC = () => {
 
   if (loading && !data) {
     return (
-      <div className="flex min-h-[400px] flex-col items-center justify-center">
-        <RefreshCw className="mb-2 h-6 w-6 animate-spin text-blue-700" />
-        <span className="text-xs font-medium text-slate-500">Đang đồng bộ trạng thái hệ thống...</span>
+      <div className="mx-auto max-w-7xl space-y-5 animate-fade-in-up">
+        <div className="h-20 rounded-xl border border-slate-200 bg-white p-5 shadow-card flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-5 w-48 rounded animate-shimmer" />
+            <div className="h-3 w-72 rounded animate-shimmer" />
+          </div>
+          <div className="h-9 w-24 rounded-lg animate-shimmer" />
+        </div>
+        <div className="h-36 rounded-xl border border-slate-200 bg-white p-5 shadow-card">
+          <div className="h-full w-full rounded-lg animate-shimmer" />
+        </div>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((idx) => (
+            <div key={idx} className="h-24 rounded-xl border border-slate-200 bg-white p-4 shadow-card space-y-2.5">
+              <div className="h-3 w-20 rounded animate-shimmer" />
+              <div className="h-7 w-16 rounded animate-shimmer" />
+              <div className="h-2.5 w-24 rounded animate-shimmer" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-5">
-      <div className="flex flex-col gap-3 rounded border border-slate-300 bg-white p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between sm:p-5">
+    <div className="mx-auto max-w-7xl space-y-5 animate-fade-in-up">
+      <div className="flex flex-col gap-3 rounded-xl border border-slate-200/90 bg-white p-4 shadow-card sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Tổng quan vận hành</h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-xl font-bold tracking-tight text-slate-900">Tổng quan vận hành</h1>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 border border-emerald-200">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 text-emerald-500 live-pulse" />
+              Trực tuyến
+            </span>
+          </div>
           <p className="mt-1 text-xs text-slate-500">
             Trạng thái điểm phát, tải mạng và công việc cần xử lý; dữ liệu tự làm mới mỗi 60 giây.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {lastUpdated && (
-            <span className="text-[11px] text-slate-500">
+            <span className="font-mono text-[11px] text-slate-500 tabular-nums">
               Cập nhật {lastUpdated.toLocaleTimeString('vi-VN')}
             </span>
           )}
@@ -153,7 +176,7 @@ export const DashboardPage: React.FC = () => {
             type="button"
             onClick={() => void loadOverview()}
             disabled={refreshing}
-            className="inline-flex min-h-10 items-center gap-2 rounded border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 text-xs font-semibold text-slate-700 transition-all duration-150 hover:bg-slate-50 hover:border-slate-400 active:scale-[0.98] disabled:opacity-60 cursor-pointer"
           >
             <RefreshCw className={'h-4 w-4 ' + (refreshing ? 'animate-spin' : '')} />
             Làm mới
@@ -162,7 +185,7 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {error && (
-        <div role="alert" className="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-3 text-xs text-red-800">
+        <div role="alert" className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-800 animate-shake">
           <AlertCircle className="h-4 w-4 shrink-0" /> {error}
         </div>
       )}
@@ -170,24 +193,30 @@ export const DashboardPage: React.FC = () => {
       <DeviceMonitoringTopology topology={data?.topology} showSummaryCards={false} />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="rounded border border-slate-300 bg-white p-4 shadow-xs">
-          <div className="flex items-center justify-between text-xs text-slate-500"><span>Điểm phát</span><MapPin className="h-4 w-4" /></div>
-          <div className="mt-1 text-2xl font-extrabold text-slate-900">{mapStats.total || data?.totalLocations || 0}</div>
+        <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover hover:border-slate-300">
+          <div className="flex items-center justify-between text-xs text-slate-500"><span>Điểm phát</span><MapPin className="h-4 w-4 text-slate-400" /></div>
+          <div className="mt-1 font-mono text-2xl font-extrabold text-slate-900 tabular-nums">{mapStats.total || data?.totalLocations || 0}</div>
           <div className="mt-1 text-[11px] text-slate-500">{mapStats.online} đang hoạt động</div>
         </div>
-        <div className="rounded border border-emerald-200 bg-white p-4 shadow-xs">
-          <div className="flex items-center justify-between text-xs text-emerald-700"><span>Đang hoạt động</span><Wifi className="h-4 w-4" /></div>
-          <div className="mt-1 text-2xl font-extrabold text-emerald-700">{mapStats.online}</div>
+        <div className="rounded-xl border border-emerald-200/90 bg-white p-4 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover hover:border-emerald-300">
+          <div className="flex items-center justify-between text-xs font-medium text-emerald-700">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 text-emerald-500 live-pulse" />
+              Đang hoạt động
+            </span>
+            <Wifi className="h-4 w-4" />
+          </div>
+          <div className="mt-1 font-mono text-2xl font-extrabold text-emerald-700 tabular-nums">{mapStats.online}</div>
           <div className="mt-1 text-[11px] text-slate-500">Điểm online</div>
         </div>
-        <div className="rounded border border-amber-200 bg-white p-4 shadow-xs">
-          <div className="flex items-center justify-between text-xs text-amber-700"><span>Suy giảm</span><BellRing className="h-4 w-4" /></div>
-          <div className="mt-1 text-2xl font-extrabold text-amber-700">{mapStats.degraded}</div>
+        <div className="rounded-xl border border-amber-200/90 bg-white p-4 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover hover:border-amber-300">
+          <div className="flex items-center justify-between text-xs font-medium text-amber-700"><span>Suy giảm</span><BellRing className="h-4 w-4" /></div>
+          <div className="mt-1 font-mono text-2xl font-extrabold text-amber-700 tabular-nums">{mapStats.degraded}</div>
           <div className="mt-1 text-[11px] text-slate-500">Điểm cần kiểm tra</div>
         </div>
-        <div className="rounded border border-red-200 bg-white p-4 shadow-xs">
-          <div className="flex items-center justify-between text-xs text-red-700"><span>Mất kết nối</span><WifiOff className="h-4 w-4" /></div>
-          <div className="mt-1 text-2xl font-extrabold text-red-700">{mapStats.offline}</div>
+        <div className="rounded-xl border border-red-200/90 bg-white p-4 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover hover:border-red-300">
+          <div className="flex items-center justify-between text-xs font-medium text-red-700"><span>Mất kết nối</span><WifiOff className="h-4 w-4" /></div>
+          <div className="mt-1 font-mono text-2xl font-extrabold text-red-700 tabular-nums">{mapStats.offline}</div>
           <div className="mt-1 text-[11px] text-slate-500">Điểm offline</div>
         </div>
       </div>
@@ -261,25 +290,28 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="rounded border border-slate-300 bg-white p-4 shadow-xs">
+        <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover">
           <div className="mb-2 flex items-center justify-between text-xs text-slate-500"><span>Phiên đang kết nối</span><Activity className="h-4 w-4 text-emerald-700" /></div>
-          <div className="text-2xl font-extrabold text-slate-900">{data?.activeSessions ?? 0}</div>
+          <div className="font-mono text-2xl font-extrabold text-slate-900 tabular-nums">{data?.activeSessions ?? 0}</div>
           <Link to="/admin/sessions" className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-[#004b87] hover:underline">Xem phiên <ArrowRight className="h-3 w-3" /></Link>
         </div>
-        <div className="rounded border border-slate-300 bg-white p-4 shadow-xs">
-          <div className="mb-2 flex items-center justify-between text-xs text-slate-500"><span>Lượt kết nối hôm nay</span><Clock className="h-4 w-4" /></div>
-          <div className="text-2xl font-extrabold text-slate-900">{data?.todaySessions ?? 0}</div>
+        <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover">
+          <div className="mb-2 flex items-center justify-between text-xs text-slate-500"><span>Lượt kết nối hôm nay</span><Clock className="h-4 w-4 text-sky-600" /></div>
+          <div className="font-mono text-2xl font-extrabold text-slate-900 tabular-nums">{data?.todaySessions ?? 0}</div>
           <div className="mt-1 text-[11px] text-slate-500">Tổng phiên được tạo trong ngày</div>
         </div>
-        <div className="rounded border border-slate-300 bg-white p-4 shadow-xs">
-          <div className="mb-2 flex items-center justify-between text-xs text-slate-500"><span>Hạ tầng gateway</span><Router className="h-4 w-4" /></div>
-          <div className="text-sm font-bold text-slate-900">{data?.gatewayStatus?.healthy ? 'Đang hoạt động' : 'Cần kiểm tra'}</div>
+        <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover">
+          <div className="mb-2 flex items-center justify-between text-xs text-slate-500"><span>Hạ tầng gateway</span><Router className="h-4 w-4 text-slate-600" /></div>
+          <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
+            <span className={`h-2 w-2 rounded-full ${data?.gatewayStatus?.healthy ? 'bg-emerald-500 text-emerald-500 live-pulse' : 'bg-amber-500'}`} />
+            {data?.gatewayStatus?.healthy ? 'Đang hoạt động' : 'Cần kiểm tra'}
+          </div>
           <div className="mt-1 line-clamp-2 text-[11px] text-slate-500">{data?.gatewayStatus?.statusMessage || 'Chưa có trạng thái gateway.'}</div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <section className="rounded border border-slate-300 bg-white p-4 shadow-xs">
+        <section className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-card">
           <h2 className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-slate-700">
             <span>Phân loại trạng thái phiên</span>
             <Link to="/admin/sessions" className="normal-case text-[#004b87] hover:underline">Chi tiết</Link>
@@ -290,8 +322,8 @@ export const DashboardPage: React.FC = () => {
               const percentage = Math.round((count / total) * 100);
               return (
                 <div key={status} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs"><StatusBadge status={status} /><span className="font-mono font-semibold text-slate-700">{count} ({percentage}%)</span></div>
-                  <div className="h-1.5 overflow-hidden rounded bg-slate-100"><div className="h-full bg-[#004b87]" style={{ width: percentage + '%' }} /></div>
+                  <div className="flex items-center justify-between text-xs"><StatusBadge status={status} /><span className="font-mono font-semibold text-slate-700 tabular-nums">{count} ({percentage}%)</span></div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-[#004b87] to-sky-500 transition-all duration-700 ease-out" style={{ width: percentage + '%' }} /></div>
                 </div>
               );
             })}
@@ -299,7 +331,7 @@ export const DashboardPage: React.FC = () => {
           </div>
         </section>
 
-        <section className="rounded border border-slate-300 bg-white p-4 shadow-xs lg:col-span-2">
+        <section className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-card lg:col-span-2">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div>
               <h2 className="text-xs font-bold uppercase tracking-wide text-slate-700">Lượt truy cập theo địa bàn</h2>
@@ -310,7 +342,7 @@ export const DashboardPage: React.FC = () => {
           {data?.locationDistribution?.length ? (
             <div className="space-y-2">
               {data.locationDistribution.slice(0, 6).map((location, index) => (
-                <div key={location.locationName + '-' + index} className="flex items-center justify-between gap-3 rounded border border-slate-100 bg-slate-50 px-3 py-2">
+                <div key={location.locationName + '-' + index} className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2 transition-colors duration-150 hover:bg-sky-50/60 hover:border-sky-200/80">
                   <div className="flex min-w-0 items-center gap-2">
                     <MapPin className="h-4 w-4 shrink-0 text-[#004b87]" />
                     <div className="min-w-0">
@@ -318,7 +350,7 @@ export const DashboardPage: React.FC = () => {
                       <div className="text-[10px] text-slate-500">{location.percentage != null ? location.percentage.toFixed(1) + '% lượt kết nối toàn thành phố' : 'Điểm phát'}</div>
                     </div>
                   </div>
-                  <span className="shrink-0 text-xs font-bold text-slate-700">{location.sessionCount} lượt</span>
+                  <span className="shrink-0 font-mono text-xs font-bold text-slate-700 tabular-nums">{location.sessionCount} lượt</span>
                 </div>
               ))}
             </div>
