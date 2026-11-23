@@ -373,9 +373,9 @@ export const AdminLayout: React.FC = () => {
           scope: "Cơ sở Phường / Xã",
           color: "bg-slate-700 text-slate-100 border-slate-600",
         };
-      case "ROLE_VNPT_ENGINEER":
+      case "ROLE_VIETTEL_ENGINEER":
         return {
-          label: "Kỹ sư VNPT",
+          label: "Kỹ sư Viettel",
           scope: "Hạ tầng Viễn thông",
           color: "bg-[#003865] text-blue-100 border-blue-700",
         };
@@ -412,7 +412,8 @@ export const AdminLayout: React.FC = () => {
         return true;
       case "DEVICES":
         return (
-          userRole === "ROLE_VNPT_ENGINEER" || userRole === "ROLE_SOTTTT_ADMIN"
+          userRole === "ROLE_VIETTEL_ENGINEER" ||
+          userRole === "ROLE_SOTTTT_ADMIN"
         );
       case "CAMPAIGNS":
         return (
@@ -422,7 +423,7 @@ export const AdminLayout: React.FC = () => {
         );
       case "INCIDENTS":
         return (
-          userRole === "ROLE_VNPT_ENGINEER" ||
+          userRole === "ROLE_VIETTEL_ENGINEER" ||
           userRole === "ROLE_SOTTTT_ADMIN" ||
           userRole === "ROLE_DISTRICT_OFFICER"
         );

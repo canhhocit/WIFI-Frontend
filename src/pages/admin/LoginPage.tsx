@@ -162,9 +162,9 @@ export const LoginPage: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => handleSelectQuickAccount('vnpt_tech01', 'password123')}
+                onClick={() => handleSelectQuickAccount('viettel_tech01', 'password123')}
                 className={`p-2 rounded-sm border text-left transition flex items-start gap-1.5 cursor-pointer ${
-                  username === 'vnpt_tech01'
+                  username === 'viettel_tech01'
                     ? 'border-[#004b87] bg-blue-50 text-[#004b87] font-semibold'
                     : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                 }`}
@@ -172,7 +172,7 @@ export const LoginPage: React.FC = () => {
                 <Wrench className="w-3.5 h-3.5 text-slate-500 flex-shrink-0 mt-0.5" />
                 <div>
                   <div className="font-bold text-[11px]">Kỹ thuật viên</div>
-                  <div className="text-[10px] text-slate-500 font-mono">vnpt_tech01</div>
+                  <div className="text-[10px] text-slate-500 font-mono">viettel_tech01</div>
                 </div>
               </button>
             </div>

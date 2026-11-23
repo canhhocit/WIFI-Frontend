@@ -159,7 +159,7 @@ export const IncidentsPage: React.FC = () => {
   const [createAssignedTo, setCreateAssignedTo] = useState<string>('');
 
   // Assign form state
-  const [assigneeName, setAssigneeName] = useState<string>('VNPT_KyThuat_01');
+  const [assigneeName, setAssigneeName] = useState<string>('Viettel_KyThuat_01');
   const [assignGroup, setAssignGroup] = useState<string>('Đội Kỹ thuật Viễn thông Hải Phòng');
   const [assignNote, setAssignNote] = useState<string>('');
 

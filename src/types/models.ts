@@ -914,7 +914,7 @@ export interface SubmitReportRequest {
 
 // ================= Users, Roles, DNS & System Settings =================
 
-export type AdminRoleType = 'ROLE_SUPER_ADMIN' | 'ROLE_ADMIN' | 'ROLE_SOTTTT_ADMIN' | 'ROLE_DISTRICT_OFFICER' | 'ROLE_COMMUNE_OFFICER' | 'ROLE_VNPT_ENGINEER';
+export type AdminRoleType = 'ROLE_SUPER_ADMIN' | 'ROLE_ADMIN' | 'ROLE_SOTTTT_ADMIN' | 'ROLE_DISTRICT_OFFICER' | 'ROLE_COMMUNE_OFFICER' | 'ROLE_VIETTEL_ENGINEER';
 
 export interface CreateAdminUserRequest {
   username: string;

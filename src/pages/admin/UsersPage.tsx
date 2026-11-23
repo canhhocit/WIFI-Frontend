@@ -40,8 +40,8 @@ const ROLE_LABELS: Record<AdminRoleType, { label: string; color: string; desc: s
     color: 'bg-teal-100 text-teal-800 border-teal-200',
     desc: 'Theo dõi tình hình hoạt động trạm Wi-Fi Nhà văn hóa cơ sở',
   },
-  ROLE_VNPT_ENGINEER: {
-    label: 'Kỹ sư Viễn thông VNPT',
+  ROLE_VIETTEL_ENGINEER: {
+    label: 'Kỹ sư Viễn thông Viettel',
     color: 'bg-amber-100 text-amber-800 border-amber-200',
     desc: 'Kỹ thuật vận hành, cấu hình thiết bị, xử lý sự cố viễn thông',
   },
@@ -223,7 +223,7 @@ export const UsersPage: React.FC = () => {
             <div>
               <h1 className="text-xl font-bold text-gray-900">Quản lý Tài khoản Cán bộ & Phân cấp Quản trị</h1>
               <p className="text-sm text-gray-500">
-                Phân quyền 5 cấp chính quyền Hải Phòng (Sở TT&TT, Quận/Huyện, Xã/Phường, VNPT) & Gán địa bàn phụ trách
+                Phân quyền 5 cấp chính quyền Hải Phòng (Sở TT&TT, Quận/Huyện, Xã/Phường, Viettel) & Gán địa bàn phụ trách
               </p>
             </div>
           </div>
@@ -285,7 +285,7 @@ export const UsersPage: React.FC = () => {
             <option value="ROLE_SOTTTT_ADMIN">Cán bộ Sở TT&TT</option>
             <option value="ROLE_DISTRICT_OFFICER">Cán bộ Quận / Huyện</option>
             <option value="ROLE_COMMUNE_OFFICER">Cán bộ Phường / Xã</option>
-            <option value="ROLE_VNPT_ENGINEER">Kỹ sư Viễn thông VNPT</option>
+            <option value="ROLE_VIETTEL_ENGINEER">Kỹ sư Viễn thông Viettel</option>
           </select>
         </div>
       </div>
@@ -534,7 +534,7 @@ export const UsersPage: React.FC = () => {
                   <option value="ROLE_SOTTTT_ADMIN">ROLE_SOTTTT_ADMIN - Cán bộ Sở TT&TT</option>
                   <option value="ROLE_DISTRICT_OFFICER">ROLE_DISTRICT_OFFICER - Cán bộ Quận / Huyện</option>
                   <option value="ROLE_COMMUNE_OFFICER">ROLE_COMMUNE_OFFICER - Cán bộ Phường / Xã</option>
-                  <option value="ROLE_VNPT_ENGINEER">ROLE_VNPT_ENGINEER - Kỹ sư Viễn thông VNPT</option>
+                  <option value="ROLE_VIETTEL_ENGINEER">ROLE_VIETTEL_ENGINEER - Kỹ sư Viễn thông Viettel</option>
                 </select>
               </div>
 

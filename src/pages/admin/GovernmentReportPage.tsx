@@ -498,7 +498,7 @@ export const GovernmentReportPage: React.FC = () => {
               <div className="text-slate-600 mt-1 space-y-0.5">
                 <div>- UBND Thành phố Hải Phòng (để b/c);</div>
                 <div>- Giám đốc Sở TT&TT (để chỉ đạo);</div>
-                <div>- VNPT, Viettel Hải Phòng (để phối hợp);</div>
+                <div>- Viettel Hải Phòng (để phối hợp);</div>
                 <div>- Lưu: VT, CNTT.</div>
               </div>
             </div>

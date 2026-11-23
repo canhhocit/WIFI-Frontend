@@ -575,8 +575,8 @@ export const PortalStatusPage: React.FC = () => {
                 <span className="font-mono font-bold text-[#004b87]">0225.1022</span>
               </div>
               <div className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-100">
-                <span className="font-semibold text-slate-800">Hỗ trợ kỹ thuật mạng Wi-Fi (VNPT Hải Phòng):</span>
-                <span className="font-mono font-bold text-emerald-700">1800.1166</span>
+                <span className="font-semibold text-slate-800">Hỗ trợ kỹ thuật mạng Wi-Fi (Viettel Hải Phòng):</span>
+                <span className="font-mono font-bold text-emerald-700">1800.8119</span>
               </div>
               <p className="text-[11px] text-slate-500 italic">
                 * Mạng Wi-Fi công cộng tuân thủ các quy tắc an toàn thông tin theo Nghị định 13/2023/NĐ-CP của Chính phủ.

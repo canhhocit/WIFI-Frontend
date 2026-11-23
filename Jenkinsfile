@@ -74,6 +74,7 @@ pipeline {
                         git config user.name "Jenkins CI"
                         git add ${KUSTOMIZE_FILE}
                         git diff --cached --quiet || git commit -m "ci: update ${DEPLOYMENT_NAME} to ${IMAGE_TAG}-${BUILD_NUMBER}"
+                        git -c http.extraheader="Authorization: Basic \$AUTH" pull --rebase origin ${GITOPS_BRANCH}
                         git -c http.extraheader="Authorization: Basic \$AUTH" push origin ${GITOPS_BRANCH}
 
                         cd ..
