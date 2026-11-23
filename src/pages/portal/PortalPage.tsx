@@ -31,6 +31,7 @@ import { portalApi } from '../../api/portalApi';
 import { PortalInitResponse } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
 import { VietnamFlag } from '../../components/VietnamFlag';
+import { ViettelLogo } from '../../components/ViettelLogo';
 import { ReportIssueModal } from '../../components/ReportIssueModal';
 import { CitizenDigitalMediaModal } from '../../components/CitizenDigitalMediaModal';
 import { Play, Tv, Video, Eye, Share2, FileText, Image as ImageIcon } from 'lucide-react';
@@ -555,48 +556,74 @@ export const PortalPage: React.FC = () => {
   if (connectedSession) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-6 sm:p-8 text-center space-y-6">
-          <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-            <CheckCircle2 className="w-12 h-12" />
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-6 sm:p-8 text-center space-y-5 border-t-4 border-[#ee0033]">
+          {/* Viettel Co-Branding Banner */}
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 px-1">
+            <div className="flex items-center gap-1.5 text-left">
+              <VietnamFlag width={26} height={17} className="rounded-xs shadow-xs" />
+              <span className="text-[10px] font-extrabold text-slate-800 uppercase tracking-wide">
+                HẢI PHÒNG SMART
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <ViettelLogo height={16} variant="simple" color="red" showTagline={false} />
+              <span className="text-[10px] font-black text-[#ee0033] uppercase tracking-wider">
+                TELECOM
+              </span>
+            </div>
           </div>
+
+          <div className="w-16 h-16 bg-gradient-to-tr from-[#ee0033] to-[#ff2d55] text-white rounded-full flex items-center justify-center mx-auto shadow-lg shadow-red-500/30">
+            <CheckCircle2 className="w-10 h-10" />
+          </div>
+
           <div>
-            <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">KẾT NỐI THÀNH CÔNG!</h2>
-            <p className="text-sm text-slate-600 mt-2">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-50 text-[#ee0033] border border-red-200 text-[10.5px] font-black uppercase tracking-wider mb-1.5">
+              <Wifi className="w-3 h-3 text-[#ee0033]" />
+              Wi-Fi Viettel Hải Phòng
+            </span>
+            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">KẾT NỐI THÀNH CÔNG!</h2>
+            <p className="text-xs text-slate-600 mt-1">
               Chào mừng quý công dân đến với <strong>{connectedSession.locationName || portalData?.location.name || 'Nhà văn hóa'}</strong>
             </p>
           </div>
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-xs text-emerald-900 space-y-2 text-left">
-            <div className="flex justify-between font-bold">
-              <span>Trạng thái mạng:</span>
-              <span className="text-emerald-700 font-semibold">Đã mở kết nối Internet</span>
+
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-700 space-y-2 text-left">
+            <div className="flex justify-between items-center font-bold">
+              <span>Hạ tầng mạng:</span>
+              <span className="text-[#ee0033] font-bold flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5" /> Viettel Fiber 5G High-Speed
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Thời lượng phiên:</span>
               <span className="font-semibold">{connectedSession.durationMinutes || 120} phút</span>
             </div>
             <div className="flex justify-between">
-              <span>Băng thông tốc độ cao:</span>
-              <span className="font-semibold">{portalData?.location.maxBandwidthMbps || 20} Mbps</span>
+              <span>Băng thông truy cập:</span>
+              <span className="font-semibold text-emerald-700 font-mono">{portalData?.location.maxBandwidthMbps || 20} Mbps</span>
             </div>
           </div>
+
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 flex items-center justify-center gap-2">
             {redirectCountdown > 0 ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
-                <span>Đang tự động chuyển tiếp đến Dịch vụ công ({redirectCountdown}s)...</span>
+                <span>Tự động chuyển đến Cổng Dịch vụ công ({redirectCountdown}s)...</span>
               </>
             ) : (
               <>
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span className="font-semibold text-emerald-700">Đang chuyển hướng đến Dịch vụ công Hải Phòng...</span>
+                <span className="font-semibold text-emerald-700">Đang chuyển tiếp tới Dịch vụ công Hải Phòng...</span>
               </>
             )}
           </div>
-          <div className="space-y-3 pt-2">
+
+          <div className="space-y-2.5 pt-1">
             <button
               type="button"
               onClick={() => { executePostAuthRedirect('https://dichvucong.haiphong.gov.vn/'); }}
-              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#ee0033] to-[#c4002b] hover:from-[#c4002b] hover:to-[#99001f] text-white font-bold text-sm tracking-wide shadow-lg shadow-red-500/25 active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#ee0033] via-[#e0002f] to-[#c4002b] hover:from-[#ff1a4b] hover:to-[#d80027] text-white font-black text-sm tracking-wide shadow-lg shadow-red-500/30 active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer"
             >
               <Landmark className="w-4 h-4 text-yellow-300" />
               <span>{redirectCountdown > 0 ? `VÀO DỊCH VỤ CÔNG HẢI PHÒNG (${redirectCountdown}s)` : 'VÀO DỊCH VỤ CÔNG HẢI PHÒNG NGAY'}</span>
@@ -605,13 +632,13 @@ export const PortalPage: React.FC = () => {
             <button
               type="button"
               onClick={() => { executePostAuthRedirect('https://www.google.com'); }}
-              className="w-full py-3 px-4 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition flex items-center justify-center gap-2 border border-slate-300 cursor-pointer"
+              className="w-full py-2.5 px-4 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition flex items-center justify-center gap-2 border border-slate-300 cursor-pointer"
             >
               <Globe className="w-4 h-4 text-[#ee0033]" />
               <span>Tiếp tục lướt web (Google)</span>
             </button>
 
-            <div className="text-center pt-1">
+            <div className="text-center pt-0.5">
               <button
                 type="button"
                 onClick={() => { executePostAuthRedirect(); }}
@@ -621,14 +648,10 @@ export const PortalPage: React.FC = () => {
               </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowReportModal(true)}
-              className="w-full py-2.5 px-3 rounded-xl bg-amber-50 text-amber-900 font-semibold text-xs hover:bg-amber-100 transition flex items-center justify-center gap-1.5 border border-amber-200 cursor-pointer mt-2"
-            >
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-              <span>Gặp sự cố kết nối? Báo lỗi kỹ thuật</span>
-            </button>
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10.5px] text-slate-500">
+              <span>Hỗ trợ kỹ thuật Viettel 24/7:</span>
+              <a href="tel:18008119" className="font-bold text-[#ee0033] hover:underline">1800 8119</a>
+            </div>
           </div>
         </div>
 
@@ -760,45 +783,68 @@ export const PortalPage: React.FC = () => {
         {/* ================= LEFT COLUMN: CITIZEN INFORMATION & CITY CAMPAIGN (lg:col-span-7) ================= */}
         <div className="lg:col-span-7 flex flex-col bg-gradient-to-b from-slate-50/70 to-white border-b lg:border-b-0 lg:border-r border-slate-200">
           
-          {/* Official Government Header */}
-          <div className="bg-[#ee0033] text-white text-center p-4 sm:p-5 border-b border-[#c4002b] relative">
-            {template?.logoUrl ? (
-              <div className="flex justify-center mb-1.5">
-                <img
-                  src={template.logoUrl}
-                  alt="Biểu trưng chính thức"
-                  className="h-10 sm:h-12 w-auto max-w-[140px] object-contain drop-shadow-sm"
-                />
+          {/* Official Viettel & Government Dual-Branded Header */}
+          <div className="bg-gradient-to-r from-[#EE0033] via-[#E0002F] to-[#C4002B] text-white p-4 sm:p-5 border-b border-[#B30022] relative shadow-md overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-36 h-36 bg-white/10 rounded-full blur-xl pointer-events-none" />
+            
+            {/* Top Co-Branding Bar: Hai Phong City x Viettel */}
+            <div className="flex items-center justify-between pb-3 mb-2.5 border-b border-white/20">
+              <div className="flex items-center gap-2">
+                <VietnamFlag width={36} height={24} className="rounded-xs shadow-sm border border-yellow-400/50 flex-shrink-0" />
+                <div className="text-left">
+                  <div className="text-[9.5px] sm:text-[10.5px] font-black tracking-widest text-yellow-300 uppercase leading-tight">
+                    UBND TP. HẢI PHÒNG
+                  </div>
+                  <div className="text-[8.5px] sm:text-[9.5px] text-red-100 font-medium">
+                    Chuyển đổi số cộng đồng
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="flex justify-center mb-2">
-                <VietnamFlag width={48} height={32} className="rounded-xs shadow-sm border border-yellow-400/50" />
+
+              <div className="h-6 w-px bg-white/30 hidden sm:block" />
+
+              <div className="flex items-center gap-2 text-right">
+                <div className="text-right">
+                  <div className="text-[9.5px] sm:text-[10.5px] font-black tracking-wider text-white uppercase leading-tight">
+                    VIETTEL HẢI PHÒNG
+                  </div>
+                  <div className="text-[8.5px] sm:text-[9.5px] text-red-100 font-medium">
+                    Hạ tầng số viễn thông
+                  </div>
+                </div>
+                <div className="bg-white px-2 py-0.5 rounded shadow-sm flex items-center">
+                  <ViettelLogo height={16} variant="simple" color="red" showTagline={false} />
+                </div>
               </div>
-            )}
-            <div className="text-[10px] sm:text-[11px] font-bold tracking-widest text-yellow-300 uppercase">
-              Cộng Hòa Xã Hội Chủ Nghĩa Việt Nam
             </div>
-            <div className="text-[10px] sm:text-[11px] text-red-100 italic">
-              Độc lập - Tự do - Hạnh phúc
+
+            {/* Central Portal Badge & Title */}
+            <div className="text-center space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/30 text-[10.5px] font-bold text-yellow-300 uppercase tracking-wider">
+                <Wifi className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />
+                <span>MẠNG WI-FI CÔNG CỘNG MIỄN PHÍ</span>
+              </div>
+              <h1 className="text-base sm:text-lg font-black tracking-tight uppercase text-white drop-shadow-sm">
+                {portalData?.location.name || template?.title || 'Cổng Thông Tin Wi-Fi Hải Phòng'}
+              </h1>
+              <p className="text-[11px] text-red-100 italic">
+                Tập đoàn Công nghiệp - Viễn thông Quân đội (Viettel) đồng hành cùng Nhân dân
+              </p>
             </div>
-            <div className="h-0.5 w-24 bg-yellow-400/60 mx-auto my-2" />
-            <div className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-yellow-300">
-              Ủy Ban Nhân Dân Thành Phố Hải Phòng
-            </div>
-            <h1 className="text-sm sm:text-base font-extrabold tracking-tight mt-0.5 uppercase text-white">
-              {template?.title || 'Cổng Thông Tin Wi-Fi'}
-            </h1>
           </div>
 
           {/* Location & Speed Meta Strip */}
-          <div className="px-4 py-2.5 bg-slate-100/90 border-b border-slate-200 flex flex-wrap items-center justify-between text-[11px] text-slate-700 gap-y-1.5">
+          <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between text-[11px] text-slate-700 gap-y-1.5">
             <div className="flex items-center gap-1.5 font-semibold truncate mr-2">
-              <MapPin className="w-3.5 h-3.5 text-[#ee0033] flex-shrink-0" />
-              <span className="truncate">{portalData?.location.name || 'Nhà văn hóa thôn, tổ dân phố Hải Phòng'}</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+              <MapPin className="w-3.5 h-3.5 text-[#EE0033] flex-shrink-0" />
+              <span className="truncate">{portalData?.location.name || 'Nhà văn hóa Hải Phòng'}</span>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0 font-mono text-[10.5px] text-slate-600">
-              <span>{portalData?.location.sessionDurationMinutes || 120} phút</span>
-              <span>•</span>
+            <div className="flex items-center gap-2 flex-shrink-0 font-mono text-[10.5px]">
+              <span className="px-2 py-0.5 rounded-full bg-red-50 text-[#EE0033] border border-red-200 font-bold flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-[#EE0033]" />
+                Viettel Fiber 5G
+              </span>
               <span className="text-emerald-700 font-bold">{portalData?.location.maxBandwidthMbps || 20} Mbps</span>
               <span>•</span>
               <span className={`font-semibold flex items-center gap-1 ${portalData?.capacityReached ? 'text-rose-600' : 'text-indigo-700'}`}>
@@ -814,7 +860,7 @@ export const PortalPage: React.FC = () => {
                 title="Báo lỗi hoặc phản ánh chất lượng mạng Wi-Fi tại điểm này"
               >
                 <AlertTriangle className="w-3 h-3 text-amber-600 flex-shrink-0" />
-                <span>Báo lỗi Wi-Fi</span>
+                <span>Báo lỗi</span>
               </button>
             </div>
           </div>
@@ -1332,21 +1378,16 @@ export const PortalPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Primary Action Button (Bấm vào kết nối 1-chạm) */}
+              {/* Primary Action Button (Bấm vào kết nối 1-chạm chuẩn phong cách Viettel) */}
               <div className="pt-2">
                 <button
                   type="submit"
                   disabled={submitting || Boolean(portalData?.capacityReached)}
-                  className={`w-full py-3.5 px-4 rounded-lg text-white font-extrabold text-sm sm:text-base tracking-wide uppercase transition flex items-center justify-center gap-2 shadow-lg ${
+                  className={`w-full py-4 px-4 rounded-xl text-white font-black text-sm sm:text-base tracking-wider uppercase transition flex items-center justify-center gap-2.5 shadow-xl ${
                     portalData?.capacityReached
                       ? 'bg-slate-400 cursor-not-allowed opacity-80'
-                      : 'cursor-pointer hover:brightness-105 active:scale-[0.99] disabled:opacity-50'
+                      : 'bg-gradient-to-r from-[#ee0033] via-[#e0002f] to-[#c4002b] hover:from-[#ff1a4b] hover:to-[#d80027] shadow-red-500/35 hover:shadow-red-500/50 active:scale-[0.99] cursor-pointer'
                   }`}
-                  style={{
-                    backgroundColor: portalData?.capacityReached
-                      ? undefined
-                      : template?.themeColor || '#ee0033',
-                  }}
                 >
                   {submitting ? (
                     <>
@@ -1360,14 +1401,18 @@ export const PortalPage: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <Wifi className="w-5 h-5 text-yellow-300" />
-                      <span>{template?.buttonText || 'KẾT NỐI WI-FI MIỄN PHÍ'}</span>
+                      <Wifi className="w-5 h-5 text-yellow-300 animate-pulse" />
+                      <span>{template?.buttonText || 'KẾT NỐI WI-FI VIETTEL MIỄN PHÍ'}</span>
                     </>
                   )}
                 </button>
-                <p className="text-[10.5px] text-slate-500 text-center mt-2 font-medium">
-                  Tốc độ: <strong>{portalData?.location.maxBandwidthMbps || 20} Mbps</strong> • Thời lượng phiên: <strong>{portalData?.location.sessionDurationMinutes || 120} phút</strong> • Giới hạn: <strong>{portalData?.maxConcurrentUsers || portalData?.location.maxConcurrentUsers || 50} kết nối đồng thời</strong>
-                </p>
+                <div className="flex items-center justify-center gap-2 mt-2 text-[10.5px] text-slate-500 font-medium">
+                  <span className="font-bold text-[#ee0033]">Viettel 5G Fiber</span>
+                  <span>•</span>
+                  <span>Băng thông: <strong className="text-slate-700">{portalData?.location.maxBandwidthMbps || 20} Mbps</strong></span>
+                  <span>•</span>
+                  <span>Thời lượng: <strong className="text-slate-700">{portalData?.location.sessionDurationMinutes || 120} phút</strong></span>
+                </div>
               </div>
 
               {/* Collapsible Advanced Authentication (Optional SĐT / OTP & Tùy chọn) */}
@@ -1465,18 +1510,23 @@ export const PortalPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Support hotline & legal note */}
-            <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-500 space-y-2">
-              <div className="flex items-center justify-between p-2 rounded bg-slate-50 border border-slate-200/80">
-                <span className="font-medium text-slate-600">Đường dây nóng DVC Hải Phòng:</span>
-                <span className="font-mono font-bold text-[#ee0033]">0225.1022</span>
+            {/* Viettel Telecom Brand & Support Footer */}
+            <div className="pt-3 border-t border-slate-200 text-[11px] text-slate-500 space-y-2">
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-red-50/70 border border-red-200/80">
+                <div className="flex items-center gap-2">
+                  <ViettelLogo height={16} variant="simple" color="red" showTagline={false} />
+                  <span className="font-semibold text-slate-700">Hỗ trợ kỹ thuật Viettel:</span>
+                </div>
+                <a href="tel:18008119" className="font-mono font-black text-[#ee0033] text-xs hover:underline">
+                  1800 8119 (Miễn phí 24/7)
+                </a>
               </div>
-              <div className="flex items-center justify-between">
-                
+              <div className="flex items-center justify-between px-1 text-[10.5px]">
+                <span className="text-slate-500">Tổng đài DVC: <strong className="text-slate-700">0225.1022</strong></span>
                 <button
                   type="button"
                   onClick={() => setShowReportModal(true)}
-                  className="inline-flex items-center gap-1 text-[11px] text-amber-700 hover:text-amber-900 font-semibold cursor-pointer underline decoration-amber-400/80"
+                  className="inline-flex items-center gap-1 text-[10.5px] text-amber-700 hover:text-amber-900 font-semibold cursor-pointer underline decoration-amber-400/80"
                 >
                   <AlertTriangle className="w-3 h-3 text-amber-600" />
                   <span>Báo sự cố Wi-Fi</span>

@@ -4,6 +4,7 @@ import { ShieldCheck, KeyRound, Loader2, Info, ArrowLeft, Shield, UserCheck, Wre
 import { authApi } from '../../api/authApi';
 import { AlertBanner } from '../../components/AlertBanner';
 import { VietnamFlag } from '../../components/VietnamFlag';
+import { ViettelLogo } from '../../components/ViettelLogo';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -36,52 +37,59 @@ export const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* National Emblem & Department Banner */}
-        <div className="text-center mb-5 space-y-1">
-          <div className="flex justify-center mb-2">
-            <VietnamFlag width={66} height={44} className="rounded-sm shadow-md border border-amber-300/40" />
+        {/* National Emblem & Viettel Telecom Co-Branding Banner */}
+        <div className="text-center mb-6 space-y-2">
+          {/* Dual Emblem Bar */}
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <VietnamFlag width={56} height={37} className="rounded-xs shadow-md border border-amber-300/40" />
+            <div className="h-8 w-px bg-slate-300" />
+            <div className="bg-white p-1.5 rounded-lg shadow-sm border border-slate-200">
+              <ViettelLogo height={24} variant="simple" color="red" showTagline={false} />
+            </div>
           </div>
+
           <div className="text-[11px] font-bold tracking-widest text-slate-800 uppercase">
             Cộng Hòa Xã Hội Chủ Nghĩa Việt Nam
           </div>
-          <div className="text-[10px] text-slate-600 italic">
+          <div className="text-[10px] text-slate-500 italic">
             Độc lập - Tự do - Hạnh phúc
           </div>
-          <div className="h-0.5 w-20 bg-red-700 mx-auto my-1.5" />
-          <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-            Ủy Ban Nhân Dân Thành Phố Hải Phòng
+          <div className="h-0.5 w-20 bg-[#ee0033] mx-auto my-1.5" />
+          <h2 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+            UBND TP. HẢI PHÒNG × VIETTEL HẢI PHÒNG
           </h2>
-          <h1 className="text-base font-extrabold text-[#ee0033] uppercase tracking-tight">
+          <h1 className="text-base sm:text-lg font-black text-[#ee0033] uppercase tracking-tight">
             Hệ Thống Quản Trị Wi-Fi Công Cộng
           </h1>
+          <p className="text-[11px] text-slate-500">
+            Hạ tầng viễn thông số phục vụ Nhân dân & Chính quyền điện tử
+          </p>
         </div>
 
         {/* Main Login Card */}
-        <div className="bg-white rounded border border-slate-300 shadow-sm overflow-hidden">
-          {/* Official Top Accent Line */}
-          <div className="h-1 bg-[#ee0033] w-full" />
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
+          {/* Official Viettel Red Accent Strip */}
+          <div className="h-1.5 bg-gradient-to-r from-[#ee0033] via-[#ff2d55] to-[#c4002b] w-full" />
 
-        
-
-          <form onSubmit={handleSubmit} className="p-5 space-y-3.5">
+          <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {error && <AlertBanner type="error" message={error} />}
 
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 Tên đăng nhập
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:border-[#ee0033] focus:ring-1 focus:ring-[#ee0033] text-slate-900 font-mono transition"
-                placeholder="vd: admin hoặc sotttt_admin"
+                className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-[#ee0033] focus:ring-2 focus:ring-red-100 text-slate-900 font-mono transition"
+                placeholder="vd: admin hoặc viettel_tech01"
                 required
               />
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
                   Mật khẩu truy cập
                 </label>
@@ -90,7 +98,7 @@ export const LoginPage: React.FC = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:border-[#ee0033] focus:ring-1 focus:ring-[#ee0033] text-slate-900 transition"
+                className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-[#ee0033] focus:ring-2 focus:ring-red-100 text-slate-900 transition"
                 placeholder="••••••••"
                 required
               />
@@ -99,9 +107,9 @@ export const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 bg-[#ee0033] hover:bg-[#c4002b] active:bg-[#99001f] text-white rounded-sm text-xs font-bold tracking-wider transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50 uppercase"
+              className="w-full py-3 px-4 bg-gradient-to-r from-[#ee0033] to-[#c4002b] hover:from-[#ff1a4b] hover:to-[#d80027] text-white rounded-xl text-xs font-black tracking-wider transition flex items-center justify-center gap-2 shadow-lg shadow-red-500/25 cursor-pointer disabled:opacity-50 uppercase mt-2"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin text-yellow-300" /> : <KeyRound className="w-4 h-4" />}
               ĐĂNG NHẬP HỆ THỐNG
             </button>
           </form>
@@ -181,16 +189,18 @@ export const LoginPage: React.FC = () => {
           <div className="px-5 py-2.5 bg-slate-100 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
             <a
               href="/portal"
-              className="text-[#ee0033] hover:underline font-semibold inline-flex items-center gap-1 transition"
+              className="text-[#ee0033] hover:underline font-bold inline-flex items-center gap-1 transition"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> Trang portal
+              <ArrowLeft className="w-3.5 h-3.5" /> Xem Cổng Portal Wi-Fi
             </a>
+            <span className="text-[10.5px]">Tổng đài Viettel: <strong className="text-[#ee0033]">1800.8119</strong></span>
           </div>
         </div>
 
-        <p className="text-center text-[11px] text-slate-500 mt-4">
-          © 2026 Thành phố Hải Phòng
-        </p>
+        <div className="text-center text-[10.5px] text-slate-500 mt-4 space-y-1">
+          <p>© 2026 UBND Thành phố Hải Phòng • Hợp tác phát triển cùng Viettel Hải Phòng</p>
+          <p className="text-[10px] text-slate-400">Tập đoàn Công nghiệp - Viễn thông Quân đội (Viettel)</p>
+        </div>
       </div>
     </div>
   );
