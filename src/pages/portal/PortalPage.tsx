@@ -25,6 +25,7 @@ import {
   Star,
   AlertTriangle,
   LifeBuoy,
+  Globe,
 } from 'lucide-react';
 import { portalApi } from '../../api/portalApi';
 import { PortalInitResponse } from '../../types/models';
@@ -189,18 +190,29 @@ export const PortalPage: React.FC = () => {
     return undefined;
   }, [excapDirectUrl, gwAddressParam, gwPortParam, rawMac, apMacParam]);
 
+  const localRouterLoginUrl = useMemo(() => {
+    if (gwAddressParam) {
+      const port = gwPortParam || '8080';
+      return `http://${gwAddressParam}:${port}/gwn_login`;
+    }
+    return 'http://192.168.80.1:8080/gwn_login';
+  }, [gwAddressParam, gwPortParam]);
+
   const [redirectCountdown, setRedirectCountdown] = useState<number>(3);
 
   const targetDestination = useMemo(() => {
-    if (targetUrlParam && !targetUrlParam.includes('/portal')) {
+    if (targetUrlParam && !targetUrlParam.includes('/portal') && !targetUrlParam.includes('gwn_login')) {
       return targetUrlParam;
     }
     return 'https://dichvucong.haiphong.gov.vn/';
   }, [targetUrlParam]);
 
-  const buildExcapUrl = (sessionToken?: string) => {
+  const buildExcapUrl = (sessionToken?: string, forceLocal = false) => {
     const finalDest = targetDestination;
-    const baseLogin = rawLoginUrl || 'http://cwp.gwnportal.cloud:8080/gwn_login';
+    let baseLogin = rawLoginUrl || 'http://192.168.80.1:8080/gwn_login';
+    if (forceLocal || baseLogin.includes('cwp.gwnportal.cloud')) {
+      baseLogin = localRouterLoginUrl;
+    }
     const sep = baseLogin.includes('?') ? '&' : '?';
     const cleanMac = (effectiveClientMac || macAddress || '0242ac110001').replace(/[:-]/g, '').toLowerCase();
     const token = sessionToken || (connectedSession ? connectedSession.sessionToken : '') || 'guest';
@@ -210,18 +222,15 @@ export const PortalPage: React.FC = () => {
   useEffect(() => {
     if (!connectedSession) return;
     if (redirectCountdown <= 0) {
-      if (rawLoginUrl) {
-        window.location.replace(buildExcapUrl(connectedSession.sessionToken));
-      } else {
-        window.location.replace(targetDestination);
-      }
+      // Khi đã xác thực xong (Backend đã bypass MAC trên GWN Cloud), điều hướng thẳng tới Dịch vụ công hoặc đích đến của công dân
+      window.location.href = targetDestination;
       return;
     }
     const timer = setTimeout(() => {
       setRedirectCountdown((prev) => prev - 1);
     }, 1000);
     return () => clearTimeout(timer);
-  }, [connectedSession, redirectCountdown, targetDestination, rawLoginUrl]);
+  }, [connectedSession, redirectCountdown, targetDestination]);
 
   useEffect(() => {
     if (isEmbeddedPreview) {
@@ -464,15 +473,54 @@ export const PortalPage: React.FC = () => {
         consentGiven: true,
       });
 
-      // Background beacon EXCAP login_url if available from router
-      if (rawLoginUrl) {
-        try {
-          const authUrl = buildExcapUrl(session.sessionToken);
-          fetch(authUrl, { mode: 'no-cors' }).catch(() => {});
-          const img = new Image();
-          img.src = authUrl;
-        } catch (_) {}
-      }
+      // Kích hoạt đồng thời tín hiệu phần cứng mở mạng tới router nội bộ (LAN EXCAP)
+      try {
+        const cleanMac = (effectiveClientMac || macAddress || '0242ac110001').replace(/[:-]/g, '').toLowerCase();
+        const authEndpoints = [
+          localRouterLoginUrl,
+          ...(rawLoginUrl && !rawLoginUrl.includes('cwp.gwnportal.cloud') ? [rawLoginUrl] : [])
+        ];
+
+        authEndpoints.forEach((endpoint) => {
+          try {
+            const sep = endpoint.includes('?') ? '&' : '?';
+            const excapUrl = `${endpoint}${sep}username=${encodeURIComponent(cleanMac + '@gwn')}&password=${encodeURIComponent(session.sessionToken || 'guest')}&redirect=${encodeURIComponent(targetDestination)}`;
+            fetch(excapUrl, { mode: 'no-cors' }).catch(() => {});
+            const img = new Image();
+            img.src = excapUrl;
+          } catch (_) {}
+        });
+
+        // Tạo dynamic hidden iframe form submit để router GWN7002 mở iptables tức thì
+        const hiddenFrameName = 'gwn_auth_frame';
+        let frame = document.getElementById(hiddenFrameName) as HTMLIFrameElement;
+        if (!frame) {
+          frame = document.createElement('iframe');
+          frame.id = hiddenFrameName;
+          frame.name = hiddenFrameName;
+          frame.style.display = 'none';
+          document.body.appendChild(frame);
+        }
+        const form = document.createElement('form');
+        form.target = hiddenFrameName;
+        form.method = 'POST';
+        form.action = localRouterLoginUrl;
+        const addHidden = (k: string, v: string) => {
+          const inp = document.createElement('input');
+          inp.type = 'hidden';
+          inp.name = k;
+          inp.value = v;
+          form.appendChild(inp);
+        };
+        addHidden('username', `${cleanMac}@gwn`);
+        addHidden('password', session.sessionToken || 'guest');
+        addHidden('redirect', targetDestination);
+        addHidden('redir', targetDestination);
+        addHidden('mac', cleanMac);
+        document.body.appendChild(form);
+        form.submit();
+        setTimeout(() => { form.remove(); }, 1500);
+      } catch (_) {}
 
       setConnectedSession(session);
       setSuccessInfo('Kết nối thành công! Đã cấp quyền truy cập Internet.');
@@ -499,7 +547,7 @@ export const PortalPage: React.FC = () => {
           <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-xs text-emerald-900 space-y-2 text-left">
             <div className="flex justify-between font-bold">
               <span>Trạng thái mạng:</span>
-              <span className="text-emerald-700">Đã mở kết nối Internet</span>
+              <span className="text-emerald-700 font-semibold">Đã mở kết nối Internet</span>
             </div>
             <div className="flex justify-between">
               <span>Thời lượng phiên:</span>
@@ -511,31 +559,50 @@ export const PortalPage: React.FC = () => {
             </div>
           </div>
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 flex items-center justify-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
-            <span>Đang tự động chuyển tiếp đến Dịch vụ công ({redirectCountdown}s)...</span>
+            {redirectCountdown > 0 ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+                <span>Đang tự động chuyển tiếp đến Dịch vụ công ({redirectCountdown}s)...</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span className="font-semibold text-emerald-700">Đang chuyển hướng đến Dịch vụ công Hải Phòng...</span>
+              </>
+            )}
           </div>
           <div className="space-y-3 pt-2">
             <button
               type="button"
-              onClick={() => window.location.replace(buildExcapUrl(connectedSession.sessionToken))}
+              onClick={() => { window.location.href = targetDestination; }}
               className="w-full py-3.5 px-4 rounded-xl bg-[#a81c1c] text-white font-bold text-sm tracking-wide shadow-lg hover:bg-[#8b1414] transition flex items-center justify-center gap-2 cursor-pointer"
             >
               <Landmark className="w-4 h-4 text-yellow-300" />
-              <span>VÀO DỊCH VỤ CÔNG HẢI PHÒNG ({redirectCountdown}s)</span>
+              <span>{redirectCountdown > 0 ? `VÀO DỊCH VỤ CÔNG HẢI PHÒNG (${redirectCountdown}s)` : 'VÀO DỊCH VỤ CÔNG HẢI PHÒNG NGAY'}</span>
             </button>
             
             <button
               type="button"
-              onClick={() => window.location.replace('https://www.google.com')}
+              onClick={() => { window.location.href = 'https://www.google.com'; }}
               className="w-full py-3 px-4 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition flex items-center justify-center gap-2 border border-slate-300 cursor-pointer"
             >
-              <span>🌐 Tiếp tục lướt web (Google)</span>
+              <Globe className="w-4 h-4 text-sky-600" />
+              <span>Tiếp tục lướt web (Google)</span>
             </button>
+
+            <div className="text-center pt-1">
+              <a
+                href={targetDestination}
+                className="text-[11px] text-slate-500 hover:text-slate-800 underline transition"
+              >
+                Nhấp vào đây nếu trang không tự chuyển tiếp
+              </a>
+            </div>
 
             <button
               type="button"
               onClick={() => setShowReportModal(true)}
-              className="w-full py-2.5 px-3 rounded-xl bg-amber-50 text-amber-900 font-semibold text-xs hover:bg-amber-100 transition flex items-center justify-center gap-1.5 border border-amber-200 cursor-pointer"
+              className="w-full py-2.5 px-3 rounded-xl bg-amber-50 text-amber-900 font-semibold text-xs hover:bg-amber-100 transition flex items-center justify-center gap-1.5 border border-amber-200 cursor-pointer mt-2"
             >
               <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
               <span>Gặp sự cố kết nối? Báo lỗi kỹ thuật</span>
