@@ -13,6 +13,12 @@
     @apply bg-slate-50 text-slate-900 font-sans antialiased selection:bg-sky-500 selection:text-white;
   }
 
+  /* Prevent Tailwind space-y-* parent containers from shifting fixed fullscreen overlays down */
+  .fixed.inset-0 {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
   /* Custom subtle scrollbar */
   ::-webkit-scrollbar {
     width: 6px;

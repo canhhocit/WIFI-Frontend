@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Users,
   UserPlus,
@@ -14,6 +15,7 @@ import {
   RefreshCw,
   Edit2,
   Trash2,
+  X,
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { AdminUserDto, AdminUnitDto, CreateAdminUserRequest, UpdateAdminUserRequest, AdminRoleType } from '../../types/models';
@@ -68,6 +70,8 @@ export const UsersPage: React.FC = () => {
   // Modal states
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUserDto | null>(null);
+  const [selectedUnitFilter, setSelectedUnitFilter] = useState<string>('ALL');
+  const [modalDistrictId, setModalDistrictId] = useState<string>('');
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -79,18 +83,67 @@ export const UsersPage: React.FC = () => {
     enabled: true,
   });
 
+  // Làm phẳng cây đơn vị hành chính 3 cấp (Thành phố -> Quận/Huyện -> Phường/Xã) và hợp nhất dữ liệu các cấp
+  const flattenAdminUnits = (
+    tree: AdminUnitDto[],
+    level2List: AdminUnitDto[],
+    level3List: AdminUnitDto[]
+  ): AdminUnitDto[] => {
+    const map = new Map<number, AdminUnitDto>();
+
+    const walk = (nodes: AdminUnitDto[], parent?: AdminUnitDto) => {
+      for (const node of nodes) {
+        if (!node || typeof node.id !== 'number') continue;
+        const enriched: AdminUnitDto = {
+          ...node,
+          parentId: node.parentId ?? parent?.id,
+          parentName: node.parentName ?? parent?.name,
+        };
+        map.set(enriched.id, enriched);
+        if (Array.isArray(node.children) && node.children.length > 0) {
+          walk(node.children, enriched);
+        }
+      }
+    };
+
+    walk(tree || []);
+    for (const d of level2List || []) {
+      if (d && typeof d.id === 'number' && !map.has(d.id)) {
+        map.set(d.id, d);
+      }
+    }
+    for (const w of level3List || []) {
+      if (w && typeof w.id === 'number') {
+        const existing = map.get(w.id);
+        const parentDistrict = w.parentId ? map.get(w.parentId) : undefined;
+        map.set(w.id, {
+          ...existing,
+          ...w,
+          parentName: w.parentName || existing?.parentName || parentDistrict?.name,
+        });
+      }
+    }
+
+    return Array.from(map.values()).sort((a, b) => {
+      if (a.level !== b.level) return (a.level || 99) - (b.level || 99);
+      return (a.name || '').localeCompare(b.name || '', 'vi');
+    });
+  };
+
   const fetchData = async () => {
     try {
       setLoading(true);
       setActionError(null);
-      const [usersRes, unitsRes] = await Promise.all([
+      const [usersRes, treeRes, level2Res, level3Res] = await Promise.all([
         adminApi.getUsers({ search, page, size: pageSize }),
         adminApi.getAdminTree().catch(() => []),
+        adminApi.getAdminByLevel(2).catch(() => []),
+        adminApi.getAdminByLevel(3).catch(() => []),
       ]);
       setUsers(usersRes?.content || []);
       setTotalPages(usersRes?.totalPages || 1);
       setTotalElements(usersRes?.totalElements || 0);
-      setAdminUnits(unitsRes || []);
+      setAdminUnits(flattenAdminUnits(treeRes || [], level2Res || [], level3Res || []));
     } catch (err: any) {
       setActionError(err.message || 'Lỗi khi tải danh sách người dùng');
     } finally {
@@ -102,8 +155,40 @@ export const UsersPage: React.FC = () => {
     fetchData();
   }, [search, page, pageSize]);
 
+  const cityUnits = adminUnits.filter((u) => u.level === 1);
+  const districtUnits = adminUnits.filter((u) => u.level === 2);
+  const wardUnits = adminUnits.filter((u) => u.level === 3);
+
+  const resolveUserUnitDisplay = (user: AdminUserDto) => {
+    if (user.adminUnitId) {
+      const unit = adminUnits.find((u) => u.id === user.adminUnitId);
+      if (unit) {
+        if (unit.level === 1) {
+          return { title: unit.name, subtitle: 'Toàn thành phố', level: 1 };
+        }
+        if (unit.level === 2) {
+          return { title: unit.name, subtitle: 'Quận / Huyện', level: 2 };
+        }
+        if (unit.level === 3) {
+          const parentDistrict = unit.parentName || adminUnits.find((d) => d.id === unit.parentId)?.name;
+          return {
+            title: unit.name,
+            subtitle: parentDistrict ? parentDistrict : 'Phường / Xã',
+            level: 3,
+          };
+        }
+      }
+    }
+    if (user.adminUnitName) {
+      const cleaned = user.adminUnitName.replace(/\s*\(Cấp\s*\d+[^)]*\)|\s*\(\d+\)/gi, '').trim();
+      return { title: cleaned, subtitle: 'Địa bàn được phân công', level: 2 };
+    }
+    return null;
+  };
+
   const handleOpenCreate = () => {
     setEditingUser(null);
+    setModalDistrictId('');
     setFormData({
       username: '',
       password: '',
@@ -119,6 +204,20 @@ export const UsersPage: React.FC = () => {
 
   const handleOpenEdit = (user: AdminUserDto) => {
     setEditingUser(user);
+    let initialDistrictId = '';
+    if (user.adminUnitId) {
+      const matched = adminUnits.find((u) => u.id === user.adminUnitId);
+      if (matched) {
+        if (matched.level === 2) {
+          initialDistrictId = String(matched.id);
+        } else if (matched.level === 3 && matched.parentId) {
+          initialDistrictId = String(matched.parentId);
+        } else if (matched.level === 1) {
+          initialDistrictId = `CITY_${matched.id}`;
+        }
+      }
+    }
+    setModalDistrictId(initialDistrictId);
     setFormData({
       username: user.username,
       password: '',
@@ -209,6 +308,17 @@ export const UsersPage: React.FC = () => {
 
   const filteredUsers = users.filter((u) => {
     if (selectedRole !== 'ALL' && u.role !== selectedRole) return false;
+    if (selectedUnitFilter !== 'ALL') {
+      const filterId = Number(selectedUnitFilter);
+      if (!u.adminUnitId) return false;
+      if (u.adminUnitId !== filterId) {
+        // Nếu lọc theo Quận/Huyện (Cấp 2), bao gồm cả cán bộ thuộc Phường/Xã (Cấp 3) trực thuộc Quận/Huyện đó
+        const userUnit = adminUnits.find((unit) => unit.id === u.adminUnitId);
+        if (!userUnit || userUnit.parentId !== filterId) {
+          return false;
+        }
+      }
+    }
     return true;
   });
 
@@ -263,7 +373,7 @@ export const UsersPage: React.FC = () => {
       )}
 
       {/* Filters & Search */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-sm border border-gray-100 shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-4 rounded-sm border border-gray-100 shadow-sm">
         <div className="relative md:col-span-2">
           <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
           <input
@@ -287,6 +397,46 @@ export const UsersPage: React.FC = () => {
             <option value="ROLE_DISTRICT_OFFICER">Cán bộ Quận / Huyện</option>
             <option value="ROLE_COMMUNE_OFFICER">Cán bộ Phường / Xã</option>
             <option value="ROLE_VIETTEL_ENGINEER">Kỹ sư Viễn thông Viettel</option>
+          </select>
+        </div>
+
+        <div>
+          <select
+            value={selectedUnitFilter}
+            onChange={(e) => setSelectedUnitFilter(e.target.value)}
+            className="w-full py-2 px-3 text-sm bg-gray-50 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+          >
+            <option value="ALL">-- Tất cả địa bàn --</option>
+            {cityUnits.length > 0 && (
+              <optgroup label="Thành phố">
+                {cityUnits.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {districtUnits.length > 0 && (
+              <optgroup label="Quận / Huyện">
+                {districtUnits.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {wardUnits.length > 0 && (
+              <optgroup label="Phường / Xã / Thị trấn">
+                {wardUnits.map((w) => {
+                  const pName = w.parentName || districtUnits.find((d) => d.id === w.parentId)?.name;
+                  return (
+                    <option key={w.id} value={w.id}>
+                      {w.name}{pName ? ` — ${pName}` : ''}
+                    </option>
+                  );
+                })}
+              </optgroup>
+            )}
           </select>
         </div>
       </div>
@@ -339,14 +489,26 @@ export const UsersPage: React.FC = () => {
                       </td>
 
                       <td className="py-3.5 px-4">
-                        {user.adminUnitName ? (
-                          <div className="flex items-center gap-1.5 text-gray-700">
-                            <Building className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-                            <span>{user.adminUnitName}</span>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 text-xs italic">Toàn thành phố / Trung ương</span>
-                        )}
+                        {(() => {
+                          const unitInfo = resolveUserUnitDisplay(user);
+                          if (unitInfo) {
+                            return (
+                              <div className="flex items-start gap-2 text-gray-800">
+                                <Building className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                                <div>
+                                  <div className="font-medium text-gray-900">{unitInfo.title}</div>
+                                  <div className="text-[11px] text-blue-600 font-medium">{unitInfo.subtitle}</div>
+                                </div>
+                              </div>
+                            );
+                          }
+                          return (
+                            <span className="inline-flex items-center gap-1.5 text-gray-500 text-xs">
+                              <Building className="w-3.5 h-3.5 text-gray-400" />
+                              Toàn thành phố Hải Phòng
+                            </span>
+                          );
+                        })()}
                       </td>
 
                       <td className="py-3.5 px-4 text-xs text-gray-600 space-y-1">
@@ -441,141 +603,255 @@ export const UsersPage: React.FC = () => {
         />
       </div>
 
-      {/* Modal Create / Edit User */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-sm shadow-xl w-full max-w-lg overflow-hidden border border-gray-100">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-bold text-gray-900">
-                {editingUser ? `Cập nhật Cán bộ: ${editingUser.fullName}` : 'Thêm mới Cán bộ Quản trị'}
-              </h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-gray-600 text-lg leading-none"
-              >
-                &times;
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {!editingUser && (
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Tên đăng nhập *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    placeholder="vd: canbo_hongbang"
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">
-                  {editingUser ? 'Mật khẩu mới (Để trống nếu giữ nguyên)' : 'Mật khẩu *'}
-                </label>
-                <input
-                  type="password"
-                  required={!editingUser}
-                  minLength={6}
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Tối thiểu 6 ký tự"
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Họ và tên *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  placeholder="vd: Nguyễn Văn A"
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Email *</label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="canbo@haiphong.gov.vn"
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Số điện thoại</label>
-                  <input
-                    type="text"
-                    value={formData.phoneNumber}
-                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                    placeholder="0901234567"
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Vai trò hệ thống *</label>
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as AdminRoleType })}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="ROLE_SUPER_ADMIN">ROLE_SUPER_ADMIN - Quản trị cấp cao</option>
-                  <option value="ROLE_SOTTTT_ADMIN">ROLE_SOTTTT_ADMIN - Cán bộ Sở TT&TT</option>
-                  <option value="ROLE_DISTRICT_OFFICER">ROLE_DISTRICT_OFFICER - Cán bộ Quận / Huyện</option>
-                  <option value="ROLE_COMMUNE_OFFICER">ROLE_COMMUNE_OFFICER - Cán bộ Phường / Xã</option>
-                  <option value="ROLE_VIETTEL_ENGINEER">ROLE_VIETTEL_ENGINEER - Kỹ sư Viễn thông Viettel</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">
-                  Gán Địa bàn Quản lý (Quận/Huyện/Xã)
-                </label>
-                <select
-                  value={formData.adminUnitId}
-                  onChange={(e) => setFormData({ ...formData, adminUnitId: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">-- Toàn thành phố (Không giới hạn) --</option>
-                  {adminUnits.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} (Cấp {u.level})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="pt-4 border-t border-gray-100 flex items-center justify-end gap-3">
+      {/* Modal Create / Edit User (Portaled to document.body to guarantee full-screen overlay & scrollable body) */}
+      {showModal &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-[2px] animate-in fade-in duration-200"
+            onClick={() => setShowModal(false)}
+          >
+            <div
+              className="bg-white rounded-sm shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden border border-gray-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="shrink-0 px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white">
+                <h3 className="font-bold text-gray-900 text-base">
+                  {editingUser ? `Cập nhật Cán bộ: ${editingUser.fullName}` : 'Thêm mới Cán bộ Quản trị'}
+                </h3>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-sm transition-colors"
+                  className="text-gray-400 hover:text-gray-600 p-1 rounded-sm hover:bg-gray-100 transition-colors cursor-pointer"
                 >
-                  Hủy bỏ
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm transition-colors"
-                >
-                  {editingUser ? 'Lưu thay đổi' : 'Tạo Cán bộ'}
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+
+              <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3.5">
+                  <div className={!editingUser ? 'grid grid-cols-1 sm:grid-cols-2 gap-3.5' : ''}>
+                    {!editingUser && (
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">
+                          Tên đăng nhập *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.username}
+                          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                          placeholder="vd: canbo_hongbang"
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">
+                        {editingUser ? 'Mật khẩu mới (Để trống nếu giữ nguyên)' : 'Mật khẩu *'}
+                      </label>
+                      <input
+                        type="password"
+                        required={!editingUser}
+                        minLength={6}
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        placeholder="Tối thiểu 6 ký tự"
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Họ và tên *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      placeholder="vd: Nguyễn Văn A"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Email *</label>
+                      <input
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="canbo@haiphong.gov.vn"
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Số điện thoại</label>
+                      <input
+                        type="text"
+                        value={formData.phoneNumber}
+                        onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                        placeholder="0901234567"
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">
+                      Vai trò hệ thống *
+                    </label>
+                    <select
+                      value={formData.role}
+                      onChange={(e) => setFormData({ ...formData, role: e.target.value as AdminRoleType })}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="ROLE_SUPER_ADMIN">ROLE_SUPER_ADMIN - Quản trị cấp cao</option>
+                      <option value="ROLE_SOTTTT_ADMIN">ROLE_SOTTTT_ADMIN - Cán bộ Sở TT&TT</option>
+                      <option value="ROLE_DISTRICT_OFFICER">ROLE_DISTRICT_OFFICER - Cán bộ Quận / Huyện</option>
+                      <option value="ROLE_COMMUNE_OFFICER">ROLE_COMMUNE_OFFICER - Cán bộ Phường / Xã</option>
+                      <option value="ROLE_VIETTEL_ENGINEER">ROLE_VIETTEL_ENGINEER - Kỹ sư Viễn thông Viettel</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-3 bg-gray-50/70 p-3.5 rounded-sm border border-gray-200/80">
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="block text-xs font-semibold text-gray-700 uppercase">
+                        Gán Địa bàn Quản lý (Quận / Huyện / Phường / Xã)
+                      </label>
+                      <span className="text-[11px] font-medium text-blue-600 shrink-0">
+                        {formData.adminUnitId
+                          ? (() => {
+                              const u = adminUnits.find((item) => String(item.id) === String(formData.adminUnitId));
+                              if (!u || u.level === 1) return 'Phạm vi: Toàn thành phố';
+                              return u.level === 2 ? 'Phạm vi: Quận / Huyện' : 'Phạm vi: Phường / Xã';
+                            })()
+                          : 'Phạm vi: Toàn thành phố'}
+                      </span>
+                    </div>
+
+                    {/* Chọn Toàn Thành phố hoặc Quận / Huyện */}
+                    <div>
+                      <label className="block text-[11px] font-medium text-gray-600 mb-1">
+                        Quận / Huyện
+                      </label>
+                      <select
+                        value={modalDistrictId}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setModalDistrictId(val);
+                          if (!val) {
+                            setFormData({ ...formData, adminUnitId: '' });
+                          } else if (val.startsWith('CITY_')) {
+                            const cityId = Number(val.replace('CITY_', ''));
+                            setFormData({ ...formData, adminUnitId: cityId });
+                          } else {
+                            setFormData({ ...formData, adminUnitId: Number(val) });
+                          }
+                        }}
+                        className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">-- Toàn thành phố (Không giới hạn địa bàn) --</option>
+                        {cityUnits.length > 0 && (
+                          <optgroup label="Thành phố">
+                            {cityUnits.map((c) => (
+                              <option key={`city-${c.id}`} value={`CITY_${c.id}`}>
+                                {c.name}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        <optgroup label={`Quận / Huyện (${districtUnits.length} đơn vị)`}>
+                          {districtUnits.map((d) => (
+                            <option key={d.id} value={String(d.id)}>
+                              {d.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      </select>
+                    </div>
+
+                    {/* Chọn Phường / Xã / Thị trấn trực thuộc Quận/Huyện đã chọn */}
+                    <div>
+                      <label className="block text-[11px] font-medium text-gray-600 mb-1">
+                        Phường / Xã / Thị trấn trực thuộc
+                      </label>
+                      <select
+                        value={
+                          adminUnits.find((u) => String(u.id) === String(formData.adminUnitId))?.level === 3
+                            ? String(formData.adminUnitId)
+                            : ''
+                        }
+                        onChange={(e) => {
+                          const wardId = e.target.value;
+                          if (wardId) {
+                            const ward = wardUnits.find((w) => String(w.id) === wardId);
+                            if (ward && ward.parentId) {
+                              setModalDistrictId(String(ward.parentId));
+                            }
+                            setFormData({ ...formData, adminUnitId: Number(wardId) });
+                          } else {
+                            if (modalDistrictId && !modalDistrictId.startsWith('CITY_')) {
+                              setFormData({ ...formData, adminUnitId: Number(modalDistrictId) });
+                            } else if (modalDistrictId.startsWith('CITY_')) {
+                              setFormData({ ...formData, adminUnitId: Number(modalDistrictId.replace('CITY_', '')) });
+                            } else {
+                              setFormData({ ...formData, adminUnitId: '' });
+                            }
+                          }
+                        }}
+                        className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">
+                          {modalDistrictId && !modalDistrictId.startsWith('CITY_')
+                            ? `-- Quản lý toàn bộ ${districtUnits.find((d) => String(d.id) === modalDistrictId)?.name || 'Quận/Huyện'} --`
+                            : '-- Không giới hạn ở Phường/Xã (Chọn nếu là Cán bộ Phường/Xã) --'}
+                        </option>
+                        {(modalDistrictId && !modalDistrictId.startsWith('CITY_')
+                          ? wardUnits.filter((w) => String(w.parentId) === modalDistrictId)
+                          : wardUnits
+                        ).map((w) => {
+                          const parentName = w.parentName || districtUnits.find((d) => d.id === w.parentId)?.name;
+                          return (
+                            <option key={w.id} value={String(w.id)}>
+                              {w.name}{parentName ? ` — ${parentName}` : ''}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <p className="text-[11px] text-gray-500 mt-1">
+                        {formData.role === 'ROLE_DISTRICT_OFFICER'
+                          ? 'Gợi ý: Cán bộ Quận/Huyện chọn Quận/Huyện để quản lý toàn bộ các Phường/Xã trực thuộc.'
+                          : formData.role === 'ROLE_COMMUNE_OFFICER'
+                          ? 'Gợi ý: Cán bộ Phường/Xã chọn cụ thể Phường/Xã nơi mình phụ trách.'
+                          : 'Gợi ý: Để trống nếu cán bộ phụ trách phạm vi toàn thành phố.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="shrink-0 px-6 py-3.5 border-t border-gray-100 bg-gray-50 flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200/70 rounded-sm transition-colors cursor-pointer"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm transition-colors cursor-pointer"
+                  >
+                    {editingUser ? 'Lưu thay đổi' : 'Tạo Cán bộ'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

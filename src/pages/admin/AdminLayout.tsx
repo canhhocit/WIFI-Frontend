@@ -365,13 +365,13 @@ export const AdminLayout: React.FC = () => {
       case "ROLE_DISTRICT_OFFICER":
         return {
           label: "Cán bộ Quận/Huyện",
-          scope: "Địa bàn Quận / Huyện",
+          scope: currentUser?.adminUnitName || "Địa bàn Quận / Huyện",
           color: "bg-slate-700 text-slate-100 border-slate-600",
         };
       case "ROLE_COMMUNE_OFFICER":
         return {
           label: "Cán bộ Phường/Xã",
-          scope: "Cơ sở Phường / Xã",
+          scope: currentUser?.adminUnitName || "Cơ sở Phường / Xã",
           color: "bg-slate-700 text-slate-100 border-slate-600",
         };
       case "ROLE_VIETTEL_ENGINEER":

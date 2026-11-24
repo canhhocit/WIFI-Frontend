@@ -88,14 +88,15 @@ export const CampaignsPage: React.FC = () => {
     setLoading(true);
     try {
       const apiStatus = statusFilter === 'ACTIVE_NOW' ? 'APPROVED' : (statusFilter || undefined);
-      const [resp, locsResp, adminResp] = await Promise.all([
+      const [resp, locsResp, level2Resp, level3Resp] = await Promise.all([
         adminApi.getCampaigns({ status: apiStatus, size: 100 }),
         adminApi.getLocations({ size: 100 }).catch(() => ({ content: [] })),
         adminApi.getAdminByLevel(2).catch(() => []),
+        adminApi.getAdminByLevel(3).catch(() => []),
       ]);
       setCampaigns(resp.content || []);
       setLocations(locsResp.content || []);
-      setAdminUnits(adminResp || []);
+      setAdminUnits([...(level2Resp || []), ...(level3Resp || [])]);
       setError(null);
     } catch (err: any) {
       setError(err?.message || 'Không thể tải danh sách chiến dịch truyền thông.');
@@ -1160,16 +1161,27 @@ export const CampaignsPage: React.FC = () => {
 
             {targetMode === 'ADMIN_UNIT' && (
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Chọn Quận / Huyện:</label>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Chọn Địa bàn (Quận / Huyện / Phường / Xã):</label>
                 <select
                   value={formData.targetAdminUnitId || ''}
                   onChange={(e) => setFormData({ ...formData, targetAdminUnitId: e.target.value ? Number(e.target.value) : undefined })}
                   className="w-full h-9 px-2.5 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                 >
-                  <option value="">-- Chọn Quận / Huyện phát sóng --</option>
-                  {adminUnits.map((u) => (
-                    <option key={u.id} value={u.id}>{u.name}</option>
-                  ))}
+                  <option value="">-- Chọn Quận/Huyện hoặc Phường/Xã phát sóng --</option>
+                  <optgroup label="Quận / Huyện">
+                    {adminUnits.filter((u) => u.level === 2 || !u.level).map((u) => (
+                      <option key={u.id} value={u.id}>{u.name}</option>
+                    ))}
+                  </optgroup>
+                  {adminUnits.some((u) => u.level === 3) && (
+                    <optgroup label="Phường / Xã / Thị trấn">
+                      {adminUnits.filter((u) => u.level === 3).map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name}{u.parentName ? ` — ${u.parentName}` : ''}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
               </div>
             )}
@@ -1367,16 +1379,27 @@ export const CampaignsPage: React.FC = () => {
 
               {targetMode === 'ADMIN_UNIT' && (
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Chọn Quận / Huyện:</label>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Chọn Địa bàn (Quận / Huyện / Phường / Xã):</label>
                   <select
                     value={formData.targetAdminUnitId || ''}
                     onChange={(e) => setFormData({ ...formData, targetAdminUnitId: e.target.value ? Number(e.target.value) : undefined })}
                     className="w-full h-9 px-2.5 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                   >
-                    <option value="">-- Chọn Quận / Huyện phát sóng --</option>
-                    {adminUnits.map((u) => (
-                      <option key={u.id} value={u.id}>{u.name}</option>
-                    ))}
+                    <option value="">-- Chọn Quận/Huyện hoặc Phường/Xã phát sóng --</option>
+                    <optgroup label="Quận / Huyện">
+                      {adminUnits.filter((u) => u.level === 2 || !u.level).map((u) => (
+                        <option key={u.id} value={u.id}>{u.name}</option>
+                      ))}
+                    </optgroup>
+                    {adminUnits.some((u) => u.level === 3) && (
+                      <optgroup label="Phường / Xã / Thị trấn">
+                        {adminUnits.filter((u) => u.level === 3).map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.name}{u.parentName ? ` — ${u.parentName}` : ''}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
                 </div>
               )}
