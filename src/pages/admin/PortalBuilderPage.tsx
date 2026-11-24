@@ -186,10 +186,10 @@ export const PortalBuilderPage: React.FC = () => {
     }
   };
   const colorPresets = [
-    { name: 'Bộ 1', themeColor: '#004b87', bgColor: '#0c2340', bgImg: '/banners/haiphong_city_bg.jpg' },
-    { name: 'Bộ 2', themeColor: '#a81c1c', bgColor: '#450a0a', bgImg: '/banners/haiphong_culture_house.jpg' },
-    { name: 'Bộ 3', themeColor: '#0284c7', bgColor: '#082f49', bgImg: '/banners/central.jpg' },
-    { name: 'Bộ 4', themeColor: '#065f46', bgColor: '#022c22', bgImg: '/banners/haiphong_culture_house.jpg' },
+    { name: 'Bộ 1 (Đỏ Viettel)', themeColor: '#ee0033', bgColor: '#14141e', bgImg: '/banners/haiphong_city_bg.jpg' },
+    { name: 'Bộ 2 (Đỏ Đậm)', themeColor: '#c4002b', bgColor: '#1a1a27', bgImg: '/banners/haiphong_culture_house.jpg' },
+    { name: 'Bộ 3 (Xanh Lam)', themeColor: '#004b87', bgColor: '#0c2340', bgImg: '/banners/central.jpg' },
+    { name: 'Bộ 4 (Xanh Lá)', themeColor: '#065f46', bgColor: '#022c22', bgImg: '/banners/haiphong_culture_house.jpg' },
   ];
 
   useEffect(() => {
@@ -546,26 +546,26 @@ export const PortalBuilderPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setScope('GLOBAL')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-semibold transition cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-bold transition cursor-pointer ${
                 scope === 'GLOBAL'
-                  ? 'bg-white text-[#004b87] shadow-xs ring-1 ring-slate-200/80'
+                  ? 'bg-white text-[#ee0033] shadow-xs ring-1 ring-slate-200/80'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Globe className="w-3.5 h-3.5" />
-              <span>Mẫu chung</span>
+              <Globe className="w-3.5 h-3.5 text-[#ee0033]" />
+              <span>Mẫu chung toàn TP</span>
             </button>
             <button
               type="button"
               onClick={() => setScope('LOCATION')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-semibold transition cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-bold transition cursor-pointer ${
                 scope === 'LOCATION'
-                  ? 'bg-white text-[#004b87] shadow-xs ring-1 ring-slate-200/80'
+                  ? 'bg-white text-[#ee0033] shadow-xs ring-1 ring-slate-200/80'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <MapPin className="w-3.5 h-3.5" />
-              <span>Từng khu vực ({locations.length})</span>
+              <Building2 className="w-3.5 h-3.5 text-[#ee0033]" />
+              <span>Tùy biến riêng từng NVH ({locations.length})</span>
             </button>
           </div>
         </div>
@@ -643,6 +643,33 @@ export const PortalBuilderPage: React.FC = () => {
             {scope === 'GLOBAL' ? (
               /* FORM 1: GLOBAL CITYWIDE TEMPLATE */
               <form onSubmit={(e) => { e.preventDefault(); handleSaveGlobalTemplate(true); }} className="flex flex-col h-full overflow-hidden text-xs">
+                {/* Clear Scope Banner for GLOBAL */}
+                <div className="px-4 py-2.5 bg-gradient-to-r from-red-50 via-rose-50 to-orange-50 border-b border-red-200 flex items-center justify-between text-xs shrink-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Globe className="w-4 h-4 text-[#ee0033] shrink-0" />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-black text-[#ee0033] uppercase text-[11px]">
+                          Đang cấu hình: MẪU CHUNG TOÀN THÀNH PHỐ
+                        </span>
+                        <span className="px-1.5 py-0.2 bg-red-100 text-[#ee0033] rounded text-[9.5px] font-bold">
+                          Áp dụng mặc định cho tất cả NVH
+                        </span>
+                      </div>
+                      <p className="text-[10.5px] text-slate-600 truncate mt-0.5">
+                        Khung điện thoại bên phải đang dùng mô phỏng với: <strong className="text-slate-800">{selectedLocation?.name || 'Nhà văn hóa'}</strong>.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setScope('LOCATION')}
+                    className="ml-2 px-2.5 py-1 bg-white hover:bg-red-50 border border-red-300 rounded-md text-[11px] font-bold text-[#ee0033] whitespace-nowrap shadow-2xs cursor-pointer shrink-0 transition"
+                  >
+                    Tùy biến riêng từng NVH →
+                  </button>
+                </div>
+
                 {/* Editor Section Tabs - 3 Equal Columns (Zero Horizontal Scrollbar) */}
                 <div className="p-2 bg-slate-100/90 border-b border-slate-200 grid grid-cols-3 gap-1.5 shrink-0">
                   {[
@@ -961,6 +988,33 @@ export const PortalBuilderPage: React.FC = () => {
             ) : (
               /* FORM 2: PER-LOCATION CUSTOMIZATION */
               <form onSubmit={handleSaveLocation} className="flex flex-col h-full overflow-hidden text-xs">
+                {/* Clear Scope Banner for LOCATION */}
+                <div className="px-4 py-2.5 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-200 flex items-center justify-between text-xs shrink-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Building2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-black text-emerald-800 uppercase text-[11px] truncate">
+                          Đang cấu hình riêng cho: {selectedLocation ? selectedLocation.name : 'Chưa chọn'}
+                        </span>
+                        <span className="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded text-[9.5px] font-bold">
+                          Tùy biến riêng
+                        </span>
+                      </div>
+                      <p className="text-[10.5px] text-slate-600 truncate mt-0.5">
+                        Thiết lập lời chào, ảnh NVH và bản tin riêng biệt cho điểm này.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setScope('GLOBAL')}
+                    className="ml-2 px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-[11px] font-bold text-slate-700 whitespace-nowrap shadow-2xs cursor-pointer shrink-0 transition"
+                  >
+                    ← Về mẫu chung TP
+                  </button>
+                </div>
+
                 {/* Fixed Location Selector & Sub-tabs */}
                 <div className="px-4 py-3 border-b border-slate-200 bg-slate-50/90 space-y-3 shrink-0">
                   <div className="flex items-center gap-2">
@@ -1162,14 +1216,23 @@ export const PortalBuilderPage: React.FC = () => {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
-                <span className="text-xs font-bold text-slate-800 truncate">
-                  {scope === 'LOCATION' ? 'Xem trước điểm phát' : 'Xem trước mẫu chung'}
-                </span>
-                {selectedLocation && (
-                  <span className="hidden xl:inline-block truncate max-w-[160px] px-2 py-0.5 rounded bg-slate-100 text-[10.5px] font-medium text-slate-600" title={selectedLocation.name}>
-                    {selectedLocation.name}
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-xs font-bold text-slate-800 truncate">
+                    {scope === 'LOCATION' ? 'Xem trước cho NVH:' : 'Mô phỏng mẫu chung với:'}
                   </span>
-                )}
+                  <select
+                    value={selectedLocationId || ''}
+                    onChange={(e) => handleSelectLocation(Number(e.target.value))}
+                    className="px-2 py-0.5 rounded border border-slate-300 bg-slate-50 hover:bg-white text-[11px] font-bold text-slate-800 max-w-[170px] sm:max-w-[210px] truncate focus:outline-none focus:border-[#ee0033] cursor-pointer"
+                    title="Chọn Nhà văn hóa để xem trước trực quan"
+                  >
+                    {locations.map((loc) => (
+                      <option key={loc.id} value={loc.id}>
+                        {loc.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 p-0.5 shrink-0" role="group" aria-label="Kích thước xem trước">
@@ -1178,7 +1241,7 @@ export const PortalBuilderPage: React.FC = () => {
                   onClick={() => setPreviewDevice('MOBILE')}
                   aria-pressed={previewDevice === 'MOBILE'}
                   className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition cursor-pointer ${
-                    previewDevice === 'MOBILE' ? 'bg-[#004b87] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                    previewDevice === 'MOBILE' ? 'bg-[#ee0033] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   <Smartphone className="w-3.5 h-3.5" />
@@ -1189,7 +1252,7 @@ export const PortalBuilderPage: React.FC = () => {
                   onClick={() => setPreviewDevice('TABLET')}
                   aria-pressed={previewDevice === 'TABLET'}
                   className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition cursor-pointer ${
-                    previewDevice === 'TABLET' ? 'bg-[#004b87] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                    previewDevice === 'TABLET' ? 'bg-[#ee0033] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   <Tablet className="w-3.5 h-3.5" />
@@ -1200,7 +1263,7 @@ export const PortalBuilderPage: React.FC = () => {
                   onClick={() => setPreviewDevice('DESKTOP')}
                   aria-pressed={previewDevice === 'DESKTOP'}
                   className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition cursor-pointer ${
-                    previewDevice === 'DESKTOP' ? 'bg-[#004b87] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                    previewDevice === 'DESKTOP' ? 'bg-[#ee0033] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   <Monitor className="w-3.5 h-3.5" />
