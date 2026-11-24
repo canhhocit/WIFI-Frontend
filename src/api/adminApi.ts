@@ -5,6 +5,7 @@ import {
   AuthFunnelStep,
   PageResponse,
   GuestSessionDto,
+  SessionSyncSummaryDto,
   LocationDto,
   CreateLocationRequest,
   UpdateLocationRequest,
@@ -101,6 +102,12 @@ export const adminApi = {
     return request<GuestSessionDto>(`/admin/sessions/${id}/revoke`, {
       method: 'POST',
       body: JSON.stringify({ reason }),
+    });
+  },
+
+  syncSessionsWithCloud: () => {
+    return request<SessionSyncSummaryDto>('/admin/sessions/sync-cloud', {
+      method: 'POST',
     });
   },
 

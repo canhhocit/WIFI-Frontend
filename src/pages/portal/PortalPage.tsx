@@ -54,6 +54,46 @@ const getOrCreateLocalClientMac = () => {
   }
 };
 
+function parseHexRgb(color?: string | null): [number, number, number] | null {
+  if (!color) return null;
+  const cleaned = color.trim().replace(/^#/, '');
+  if (/^[0-9a-fA-F]{3}$/.test(cleaned)) {
+    return [
+      parseInt(cleaned[0] + cleaned[0], 16),
+      parseInt(cleaned[1] + cleaned[1], 16),
+      parseInt(cleaned[2] + cleaned[2], 16),
+    ];
+  }
+  if (/^[0-9a-fA-F]{6}$/.test(cleaned)) {
+    return [
+      parseInt(cleaned.slice(0, 2), 16),
+      parseInt(cleaned.slice(2, 4), 16),
+      parseInt(cleaned.slice(4, 6), 16),
+    ];
+  }
+  return null;
+}
+
+function toRgba(color: string | undefined | null, alpha: number, fallback: string): string {
+  const rgb = parseHexRgb(color);
+  if (!rgb) return fallback;
+  return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`;
+}
+
+function adjustHexBrightness(color: string | undefined | null, factor: number, fallback: string): string {
+  const rgb = parseHexRgb(color);
+  if (!rgb) return fallback;
+  const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v * factor)));
+  return `rgb(${clamp(rgb[0])}, ${clamp(rgb[1])}, ${clamp(rgb[2])})`;
+}
+
+function isDarkHex(color: string | undefined | null): boolean {
+  const rgb = parseHexRgb(color);
+  if (!rgb) return true;
+  const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+  return luminance < 0.55;
+}
+
 export const PortalPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -553,10 +593,30 @@ export const PortalPage: React.FC = () => {
     }
   };
 
+  const template = portalData?.portalTemplate;
+  const effectiveThemeColor = parseHexRgb(template?.themeColor) ? template!.themeColor! : '#ee0033';
+  const themeDark = adjustHexBrightness(effectiveThemeColor, 0.76, '#c4002b');
+  const themeSoftBg = toRgba(effectiveThemeColor, 0.09, 'rgba(238, 0, 51, 0.09)');
+  const themeBorder = toRgba(effectiveThemeColor, 0.28, 'rgba(238, 0, 51, 0.28)');
+  const themeShadow = toRgba(effectiveThemeColor, 0.36, 'rgba(238, 0, 51, 0.36)');
+  const hasCustomBgColor = Boolean(parseHexRgb(template?.backgroundColor));
+  const effectiveBgColor = hasCustomBgColor ? template!.backgroundColor! : '#0c2340';
+  const bgOverlayGradient = hasCustomBgColor
+    ? isDarkHex(effectiveBgColor)
+      ? `linear-gradient(180deg, ${toRgba(effectiveBgColor, 0.84, 'rgba(2,6,23,0.84)')} 0%, ${adjustHexBrightness(effectiveBgColor, 0.45, '#020617')} 100%)`
+      : `linear-gradient(180deg, ${toRgba(effectiveBgColor, 0.72, 'rgba(248,250,252,0.72)')} 0%, ${toRgba(effectiveBgColor, 0.88, 'rgba(248,250,252,0.88)')} 100%)`
+    : 'linear-gradient(180deg, rgba(2,6,23,0.8) 0%, rgba(15,23,42,0.75) 50%, rgba(2,6,23,0.88) 100%)';
+
   if (connectedSession) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-6 sm:p-8 text-center space-y-5 border-t-4 border-[#ee0033]">
+      <div
+        className="min-h-screen bg-slate-900 flex items-center justify-center p-4"
+        style={hasCustomBgColor ? { backgroundColor: effectiveBgColor } : undefined}
+      >
+        <div
+          className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-6 sm:p-8 text-center space-y-5 border-t-4 border-[#ee0033]"
+          style={{ borderTopColor: effectiveThemeColor }}
+        >
           {/* Viettel Co-Branding Banner */}
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 px-1">
             <div className="flex items-center gap-1.5 text-left">
@@ -567,20 +627,29 @@ export const PortalPage: React.FC = () => {
             </div>
             <div className="flex items-center gap-1">
               <ViettelLogo height={16} variant="simple" color="red" showTagline={false} />
-              <span className="text-[10px] font-black text-[#ee0033] uppercase tracking-wider">
+              <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: effectiveThemeColor }}>
                 TELECOM
               </span>
             </div>
           </div>
 
-          <div className="w-16 h-16 bg-gradient-to-tr from-[#ee0033] to-[#ff2d55] text-white rounded-full flex items-center justify-center mx-auto shadow-lg shadow-red-500/30">
+          <div
+            className="w-16 h-16 text-white rounded-full flex items-center justify-center mx-auto"
+            style={{
+              background: `linear-gradient(135deg, ${effectiveThemeColor} 0%, ${themeDark} 100%)`,
+              boxShadow: `0 10px 25px -5px ${themeShadow}`,
+            }}
+          >
             <CheckCircle2 className="w-10 h-10" />
           </div>
 
           <div>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-50 text-[#ee0033] border border-red-200 text-[10.5px] font-black uppercase tracking-wider mb-1.5">
-              <Wifi className="w-3 h-3 text-[#ee0033]" />
-              Wi-Fi Viettel Hải Phòng
+            <span
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10.5px] font-black uppercase tracking-wider mb-1.5"
+              style={{ backgroundColor: themeSoftBg, color: effectiveThemeColor, borderColor: themeBorder }}
+            >
+              <Wifi className="w-3 h-3" style={{ color: effectiveThemeColor }} />
+              Wi-Fi Hải Phòng
             </span>
             <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">KẾT NỐI THÀNH CÔNG!</h2>
             <p className="text-xs text-slate-600 mt-1">
@@ -591,7 +660,7 @@ export const PortalPage: React.FC = () => {
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-700 space-y-2 text-left">
             <div className="flex justify-between items-center font-bold">
               <span>Hạ tầng mạng:</span>
-              <span className="text-[#ee0033] font-bold flex items-center gap-1">
+              <span className="font-bold flex items-center gap-1" style={{ color: effectiveThemeColor }}>
                 <Sparkles className="w-3.5 h-3.5" /> Viettel Fiber 5G High-Speed
               </span>
             </div>
@@ -623,7 +692,11 @@ export const PortalPage: React.FC = () => {
             <button
               type="button"
               onClick={() => { executePostAuthRedirect('https://dichvucong.haiphong.gov.vn/'); }}
-              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#ee0033] via-[#e0002f] to-[#c4002b] hover:from-[#ff1a4b] hover:to-[#d80027] text-white font-black text-sm tracking-wide shadow-lg shadow-red-500/30 active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3.5 px-4 rounded-xl text-white font-black text-sm tracking-wide active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer hover:brightness-105"
+              style={{
+                background: `linear-gradient(135deg, ${effectiveThemeColor} 0%, ${themeDark} 100%)`,
+                boxShadow: `0 10px 22px -6px ${themeShadow}`,
+              }}
             >
               <Landmark className="w-4 h-4 text-yellow-300" />
               <span>{redirectCountdown > 0 ? `VÀO DỊCH VỤ CÔNG HẢI PHÒNG (${redirectCountdown}s)` : 'VÀO DỊCH VỤ CÔNG HẢI PHÒNG NGAY'}</span>
@@ -634,7 +707,7 @@ export const PortalPage: React.FC = () => {
               onClick={() => { executePostAuthRedirect('https://www.google.com'); }}
               className="w-full py-2.5 px-4 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition flex items-center justify-center gap-2 border border-slate-300 cursor-pointer"
             >
-              <Globe className="w-4 h-4 text-[#ee0033]" />
+              <Globe className="w-4 h-4" style={{ color: effectiveThemeColor }} />
               <span>Tiếp tục lướt web (Google)</span>
             </button>
 
@@ -642,7 +715,7 @@ export const PortalPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => { executePostAuthRedirect(); }}
-                className="text-[11px] text-slate-500 hover:text-[#ee0033] underline transition cursor-pointer bg-transparent border-0"
+                className="text-[11px] text-slate-500 underline transition cursor-pointer bg-transparent border-0"
               >
                 Nhấp vào đây nếu trang không tự chuyển tiếp
               </button>
@@ -650,7 +723,7 @@ export const PortalPage: React.FC = () => {
 
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10.5px] text-slate-500">
               <span>Hỗ trợ kỹ thuật Viettel 24/7:</span>
-              <a href="tel:18008119" className="font-bold text-[#ee0033] hover:underline">1800 8119</a>
+              <a href="tel:18008119" className="font-bold hover:underline" style={{ color: effectiveThemeColor }}>1800 8119</a>
             </div>
           </div>
         </div>
@@ -734,7 +807,6 @@ export const PortalPage: React.FC = () => {
     loadPortal(slug);
   };
 
-  const template = portalData?.portalTemplate;
   const survey = portalData?.activeSurvey;
 
   const activeCampaign = portalData?.activeCampaign;
@@ -783,14 +855,10 @@ export const PortalPage: React.FC = () => {
         className="fixed inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
         style={{ backgroundImage: `url('${backgroundWallpaperUrl}')` }}
       />
-      {/* GovTech Dark Overlay with Restrained Glassmorphism */}
+      {/* GovTech Backdrop Overlay tinted by template.backgroundColor */}
       <div
         className="fixed inset-0 backdrop-blur-[2px] transition-colors duration-500"
-        style={{
-          background: template?.backgroundColor
-            ? `linear-gradient(180deg, ${template.backgroundColor}cc 0%, #020617d9 100%)`
-            : 'linear-gradient(180deg, rgba(2,6,23,0.8) 0%, rgba(15,23,42,0.75) 50%, rgba(2,6,23,0.88) 100%)',
-        }}
+        style={{ background: bgOverlayGradient }}
       />
 
       {/* Main Responsive Container: Mobile = Sleek App Card, Laptop = 2-Column Split */}
@@ -801,11 +869,10 @@ export const PortalPage: React.FC = () => {
           
           {/* Official Viettel & Government Dual-Branded Header */}
           <div
-            className="text-white p-4 sm:p-5 border-b border-[#B30022] relative shadow-md overflow-hidden transition-colors duration-300"
+            className="text-white p-4 sm:p-5 border-b relative shadow-md overflow-hidden transition-colors duration-300"
             style={{
-              background: template?.themeColor
-                ? `linear-gradient(135deg, ${template.themeColor} 0%, ${template.backgroundColor || '#C4002B'} 100%)`
-                : 'linear-gradient(to right, #EE0033, #E0002F, #C4002B)',
+              background: `linear-gradient(135deg, ${effectiveThemeColor} 0%, ${themeDark} 100%)`,
+              borderBottomColor: themeDark,
             }}
           >
             <div className="absolute -top-12 -right-12 w-36 h-36 bg-white/10 rounded-full blur-xl pointer-events-none" />
@@ -826,7 +893,7 @@ export const PortalPage: React.FC = () => {
                   <div className="text-[9.5px] sm:text-[10.5px] font-black tracking-widest text-yellow-300 uppercase leading-tight">
                     UBND TP. HẢI PHÒNG
                   </div>
-                  <div className="text-[8.5px] sm:text-[9.5px] text-red-100 font-medium">
+                  <div className="text-[8.5px] sm:text-[9.5px] text-white/80 font-medium">
                     Chuyển đổi số cộng đồng
                   </div>
                 </div>
@@ -839,7 +906,7 @@ export const PortalPage: React.FC = () => {
                   <div className="text-[9.5px] sm:text-[10.5px] font-black tracking-wider text-white uppercase leading-tight">
                     VIETTEL HẢI PHÒNG
                   </div>
-                  <div className="text-[8.5px] sm:text-[9.5px] text-red-100 font-medium">
+                  <div className="text-[8.5px] sm:text-[9.5px] text-white/80 font-medium">
                     Hạ tầng số viễn thông
                   </div>
                 </div>
@@ -856,9 +923,9 @@ export const PortalPage: React.FC = () => {
                 <span>MẠNG WI-FI CÔNG CỘNG MIỄN PHÍ</span>
               </div>
               <h1 className="text-base sm:text-lg font-black tracking-tight uppercase text-white drop-shadow-sm">
-                {portalData?.location.name || template?.title || 'Cổng Thông Tin Wi-Fi Hải Phòng'}
+                {template?.title || portalData?.location.name || 'Cổng Thông Tin Wi-Fi Hải Phòng'}
               </h1>
-              <p className="text-[11px] text-red-100 italic">
+              <p className="text-[11px] text-white/85 italic">
                 Tập đoàn Công nghiệp - Viễn thông Quân đội (Viettel) đồng hành cùng Nhân dân
               </p>
             </div>
@@ -868,12 +935,15 @@ export const PortalPage: React.FC = () => {
           <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between text-[11px] text-slate-700 gap-y-1.5">
             <div className="flex items-center gap-1.5 font-semibold truncate mr-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-              <MapPin className="w-3.5 h-3.5 text-[#EE0033] flex-shrink-0" />
+              <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: effectiveThemeColor }} />
               <span className="truncate">{portalData?.location.name || 'Nhà văn hóa Hải Phòng'}</span>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0 font-mono text-[10.5px]">
-              <span className="px-2 py-0.5 rounded-full bg-red-50 text-[#EE0033] border border-red-200 font-bold flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-[#EE0033]" />
+              <span
+                className="px-2 py-0.5 rounded-full border font-bold flex items-center gap-1"
+                style={{ backgroundColor: themeSoftBg, color: effectiveThemeColor, borderColor: themeBorder }}
+              >
+                <Sparkles className="w-3 h-3" style={{ color: effectiveThemeColor }} />
                 Viettel Fiber 5G
               </span>
               <span className="text-emerald-700 font-bold">{portalData?.location.maxBandwidthMbps || 20} Mbps</span>
@@ -898,7 +968,10 @@ export const PortalPage: React.FC = () => {
 
           {/* Digital Broadcast News Ticker (Dòng tin tức truyền thông số Hải Phòng) */}
           {activeCampaign && (
-          <div className="bg-[#c4002b] text-white px-3.5 py-1.5 flex items-center gap-2 text-[11px] font-medium overflow-hidden border-b border-red-950/40 shadow-inner">
+          <div
+            className="text-white px-3.5 py-1.5 flex items-center gap-2 text-[11px] font-medium overflow-hidden border-b border-black/20 shadow-inner transition-colors duration-300"
+            style={{ backgroundColor: themeDark }}
+          >
             <div className="flex items-center gap-1 bg-yellow-400 text-red-950 font-black px-1.5 py-0.5 rounded-xs text-[9.5px] uppercase tracking-wider flex-shrink-0 shadow-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping" />
               TIN MỚI
@@ -972,7 +1045,7 @@ export const PortalPage: React.FC = () => {
                 {portalData?.location.welcomeMessage || template?.welcomeText || `Chào mừng Nhân dân đến với ${portalData?.location.name || 'Nhà văn hóa'}`}
               </h2>
               <p className="text-xs text-slate-600 flex items-center gap-1.5 mt-1.5">
-                <MapPin className="w-3.5 h-3.5 text-[#ee0033] flex-shrink-0" />
+                <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: effectiveThemeColor }} />
                 <span className="truncate">{portalData?.location.address || 'Thành phố Hải Phòng'}</span>
               </p>
             </div>
@@ -980,8 +1053,8 @@ export const PortalPage: React.FC = () => {
             {/* Bảng tin tuyên truyền & Chuyển đổi số địa phương */}
             {(portalData?.location.promoTitle || portalData?.location.promoContent || portalData?.location.promoActionUrl) && (
               <div className="p-3.5 bg-amber-50/70 rounded-lg border border-amber-300/80 shadow-xs space-y-1.5">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-[#ee0033]">
-                  <Megaphone className="w-4 h-4 text-[#ee0033] flex-shrink-0" />
+                <div className="flex items-center gap-1.5 text-xs font-bold" style={{ color: effectiveThemeColor }}>
+                  <Megaphone className="w-4 h-4 flex-shrink-0" style={{ color: effectiveThemeColor }} />
                   <span className="truncate">{portalData.location.promoTitle || 'Bản Tin Chuyển Đổi Số Địa Phương'}</span>
                 </div>
                 {portalData.location.promoContent && (
@@ -994,7 +1067,8 @@ export const PortalPage: React.FC = () => {
                     href={portalData.location.promoActionUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[#ee0033] hover:underline"
+                    className="inline-flex items-center gap-1 text-xs font-bold hover:underline"
+                    style={{ color: effectiveThemeColor }}
                   >
                     Mở cổng thông tin địa phương <ExternalLink className="w-3 h-3" />
                   </a>
@@ -1004,9 +1078,9 @@ export const PortalPage: React.FC = () => {
 
             {/* Hướng dẫn Dịch vụ hành chính công Thành phố */}
             <div className="hidden sm:flex p-3 bg-blue-50/80 rounded-lg border border-blue-200 items-start gap-2.5 text-slate-700">
-              <Landmark className="w-4 h-4 text-[#ee0033] flex-shrink-0 mt-0.5" />
+              <Landmark className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: effectiveThemeColor }} />
               <div className="text-xs leading-relaxed">
-                <span className="font-bold text-[#ee0033]">Dịch vụ công trực tuyến:</span> Sau khi kết nối Wi-Fi, hệ thống sẽ mở trực tiếp <strong>Cổng Dịch vụ công TP Hải Phòng</strong> để bà con tra cứu hồ sơ và nộp thủ tục hành chính miễn phí.
+                <span className="font-bold" style={{ color: effectiveThemeColor }}>Dịch vụ công trực tuyến:</span> Sau khi kết nối Wi-Fi, hệ thống sẽ mở trực tiếp <strong>Cổng Dịch vụ công TP Hải Phòng</strong> để bà con tra cứu hồ sơ và nộp thủ tục hành chính miễn phí.
               </div>
             </div>
 
@@ -1015,7 +1089,10 @@ export const PortalPage: React.FC = () => {
             <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs space-y-3.5 transition hover:shadow-md">
               {/* Header: Huy hiệu Bản tin tuyên truyền số */}
               <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#ee0033] text-white text-[11px] font-bold tracking-wide shadow-2xs">
+                <div
+                  className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-white text-[11px] font-bold tracking-wide shadow-2xs"
+                  style={{ backgroundColor: effectiveThemeColor }}
+                >
                   <Megaphone className="w-3.5 h-3.5 text-yellow-300 flex-shrink-0" />
                   <span>BẢN TIN TUYÊN TRUYỀN SỐ</span>
                 </div>
@@ -1058,7 +1135,10 @@ export const PortalPage: React.FC = () => {
                 {/* Center Play Button for Video */}
                 {activeCampaign.videoUrl ? (
                   <div className="absolute inset-0 z-10 flex items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-white/90 text-[#ee0033] flex items-center justify-center shadow-lg backdrop-blur-sm group-hover:scale-110 group-hover:bg-[#ee0033] group-hover:text-white transition-all duration-300">
+                    <div
+                      className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg backdrop-blur-sm group-hover:scale-110 transition-all duration-300"
+                      style={{ color: effectiveThemeColor }}
+                    >
                       <Play className="w-5 h-5 fill-current ml-0.5" />
                     </div>
                   </div>
@@ -1089,7 +1169,8 @@ export const PortalPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowMediaModal(true)}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 bg-[#ee0033] hover:bg-[#c4002b] text-white rounded-lg text-xs font-semibold shadow-xs transition cursor-pointer"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 text-white rounded-lg text-xs font-semibold shadow-xs transition cursor-pointer hover:brightness-110"
+                  style={{ backgroundColor: effectiveThemeColor }}
                 >
                   {activeCampaign.videoUrl ? (
                     <>
@@ -1139,9 +1220,10 @@ export const PortalPage: React.FC = () => {
                         onClick={() => handleSwitchDemoLocation(item.slug)}
                         className={`px-2 py-1.5 rounded text-center transition cursor-pointer flex flex-col items-center justify-center border ${
                           isActive
-                            ? 'bg-[#ee0033] text-white border-blue-400 font-bold shadow-md ring-1 ring-blue-300'
+                            ? 'text-white font-bold shadow-md'
                             : 'bg-white/10 hover:bg-white/20 text-slate-200 border-white/10 hover:border-white/25 text-[11px]'
                         }`}
+                        style={isActive ? { backgroundColor: effectiveThemeColor, borderColor: themeBorder } : undefined}
                       >
                         <span className="text-xs font-semibold leading-tight">{item.name}</span>
                         <span className="text-[9.5px] opacity-80">{item.sub}</span>
@@ -1159,7 +1241,12 @@ export const PortalPage: React.FC = () => {
         <div className="lg:col-span-5 flex flex-col bg-white">
           
           {/* Laptop Top Banner / Telemetry Status Card (Visible on lg screens) */}
-          <div className="hidden lg:block bg-gradient-to-r from-[#14141e] to-[#ee0033] text-white p-5 border-b border-blue-900 shadow-sm">
+          <div
+            className="hidden lg:block text-white p-5 border-b border-black/20 shadow-sm transition-colors duration-300"
+            style={{
+              background: `linear-gradient(135deg, #0f172a 0%, ${effectiveThemeColor} 100%)`,
+            }}
+          >
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-yellow-300 shadow-inner">
                 <Wifi className="w-5 h-5 animate-pulse" />
@@ -1236,8 +1323,8 @@ export const PortalPage: React.FC = () => {
               {survey && visibleSurveyQuestions.length > 0 && (
                 <div className="p-3.5 bg-gradient-to-b from-sky-50/90 to-blue-50/60 rounded-lg border border-sky-200/90 shadow-xs space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-[#ee0033]">
-                      <ClipboardList className="w-4 h-4 text-[#ee0033] flex-shrink-0" />
+                    <div className="flex items-center gap-1.5 text-xs font-bold" style={{ color: effectiveThemeColor }}>
+                      <ClipboardList className="w-4 h-4 flex-shrink-0" style={{ color: effectiveThemeColor }} />
                       <span>{survey.title}</span>
                     </div>
                     <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 font-bold uppercase tracking-wider">
@@ -1268,7 +1355,7 @@ export const PortalPage: React.FC = () => {
                           }`}
                         >
                           <p className="font-semibold text-slate-800 text-[11.5px] leading-snug">
-                            <span className="text-[#ee0033] font-bold mr-1">Câu {idx + 1}:</span>
+                            <span className="font-bold mr-1" style={{ color: effectiveThemeColor }}>Câu {idx + 1}:</span>
                             {q.questionText} {q.required ? (
                               <span className="text-rose-600 font-bold ml-1 text-[10px] bg-rose-50 border border-rose-200 px-1 py-0.5 rounded">Bắt buộc</span>
                             ) : (
@@ -1332,19 +1419,23 @@ export const PortalPage: React.FC = () => {
                                     }}
                                     className={`w-full px-2.5 py-1.5 rounded text-[11px] border text-left transition cursor-pointer flex items-center justify-between ${
                                       isChecked
-                                        ? 'bg-blue-50 text-[#ee0033] border-[#ee0033] font-semibold shadow-xs'
+                                        ? 'font-semibold shadow-xs'
                                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                                     }`}
+                                    style={isChecked ? { backgroundColor: themeSoftBg, color: effectiveThemeColor, borderColor: effectiveThemeColor } : undefined}
                                   >
                                     <div className="flex items-center gap-2">
-                                      <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center text-[10px] font-bold ${
-                                        isChecked ? 'bg-[#ee0033] border-[#ee0033] text-white' : 'border-slate-400 bg-white'
-                                      }`}>
+                                      <div
+                                        className={`w-3.5 h-3.5 rounded border flex items-center justify-center text-[10px] font-bold ${
+                                          isChecked ? 'text-white' : 'border-slate-400 bg-white'
+                                        }`}
+                                        style={isChecked ? { backgroundColor: effectiveThemeColor, borderColor: effectiveThemeColor } : undefined}
+                                      >
                                         {isChecked && '✓'}
                                       </div>
                                       <span>{opt}</span>
                                     </div>
-                                    {isChecked && <span className="text-[9.5px] text-[#ee0033] font-bold">Đã chọn</span>}
+                                    {isChecked && <span className="text-[9.5px] font-bold" style={{ color: effectiveThemeColor }}>Đã chọn</span>}
                                   </button>
                                 );
                               })}
@@ -1365,9 +1456,10 @@ export const PortalPage: React.FC = () => {
                                     }
                                     className={`px-2.5 py-1.5 rounded text-[11px] border text-left transition cursor-pointer flex items-center justify-between ${
                                       isSelected
-                                        ? 'bg-[#ee0033] text-white border-[#ee0033] font-bold shadow-xs'
+                                        ? 'text-white font-bold shadow-xs'
                                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                                     }`}
+                                    style={isSelected ? { backgroundColor: effectiveThemeColor, borderColor: themeDark } : undefined}
                                   >
                                     <span className="truncate">{opt}</span>
                                     {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-yellow-300 flex-shrink-0 ml-1" />}
@@ -1409,7 +1501,8 @@ export const PortalPage: React.FC = () => {
                     type="checkbox"
                     checked={consentGiven}
                     onChange={(e) => setConsentGiven(e.target.checked)}
-                    className="mt-0.5 rounded-xs border-slate-300 text-[#ee0033] focus:ring-[#ee0033] w-4 h-4 cursor-pointer flex-shrink-0"
+                    className="mt-0.5 rounded-xs border-slate-300 w-4 h-4 cursor-pointer flex-shrink-0"
+                    style={{ accentColor: effectiveThemeColor }}
                   />
                   <span className="leading-relaxed">
                     {template?.termsText ? (
@@ -1431,7 +1524,7 @@ export const PortalPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Primary Action Button (Bấm vào kết nối 1-chạm chuẩn phong cách Viettel) */}
+              {/* Primary Action Button (Bấm vào kết nối 1-chạm đồng bộ theo Theme Color) */}
               <div className="pt-2">
                 <button
                   type="submit"
@@ -1439,8 +1532,16 @@ export const PortalPage: React.FC = () => {
                   className={`w-full py-4 px-4 rounded-xl text-white font-black text-sm sm:text-base tracking-wider uppercase transition flex items-center justify-center gap-2.5 shadow-xl ${
                     portalData?.capacityReached
                       ? 'bg-slate-400 cursor-not-allowed opacity-80'
-                      : 'bg-gradient-to-r from-[#ee0033] via-[#e0002f] to-[#c4002b] hover:from-[#ff1a4b] hover:to-[#d80027] shadow-red-500/35 hover:shadow-red-500/50 active:scale-[0.99] cursor-pointer'
+                      : 'hover:brightness-110 active:scale-[0.99] cursor-pointer'
                   }`}
+                  style={
+                    !portalData?.capacityReached
+                      ? {
+                          background: `linear-gradient(135deg, ${effectiveThemeColor} 0%, ${themeDark} 100%)`,
+                          boxShadow: `0 12px 24px -6px ${themeShadow}`,
+                        }
+                      : undefined
+                  }
                 >
                   {submitting ? (
                     <>
@@ -1460,7 +1561,7 @@ export const PortalPage: React.FC = () => {
                   )}
                 </button>
                 <div className="flex items-center justify-center gap-2 mt-2 text-[10.5px] text-slate-500 font-medium">
-                  <span className="font-bold text-[#ee0033]">Viettel 5G Fiber</span>
+                  <span className="font-bold" style={{ color: effectiveThemeColor }}>Viettel 5G Fiber</span>
                   <span>•</span>
                   <span>Băng thông: <strong className="text-slate-700">{portalData?.location.maxBandwidthMbps || 20} Mbps</strong></span>
                   <span>•</span>
@@ -1495,7 +1596,7 @@ export const PortalPage: React.FC = () => {
                     ) : (
                       <div className="space-y-2">
                         <span className="font-bold text-slate-800 text-[11px] flex items-center gap-1">
-                          <Smartphone className="w-3.5 h-3.5 text-[#ee0033]" /> Xác thực SĐT (Nhớ thiết bị 30 ngày):
+                          <Smartphone className="w-3.5 h-3.5" style={{ color: effectiveThemeColor }} /> Xác thực SĐT (Nhớ thiết bị 30 ngày):
                         </span>
                         {!otpSent ? (
                           <div className="flex gap-2">
@@ -1504,13 +1605,14 @@ export const PortalPage: React.FC = () => {
                               value={phoneNumber}
                               onChange={(e) => setPhoneNumber(e.target.value)}
                               placeholder="Nhập số điện thoại"
-                              className="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-300 rounded focus:outline-none focus:border-[#ee0033] font-mono"
+                              className="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-300 rounded focus:outline-none font-mono"
                             />
                             <button
                               type="button"
                               onClick={handleSendOtp}
                               disabled={submitting || isPreviewMode}
-                              className="px-3.5 py-1.5 bg-[#ee0033] hover:bg-[#c4002b] text-white rounded text-xs font-semibold transition cursor-pointer disabled:opacity-50 flex items-center gap-1"
+                              className="px-3.5 py-1.5 text-white rounded text-xs font-semibold transition hover:brightness-110 cursor-pointer disabled:opacity-50 flex items-center gap-1"
+                              style={{ backgroundColor: effectiveThemeColor }}
                             >
                               <Send className="w-3 h-3" /> Gửi OTP
                             </button>
@@ -1530,7 +1632,8 @@ export const PortalPage: React.FC = () => {
                                 type="button"
                                 onClick={handleVerifyOtp}
                                 disabled={submitting || isPreviewMode}
-                                className="px-3.5 py-1.5 bg-[#ee0033] hover:bg-[#c4002b] text-white rounded text-xs font-semibold transition"
+                                className="px-3.5 py-1.5 text-white rounded text-xs font-semibold transition hover:brightness-110"
+                                style={{ backgroundColor: effectiveThemeColor }}
                               >
                                 Xác nhận
                               </button>
@@ -1613,9 +1716,10 @@ export const PortalPage: React.FC = () => {
                 onClick={() => handleSwitchDemoLocation(item.slug)}
                 className={`px-2 py-1.5 rounded text-center transition cursor-pointer flex flex-col items-center justify-center border ${
                   isActive
-                    ? 'bg-[#ee0033] text-white border-blue-400 font-bold shadow-md ring-1 ring-blue-300'
+                    ? 'text-white font-bold shadow-md'
                     : 'bg-white/10 hover:bg-white/20 text-slate-200 border-white/10 hover:border-white/25 text-[11px]'
                 }`}
+                style={isActive ? { backgroundColor: effectiveThemeColor, borderColor: themeBorder } : undefined}
               >
                 <span className="text-xs font-semibold leading-tight">{item.name}</span>
                 <span className="text-[9px] opacity-75">{item.sub}</span>

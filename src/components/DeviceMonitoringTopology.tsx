@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   MapPin,
@@ -167,6 +168,20 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
     if (h > 0) return `${h} giờ ${m} phút`;
     return `${m} phút`;
   };
+
+  useEffect(() => {
+    if (!modalCategory) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !meshDevice) handleCloseModal();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [modalCategory, meshDevice]);
 
   return (
     <div className="space-y-3.5">
@@ -432,10 +447,17 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
         </div>
       </div>
 
-      {/* DETAIL DRILL-DOWN MODAL */}
-      {modalCategory && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[85vh] flex flex-col overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+      {/* DETAIL DRILL-DOWN MODAL (Rendered via Portal directly in document.body to stay centered in viewport) */}
+      {modalCategory &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-slate-900/55 backdrop-blur-[2px]"
+            onClick={handleCloseModal}
+          >
+            <div
+              className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[85vh] flex flex-col overflow-hidden border border-slate-200"
+              onClick={(e) => e.stopPropagation()}
+            >
             {/* Modal Header */}
             <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
               <div className="flex items-center gap-3">
@@ -522,7 +544,7 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
                                 </div>
                                 <div>
                                   <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                                    <span>Grandstream {dev.model || 'GWN7002'}</span>
+                                    <span>{dev.vendor || 'Grandstream'} {dev.model || 'Router'}</span>
                                     <span
                                       className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                                         dev.status === 'ONLINE'
@@ -536,7 +558,7 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
                                     </span>
                                   </div>
                                   <div className="text-xs text-slate-500 mt-0.5">
-                                    Vị trí: <span className="font-medium text-slate-700">{dev.locationName || 'Nhà văn hóa TDP số 1'}</span>
+                                    Vị trí: <span className="font-medium text-slate-700">{dev.locationName || 'Chưa gán điểm'}</span>
                                   </div>
                                 </div>
                               </div>
@@ -587,7 +609,15 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
                   {/* CATEGORY: AP (ACCESS POINT) */}
                   {modalCategory === 'AP' && (
                     <div className="space-y-3">
-                     
+                      {devicesList.length === 0 ? (
+                        <div className="py-8 px-4 text-center bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 space-y-1.5">
+                          <WifiOff className="w-7 h-7 text-slate-400 mx-auto" />
+                          <p className="font-semibold text-slate-800">Chưa có Access Point (AP) nào trên hệ thống (0 thiết bị)</p>
+                          <p className="text-[11px] text-slate-500 max-w-md mx-auto">
+                            API Grandstream GWN Cloud chỉ đồng bộ các Access Point cùng hệ sinh thái Grandstream (GWN). Các AP khác hãng sẽ không tự lấy số lượng qua Cloud GWN.
+                          </p>
+                        </div>
+                      ) : (
                       <div className="border border-slate-200 rounded-lg overflow-hidden">
                         <table className="w-full text-left text-xs">
                           <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
@@ -605,16 +635,16 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
                               <tr key={dev.id} className="hover:bg-slate-50/80 transition-colors">
                                 <td className="py-2.5 px-3 font-semibold text-slate-900 flex items-center gap-2">
                                   <Wifi className="w-4 h-4 text-[#004b87]" />
-                                  <span>Trạm phát #{idx + 1} ({dev.model || 'vAP-32X6V1'})</span>
+                                  <span>Trạm phát #{idx + 1} ({dev.model || 'Chưa rõ model'})</span>
                                 </td>
                                 <td className="py-2.5 px-3 font-mono font-medium text-slate-700">
                                   {dev.macAddress}
                                 </td>
                                 <td className="py-2.5 px-3 text-slate-700">
-                                  {dev.locationName || 'Nhà văn hóa TDP số 1'}
+                                  {dev.locationName || 'Chưa gán điểm'}
                                 </td>
                                 <td className="py-2.5 px-3 text-slate-600">
-                                  {dev.vendor || 'Viettel'}
+                                  {dev.vendor || '—'}
                                 </td>
                                 <td className="py-2.5 px-3">
                                   <DeviceStatusBadge status={dev.status} monitoringSource={dev.monitoringSource} compact />
@@ -632,6 +662,7 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
                           </tbody>
                         </table>
                       </div>
+                      )}
                     </div>
                   )}
 
@@ -682,10 +713,10 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
                                     {session.macAddress}
                                   </td>
                                   <td className="py-2.5 px-3 font-mono text-slate-600">
-                                    {session.ipAddress || '192.168.80.x'}
+                                    {session.ipAddress || '—'}
                                   </td>
                                   <td className="py-2.5 px-3 text-slate-700">
-                                    {session.locationName || 'Nhà văn hóa'}
+                                    {session.locationName || 'Chưa xác định'}
                                   </td>
                                   <td className="py-2.5 px-3 text-slate-500">
                                     {session.authorizedAt
@@ -739,13 +770,13 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
                                   {dev.deviceType}
                                 </td>
                                 <td className="py-2.5 px-3 font-medium text-slate-700">
-                                  {dev.model} ({dev.vendor || 'Grandstream'})
+                                  {dev.model || '—'} ({dev.vendor || '—'})
                                 </td>
                                 <td className="py-2.5 px-3 font-mono text-slate-700">
                                   {dev.macAddress}
                                 </td>
                                 <td className="py-2.5 px-3 text-slate-600">
-                                  {dev.locationName || 'Nhà văn hóa'}
+                                  {dev.locationName || 'Chưa gán điểm'}
                                 </td>
                                 <td className="py-2.5 px-3">
                                   <span
@@ -805,8 +836,9 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
               </div>
             </div>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

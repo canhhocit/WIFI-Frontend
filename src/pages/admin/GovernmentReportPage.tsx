@@ -490,9 +490,8 @@ export const GovernmentReportPage: React.FC = () => {
             </ul>
           </div>
 
-          {/* Official Signatures & Seal Footer */}
-          <div className="mt-10 pt-4 grid grid-cols-2 text-xs font-serif text-gray-800">
-            {/* Left: Recipients */}
+          {/* Footer Recipients */}
+          <div className="mt-10 pt-4 text-xs font-serif text-gray-800">
             <div className="text-left text-[11.5px] leading-relaxed font-sans">
               <div className="font-bold font-serif text-xs text-slate-900 uppercase tracking-wide">Nơi nhận:</div>
               <div className="text-slate-600 mt-1 space-y-0.5">
@@ -500,37 +499,6 @@ export const GovernmentReportPage: React.FC = () => {
                 <div>- Giám đốc Sở TT&TT (để chỉ đạo);</div>
                 <div>- Viettel Hải Phòng (để phối hợp);</div>
                 <div>- Lưu: VT, CNTT.</div>
-              </div>
-            </div>
-
-            {/* Right: Signature & Official Red Stamp */}
-            <div className="text-center">
-              <div className="font-bold uppercase tracking-wide text-xs">KT. GIÁM ĐỐC</div>
-              <div className="font-bold uppercase tracking-wide text-xs text-red-900 mt-0.5">PHÓ GIÁM ĐỐC</div>
-
-              {/* Official Seal and Digital Signature Badge */}
-              <div className="relative my-3 flex flex-col items-center justify-center">
-                <div className="relative">
-                  {/* Con dấu đỏ mộc tròn chính thức */}
-                  <img
-                    src="/images/seal-so-tttt-haiphong.png"
-                    alt="Con dấu đỏ Sở Thông tin và Truyền thông Hải Phòng"
-                    className="w-32 h-32 object-contain select-none drop-shadow-sm opacity-95 transition hover:scale-105"
-                  />
-                </div>
-              </div>
-
-              <div className="font-bold text-sm text-slate-900 tracking-wide font-serif">
-                Vũ Đại Thắng
-              </div>
-
-              {/* Digital Signature Badge */}
-              <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded font-sans text-[10.5px] font-semibold shadow-xs">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-                <span>ĐÃ KÝ SỐ ĐIỆN TỬ — BAN CƠ YẾU CHÍNH PHỦ</span>
-              </div>
-              <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                Ký bởi: Sở Thông tin và Truyền thông TP. Hải Phòng (18/11/2026 14:30)
               </div>
             </div>
           </div>

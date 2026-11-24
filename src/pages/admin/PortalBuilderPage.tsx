@@ -159,19 +159,47 @@ export const PortalBuilderPage: React.FC = () => {
     }
   };
 
+  const normalizeTemplateState = (tpl: PortalTemplateDto): PortalTemplateDto => ({
+    ...tpl,
+    name: tpl.name || '',
+    templateType: tpl.templateType || 'CULTURAL',
+    themeColor: tpl.themeColor || '#0284c7',
+    backgroundColor: tpl.backgroundColor || '#0c2340',
+    backgroundImageUrl: tpl.backgroundImageUrl || '',
+    logoUrl: tpl.logoUrl || '',
+    bannerUrl: tpl.bannerUrl || '',
+    title: tpl.title || '',
+    welcomeText: tpl.welcomeText || '',
+    buttonText: tpl.buttonText || '',
+    termsText: tpl.termsText || '',
+    layoutConfig: tpl.layoutConfig || '',
+  });
+
+  const parseVersionSnapshot = (snapshotJson?: string): Partial<PortalTemplateDto> | null => {
+    if (!snapshotJson) return null;
+    try {
+      return JSON.parse(snapshotJson) as Partial<PortalTemplateDto>;
+    } catch {
+      return null;
+    }
+  };
+
   const handleRollback = async (versionNumber: number) => {
     if (!template.id) return;
-    if (!window.confirm(`Bạn có chắc chắn muốn khôi phục về phiên bản v${versionNumber}?`)) return;
+    if (!window.confirm(`Bạn có chắc chắn muốn khôi phục giao diện về phiên bản v${versionNumber}?`)) return;
     setRollingBack(true);
     try {
       const restored = await adminApi.rollbackPortalTemplateVersion(template.id, versionNumber);
-      setTemplate(restored);
-      setSavedTemplate(restored);
+      const normalized = normalizeTemplateState(restored);
+      setTemplate(normalized);
+      setSavedTemplate(normalized);
+      setScope('GLOBAL');
+      setPortalContentReloadKey((prev) => prev + 1);
       setVersionsModalOpen(false);
       setToast({
         show: true,
         title: 'Khôi phục thành công',
-        message: `Đã khôi phục giao diện về phiên bản v${versionNumber}`,
+        message: `Đã khôi phục giao diện về phiên bản v${versionNumber} (màu chủ đạo ${normalized.themeColor.toUpperCase()}).`,
         type: 'success',
       });
     } catch (e: any) {
@@ -237,8 +265,9 @@ export const PortalBuilderPage: React.FC = () => {
       ]);
 
       if (activeTpl) {
-        setTemplate(activeTpl);
-        setSavedTemplate(activeTpl);
+        const normalized = normalizeTemplateState(activeTpl);
+        setTemplate(normalized);
+        setSavedTemplate(normalized);
       } else {
         setSavedTemplate(template);
       }
@@ -306,8 +335,10 @@ export const PortalBuilderPage: React.FC = () => {
     try {
       const templateToSave = { ...template, active: isPublish };
       const saved = await adminApi.savePortalTemplate(templateToSave);
-      setTemplate(saved);
-      setSavedTemplate(saved);
+      const normalized = normalizeTemplateState(saved);
+      setTemplate(normalized);
+      setSavedTemplate(normalized);
+      setPortalContentReloadKey((prev) => prev + 1);
       setToast({
         show: true,
         title: isPublish ? 'Xuất bản thành công' : 'Lưu bản nháp thành công',
@@ -723,7 +754,7 @@ export const PortalBuilderPage: React.FC = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           {colorPresets.map((preset) => {
-                            const isSelected = template.themeColor === preset.themeColor;
+                            const isSelected = (template.themeColor || '').toLowerCase() === preset.themeColor.toLowerCase();
                             return (
                               <button
                                 key={preset.name}
@@ -761,13 +792,13 @@ export const PortalBuilderPage: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <input
                               type="color"
-                              value={template.themeColor}
+                              value={/^#[0-9a-fA-F]{6}$/.test(template.themeColor || '') ? template.themeColor : '#0284c7'}
                               onChange={(e) => setTemplate({ ...template, themeColor: e.target.value })}
                               className="w-8 h-8 rounded-md border border-slate-200 cursor-pointer p-0.5 shrink-0"
                             />
                             <input
                               type="text"
-                              value={template.themeColor}
+                              value={template.themeColor || ''}
                               onChange={(e) => setTemplate({ ...template, themeColor: e.target.value })}
                               className="flex-1 min-w-0 px-2.5 py-1.5 text-xs font-mono border border-slate-200 rounded-md uppercase focus:outline-none focus:border-[#004b87]"
                             />
@@ -779,13 +810,13 @@ export const PortalBuilderPage: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <input
                               type="color"
-                              value={template.backgroundColor}
+                              value={/^#[0-9a-fA-F]{6}$/.test(template.backgroundColor || '') ? template.backgroundColor : '#0c2340'}
                               onChange={(e) => setTemplate({ ...template, backgroundColor: e.target.value })}
                               className="w-8 h-8 rounded-md border border-slate-200 cursor-pointer p-0.5 shrink-0"
                             />
                             <input
                               type="text"
-                              value={template.backgroundColor}
+                              value={template.backgroundColor || ''}
                               onChange={(e) => setTemplate({ ...template, backgroundColor: e.target.value })}
                               className="flex-1 min-w-0 px-2.5 py-1.5 text-xs font-mono border border-slate-200 rounded-md uppercase focus:outline-none focus:border-[#004b87]"
                             />
@@ -1341,6 +1372,7 @@ export const PortalBuilderPage: React.FC = () => {
                     src="/portal?previewMode=embedded"
                     title={'Bản xem trước cổng Wi-Fi ' + (previewDevice === 'MOBILE' ? 'điện thoại' : previewDevice === 'TABLET' ? 'máy tính bảng' : 'máy tính')}
                     onLoad={() => {
+                      setPreviewReady(true);
                       if (previewData) {
                         previewFrameRef.current?.contentWindow?.postMessage(
                           { type: 'WIFI_PORTAL_PREVIEW_UPDATE', previewData },
@@ -1490,28 +1522,39 @@ export const PortalBuilderPage: React.FC = () => {
       </Modal>
 
       {versionsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-md max-w-2xl w-full max-h-[85vh] flex flex-col shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-[2px] p-4"
+          onClick={() => setVersionsModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200/80 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-indigo-50 text-indigo-700 rounded-sm">
-                  <History className="w-5 h-5" />
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                  <History className="w-4.5 h-4.5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">Lịch sử thay đổi giao diện</h3>
+                  <h3 className="text-[15px] font-semibold text-slate-900">Lịch sử thay đổi giao diện</h3>
+                  <p className="text-[11.5px] text-slate-500 mt-0.5">
+                    Xem màu sắc, nội dung từng bản lưu và khôi phục về bất kỳ mốc thời gian nào
+                  </p>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setVersionsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-lg font-bold p-1 cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-lg transition cursor-pointer"
+                aria-label="Đóng"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Body */}
-            <div className="p-6 overflow-y-auto space-y-3 flex-1">
+            <div className="p-5 overflow-y-auto space-y-2.5 flex-1">
               {loadingVersions ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
@@ -1521,34 +1564,101 @@ export const PortalBuilderPage: React.FC = () => {
                   Chưa có lịch sử phiên bản nào được ghi nhận
                 </div>
               ) : (
-                versions.map((ver) => (
-                  <div
-                    key={ver.id}
-                    className="flex items-center justify-between p-3.5 border border-slate-200 rounded-sm hover:border-indigo-300 hover:bg-slate-50 transition"
-                  >
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-slate-900">v{ver.versionNumber}</span>
-                        <span className="text-xs text-slate-700 font-medium">{ver.versionName || 'Bản ghi cấu hình'}</span>
-                      </div>
-                      <div className="text-[11px] text-slate-400">
-                        Lưu bởi: <span className="font-semibold text-slate-600">{ver.createdBy}</span> · Thời điểm: {new Date(ver.createdAt).toLocaleString('vi-VN')}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={rollingBack}
-                      onClick={() => handleRollback(ver.versionNumber)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-sm text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+                versions.map((ver, index) => {
+                  const snap = parseVersionSnapshot(ver.snapshotJson);
+                  const snapTheme = (snap?.themeColor || '').toUpperCase();
+                  const snapBg = (snap?.backgroundColor || '').toUpperCase();
+                  const isCurrentActive =
+                    index === 0 &&
+                    savedTemplate != null &&
+                    (snap?.themeColor || '').toLowerCase() === (savedTemplate.themeColor || '').toLowerCase() &&
+                    (snap?.backgroundColor || '').toLowerCase() === (savedTemplate.backgroundColor || '').toLowerCase() &&
+                    (snap?.backgroundImageUrl || '') === (savedTemplate.backgroundImageUrl || '') &&
+                    (snap?.title || '') === (savedTemplate.title || '') &&
+                    (snap?.buttonText || '') === (savedTemplate.buttonText || '');
+
+                  return (
+                    <div
+                      key={ver.id}
+                      className={`flex items-center justify-between gap-4 p-3.5 border rounded-lg transition ${
+                        isCurrentActive
+                          ? 'border-emerald-200 bg-emerald-50/40'
+                          : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-slate-50/70'
+                      }`}
                     >
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      Khôi phục bản này
-                    </button>
-                  </div>
-                ))
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="px-1.5 py-0.5 rounded bg-slate-100 font-mono font-bold text-[11px] text-slate-800">
+                            v{ver.versionNumber}
+                          </span>
+                          <span className="text-xs text-slate-800 font-semibold truncate">
+                            {ver.versionName || 'Bản ghi cấu hình'}
+                          </span>
+                          {isCurrentActive && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-emerald-100 text-emerald-700">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              Đang áp dụng
+                            </span>
+                          )}
+                        </div>
+
+                        {snap && (
+                          <div className="flex items-center gap-3 flex-wrap text-[11px] text-slate-600">
+                            {snapTheme && (
+                              <span className="inline-flex items-center gap-1.5 font-mono">
+                                <span
+                                  className="w-3 h-3 rounded-full border border-slate-300 shrink-0"
+                                  style={{ backgroundColor: snap.themeColor }}
+                                />
+                                {snapTheme}
+                              </span>
+                            )}
+                            {snapBg && (
+                              <span className="inline-flex items-center gap-1.5 font-mono text-slate-500">
+                                <span
+                                  className="w-3 h-3 rounded-full border border-slate-300 shrink-0"
+                                  style={{ backgroundColor: snap.backgroundColor }}
+                                />
+                                Nền {snapBg}
+                              </span>
+                            )}
+                            {snap.buttonText && (
+                              <span className="truncate max-w-[180px] text-slate-500" title={snap.buttonText}>
+                                Nút: <strong className="font-medium text-slate-700">{snap.buttonText}</strong>
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="text-[11px] text-slate-400">
+                          Lưu bởi <span className="font-medium text-slate-600">{ver.createdBy}</span> · {new Date(ver.createdAt).toLocaleString('vi-VN')}
+                        </div>
+                      </div>
+
+                      {isCurrentActive ? (
+                        <span className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-white border border-emerald-200 rounded-lg shrink-0">
+                          Bản hiện tại
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={rollingBack}
+                          onClick={() => handleRollback(ver.versionNumber)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50 shrink-0"
+                        >
+                          {rollingBack ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <RotateCcw className="w-3.5 h-3.5" />
+                          )}
+                          Khôi phục bản này
+                        </button>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
-
           </div>
         </div>
       )}
