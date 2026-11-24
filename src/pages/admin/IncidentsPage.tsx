@@ -33,7 +33,13 @@ import {
   CheckCheck,
   AlertTriangle,
   Eye,
-  History
+  History,
+  Zap,
+  Cable,
+  Cpu,
+  Settings2,
+  Globe,
+  HelpCircle
 } from 'lucide-react';
 
 const formatDateTime = (dateStr?: string | null): string => {
@@ -156,7 +162,9 @@ export const IncidentsPage: React.FC = () => {
   const [createTitle, setCreateTitle] = useState<string>('');
   const [createDescription, setCreateDescription] = useState<string>('');
   const [createSeverity, setCreateSeverity] = useState<IncidentSeverity>('MAJOR');
+  const [createIncidentType, setCreateIncidentType] = useState<string>('SYSTEM_DEGRADATION');
   const [createAssignedTo, setCreateAssignedTo] = useState<string>('');
+  const [targetCitizenReportId, setTargetCitizenReportId] = useState<number | null>(null);
 
   // Assign form state
   const [assigneeName, setAssigneeName] = useState<string>('Viettel_KyThuat_01');
@@ -278,17 +286,22 @@ export const IncidentsPage: React.FC = () => {
         title: createTitle,
         description: createDescription,
         severity: createSeverity,
+        incidentType: createIncidentType || 'SYSTEM_DEGRADATION',
         assignedTo: createAssignedTo || undefined,
         assignedGroup: createAssignedTo ? 'Đội Kỹ thuật Viễn thông Hải Phòng' : undefined,
+        citizenReportId: targetCitizenReportId || undefined,
       };
       const created = await adminApi.createIncident(payload);
       setIncidents((prev) => [created, ...prev]);
       setShowCreateModal(false);
       setCreateTitle('');
       setCreateDescription('');
+      setTargetCitizenReportId(null);
       await loadData();
-    } catch (err) {
-      alert('Không thể tạo phiếu sự cố');
+    } catch (err: any) {
+      console.error('Failed to create incident:', err);
+      const msg = err?.message || err?.response?.data?.message || 'Không thể tạo phiếu sự cố';
+      alert(`Không thể tạo phiếu sự cố: ${msg}`);
     }
   };
 
@@ -533,9 +546,9 @@ export const IncidentsPage: React.FC = () => {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="text-xs border border-gray-300 rounded-sm px-2.5 py-1.5 bg-white text-gray-700 cursor-pointer"
+                className="text-xs border border-gray-300 rounded-md px-2.5 py-1.5 bg-white text-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
               >
-                <option value="ALL">-- Tất cả trạng thái --</option>
+                <option value="ALL">Tất cả trạng thái</option>
                 <option value="OPEN">Mới tiếp nhận</option>
                 <option value="ASSIGNED">Đã phân công</option>
                 <option value="IN_PROGRESS">Đang xử lý</option>
@@ -546,12 +559,12 @@ export const IncidentsPage: React.FC = () => {
               <select
                 value={selectedSeverity}
                 onChange={(e) => setSelectedSeverity(e.target.value)}
-                className="text-xs border border-gray-300 rounded-sm px-2.5 py-1.5 bg-white text-gray-700 cursor-pointer"
+                className="text-xs border border-gray-300 rounded-md px-2.5 py-1.5 bg-white text-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
               >
-                <option value="ALL">-- Tất cả mức độ khẩn cấp --</option>
-                <option value="CRITICAL">🔴 Khẩn cấp (SLA 4h)</option>
-                <option value="MAJOR">🟠 Nghiêm trọng (SLA 8h)</option>
-                <option value="MINOR">🟡 Bình thường (SLA 24h)</option>
+                <option value="ALL">Tất cả mức độ SLA</option>
+                <option value="CRITICAL">Khẩn cấp (SLA 4h)</option>
+                <option value="MAJOR">Nghiêm trọng (SLA 8h)</option>
+                <option value="MINOR">Bình thường (SLA 24h)</option>
               </select>
             </div>
           </div>
@@ -878,6 +891,11 @@ export const IncidentsPage: React.FC = () => {
                                   if (r.locationId) setCreateLocationId(r.locationId);
                                   setCreateTitle(`Sự cố mạng tại ${r.locationName} (từ phản ánh người dân)`);
                                   setCreateDescription(`Phản ánh: ${issueBadge.text} - ${r.description || ''} (${r.phoneNumber || 'Không để lại SĐT'})`);
+                                  setTargetCitizenReportId(r.id);
+                                  const mappedType = r.issueType === 'POWER_OUTAGE' ? 'POWER_OUTAGE' :
+                                                     (r.issueType === 'CANNOT_CONNECT' || r.issueType === 'PORTAL_ERROR') ? 'HARDWARE_FAULT' :
+                                                     'SYSTEM_DEGRADATION';
+                                  setCreateIncidentType(mappedType);
                                   setShowCreateModal(true);
                                 }}
                                 className="px-2.5 py-1 text-white bg-rose-600 hover:bg-rose-700 rounded text-[11px] font-medium cursor-pointer"
@@ -1126,96 +1144,196 @@ export const IncidentsPage: React.FC = () => {
 
       {/* Modal Create Incident */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in">
-          <div className="bg-white rounded max-w-lg w-full p-6 shadow-xl border border-gray-100">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <h3 className="font-bold text-gray-900 text-base flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-rose-600" />
-                Mở Phiếu Báo Cáo Sự Cố Mới
-              </h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
-                <X className="w-5 h-5" />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-[2px] p-4"
+          onClick={() => setShowCreateModal(false)}
+        >
+          <div
+            className="bg-white rounded-xl max-w-xl w-full shadow-2xl border border-slate-200/80 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between px-6 py-4 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+                  <ShieldAlert className="w-4.5 h-4.5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900 text-[15px] leading-snug">
+                    Tạo phiếu sự cố mới
+                  </h3>
+                  <p className="text-[11.5px] text-slate-500 mt-0.5">
+                    Ghi nhận sự cố hạ tầng và áp dụng cam kết thời gian xử lý (SLA)
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(false)}
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-lg transition cursor-pointer"
+                aria-label="Đóng"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleCreate} className="mt-4 space-y-4 text-xs">
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Điểm phát Wi-Fi (NVH)</label>
-                <select
-                  value={createLocationId}
-                  onChange={(e) => setCreateLocationId(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs cursor-pointer"
-                >
-                  {locations.map((loc) => (
-                    <option key={loc.id} value={loc.id}>
-                      {loc.name} ({loc.locationCode || 'Mã NVH'})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Tiêu đề sự cố</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ví dụ: Mất hoàn toàn tín hiệu kết nối Internet ONT tại NVH"
-                  value={createTitle}
-                  onChange={(e) => setCreateTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Mô tả chi tiết</label>
-                <textarea
-                  rows={3}
-                  placeholder="Mô tả hiện tượng, báo cáo của người dân hoặc kết quả đo kiểm sơ bộ..."
-                  value={createDescription}
-                  onChange={(e) => setCreateDescription(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+            <form onSubmit={handleCreate} className="text-xs">
+              <div className="px-6 py-5 space-y-4 max-h-[75vh] overflow-y-auto">
                 <div>
-                  <label className="block font-medium text-gray-700 mb-1">Mức độ khẩn cấp (SLA)</label>
+                  <label className="block font-medium text-slate-700 mb-1.5">
+                    Điểm phát Wi-Fi (Nhà văn hóa) <span className="text-rose-500">*</span>
+                  </label>
                   <select
-                    value={createSeverity}
-                    onChange={(e: any) => setCreateSeverity(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs font-medium cursor-pointer"
+                    value={createLocationId}
+                    onChange={(e) => setCreateLocationId(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition"
                   >
-                    <option value="CRITICAL">🔴 Khẩn cấp - SLA 4h (Mất toàn bộ kết nối)</option>
-                    <option value="MAJOR">🟠 Nghiêm trọng - SLA 8h (Suy giảm nặng, nghẽn mạng)</option>
-                    <option value="MINOR">🟡 Bình thường - SLA 24h (Lỗi nhẹ, chậm chờn)</option>
+                    {locations.map((loc) => (
+                      <option key={loc.id} value={loc.id}>
+                        {loc.name} {loc.locationCode ? `— ${loc.locationCode}` : ''}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-medium text-gray-700 mb-1">Kỹ thuật viên tiếp nhận</label>
+                  <label className="block font-medium text-slate-700 mb-1.5">
+                    Tiêu đề sự cố <span className="text-rose-500">*</span>
+                  </label>
                   <input
                     type="text"
-                    placeholder="Tên kỹ thuật viên (tùy chọn)"
-                    value={createAssignedTo}
-                    onChange={(e) => setCreateAssignedTo(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
+                    required
+                    placeholder="Ví dụ: Mất tín hiệu Internet ONT tại Nhà văn hóa"
+                    value={createTitle}
+                    onChange={(e) => setCreateTitle(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition"
                   />
+                </div>
+
+                <div>
+                  <label className="block font-medium text-slate-700 mb-1.5">Mô tả chi tiết</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Ghi nhận hiện tượng, thời điểm phát sinh hoặc kết quả đo kiểm ban đầu..."
+                    value={createDescription}
+                    onChange={(e) => setCreateDescription(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition resize-none"
+                  />
+                </div>
+
+                {/* Mức độ khẩn cấp (SLA) - Priority Cards thay thế select emoji */}
+                <div>
+                  <label className="block font-medium text-slate-700 mb-1.5">
+                    Mức độ ưu tiên & Cam kết SLA
+                  </label>
+                  <div className="grid grid-cols-3 gap-2.5">
+                    {(
+                      [
+                        {
+                          value: 'CRITICAL' as IncidentSeverity,
+                          label: 'Khẩn cấp',
+                          sla: 'SLA 4h',
+                          desc: 'Mất toàn bộ kết nối',
+                          dot: 'bg-rose-500',
+                          activeClass: 'border-rose-500 bg-rose-50/70 ring-2 ring-rose-500/15',
+                          slaClass: 'bg-rose-100 text-rose-700'
+                        },
+                        {
+                          value: 'MAJOR' as IncidentSeverity,
+                          label: 'Nghiêm trọng',
+                          sla: 'SLA 8h',
+                          desc: 'Suy giảm nặng, nghẽn mạng',
+                          dot: 'bg-amber-500',
+                          activeClass: 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/15',
+                          slaClass: 'bg-amber-100 text-amber-800'
+                        },
+                        {
+                          value: 'MINOR' as IncidentSeverity,
+                          label: 'Bình thường',
+                          sla: 'SLA 24h',
+                          desc: 'Lỗi nhẹ, chập chờn',
+                          dot: 'bg-sky-500',
+                          activeClass: 'border-sky-500 bg-sky-50/70 ring-2 ring-sky-500/15',
+                          slaClass: 'bg-sky-100 text-sky-700'
+                        }
+                      ] as const
+                    ).map((opt) => {
+                      const selected = createSeverity === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setCreateSeverity(opt.value)}
+                          className={`text-left p-2.5 rounded-lg border transition cursor-pointer ${
+                            selected
+                              ? opt.activeClass
+                              : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="inline-flex items-center gap-1.5 font-semibold text-slate-800 text-[12px]">
+                              <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dot}`} />
+                              {opt.label}
+                            </span>
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold ${
+                              selected ? opt.slaClass : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              {opt.sla}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-slate-500 mt-1 leading-tight">
+                            {opt.desc}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-medium text-slate-700 mb-1.5">Phân loại sự cố</label>
+                    <select
+                      value={createIncidentType}
+                      onChange={(e) => setCreateIncidentType(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition"
+                    >
+                      <option value="SYSTEM_DEGRADATION">Suy giảm chất lượng / Chập chờn</option>
+                      <option value="FIBER_CUT">Đứt cáp quang / Mất tín hiệu</option>
+                      <option value="HARDWARE_FAULT">Lỗi phần cứng (AP / Router / Mesh)</option>
+                      <option value="POWER_OUTAGE">Mất nguồn điện tại Nhà văn hóa</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-medium text-slate-700 mb-1.5">
+                      Kỹ thuật viên tiếp nhận <span className="text-slate-400 font-normal">(tùy chọn)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Nhập tên hoặc mã KTV..."
+                      value={createAssignedTo}
+                      onChange={(e) => setCreateAssignedTo(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-5 flex justify-end gap-2 pt-3 border-t border-gray-100">
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-2 px-6 py-3.5 bg-slate-50 border-t border-slate-200/80">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-sm hover:bg-gray-50 cursor-pointer"
+                  className="px-4 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-rose-600 text-white rounded-sm hover:bg-rose-700 font-medium shadow-sm cursor-pointer"
+                  className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 font-semibold shadow-xs transition cursor-pointer"
                 >
-                  Phát hành phiếu sự cố
+                  Tạo phiếu sự cố
                 </button>
               </div>
             </form>
@@ -1225,64 +1343,82 @@ export const IncidentsPage: React.FC = () => {
 
       {/* Modal Assign Incident */}
       {showAssignModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in">
-          <div className="bg-white rounded max-w-md w-full p-6 shadow-xl border border-gray-100">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <h3 className="font-bold text-gray-900 text-base flex items-center gap-2">
-                <UserCheck className="w-5 h-5 text-blue-600" />
-                Điều Phối Kỹ Thuật Viên Xử Lý
-              </h3>
-              <button onClick={() => setShowAssignModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
-                <X className="w-5 h-5" />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-[2px] p-4"
+          onClick={() => setShowAssignModal(false)}
+        >
+          <div
+            className="bg-white rounded-xl max-w-md w-full shadow-2xl border border-slate-200/80 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                  <UserCheck className="w-4 h-4" />
+                </div>
+                <h3 className="font-semibold text-slate-900 text-[15px]">
+                  Điều phối kỹ thuật viên xử lý
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAssignModal(false)}
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-lg transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleAssign} className="mt-4 space-y-3 text-xs">
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Kỹ thuật viên phụ trách</label>
-                <input
-                  type="text"
-                  required
-                  value={assigneeName}
-                  onChange={(e) => setAssigneeName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
-                  placeholder="Ví dụ: KTV Nguyễn Văn An"
-                />
+            <form onSubmit={handleAssign} className="text-xs">
+              <div className="px-6 py-4 space-y-3.5">
+                <div>
+                  <label className="block font-medium text-slate-700 mb-1.5">
+                    Kỹ thuật viên phụ trách <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={assigneeName}
+                    onChange={(e) => setAssigneeName(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+                    placeholder="Ví dụ: KTV Nguyễn Văn An"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-medium text-slate-700 mb-1.5">Đơn vị / Đội công tác</label>
+                  <input
+                    type="text"
+                    value={assignGroup}
+                    onChange={(e) => setAssignGroup(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+                    placeholder="Ví dụ: Đội Viễn thông Trung tâm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-medium text-slate-700 mb-1.5">Ghi chú chỉ đạo</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Yêu cầu kiểm tra ODF quang và nguồn điện NVH..."
+                    value={assignNote}
+                    onChange={(e) => setAssignNote(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition resize-none"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Đơn vị / Đội công tác</label>
-                <input
-                  type="text"
-                  value={assignGroup}
-                  onChange={(e) => setAssignGroup(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
-                  placeholder="Ví dụ: Đội Viễn thông Trung tâm"
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Ghi chú chỉ đạo</label>
-                <textarea
-                  rows={2}
-                  placeholder="Yêu cầu kiểm tra ODF quang và nguồn điện NVH trước 12h..."
-                  value={assignNote}
-                  onChange={(e) => setAssignNote(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
-                />
-              </div>
-
-              <div className="mt-4 flex justify-end gap-2 pt-2 border-t border-gray-100">
+              <div className="flex justify-end gap-2 px-6 py-3.5 bg-slate-50 border-t border-slate-200/80">
                 <button
                   type="button"
                   onClick={() => setShowAssignModal(false)}
-                  className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-sm cursor-pointer"
+                  className="px-3.5 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-blue-600 text-white rounded-sm hover:bg-blue-700 font-semibold cursor-pointer shadow-xs"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition cursor-pointer shadow-xs"
                 >
                   Xác nhận điều phối
                 </button>
@@ -1294,58 +1430,93 @@ export const IncidentsPage: React.FC = () => {
 
       {/* Modal Resolve Incident */}
       {showResolveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in">
-          <div className="bg-white rounded max-w-md w-full p-6 shadow-xl border border-gray-100">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <h3 className="font-bold text-gray-900 text-base flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                Hoàn Tất Khắc Phục Sự Cố
-              </h3>
-              <button onClick={() => setShowResolveModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
-                <X className="w-5 h-5" />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-[2px] p-4"
+          onClick={() => setShowResolveModal(false)}
+        >
+          <div
+            className="bg-white rounded-xl max-w-lg w-full shadow-2xl border border-slate-200/80 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+                <h3 className="font-semibold text-slate-900 text-[15px]">
+                  Hoàn tất khắc phục sự cố
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowResolveModal(false)}
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-lg transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleResolve} className="mt-4 space-y-3 text-xs">
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Nguyên nhân cốt lõi</label>
-                <select
-                  value={rootCauseCategory}
-                  onChange={(e: any) => setRootCauseCategory(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs font-semibold cursor-pointer"
-                >
-                  <option value="POWER_OUTAGE">⚡ Mất nguồn điện lưới NVH</option>
-                  <option value="FIBER_CUT">✂️ Đứt cáp quang viễn thông</option>
-                  <option value="HARDWARE_FAILURE">🔥 Hỏng thiết bị phần cứng AP / Gateway</option>
-                  <option value="CONFIG_ERROR">⚙️ Lỗi cấu hình mạng / DNS</option>
-                  <option value="ISP_ISSUE">🌐 Sự cố đường truyền nhà mạng</option>
-                  <option value="UNKNOWN">❓ Chưa rõ nguyên nhân</option>
-                </select>
+            <form onSubmit={handleResolve} className="text-xs">
+              <div className="px-6 py-4 space-y-4">
+                <div>
+                  <label className="block font-medium text-slate-700 mb-1.5">Nguyên nhân cốt lõi (RCA)</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(
+                      [
+                        { value: 'POWER_OUTAGE' as RootCauseCategory, label: 'Mất nguồn điện lưới NVH', Icon: Zap },
+                        { value: 'FIBER_CUT' as RootCauseCategory, label: 'Đứt cáp quang viễn thông', Icon: Cable },
+                        { value: 'HARDWARE_FAILURE' as RootCauseCategory, label: 'Hỏng thiết bị AP / Gateway', Icon: Cpu },
+                        { value: 'CONFIG_ERROR' as RootCauseCategory, label: 'Lỗi cấu hình mạng / DNS', Icon: Settings2 },
+                        { value: 'ISP_ISSUE' as RootCauseCategory, label: 'Sự cố đường truyền nhà mạng', Icon: Globe },
+                        { value: 'UNKNOWN' as RootCauseCategory, label: 'Chưa rõ nguyên nhân', Icon: HelpCircle }
+                      ] as const
+                    ).map(({ value, label, Icon }) => {
+                      const active = rootCauseCategory === value;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => setRootCauseCategory(value)}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition cursor-pointer ${
+                            active
+                              ? 'border-emerald-500 bg-emerald-50/70 text-emerald-900 font-semibold ring-2 ring-emerald-500/15'
+                              : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                          }`}
+                        >
+                          <Icon className={`w-3.5 h-3.5 shrink-0 ${active ? 'text-emerald-600' : 'text-slate-400'}`} />
+                          <span className="truncate">{label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-medium text-slate-700 mb-1.5">
+                    Biện pháp đã xử lý & kết quả <span className="text-rose-500">*</span>
+                  </label>
+                  <textarea
+                    rows={3}
+                    required
+                    placeholder="Ví dụ: Đã hàn nối lại mối cáp quang, đo suy hao quang đạt -18dBm, tín hiệu Wi-Fi ổn định."
+                    value={resolutionSummary}
+                    onChange={(e) => setResolutionSummary(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition resize-none"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Biện pháp đã xử lý & Kết quả</label>
-                <textarea
-                  rows={3}
-                  required
-                  placeholder="Ví dụ: Đã hàn nối lại mối cáp quang trụ điện số 12, đo suy hao quang đạt -18dBm, tín hiệu Wi-Fi đã phát ổn định."
-                  value={resolutionSummary}
-                  onChange={(e) => setResolutionSummary(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
-                />
-              </div>
-
-              <div className="mt-4 flex justify-end gap-2 pt-2 border-t border-gray-100">
+              <div className="flex justify-end gap-2 px-6 py-3.5 bg-slate-50 border-t border-slate-200/80">
                 <button
                   type="button"
                   onClick={() => setShowResolveModal(false)}
-                  className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-sm cursor-pointer"
+                  className="px-3.5 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-emerald-600 text-white rounded-sm hover:bg-emerald-700 font-semibold cursor-pointer shadow-xs"
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-semibold transition cursor-pointer shadow-xs"
                 >
                   Xác nhận đã khắc phục
                 </button>
@@ -1357,45 +1528,63 @@ export const IncidentsPage: React.FC = () => {
 
       {/* Modal Close Incident (Nghiệm thu) */}
       {showCloseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in">
-          <div className="bg-white rounded max-w-md w-full p-6 shadow-xl border border-gray-100">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <h3 className="font-bold text-gray-900 text-base flex items-center gap-2">
-                <CheckCheck className="w-5 h-5 text-emerald-600" />
-                Nghiệm Thu & Đóng Phiếu Sự Cố
-              </h3>
-              <button onClick={() => setShowCloseModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
-                <X className="w-5 h-5" />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-[2px] p-4"
+          onClick={() => setShowCloseModal(false)}
+        >
+          <div
+            className="bg-white rounded-xl max-w-md w-full shadow-2xl border border-slate-200/80 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                  <CheckCheck className="w-4 h-4" />
+                </div>
+                <h3 className="font-semibold text-slate-900 text-[15px]">
+                  Nghiệm thu & đóng phiếu sự cố
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCloseModal(false)}
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-lg transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleClose} className="mt-4 space-y-3 text-xs">
-              <p className="text-gray-600 leading-relaxed">
-                Bạn đang xác nhận nghiệm thu kết quả khắc phục sự cố tại điểm phát này. Sau khi đóng phiếu, trạng thái sẽ chuyển thành <strong>Đã đóng phiếu</strong>.
-              </p>
+            <form onSubmit={handleClose} className="text-xs">
+              <div className="px-6 py-4 space-y-3.5">
+                <p className="text-slate-600 leading-relaxed">
+                  Xác nhận nghiệm thu kết quả khắc phục sự cố tại điểm phát này. Sau khi đóng phiếu, trạng thái sẽ chuyển thành <strong>Đã đóng phiếu</strong>.
+                </p>
 
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Ghi chú nghiệm thu (tùy chọn)</label>
-                <textarea
-                  rows={2}
-                  placeholder="Ví dụ: Đã kiểm tra lại tốc độ truy cập đạt 65Mbps, người dân kết nối bình thường."
-                  value={closeNote}
-                  onChange={(e) => setCloseNote(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
-                />
+                <div>
+                  <label className="block font-medium text-slate-700 mb-1.5">
+                    Ghi chú nghiệm thu <span className="text-slate-400 font-normal">(tùy chọn)</span>
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Ví dụ: Đã kiểm tra tốc độ truy cập đạt 65Mbps, người dân kết nối bình thường."
+                    value={closeNote}
+                    onChange={(e) => setCloseNote(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-500 transition resize-none"
+                  />
+                </div>
               </div>
 
-              <div className="mt-4 flex justify-end gap-2 pt-2 border-t border-gray-100">
+              <div className="flex justify-end gap-2 px-6 py-3.5 bg-slate-50 border-t border-slate-200/80">
                 <button
                   type="button"
                   onClick={() => setShowCloseModal(false)}
-                  className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-sm cursor-pointer"
+                  className="px-3.5 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-sm font-semibold cursor-pointer shadow-xs"
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-semibold transition cursor-pointer shadow-xs"
                 >
                   Xác nhận đóng phiếu
                 </button>
@@ -1407,46 +1596,64 @@ export const IncidentsPage: React.FC = () => {
 
       {/* Modal Reopen Incident */}
       {showReopenModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in">
-          <div className="bg-white rounded max-w-md w-full p-6 shadow-xl border border-gray-100">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <h3 className="font-bold text-gray-900 text-base flex items-center gap-2">
-                <RotateCcw className="w-5 h-5 text-rose-600" />
-                Mở Lại Phiếu Sự Cố Kỹ Thuật
-              </h3>
-              <button onClick={() => setShowReopenModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
-                <X className="w-5 h-5" />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-[2px] p-4"
+          onClick={() => setShowReopenModal(false)}
+        >
+          <div
+            className="bg-white rounded-xl max-w-md w-full shadow-2xl border border-slate-200/80 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600">
+                  <RotateCcw className="w-4 h-4" />
+                </div>
+                <h3 className="font-semibold text-slate-900 text-[15px]">
+                  Mở lại phiếu sự cố
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowReopenModal(false)}
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-lg transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleReopen} className="mt-4 space-y-3 text-xs">
-              <p className="text-gray-600 leading-relaxed">
-                Phiếu sự cố sẽ được mở lại với trạng thái <strong>Đang xử lý</strong> để kỹ thuật viên tiếp tục kiểm tra và đo kiểm hiện trường.
-              </p>
+            <form onSubmit={handleReopen} className="text-xs">
+              <div className="px-6 py-4 space-y-3.5">
+                <p className="text-slate-600 leading-relaxed">
+                  Phiếu sự cố sẽ được chuyển lại trạng thái <strong>Đang xử lý</strong> để kỹ thuật viên tiếp tục kiểm tra hiện trường.
+                </p>
 
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Lý do mở lại phiếu</label>
-                <textarea
-                  rows={2}
-                  required
-                  placeholder="Ví dụ: Kiểm tra thực tế điểm phát sóng vẫn suy hao quang cao, chưa vào được mạng."
-                  value={reopenReason}
-                  onChange={(e) => setReopenReason(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-sm text-xs"
-                />
+                <div>
+                  <label className="block font-medium text-slate-700 mb-1.5">
+                    Lý do mở lại phiếu <span className="text-rose-500">*</span>
+                  </label>
+                  <textarea
+                    rows={2}
+                    required
+                    placeholder="Ví dụ: Kiểm tra thực tế điểm phát sóng vẫn suy hao quang cao, chưa vào được mạng."
+                    value={reopenReason}
+                    onChange={(e) => setReopenReason(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition resize-none"
+                  />
+                </div>
               </div>
 
-              <div className="mt-4 flex justify-end gap-2 pt-2 border-t border-gray-100">
+              <div className="flex justify-end gap-2 px-6 py-3.5 bg-slate-50 border-t border-slate-200/80">
                 <button
                   type="button"
                   onClick={() => setShowReopenModal(false)}
-                  className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-sm cursor-pointer"
+                  className="px-3.5 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-sm font-semibold cursor-pointer shadow-xs"
+                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-semibold transition cursor-pointer shadow-xs"
                 >
                   Xác nhận mở lại
                 </button>

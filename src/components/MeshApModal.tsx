@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Wifi, Signal, Smartphone, RotateCw, Clock, Cpu, MemoryStick, AlertTriangle, Radio } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Wifi, Signal, Smartphone, RotateCw, Clock, Cpu, MemoryStick, AlertTriangle, Radio, X } from 'lucide-react';
 import { adminApi } from '../api/adminApi';
 import { MeshApSnapshotDto, NetworkDeviceDto } from '../types/models';
 
@@ -64,16 +65,31 @@ export const MeshApModal: React.FC<Props> = ({ device, onClose, onRefreshed }) =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [device?.id]);
 
+  useEffect(() => {
+    if (!device) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [device, onClose]);
+
   if (!device) return null;
   const live = snap?.monitoringMode === 'LIVE';
   const clients = snap?.clients ?? [];
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-md max-w-4xl w-full max-h-[88vh] flex flex-col shadow-xl overflow-hidden">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/55 backdrop-blur-[2px] p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-xl max-w-4xl w-full max-h-[88vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-sky-50 text-sky-700 rounded-sm">
+            <div className="p-2 bg-sky-50 text-sky-700 rounded-lg">
               <Wifi className="w-5 h-5" />
             </div>
             <div>
@@ -85,14 +101,20 @@ export const MeshApModal: React.FC<Props> = ({ device, onClose, onRefreshed }) =
           </div>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={load}
               disabled={loading}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 rounded-sm text-xs font-semibold text-slate-700 disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 rounded-lg text-xs font-semibold text-slate-700 disabled:opacity-50 cursor-pointer"
             >
               <RotateCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Đọc lại
             </button>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-lg font-bold p-1 cursor-pointer">
-              ✕
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-slate-400 hover:text-slate-600 hover:bg-slate-200/70 p-1.5 rounded-lg transition cursor-pointer"
+              aria-label="Đóng"
+            >
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -252,12 +274,13 @@ export const MeshApModal: React.FC<Props> = ({ device, onClose, onRefreshed }) =
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 rounded-sm text-slate-700 font-semibold cursor-pointer"
+            className="px-4 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 rounded-lg text-slate-700 font-semibold cursor-pointer"
           >
             Đóng
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

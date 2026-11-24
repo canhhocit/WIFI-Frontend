@@ -279,6 +279,17 @@ export interface DeviceDto {
   blocked: boolean;
 }
 
+export interface SessionSyncSummaryDto {
+  checkedCount: number;
+  onlineCount: number;
+  updatedTrafficCount: number;
+  expiredCount: number;
+  skippedCount: number;
+  cloudConnected: boolean;
+  syncedAt: string;
+  message: string;
+}
+
 export interface GuestSessionDto {
   id: number;
   sessionToken: string;
@@ -754,8 +765,10 @@ export interface CreateIncidentRequest {
   title: string;
   description?: string;
   severity: IncidentSeverity;
+  incidentType?: string;
   assignedTo?: string;
   assignedGroup?: string;
+  citizenReportId?: number;
 }
 
 export interface AssignIncidentRequest {

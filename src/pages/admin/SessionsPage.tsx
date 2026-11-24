@@ -13,7 +13,8 @@ import {
   Loader2,
   Signal,
   MapPin,
-  Laptop
+  Laptop,
+  Cloud
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { GuestSessionDto, LocationDto, SessionStatus } from '../../types/models';
@@ -26,6 +27,8 @@ export const SessionsPage: React.FC = () => {
   const [sessions, setSessions] = useState<GuestSessionDto[]>([]);
   const [locations, setLocations] = useState<LocationDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncingCloud, setSyncingCloud] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Filters
@@ -81,6 +84,21 @@ export const SessionsPage: React.FC = () => {
     loadSessions();
   };
 
+  const handleSyncCloud = async () => {
+    setSyncingCloud(true);
+    setSyncMessage(null);
+    setError(null);
+    try {
+      const summary = await adminApi.syncSessionsWithCloud();
+      setSyncMessage(summary.message);
+      await loadSessions();
+    } catch (err: any) {
+      setError(err?.message || 'Không thể đồng bộ phiên kết nối từ GWN Cloud.');
+    } finally {
+      setSyncingCloud(false);
+    }
+  };
+
   const handleConfirmRevoke = async () => {
     if (!revokeSessionTarget) return;
     setRevoking(true);
@@ -119,15 +137,28 @@ export const SessionsPage: React.FC = () => {
           <p className="text-xs text-slate-500 mt-1">
           </p>
         </div>
-        <button
-          onClick={loadSessions}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
-        >
-          <RefreshCw className="w-3.5 h-3.5" /> Làm mới dữ liệu
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleSyncCloud}
+            disabled={syncingCloud}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold transition shadow-xs cursor-pointer disabled:opacity-60"
+          >
+            {syncingCloud ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Cloud className="w-3.5 h-3.5" />}
+            {syncingCloud ? 'Đang đồng bộ Cloud...' : 'Đồng bộ từ Cloud'}
+          </button>
+          <button
+            type="button"
+            onClick={loadSessions}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5" /> Làm mới dữ liệu
+          </button>
+        </div>
       </div>
 
       {error && <AlertBanner type="error" message={error} />}
+      {syncMessage && <AlertBanner type="success" message={syncMessage} />}
 
       {/* Filter and Search Bar */}
       <div className="bg-white p-3.5 rounded border border-slate-300 shadow-xs flex flex-col md:flex-row gap-2.5">
