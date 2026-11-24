@@ -82,13 +82,14 @@ export const UsersPage: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setActionError(null);
       const [usersRes, unitsRes] = await Promise.all([
         adminApi.getUsers({ search, page, size: pageSize }),
-        adminApi.getAdminTree(),
+        adminApi.getAdminTree().catch(() => []),
       ]);
-      setUsers(usersRes.content || []);
-      setTotalPages(usersRes.totalPages || 1);
-      setTotalElements(usersRes.totalElements || 0);
+      setUsers(usersRes?.content || []);
+      setTotalPages(usersRes?.totalPages || 1);
+      setTotalElements(usersRes?.totalElements || 0);
       setAdminUnits(unitsRes || []);
     } catch (err: any) {
       setActionError(err.message || 'Lỗi khi tải danh sách người dùng');
