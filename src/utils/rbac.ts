@@ -20,7 +20,7 @@ export interface ModulePermissionState {
   role: string;
 }
 
-const DEFAULT_SOTTTT_PERMS: Record<RbacModuleKey, Omit<ModulePermissionState, 'isSuperAdmin' | 'role'>> = {
+export const DEFAULT_SOTTTT_PERMS: Record<RbacModuleKey, Omit<ModulePermissionState, 'isSuperAdmin' | 'role'>> = {
   LOCATIONS: { canView: true, canCreate: true, canEdit: true, canDelete: false, canApprove: true },
   DEVICES: { canView: true, canCreate: false, canEdit: false, canDelete: false, canApprove: false },
   CAMPAIGNS: { canView: true, canCreate: true, canEdit: true, canDelete: true, canApprove: true },
@@ -29,7 +29,7 @@ const DEFAULT_SOTTTT_PERMS: Record<RbacModuleKey, Omit<ModulePermissionState, 'i
   SETTINGS: { canView: true, canCreate: false, canEdit: false, canDelete: false, canApprove: false },
 };
 
-const DEFAULT_COMMUNE_PERMS: Record<RbacModuleKey, Omit<ModulePermissionState, 'isSuperAdmin' | 'role'>> = {
+export const DEFAULT_COMMUNE_PERMS: Record<RbacModuleKey, Omit<ModulePermissionState, 'isSuperAdmin' | 'role'>> = {
   LOCATIONS: { canView: true, canCreate: false, canEdit: true, canDelete: false, canApprove: false },
   DEVICES: { canView: true, canCreate: false, canEdit: false, canDelete: false, canApprove: false },
   CAMPAIGNS: { canView: true, canCreate: true, canEdit: false, canDelete: false, canApprove: false },

@@ -3,6 +3,7 @@ import {
   ShieldAlert,
   Save,
   RefreshCw,
+  RotateCcw,
   Check,
   X,
   CheckCircle,
@@ -12,7 +13,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { RolePermissionDto } from '../../types/models';
-import { useRbac } from '../../utils/rbac';
+import { useRbac, DEFAULT_COMMUNE_PERMS, DEFAULT_SOTTTT_PERMS, RbacModuleKey } from '../../utils/rbac';
 
 const MODULES = [
   { key: 'LOCATIONS', label: '1. Điểm phát Wi-Fi' },
@@ -73,8 +74,36 @@ export const RolePermissionsPage: React.FC = () => {
         canApprove: true,
       };
     }
+
     const found = permissions.find((p) => p.roleName === role && p.moduleName === module);
-    if (found) return found;
+    // If permission exists in state and has at least one active flag or is explicitly configured, use it
+    if (found) {
+      const rolePerms = permissions.filter((p) => p.roleName === role);
+      const hasAnyConfigured = rolePerms.some((p) => p.canView || p.canCreate || p.canEdit || p.canDelete || p.canApprove);
+      if (hasAnyConfigured) {
+        return found;
+      }
+    }
+
+    // Default standard matrix for city government roles
+    const fallback =
+      role === 'ROLE_SOTTTT_ADMIN'
+        ? DEFAULT_SOTTTT_PERMS[module as RbacModuleKey]
+        : DEFAULT_COMMUNE_PERMS[module as RbacModuleKey];
+
+    if (fallback) {
+      return {
+        id: found?.id || 0,
+        roleName: role,
+        moduleName: module,
+        canView: fallback.canView,
+        canCreate: fallback.canCreate,
+        canEdit: fallback.canEdit,
+        canDelete: fallback.canDelete,
+        canApprove: fallback.canApprove,
+      };
+    }
+
     return {
       id: 0,
       roleName: role,
@@ -85,6 +114,28 @@ export const RolePermissionsPage: React.FC = () => {
       canDelete: false,
       canApprove: false,
     };
+  };
+
+  const handleResetToDefault = () => {
+    const defaults = selectedRole === 'ROLE_SOTTTT_ADMIN' ? DEFAULT_SOTTTT_PERMS : DEFAULT_COMMUNE_PERMS;
+    setPermissions((prev) => {
+      const remaining = prev.filter((p) => p.roleName !== selectedRole);
+      const newPerms: RolePermissionDto[] = MODULES.map((m) => {
+        const d = defaults[m.key as RbacModuleKey] || { canView: false, canCreate: false, canEdit: false, canDelete: false, canApprove: false };
+        return {
+          id: 0,
+          roleName: selectedRole,
+          moduleName: m.key,
+          canView: d.canView,
+          canCreate: d.canCreate,
+          canEdit: d.canEdit,
+          canDelete: d.canDelete,
+          canApprove: d.canApprove,
+        };
+      });
+      return [...remaining, ...newPerms];
+    });
+    setSuccessMsg(`Đã nạp ma trận phân quyền chuẩn cho vai trò: ${ROLES.find(r => r.key === selectedRole)?.label}. Bạn hãy bấm "Lưu Quyền Hạn" để áp dụng.`);
   };
 
   const handleToggle = (role: string, module: string, action: 'canView' | 'canCreate' | 'canEdit' | 'canDelete' | 'canApprove') => {
@@ -169,6 +220,17 @@ export const RolePermissionsPage: React.FC = () => {
             <RefreshCw className="w-4 h-4" />
             Làm mới
           </button>
+          {canModifyMatrix && selectedRole !== 'ROLE_SUPER_ADMIN' && (
+            <button
+              onClick={handleResetToDefault}
+              disabled={saving}
+              className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-sm border border-amber-200 transition-colors"
+              title="Khôi phục ma trận phân quyền chuẩn theo quy định TP Hải Phòng"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Khôi phục quyền chuẩn
+            </button>
+          )}
           {canModifyMatrix && (
             <button
               onClick={handleSaveRole}
@@ -214,16 +276,21 @@ export const RolePermissionsPage: React.FC = () => {
       </div>
 
       {/* Role Details Notice */}
-      <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-sm flex items-start gap-3 text-sm text-yellow-700">
+      <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-sm flex flex-col gap-2 text-sm text-gray-700">
         <div>
-          <span className="font-bold">Đang cấu hình cho: </span>
-          {ROLES.find((r) => r.key === selectedRole)?.label}
+          <span className="font-bold text-gray-900">Đang cấu hình cho: </span>
+          <span className="font-semibold text-blue-700">{ROLES.find((r) => r.key === selectedRole)?.label}</span>
           {selectedRole === 'ROLE_SUPER_ADMIN' && (
             <span className="ml-2 text-xs font-semibold text-purple-700 bg-purple-100 px-2 py-0.5 rounded">
               Vai trò Quản trị cấp cao mặc định có tất cả quyền hạn
             </span>
           )}
         </div>
+        {selectedRole === 'ROLE_COMMUNE_OFFICER' && (
+          <div className="text-xs text-teal-800 bg-teal-50/80 p-2.5 rounded border border-teal-200">
+            <strong>Đặc quyền Cán bộ UBND Xã / Phường chuẩn TP Hải Phòng:</strong> Được <strong>Xem & Sửa</strong> thông tin liên hệ Trưởng thôn tại Điểm phát; <strong>Xem</strong> tình trạng AP Nhà văn hóa; <strong>Tạo mới</strong> phiếu khảo sát ý kiến người dân; <strong>Tạo mới</strong> phiếu báo sự cố hỏng mạng Wi-Fi tại Nhà văn hóa.
+          </div>
+        )}
       </div>
 
       {/* Matrix Table */}
