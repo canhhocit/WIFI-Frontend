@@ -48,6 +48,11 @@ const ROLE_LABELS: Record<string, { label: string; color: string; desc: string }
     color: 'bg-purple-100 text-purple-800 border-purple-200',
     desc: 'Quyền vận hành chung',
   },
+  ROLE_VIETTEL_ENGINEER: {
+    label: 'Quản trị hệ thống (Kỹ thuật)',
+    color: 'bg-amber-100 text-amber-800 border-amber-200',
+    desc: 'Kỹ thuật vận hành viễn thông',
+  },
 };
 
 export const UsersPage: React.FC = () => {

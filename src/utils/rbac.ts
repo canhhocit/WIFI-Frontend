@@ -30,9 +30,9 @@ const DEFAULT_SOTTTT_PERMS: Record<RbacModuleKey, Omit<ModulePermissionState, 'i
 };
 
 const DEFAULT_COMMUNE_PERMS: Record<RbacModuleKey, Omit<ModulePermissionState, 'isSuperAdmin' | 'role'>> = {
-  LOCATIONS: { canView: true, canCreate: false, canEdit: false, canDelete: false, canApprove: false },
+  LOCATIONS: { canView: true, canCreate: false, canEdit: true, canDelete: false, canApprove: false },
   DEVICES: { canView: true, canCreate: false, canEdit: false, canDelete: false, canApprove: false },
-  CAMPAIGNS: { canView: true, canCreate: false, canEdit: false, canDelete: false, canApprove: false },
+  CAMPAIGNS: { canView: true, canCreate: true, canEdit: false, canDelete: false, canApprove: false },
   INCIDENTS: { canView: true, canCreate: true, canEdit: false, canDelete: false, canApprove: false },
   USERS: { canView: false, canCreate: false, canEdit: false, canDelete: false, canApprove: false },
   SETTINGS: { canView: false, canCreate: false, canEdit: false, canDelete: false, canApprove: false },

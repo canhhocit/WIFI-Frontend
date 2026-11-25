@@ -45,8 +45,11 @@ import { Toast } from '../../components/Toast';
 import { VietnamFlag } from '../../components/VietnamFlag';
 import { Modal } from '../../components/Modal';
 import { portalApi } from '../../api/portalApi';
+import { useRbac } from '../../utils/rbac';
 
 export const PortalBuilderPage: React.FC = () => {
+  const { canEdit: canEditCampaigns } = useRbac('CAMPAIGNS');
+  const { canEdit: canEditLocations } = useRbac('LOCATIONS');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -686,6 +689,11 @@ export const PortalBuilderPage: React.FC = () => {
                         <span className="px-1.5 py-0.2 bg-red-100 text-[#ee0033] rounded text-[9.5px] font-bold">
                           Áp dụng mặc định cho tất cả NVH
                         </span>
+                        {!canEditCampaigns && (
+                          <span className="px-1.5 py-0.2 bg-amber-100 text-amber-800 rounded text-[9.5px] font-bold border border-amber-300">
+                            Chế độ xem
+                          </span>
+                        )}
                       </div>
                       <p className="text-[10.5px] text-slate-600 truncate mt-0.5">
                         Khung điện thoại bên phải đang dùng mô phỏng với: <strong className="text-slate-800">{selectedLocation?.name || 'Nhà văn hóa'}</strong>.
@@ -988,32 +996,40 @@ export const PortalBuilderPage: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 ml-auto">
-                    <button
-                      type="button"
-                      disabled={saving}
-                      onClick={() => handleSaveGlobalTemplate(false)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
-                      title="Lưu lại cấu hình dưới dạng bản nháp nội bộ"
-                    >
-                      <Save className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Lưu nháp</span>
-                    </button>
-                    <button
-                      type="button"
-                      disabled={saving}
-                      onClick={() => handleSaveGlobalTemplate(true)}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#004b87] hover:bg-[#003865] text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
-                      title="Xuất bản và phát hành chính thức cho người dân"
-                    >
-                      {saving ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
-                      )}
-                      <span>Xuất bản</span>
-                    </button>
-                  </div>
+                  {canEditCampaigns ? (
+                    <div className="flex items-center gap-2 ml-auto">
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={() => handleSaveGlobalTemplate(false)}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+                        title="Lưu lại cấu hình dưới dạng bản nháp nội bộ"
+                      >
+                        <Save className="w-3.5 h-3.5 text-slate-500" />
+                        <span>Lưu nháp</span>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={() => handleSaveGlobalTemplate(true)}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#004b87] hover:bg-[#003865] text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
+                        title="Xuất bản và phát hành chính thức cho người dân"
+                      >
+                        {saving ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
+                        )}
+                        <span>Xuất bản</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 ml-auto">
+                      <span className="text-[11px] text-slate-500 italic">
+                        Chỉ Quản trị viên & Sở KH&CN mới có quyền lưu mẫu chung toàn TP
+                      </span>
+                    </div>
+                  )}
                 </div>
               </form>
             ) : (
