@@ -758,9 +758,6 @@ export const DevicesPage: React.FC = () => {
                         );
                       })()}
                     </h3>
-                    <span className="text-[11px] text-slate-400">
-                      {locPorts.apiReachable ? 'Trạng thái cổng LAN trực tiếp từ Grandstream' : 'Chưa kết nối được GWN Cloud'}
-                    </span>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     {locPorts.ports.map((p) => (
