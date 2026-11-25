@@ -996,14 +996,6 @@ export const LocationsPage: React.FC = () => {
               category="banners"
             />
 
-            <ImageUploadInput
-              value={formData.backgroundImageUrl}
-              onChange={(url) => setFormData({ ...formData, backgroundImageUrl: url })}
-              label="Hình nền riêng của điểm này"
-              helperText="Tải ảnh từ máy hoặc dán URL (để trống nếu dùng nền chung)"
-              category="banners"
-            />
-
             <div className="grid grid-cols-1 gap-2">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -1259,14 +1251,6 @@ export const LocationsPage: React.FC = () => {
               onChange={(url) => setFormData({ ...formData, promoBannerUrl: url })}
               label="Ảnh Banner"
               helperText="Tải từ máy hoặc nhập liên kết ảnh"
-              category="banners"
-            />
-
-            <ImageUploadInput
-              value={formData.backgroundImageUrl}
-              onChange={(url) => setFormData({ ...formData, backgroundImageUrl: url })}
-              label="Hình nền riêng của điểm này "
-              helperText="Tải ảnh nền từ máy tính hoặc dán URL (để trống nếu dùng nền chung)"
               category="banners"
             />
 
