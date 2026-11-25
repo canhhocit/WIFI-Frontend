@@ -768,7 +768,7 @@ export const DevicesPage: React.FC = () => {
                         className={`rounded border px-3 py-2 flex items-center justify-between ${p.status === 'ONLINE' ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50'}`}>
                         <div>
                           <div className="text-xs font-semibold text-slate-700">{p.label}</div>
-                          <div className="text-[11px] text-slate-500">{p.meshName || 'Chưa gán mesh'}</div>
+                          {p.meshName && <div className="text-[11px] text-slate-500">{p.meshName}</div>}
                         </div>
                         <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${p.status === 'ONLINE' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>
                           {p.status === 'ONLINE' ? 'ONLINE' : 'OFFLINE'}
