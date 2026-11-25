@@ -306,6 +306,11 @@ export const adminApi = {
     return request<GwnPortStatus>(`/v1/admin/network-devices/location/${locationId}/gwn-ports`);
   },
 
+  // Client đang kết nối (từ GDMS) của router GWN tại điểm — để liệt kê + thống kê theo cổng/AP.
+  getConnectedClientsByLocation: (locationId: number) => {
+    return request<GwnClientDto[]>(`/v1/admin/network-devices/location/${locationId}/connected-clients`);
+  },
+
   rebootNetworkDevice: (id: number) => {
     return request<NetworkDeviceDto>(`/v1/admin/network-devices/${id}/reboot`, {
       method: 'POST',

@@ -87,6 +87,8 @@ export const DevicesPage: React.FC = () => {
   const [locDevices, setLocDevices] = useState<NetworkDeviceDto[]>([]);
   const [loadingLocDevices, setLoadingLocDevices] = useState(false);
   const [locPorts, setLocPorts] = useState<GwnPortStatus | null>(null);
+  // Client đang kết nối (từ GDMS) của điểm đang xem — để thống kê theo cổng/AP + liệt kê.
+  const [locClients, setLocClients] = useState<GwnClientDto[]>([]);
 
   // Device swap modal state
   const [swapModalOpen, setSwapModalOpen] = useState(false);
@@ -198,10 +200,12 @@ export const DevicesPage: React.FC = () => {
   const loadLocationDetail = async (loc: LocationDto) => {
     setLoadingLocDevices(true);
     setLocPorts(null);
+    setLocClients([]);
     try {
       const devs = await adminApi.getNetworkDevicesByLocation(loc.id);
       setLocDevices(devs || []);
       adminApi.getGwnPortStatusByLocation(loc.id).then(setLocPorts).catch(() => setLocPorts(null));
+      adminApi.getConnectedClientsByLocation(loc.id).then((c) => setLocClients(c || [])).catch(() => setLocClients([]));
       setError(null);
     } catch (err: any) {
       setError(err?.message || 'Không thể tải thiết bị của địa điểm.');
@@ -772,18 +776,63 @@ export const DevicesPage: React.FC = () => {
                     </h3>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    {locPorts.ports.map((p) => (
+                    {locPorts.ports.map((p) => {
+                      const nClients = locClients.filter((c) => (c.lanPort || '') === p.port).length;
+                      return (
                       <div key={p.port}
                         className={`rounded border px-3 py-2 flex items-center justify-between ${p.status === 'ONLINE' ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50'}`}>
                         <div>
                           <div className="text-xs font-semibold text-slate-700">{p.label}</div>
                           {p.meshName && <div className="text-[11px] text-slate-500">{p.meshName}</div>}
+                          {p.status === 'ONLINE' && (
+                            <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                              <Users className="w-3 h-3 text-slate-400" /> {nClients} client
+                            </div>
+                          )}
                         </div>
                         <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${p.status === 'ONLINE' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>
                           {p.status === 'ONLINE' ? 'ONLINE' : 'OFFLINE'}
                         </span>
                       </div>
-                    ))}
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Client đang kết nối (từ GDMS) */}
+              {!viewUnassigned && locClients.length > 0 && (
+                <div className="bg-white rounded border border-slate-300 shadow-xs p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-slate-700">Client đang kết nối ({locClients.length})</h3>
+                    <span className="text-[11px] text-slate-400">Từ Grandstream GDMS</span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-[11px] text-left">
+                      <thead>
+                        <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
+                          <th className="py-1.5 px-2.5 font-semibold">Tên / MAC</th>
+                          <th className="py-1.5 px-2.5 font-semibold">IP</th>
+                          <th className="py-1.5 px-2.5 font-semibold">Kết nối</th>
+                          <th className="py-1.5 px-2.5 font-semibold">Cổng AP</th>
+                          <th className="py-1.5 px-2.5 font-semibold text-right">Dung lượng</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {locClients.map((c, i) => (
+                          <tr key={i} className="hover:bg-slate-50/70">
+                            <td className="py-1.5 px-2.5">
+                              <span className="font-semibold text-slate-800">{c.hostname || 'Client'}</span>
+                              <span className="block text-slate-400 font-mono">{c.mac}</span>
+                            </td>
+                            <td className="py-1.5 px-2.5 font-mono text-slate-600">{c.ip || '—'}</td>
+                            <td className="py-1.5 px-2.5 text-slate-600">{c.wired ? 'Có dây' : c.radioBand}</td>
+                            <td className="py-1.5 px-2.5 text-slate-600">{c.lanPort ? `LAN${c.lanPort}` : '—'}</td>
+                            <td className="py-1.5 px-2.5 text-right text-slate-500 whitespace-nowrap">↓{formatBytes(c.bytesRx)} · ↑{formatBytes(c.bytesTx)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               )}

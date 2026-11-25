@@ -236,6 +236,8 @@ export interface GwnClientDto {
   bytesRx: number;
   bytesTx: number;
   connectTimeSeconds: number;
+  lanPort?: string | null;
+  wired?: boolean;
 }
 
 export interface GwnUpgradeResult {
