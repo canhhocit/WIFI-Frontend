@@ -68,6 +68,7 @@ export const DevicesPage: React.FC = () => {
 
   // Grandstream sync & reboot state
   const [syncingGwn, setSyncingGwn] = useState(false);
+  const [refreshingMesh, setRefreshingMesh] = useState(false);
   const [syncSuccessMsg, setSyncSuccessMsg] = useState<string | null>(null);
   const [deviceToReboot, setDeviceToReboot] = useState<NetworkDeviceDto | null>(null);
   const [rebootingId, setRebootingId] = useState<number | null>(null);
@@ -166,6 +167,21 @@ export const DevicesPage: React.FC = () => {
       setError(err?.message || 'Lỗi khi đồng bộ dữ liệu từ Grandstream Cloud.');
     } finally {
       setSyncingGwn(false);
+    }
+  };
+
+  const handleRefreshMeshStatus = async () => {
+    setRefreshingMesh(true);
+    setError(null);
+    setSyncSuccessMsg(null);
+    try {
+      const count = await adminApi.refreshMeshStatus();
+      setSyncSuccessMsg(`Đã làm mới trạng thái ${count ?? 0} mesh từ GWN Cloud (link cổng LAN).`);
+      await loadNetworkDevices();
+    } catch (err: any) {
+      setError(err?.message || 'Lỗi khi làm mới trạng thái mesh từ GWN Cloud.');
+    } finally {
+      setRefreshingMesh(false);
     }
   };
 
@@ -490,6 +506,22 @@ export const DevicesPage: React.FC = () => {
                 ) : (
                   <>
                     <RotateCw className="w-3.5 h-3.5" /> Đồng bộ từ Grandstream Cloud
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleRefreshMeshStatus}
+                disabled={refreshingMesh}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 disabled:opacity-50 text-white rounded-sm text-xs font-semibold transition cursor-pointer shadow-xs"
+                title="Làm mới ngay trạng thái on/off của mesh từ Grandstream GWN Cloud (link cổng LAN), không chờ chu kỳ tự động"
+              >
+                {refreshingMesh ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Đang làm mới...
+                  </>
+                ) : (
+                  <>
+                    <RotateCw className="w-3.5 h-3.5" /> Làm mới trạng thái mesh
                   </>
                 )}
               </button>

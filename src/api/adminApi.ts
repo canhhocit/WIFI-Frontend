@@ -251,6 +251,13 @@ export const adminApi = {
     });
   },
 
+  // Làm mới NGAY trạng thái on/off của mesh từ GWN Cloud (link cổng LAN), không chờ chu kỳ tự động.
+  refreshMeshStatus: () => {
+    return request<number>('/v1/admin/network-devices/mesh/refresh-status', {
+      method: 'POST',
+    });
+  },
+
   rebootNetworkDevice: (id: number) => {
     return request<NetworkDeviceDto>(`/v1/admin/network-devices/${id}/reboot`, {
       method: 'POST',
