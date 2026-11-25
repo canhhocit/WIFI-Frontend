@@ -472,7 +472,7 @@ export const AdminLayout: React.FC = () => {
   return (
     <div className="min-h-screen md:h-screen md:overflow-hidden bg-slate-100 flex flex-col md:flex-row font-sans">
       {/* Mobile Top Header */}
-      <div className="md:hidden bg-white text-[#ee0033] px-4 py-3 flex items-center justify-between border-b border-red-100 sticky top-0 z-40 shadow-2xs">
+      <div className="md:hidden bg-white text-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-200 sticky top-0 z-40 shadow-2xs">
         <div className="flex items-center gap-2.5">
           <VietnamFlag width={30} height={20} className="shadow-xs rounded-xs" />
           <span className="font-bold text-xs uppercase tracking-wide text-[#ee0033]">
@@ -481,7 +481,7 @@ export const AdminLayout: React.FC = () => {
         </div>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-1.5 rounded text-[#ee0033] hover:bg-red-50 cursor-pointer"
+          className="p-1.5 rounded text-slate-600 hover:text-[#ee0033] hover:bg-red-50 cursor-pointer"
         >
           {mobileMenuOpen ? (
             <X className="w-5 h-5" />
@@ -501,7 +501,7 @@ export const AdminLayout: React.FC = () => {
 
       {/* Sidebar Navigation */}
       <aside
-        className={`fixed md:sticky top-0 left-0 z-30 h-screen bg-white text-[#ee0033] flex flex-col border-r border-slate-200 shadow-2xs transition-all duration-300 ease-in-out ${mobileMenuOpen
+        className={`fixed md:sticky top-0 left-0 z-30 h-screen bg-white text-slate-700 flex flex-col border-r border-slate-200 shadow-2xs transition-all duration-300 ease-in-out ${mobileMenuOpen
             ? "translate-x-0 w-72"
             : "-translate-x-full md:translate-x-0"
           } ${desktopCollapsed
@@ -513,7 +513,7 @@ export const AdminLayout: React.FC = () => {
           {/* Department & Viettel Telecom Brand Banner */}
           <div
             data-tour="welcome-card"
-            className={`border-b border-red-100 bg-white flex items-center transition-all ${desktopCollapsed
+            className={`border-b border-slate-200 bg-white flex items-center transition-all ${desktopCollapsed
                 ? "p-2.5 flex-col gap-2 justify-center"
                 : "p-3.5 justify-between"
               }`}
@@ -539,7 +539,7 @@ export const AdminLayout: React.FC = () => {
                     UBND TP. HẢI PHÒNG
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-xs text-[#ee0033] font-bold tracking-tight truncate">
+                    <span className="text-xs text-slate-900 font-bold tracking-tight truncate">
                       Quản Trị Wi-Fi
                     </span>
                     <span className="px-1.5 py-0.2 rounded-xs bg-[#ee0033] text-white text-[9px] font-black uppercase tracking-wider">
@@ -555,7 +555,7 @@ export const AdminLayout: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                className="p-1.5 rounded text-[#ee0033] hover:bg-red-50 transition cursor-pointer"
+                className="p-1.5 rounded text-slate-500 hover:text-[#ee0033] hover:bg-red-50 transition cursor-pointer"
                 title="Đóng menu điều hướng"
               >
                 <X className="w-4 h-4" />
@@ -564,10 +564,10 @@ export const AdminLayout: React.FC = () => {
           </div>
 
           {!desktopCollapsed && (
-            <div className="px-3 py-2 border-b border-red-100 bg-white flex items-center justify-between text-[11px]">
+            <div className="px-3.5 py-2 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between text-[11px]">
               <div className="flex items-center gap-2">
                 <ViettelLogo height={14} variant="simple" color="red" showTagline={false} />
-                <span className="text-[10px] font-bold text-[#ee0033] uppercase tracking-wide">Viettel Telecom</span>
+                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide">Viettel Telecom</span>
               </div>
               <a
                 href="/portal"
@@ -590,13 +590,13 @@ export const AdminLayout: React.FC = () => {
             {filteredNavGroups.map((group, gIdx) => (
               <div key={group.groupTitle} className="space-y-1">
                 {!desktopCollapsed ? (
-                  <div className="px-3 text-[10px] font-bold text-[#ee0033]/75 uppercase tracking-wider">
+                  <div className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                     {group.groupTitle}
                   </div>
                 ) : (
-                  gIdx > 0 && <div className="h-px bg-red-100 my-2 mx-1" />
+                  gIdx > 0 && <div className="h-px bg-slate-200 my-2 mx-1" />
                 )}
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   {group.items.map((item) => {
                     const Icon = item.icon;
                     const isActive = item.end
@@ -610,18 +610,21 @@ export const AdminLayout: React.FC = () => {
                         data-tour={item.tourId}
                         onClick={() => setMobileMenuOpen(false)}
                         title={desktopCollapsed ? item.label : undefined}
-                        className={`flex items-center rounded transition group relative ${desktopCollapsed
+                        className={`flex items-center rounded-md transition group relative ${desktopCollapsed
                             ? "justify-center p-2.5"
-                            : "gap-2.5 px-3 py-1.5 text-xs font-medium"
+                            : "gap-2.5 px-3 py-2 text-xs font-medium"
                           } ${isActive
-                            ? "bg-red-50 text-[#ee0033] font-bold border border-red-200 border-l-4 border-l-[#ee0033] shadow-2xs"
-                            : "text-[#ee0033] hover:text-[#b80028] hover:bg-red-50/60"
+                            ? "bg-red-50 text-[#ee0033] font-bold shadow-2xs ring-1 ring-red-200/80"
+                            : "text-slate-700 hover:text-[#ee0033] hover:bg-red-50/50"
                           }`}
                       >
+                        {isActive && !desktopCollapsed && (
+                          <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-[#ee0033] rounded-r" />
+                        )}
                         <Icon
-                          className={`w-4 h-4 flex-shrink-0 transition-transform ${isActive
+                          className={`w-4 h-4 flex-shrink-0 transition-colors ${isActive
                               ? "text-[#ee0033]"
-                              : "text-[#ee0033]/80 group-hover:text-[#ee0033]"
+                              : "text-slate-400 group-hover:text-[#ee0033]"
                             }`}
                         />
                         {!desktopCollapsed && (
@@ -637,7 +640,7 @@ export const AdminLayout: React.FC = () => {
           {/* User Profile & Logout */}
           <div
             data-tour="user-profile"
-            className={`border-t border-red-100 bg-white flex items-center transition-all ${desktopCollapsed
+            className={`border-t border-slate-200 bg-slate-50/70 flex items-center transition-all ${desktopCollapsed
                 ? "p-2 flex-col gap-2 justify-center"
                 : "p-3 justify-between gap-2"
               }`}
@@ -646,13 +649,13 @@ export const AdminLayout: React.FC = () => {
               <>
                 <div className="truncate pr-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-[#ee0033] truncate">
+                    <span className="text-xs font-bold text-slate-800 truncate">
                       {currentUser?.fullName ||
                         currentUser?.username ||
                         "Cán bộ Quản trị"}
                     </span>
                   </div>
-                  <div className="text-[10px] text-[#ee0033]/75 font-mono truncate mt-0.5">
+                  <div className="text-[10px] text-slate-500 font-mono truncate mt-0.5">
                     {currentUser?.email || "admin@haiphong.gov.vn"}
                   </div>
                 </div>
@@ -660,14 +663,14 @@ export const AdminLayout: React.FC = () => {
                   <button
                     onClick={() => setIsChangePasswordOpen(true)}
                     title="Đổi mật khẩu tài khoản"
-                    className="p-1.5 rounded text-[#ee0033] hover:bg-red-50 border border-transparent hover:border-red-200 transition cursor-pointer"
+                    className="p-1.5 rounded text-slate-500 hover:text-amber-600 hover:bg-amber-50 border border-transparent hover:border-amber-200 transition cursor-pointer"
                   >
                     <KeyRound className="w-4 h-4" />
                   </button>
                   <button
                     onClick={handleLogout}
                     title="Đăng xuất an toàn"
-                    className="p-1.5 rounded text-[#ee0033] hover:bg-red-50 border border-transparent hover:border-red-200 transition cursor-pointer"
+                    className="p-1.5 rounded text-slate-500 hover:text-[#ee0033] hover:bg-red-50 border border-transparent hover:border-red-200 transition cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
                   </button>
@@ -690,14 +693,14 @@ export const AdminLayout: React.FC = () => {
                 <button
                   onClick={() => setIsChangePasswordOpen(true)}
                   title="Đổi mật khẩu tài khoản"
-                  className="p-2 rounded text-[#ee0033] hover:bg-red-50 transition cursor-pointer"
+                  className="p-2 rounded text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
                 >
                   <KeyRound className="w-4 h-4" />
                 </button>
                 <button
                   onClick={handleLogout}
                   title="Đăng xuất an toàn"
-                  className="p-2 rounded text-[#ee0033] hover:bg-red-50 transition cursor-pointer"
+                  className="p-2 rounded text-slate-500 hover:text-[#ee0033] hover:bg-red-50 transition cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
