@@ -9,9 +9,6 @@ import {
   Users,
   Wifi,
   HardDrive,
-  Award,
-  ShieldCheck,
-  Clock,
   RefreshCw,
   Landmark,
   Send,
@@ -51,6 +48,7 @@ export const GovernmentReportPage: React.FC = () => {
   const [submitTitle, setSubmitTitle] = useState<string>('');
   const [submitNotes, setSubmitNotes] = useState<string>('');
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccessMsg, setSubmitSuccessMsg] = useState<string | null>(null);
 
   const loadReport = async () => {
@@ -114,9 +112,10 @@ export const GovernmentReportPage: React.FC = () => {
   };
 
   const handleOpenSubmitModal = () => {
-    const periodLabel = period === 'MONTH' ? 'Tháng này' : period === 'PREV_MONTH' ? 'Tháng trước' : period;
+    const periodLabel = report?.reportPeriod || (period === 'MONTH' ? 'Tháng này' : period === 'PREV_MONTH' ? 'Tháng trước' : period);
     setSubmitTitle(`Báo cáo vận hành mạng Wi-Fi công cộng Hải Phòng - Kỳ ${periodLabel}`);
     setSubmitNotes('');
+    setSubmitError(null);
     setShowSubmitModal(true);
   };
 
@@ -124,11 +123,14 @@ export const GovernmentReportPage: React.FC = () => {
     e.preventDefault();
     if (!submitTitle.trim()) return;
     setSubmitting(true);
+    setSubmitError(null);
     setExportError(null);
     try {
       await adminApi.submitGovernmentReport({
-        reportPeriod: period,
+        period,
         title: submitTitle.trim(),
+        recipientAgency: 'UBND TP Hải Phòng & Sở KH&CN',
+        exportFormat: 'PDF',
         notes: submitNotes.trim() || undefined,
       });
       setShowSubmitModal(false);
@@ -136,7 +138,7 @@ export const GovernmentReportPage: React.FC = () => {
       await loadHistory();
       setTimeout(() => setSubmitSuccessMsg(null), 5000);
     } catch (err: any) {
-      setExportError(err?.message || 'Lỗi khi lưu vết nộp báo cáo');
+      setSubmitError(err?.message || 'Lỗi khi lưu vết nộp báo cáo');
     } finally {
       setSubmitting(false);
     }
@@ -283,7 +285,7 @@ export const GovernmentReportPage: React.FC = () => {
                 SỞ KHOA HỌC VÀ CÔNG NGHỆ
               </div>
               <div className="w-32 h-0.5 bg-red-800 mt-1 mb-1" />
-              <div className="text-[11px] text-gray-600 font-sans italic">Số: 1584/BC-SKHCN-CNTT</div>
+              <div className="text-[11px] text-gray-600 font-sans italic">Số: ....../BC-SKHCN</div>
             </div>
 
             <div className="w-1/2 text-right">
@@ -321,13 +323,16 @@ export const GovernmentReportPage: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 print:grid-cols-4 gap-3 print:gap-2 py-2 print:py-0.5">
               <div className="p-3 print:p-2 bg-slate-50 border rounded-sm">
                 <div className="flex items-center justify-between text-gray-500 text-xs print:text-[10.5px]">
-                  <span>Quy mô điểm phát</span>
+                  <span>Điểm phát trực tuyến</span>
                   <Building2 className="w-4 h-4 print:w-3.5 print:h-3.5 text-gray-400" />
                 </div>
-                <div className="mt-2 print:mt-1 text-2xl print:text-base font-bold text-gray-900">
-                  {report.activeLocations} điểm đang phát
+                <div className="mt-2 print:mt-1 flex items-baseline gap-1.5 whitespace-nowrap">
+                  <span className="text-2xl print:text-base font-bold text-gray-900 font-mono">
+                    {report.activeLocations}
+                  </span>
+                  <span className="text-xs print:text-[10px] font-semibold text-gray-600">điểm Online</span>
                 </div>
-                <div className="text-[11px] print:text-[9.5px] text-emerald-700 font-semibold mt-0.5">
+                <div className="text-[11px] print:text-[9.5px] text-slate-600 font-medium mt-0.5">
                   Quy hoạch: {report.totalTargetLocations.toLocaleString()} điểm NVH
                 </div>
               </div>
@@ -335,12 +340,12 @@ export const GovernmentReportPage: React.FC = () => {
               <div className="p-3 print:p-2 bg-slate-50 border rounded-sm">
                 <div className="flex items-center justify-between text-gray-500 text-xs print:text-[10.5px]">
                   <span>Độ khả dụng mạng</span>
-                  <Wifi className="w-4 h-4 print:w-3.5 print:h-3.5 text-emerald-600" />
+                  <Wifi className={`w-4 h-4 print:w-3.5 print:h-3.5 ${report.networkAvailabilityRate >= 99 ? 'text-emerald-600' : report.networkAvailabilityRate >= 80 ? 'text-amber-600' : 'text-rose-600'}`} />
                 </div>
-                <div className="mt-2 print:mt-1 text-2xl print:text-base font-bold text-emerald-600">
+                <div className={`mt-2 print:mt-1 text-2xl print:text-base font-bold font-mono ${report.networkAvailabilityRate >= 99 ? 'text-emerald-600' : report.networkAvailabilityRate >= 80 ? 'text-amber-600' : 'text-rose-600'}`}>
                   {report.networkAvailabilityRate}%
                 </div>
-                <div className="text-[11px] print:text-[9.5px] text-gray-500 mt-0.5">Cam kết theo đề án: &gt; 99.0%</div>
+                <div className="text-[11px] print:text-[9.5px] text-gray-500 mt-0.5">Chỉ tiêu đề án: &gt; 99.0%</div>
               </div>
 
               <div className="p-3 print:p-2 bg-slate-50 border rounded-sm">
@@ -359,51 +364,10 @@ export const GovernmentReportPage: React.FC = () => {
                   <span>Dung lượng dữ liệu</span>
                   <HardDrive className="w-4 h-4 print:w-3.5 print:h-3.5 text-indigo-600" />
                 </div>
-                <div className="mt-2 print:mt-1 text-2xl print:text-base font-bold text-indigo-600">
+                <div className="mt-2 print:mt-1 text-2xl print:text-base font-bold text-indigo-600 font-mono">
                   {formatDataVolume(report.totalDataServedTb)}
                 </div>
-                <div className="text-[11px] print:text-[9.5px] text-gray-500 mt-0.5">Dịch vụ công &amp; đời sống nhân dân</div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 print:grid-cols-3 gap-3 print:gap-2 py-1 print:py-0">
-              <div className="p-3 print:p-2 bg-emerald-50/70 border border-emerald-200 rounded-sm">
-                <div className="text-xs print:text-[10.5px] font-semibold text-emerald-900 flex items-center gap-1.5">
-                  <Award className="w-4 h-4 print:w-3.5 print:h-3.5 text-emerald-600" />
-                  Mức độ hài lòng của nhân dân
-                </div>
-                <div className="mt-1 print:mt-0.5 text-2xl print:text-base font-black text-emerald-700">
-                  {report.citizenSatisfactionRate}%
-                </div>
-                <div className="text-[11px] print:text-[9.5px] text-emerald-800 mt-0.5">
-                  Đánh giá Tốt / Rất tốt qua khảo sát trực tuyến
-                </div>
-              </div>
-
-              <div className="p-3 print:p-2 bg-blue-50/70 border border-blue-200 rounded-sm">
-                <div className="text-xs print:text-[10.5px] font-semibold text-blue-900 flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 print:w-3.5 print:h-3.5 text-blue-600" />
-                  Tuân thủ cam kết SLA Viễn thông
-                </div>
-                <div className="mt-1 print:mt-0.5 text-2xl print:text-base font-black text-blue-700">
-                  {report.telecomSlaComplianceRate}%
-                </div>
-                <div className="text-[11px] print:text-[9.5px] text-blue-800 mt-0.5">
-                  Tổng {report.totalIncidentsReported} sự cố kỹ thuật ghi nhận
-                </div>
-              </div>
-
-              <div className="p-3 print:p-2 bg-amber-50/70 border border-amber-200 rounded-sm">
-                <div className="text-xs print:text-[10.5px] font-semibold text-amber-900 flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 print:w-3.5 print:h-3.5 text-amber-600" />
-                  Thời gian phục hồi trung bình (MTTR)
-                </div>
-                <div className="mt-1 print:mt-0.5 text-2xl print:text-base font-black text-amber-700">
-                  {report.averageResolutionHours > 0 ? `${report.averageResolutionHours} Giờ` : '0.0 Giờ'}
-                </div>
-                <div className="text-[11px] print:text-[9.5px] text-amber-800 mt-0.5">
-                  Hạn mức cam kết tối đa: 4h - 8h
-                </div>
+                <div className="text-[11px] print:text-[9.5px] text-gray-500 mt-0.5">Lưu lượng qua Cổng chào</div>
               </div>
             </div>
           </div>
@@ -479,7 +443,7 @@ export const GovernmentReportPage: React.FC = () => {
                     <td className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-mono text-slate-900">
                       {report.totalIncidentsReported}
                     </td>
-                    <td className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-mono text-emerald-700">
+                    <td className={`px-3 py-2.5 print:px-1.5 print:py-1 text-center font-mono ${report.telecomSlaComplianceRate >= 95 ? 'text-emerald-700' : report.telecomSlaComplianceRate >= 80 ? 'text-amber-700' : 'text-rose-600'}`}>
                       {report.telecomSlaComplianceRate}%
                     </td>
                   </tr>
@@ -491,17 +455,26 @@ export const GovernmentReportPage: React.FC = () => {
           {/* Part III: Security & Digital Policy Note */}
           <div className="mt-8 print:mt-3 print:p-2.5 print:break-inside-avoid space-y-2 print:space-y-1 text-xs font-sans text-slate-700 bg-slate-50 p-4 rounded border border-slate-200">
             <h3 className="font-bold text-slate-900 uppercase font-serif text-[11px] print:text-[10px] tracking-wide">
-              III. ĐÁNH GIÁ CÔNG TÁC BẢO ĐẢM AN TOÀN THÔNG TIN & TRUYỀN THÔNG SỐ
+              III. ĐÁNH GIÁ HIỆN TRẠNG VẬN HÀNH &amp; AN TOÀN THÔNG TIN
             </h3>
             <ul className="list-disc pl-5 space-y-1 print:space-y-0.5 text-[11.5px] print:text-[9.5px] leading-relaxed print:leading-snug">
               <li>
-                <strong>Cổng chào số chính quyền:</strong> Phát sóng đồng bộ thông điệp chuyển đổi số, liên kết Cổng Dịch vụ công thành phố Hải Phòng và các tiện ích số thiết thực cho nhân dân.
+                <strong>Cổng chào số &amp; Dịch vụ công:</strong> Cổng chào điện tử phục vụ truyền thông chuyển đổi số và điều hướng trực tiếp tới Cổng Dịch vụ công thành phố Hải Phòng tại các điểm đã lắp đặt thiết bị.
               </li>
               <li>
-                <strong>An toàn an ninh thông tin:</strong> Hệ thống vận hành tuân thủ quy chuẩn ATTT Cấp độ 3 (Nghị định 85/2016/NĐ-CP); tích hợp bộ lọc tên miền độc hại DNS và nhật ký truy cập lưu trữ pháp lý 12 tháng theo Luật An ninh mạng.
+                <strong>An toàn thông tin &amp; Lưu vết pháp lý:</strong> Hệ thống áp dụng phân quyền 3 cấp, kiểm soát tên miền DNS và lưu trữ nhật ký phiên truy cập 12 tháng phục vụ công tác kiểm tra, giám sát theo quy định.
               </li>
               <li>
-                <strong>Cam kết chất lượng (SLA):</strong> Liên danh nhà thầu duy trì kỹ thuật thường trực 24/7, tỷ lệ sẵn sàng mạng luôn duy trì đạt chỉ tiêu cam kết với UBND thành phố.
+                <strong>Hiện trạng kết nối &amp; Tuân thủ SLA trong kỳ:</strong>{' '}
+                {report.networkAvailabilityRate >= 99 && report.telecomSlaComplianceRate >= 95 ? (
+                  <>
+                    Hệ thống vận hành ổn định, tỷ lệ sẵn sàng mạng đạt <strong>{report.networkAvailabilityRate}%</strong> và tỷ lệ xử lý sự cố đúng hạn SLA đạt <strong>{report.telecomSlaComplianceRate}%</strong> (MTTR: {report.averageResolutionHours} giờ).
+                  </>
+                ) : (
+                  <>
+                    Ghi nhận <strong>{report.activeLocations}</strong> điểm đang phát sóng trực tuyến (độ khả dụng <strong>{report.networkAvailabilityRate}%</strong> trên tổng số điểm đã khai báo); tiếp nhận <strong>{report.totalIncidentsReported}</strong> sự cố, tỷ lệ xử lý đúng hạn SLA đạt <strong>{report.telecomSlaComplianceRate}%</strong> (MTTR: {report.averageResolutionHours} giờ). Đề nghị các đơn vị đẩy nhanh tiến độ đấu nối thiết bị tại các điểm còn lại và xử lý dứt điểm các phiếu sự cố quá hạn.
+                  </>
+                )}
               </li>
             </ul>
           </div>
@@ -570,7 +543,7 @@ export const GovernmentReportPage: React.FC = () => {
                       </td>
                       <td className="px-3 py-3 text-center whitespace-nowrap">
                         <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded font-mono text-[11px]">
-                          {item.reportPeriod}
+                          {item.period || item.reportPeriod || '—'}
                         </span>
                       </td>
                       <td className="px-3 py-3 whitespace-nowrap">
@@ -578,12 +551,12 @@ export const GovernmentReportPage: React.FC = () => {
                         <div className="text-[11px] text-gray-400 font-mono">@{item.submittedBy}</div>
                       </td>
                       <td className="px-3 py-3 text-center whitespace-nowrap text-gray-500 font-mono text-[11px]">
-                        {new Date(item.createdAt).toLocaleString('vi-VN')}
+                        {new Date(item.submittedAt || item.createdAt).toLocaleString('vi-VN')}
                       </td>
                       <td className="px-3 py-3 text-center whitespace-nowrap">
-                        <span className="text-emerald-700 font-semibold">{item.availabilityRate}% khả dụng</span>
+                        <span className="text-emerald-700 font-semibold">{item.slaPercentage ?? item.availabilityRate ?? 0}% SLA</span>
                         <span className="text-gray-300 mx-1">|</span>
-                        <span className="text-blue-700 font-mono">{item.totalSessions.toLocaleString()} phiên</span>
+                        <span className="text-blue-700 font-mono">{(item.totalSessions ?? 0).toLocaleString()} phiên</span>
                       </td>
                       <td className="px-3 py-3 text-center whitespace-nowrap">
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -632,6 +605,12 @@ export const GovernmentReportPage: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmitReport} className="p-6 space-y-4">
+              {submitError && (
+                <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-sm flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                  <span>{submitError}</span>
+                </div>
+              )}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Kỳ báo cáo <span className="text-red-600">*</span>

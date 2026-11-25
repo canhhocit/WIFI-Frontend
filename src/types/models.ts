@@ -1003,23 +1003,33 @@ export interface GovernmentReportHistoryDto {
   id: number;
   reportCode: string;
   title: string;
-  reportPeriod: string;
+  period?: string;
+  reportPeriod?: string;
   submittedBy: string;
-  submittedByName: string;
-  submissionStatus: string;
+  submittedByName?: string;
+  status?: string;
+  submissionStatus?: string;
   totalLocations: number;
-  activeLocations: number;
-  availabilityRate: number;
+  onlineLocations?: number;
+  activeLocations?: number;
+  slaPercentage?: number;
+  availabilityRate?: number;
   totalSessions: number;
-  citizenSatisfactionRate: number;
+  totalDataGb?: number;
+  citizenSatisfactionRate?: number;
+  recipientAgency?: string;
+  exportFormat?: string;
   fileUrl?: string;
   notes?: string;
+  submittedAt?: string;
   createdAt: string;
 }
 
 export interface SubmitReportRequest {
-  reportPeriod: string;
-  title: string;
+  period: string;
+  title?: string;
+  recipientAgency?: string;
+  exportFormat?: string;
   notes?: string;
 }
 
