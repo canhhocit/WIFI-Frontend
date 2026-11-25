@@ -32,10 +32,12 @@ import { PortalInitResponse } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
 import { VietnamFlag } from '../../components/VietnamFlag';
 import { ViettelLogo } from '../../components/ViettelLogo';
-import { ReportIssueModal } from '../../components/ReportIssueModal';
-import { CitizenDigitalMediaModal } from '../../components/CitizenDigitalMediaModal';
 import { Play, Tv, Video, Eye, Share2, FileText, Image as ImageIcon } from 'lucide-react';
 import { normalizeMediaUrl, getYouTubeThumbnailUrl } from '../../utils/mediaUrl';
+
+// Lazy-load heavy modals so mobile Captive Portal CNA downloads minimum initial JavaScript
+const ReportIssueModal = React.lazy(() => import('../../components/ReportIssueModal').then(m => ({ default: m.ReportIssueModal })));
+const CitizenDigitalMediaModal = React.lazy(() => import('../../components/CitizenDigitalMediaModal').then(m => ({ default: m.CitizenDigitalMediaModal })));
 
 const DEFAULT_FALLBACK_PORTAL_DATA: PortalInitResponse = {
   location: {
@@ -824,15 +826,19 @@ export const PortalPage: React.FC = () => {
           </div>
         </div>
 
-        <ReportIssueModal
-          isOpen={showReportModal}
-          onClose={() => setShowReportModal(false)}
-          locationName={portalData?.location.name}
-          locationId={portalData?.location.id}
-          locationSlug={portalData?.location.slug || locationParam}
-          clientMac={effectiveClientMac}
-          clientIp={portalData?.clientIp || rawIp}
-        />
+        {showReportModal && (
+          <React.Suspense fallback={null}>
+            <ReportIssueModal
+              isOpen={showReportModal}
+              onClose={() => setShowReportModal(false)}
+              locationName={portalData?.location.name}
+              locationId={portalData?.location.id}
+              locationSlug={portalData?.location.slug || locationParam}
+              clientMac={effectiveClientMac}
+              clientIp={portalData?.clientIp || rawIp}
+            />
+          </React.Suspense>
+        )}
       </div>
     );
   }
@@ -886,14 +892,18 @@ export const PortalPage: React.FC = () => {
           </button>
         </div>
 
-        <ReportIssueModal
-          isOpen={showReportModal}
-          onClose={() => setShowReportModal(false)}
-          locationSlug={locationParam}
-          clientMac={effectiveClientMac}
-          clientIp={rawIp}
-          previewMode={isPreviewMode}
-        />
+        {showReportModal && (
+          <React.Suspense fallback={null}>
+            <ReportIssueModal
+              isOpen={showReportModal}
+              onClose={() => setShowReportModal(false)}
+              locationSlug={locationParam}
+              clientMac={effectiveClientMac}
+              clientIp={rawIp}
+              previewMode={isPreviewMode}
+            />
+          </React.Suspense>
+        )}
       </div>
     );
   }
@@ -1769,26 +1779,32 @@ export const PortalPage: React.FC = () => {
       </button>
       )}
 
-      <ReportIssueModal
-        isOpen={showReportModal}
-        onClose={() => setShowReportModal(false)}
-        locationName={portalData?.location.name}
-        locationId={portalData?.location.id}
-        locationSlug={portalData?.location.slug || locationParam}
-        clientMac={effectiveClientMac}
-        clientIp={portalData?.clientIp || rawIp}
-        previewMode={isPreviewMode}
-      />
+      {showReportModal && (
+        <React.Suspense fallback={null}>
+          <ReportIssueModal
+            isOpen={showReportModal}
+            onClose={() => setShowReportModal(false)}
+            locationName={portalData?.location.name}
+            locationId={portalData?.location.id}
+            locationSlug={portalData?.location.slug || locationParam}
+            clientMac={effectiveClientMac}
+            clientIp={portalData?.clientIp || rawIp}
+            previewMode={isPreviewMode}
+          />
+        </React.Suspense>
+      )}
 
       {/* Citizen Digital Media Modal (Trình chiếu Video & Toàn văn truyền thông số) */}
-      {activeCampaign && (
-        <CitizenDigitalMediaModal
-          isOpen={showMediaModal}
-          onClose={() => setShowMediaModal(false)}
-          campaign={activeCampaign}
-          onConnectToWatchVideo={isPreviewMode ? undefined : handleConnectAndWatchVideo}
-          isConnectingWifi={submitting}
-        />
+      {activeCampaign && showMediaModal && (
+        <React.Suspense fallback={null}>
+          <CitizenDigitalMediaModal
+            isOpen={showMediaModal}
+            onClose={() => setShowMediaModal(false)}
+            campaign={activeCampaign}
+            onConnectToWatchVideo={isPreviewMode ? undefined : handleConnectAndWatchVideo}
+            isConnectingWifi={submitting}
+          />
+        </React.Suspense>
       )}
     </div>
   );
