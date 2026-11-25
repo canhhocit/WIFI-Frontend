@@ -784,7 +784,7 @@ export const DevicesPage: React.FC = () => {
                         <div>
                           <div className="text-xs font-semibold text-slate-700">{p.label}</div>
                           {p.meshName && <div className="text-[11px] text-slate-500">{p.meshName}</div>}
-                          {p.status === 'ONLINE' && (
+                          {p.status === 'ONLINE' && locClients.length > 0 && (
                             <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
                               <Users className="w-3 h-3 text-slate-400" /> {nClients} client
                             </div>
