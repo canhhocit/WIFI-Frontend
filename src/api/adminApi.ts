@@ -290,6 +290,16 @@ export const adminApi = {
     });
   },
 
+  // "AP theo cổng GWN": on/off từng cổng LAN của GWN (biết đúng AP cổng nào chết, không cần MAC).
+  getGwnPortStatus: () => {
+    return request<{
+      apiReachable: boolean;
+      gwnName?: string | null;
+      siteName?: string | null;
+      ports: { port: string; label: string; status: string; meshName?: string | null; meshMac?: string | null; meshIp?: string | null }[];
+    }>('/v1/admin/network-devices/gwn-ports');
+  },
+
   rebootNetworkDevice: (id: number) => {
     return request<NetworkDeviceDto>(`/v1/admin/network-devices/${id}/reboot`, {
       method: 'POST',

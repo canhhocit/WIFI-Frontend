@@ -59,6 +59,7 @@ export const DevicesPage: React.FC = () => {
 
   // Network infrastructure devices state
   const [networkDevices, setNetworkDevices] = useState<NetworkDeviceDto[]>([]);
+  const [gwnPorts, setGwnPorts] = useState<any | null>(null);
   const [loadingNetDev, setLoadingNetDev] = useState(false);
   const [netPage, setNetPage] = useState(0);
   const [netPageSize, setNetPageSize] = useState(10);
@@ -166,6 +167,7 @@ export const DevicesPage: React.FC = () => {
       setNetworkDevices(resp.content);
       setNetTotalPages(resp.totalPages);
       setNetTotalElements(resp.totalElements);
+      adminApi.getGwnPortStatus().then(setGwnPorts).catch(() => setGwnPorts(null));
       setError(null);
     } catch (err: any) {
       setError(err?.message || 'Không thể tải danh sách thiết bị hạ tầng.');
@@ -566,6 +568,33 @@ export const DevicesPage: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {gwnPorts && Array.isArray(gwnPorts.ports) && gwnPorts.ports.length > 0 && (
+            <div className="bg-white rounded border border-slate-300 shadow-xs mb-4 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-slate-700">
+                  AP theo cổng GWN{gwnPorts.siteName ? ` — ${gwnPorts.siteName}` : ''}
+                </h3>
+                <span className="text-[11px] text-slate-400">
+                  {gwnPorts.apiReachable ? 'Trạng thái cổng LAN trực tiếp từ Grandstream' : 'Chưa kết nối được GWN Cloud'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                {gwnPorts.ports.map((p: any) => (
+                  <div key={p.port}
+                    className={`rounded border px-3 py-2 flex items-center justify-between ${p.status === 'ONLINE' ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50'}`}>
+                    <div>
+                      <div className="text-xs font-semibold text-slate-700">{p.label}</div>
+                      <div className="text-[11px] text-slate-500">{p.meshName || 'Chưa gán mesh'}</div>
+                    </div>
+                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${p.status === 'ONLINE' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>
+                      {p.status === 'ONLINE' ? 'ONLINE' : 'OFFLINE'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="bg-white rounded border border-slate-300 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
