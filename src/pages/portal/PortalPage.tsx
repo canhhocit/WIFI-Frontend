@@ -802,11 +802,6 @@ export const PortalPage: React.FC = () => {
     );
   }
 
-  const handleSwitchDemoLocation = (slug: string) => {
-    navigate(`/portal?location=${slug}`);
-    loadPortal(slug);
-  };
-
   const survey = portalData?.activeSurvey;
 
   const activeCampaign = portalData?.activeCampaign;
@@ -826,13 +821,6 @@ export const PortalPage: React.FC = () => {
     portalData?.location.promoBannerUrl ||
     template?.bannerUrl ||
     '/banners/haiphong_culture_house.jpg';
-
-  const demoLocations = [
-    { slug: 'hp-hb-nvh01', name: 'Hồng Bàng', sub: 'TDP số 1' },
-    { slug: 'hp-nq-nvh02', name: 'Ngô Quyền', sub: 'KDC Máy Tơ' },
-    { slug: 'hp-ch-nvh03', name: 'Cát Hải', sub: 'TT Cát Bà' },
-    { slug: 'hp-tn-nvh04', name: 'Thủy Nguyên', sub: 'TT Núi Đèo' },
-  ];
 
   return (
     <div
@@ -1199,40 +1187,6 @@ export const PortalPage: React.FC = () => {
               </div>
             </div>
             )}
-
-            {/* Desktop-only: Demo Location Switcher inside Left Column */}
-            <div className="hidden lg:block pt-2">
-              <div className="p-3 bg-slate-900/95 rounded-lg border border-slate-700 text-white shadow-md">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-amber-300" /> Trải nghiệm hình ảnh & thông tin từng điểm:
-                  </span>
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {demoLocations.map((item) => {
-                    const isActive =
-                      portalData?.location.slug === item.slug ||
-                      (!locationParam && item.slug === 'hp-hb-nvh01');
-                    return (
-                      <button
-                        key={item.slug}
-                        type="button"
-                        onClick={() => handleSwitchDemoLocation(item.slug)}
-                        className={`px-2 py-1.5 rounded text-center transition cursor-pointer flex flex-col items-center justify-center border ${
-                          isActive
-                            ? 'text-white font-bold shadow-md'
-                            : 'bg-white/10 hover:bg-white/20 text-slate-200 border-white/10 hover:border-white/25 text-[11px]'
-                        }`}
-                        style={isActive ? { backgroundColor: effectiveThemeColor, borderColor: themeBorder } : undefined}
-                      >
-                        <span className="text-xs font-semibold leading-tight">{item.name}</span>
-                        <span className="text-[9.5px] opacity-80">{item.sub}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
 
           </div>
         </div>
@@ -1695,40 +1649,6 @@ export const PortalPage: React.FC = () => {
         </div>
 
       </div>
-
-      {/* Demo Location Switcher for Mobile (Hidden on laptop/lg:hidden and in embedded studio preview) */}
-      {!isEmbeddedPreview && (
-      <div className="lg:hidden relative z-10 mt-3 max-w-md w-full bg-slate-900/90 backdrop-blur-md rounded-lg p-2.5 border border-white/20 text-white shadow-xl">
-        <div className="flex items-center justify-between mb-1.5 px-0.5">
-          <span className="text-[10.5px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
-            <MapPin className="w-3.5 h-3.5 text-amber-300" /> Trải nghiệm hình ảnh & thông tin từng điểm:
-          </span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-          {demoLocations.map((item) => {
-            const isActive =
-              portalData?.location.slug === item.slug ||
-              (!locationParam && item.slug === 'hp-hb-nvh01');
-            return (
-              <button
-                key={item.slug}
-                type="button"
-                onClick={() => handleSwitchDemoLocation(item.slug)}
-                className={`px-2 py-1.5 rounded text-center transition cursor-pointer flex flex-col items-center justify-center border ${
-                  isActive
-                    ? 'text-white font-bold shadow-md'
-                    : 'bg-white/10 hover:bg-white/20 text-slate-200 border-white/10 hover:border-white/25 text-[11px]'
-                }`}
-                style={isActive ? { backgroundColor: effectiveThemeColor, borderColor: themeBorder } : undefined}
-              >
-                <span className="text-xs font-semibold leading-tight">{item.name}</span>
-                <span className="text-[9px] opacity-75">{item.sub}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      )}
 
       {/* Floating "Báo lỗi Wi-Fi" Button (Hidden inside embedded studio preview) */}
       {!isEmbeddedPreview && (
