@@ -762,7 +762,7 @@ export const DevicesPage: React.FC = () => {
                       AP theo cổng GWN
                       {(() => {
                         const on = locPorts.ports.filter((p) => p.status === 'ONLINE').length;
-                        const exp = selectedLoc?.expectedApCount ?? 4;
+                        const exp = locPorts.ports.length; // tổng slot AP hiển thị = min(4, số cổng LAN thật)
                         return (
                           <span className={`ml-2 text-[11px] font-bold px-1.5 py-0.5 rounded ${on < exp ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
                             AP đang kết nối: {on}/{exp}
