@@ -118,14 +118,14 @@ const MODULE_TOUR_DEFINITIONS: Record<string, { title: string; content: string; 
     placement: 'right'
   },
   'nav-government-report': {
-    title: 'Báo Cáo Sở TT&TT & UBND Thành Phố',
+    title: 'Báo Cáo Sở KH&CN & UBND Thành Phố',
     content: 'Tổng hợp số liệu chỉ tiêu phục vụ công dân, kết xuất báo cáo hành chính.',
     badge: 'Báo cáo hành chính',
     placement: 'right'
   },
   'nav-users': {
-    title: 'Cán Bộ 5 Cấp & Phân Bổ Địa Bàn',
-    content: 'Cấp phát và quản lý tài khoản cán bộ phân cấp 5 cấp.',
+    title: 'Cán Bộ 3 Cấp & Phân Bổ Địa Bàn',
+    content: 'Cấp phát và quản lý tài khoản cán bộ phân cấp 3 cấp (Admin, Sở KH&CN, Xã/Phường).',
     badge: 'Quản trị nhân sự',
     placement: 'right'
   },

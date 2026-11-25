@@ -707,12 +707,12 @@ export const adminApi = {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
-    if (!res.ok) throw new Error('Không thể xuất báo cáo hành chính UBND / Sở TT&TT');
+    if (!res.ok) throw new Error('Không thể xuất báo cáo hành chính UBND / Sở KH&CN');
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Bao_cao_UBND_So_TTTT_Hai_Phong_${period}.csv`;
+    a.download = `Bao_cao_UBND_So_KHCN_Hai_Phong_${period}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

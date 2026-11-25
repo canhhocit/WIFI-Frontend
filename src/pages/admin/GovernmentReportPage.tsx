@@ -122,7 +122,7 @@ export const GovernmentReportPage: React.FC = () => {
         notes: submitNotes.trim() || undefined,
       });
       setShowSubmitModal(false);
-      setSubmitSuccessMsg('Báo cáo đã được lưu trữ và ghi nhận nộp thành công lên Sở TT&TT / UBND Thành phố.');
+      setSubmitSuccessMsg('Báo cáo đã được lưu trữ và ghi nhận nộp thành công lên Sở KH&CN / UBND Thành phố.');
       await loadHistory();
       setTimeout(() => setSubmitSuccessMsg(null), 5000);
     } catch (err: any) {
@@ -139,7 +139,7 @@ export const GovernmentReportPage: React.FC = () => {
         <div>
           <h1 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
             <Landmark className="w-6 h-6 text-red-700" />
-            Báo Cáo Hành Chính Sở TT&TT / UBND Thành Phố Hải Phòng
+            Báo Cáo Hành Chính Sở KH&CN / UBND Thành Phố Hải Phòng
           </h1>
           <p className="text-xs text-gray-500 mt-0.5">
             Mẫu báo cáo tiến độ và chất lượng khai thác mạng Wi-Fi công cộng 1.584 Nhà văn hóa thôn, tổ dân phố
@@ -226,7 +226,7 @@ export const GovernmentReportPage: React.FC = () => {
               <button
                 onClick={handleOpenSubmitModal}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-red-700 hover:bg-red-800 rounded-sm shadow-xs cursor-pointer"
-                title="Gửi báo cáo số chính thức lên Sở TT&TT / UBND"
+                title="Gửi báo cáo số chính thức lên Sở KH&CN / UBND"
               >
                 <Send className="w-3.5 h-3.5" />
                 Nộp báo cáo
@@ -269,10 +269,10 @@ export const GovernmentReportPage: React.FC = () => {
             <div className="w-1/2 text-left">
               <div className="font-bold uppercase tracking-wide text-xs">ỦY BAN NHÂN DÂN THÀNH PHỐ HẢI PHÒNG</div>
               <div className="font-bold uppercase text-red-800 text-xs sm:text-sm mt-0.5 tracking-tight">
-                SỞ THÔNG TIN VÀ TRUYỀN THÔNG
+                SỞ KHOA HỌC VÀ CÔNG NGHỆ
               </div>
               <div className="w-32 h-0.5 bg-red-800 mt-1 mb-1" />
-              <div className="text-[11px] text-gray-600 font-sans italic">Số: 1584/BC-STTTT-CNTT</div>
+              <div className="text-[11px] text-gray-600 font-sans italic">Số: 1584/BC-SKHCN-CNTT</div>
             </div>
 
             <div className="w-1/2 text-right">
@@ -496,7 +496,7 @@ export const GovernmentReportPage: React.FC = () => {
               <div className="font-bold font-serif text-xs text-slate-900 uppercase tracking-wide">Nơi nhận:</div>
               <div className="text-slate-600 mt-1 space-y-0.5">
                 <div>- UBND Thành phố Hải Phòng (để b/c);</div>
-                <div>- Giám đốc Sở TT&TT (để chỉ đạo);</div>
+                <div>- Giám đốc Sở KH&CN (để chỉ đạo);</div>
                 <div>- Viettel Hải Phòng (để phối hợp);</div>
                 <div>- Lưu: VT, CNTT.</div>
               </div>
@@ -510,7 +510,7 @@ export const GovernmentReportPage: React.FC = () => {
         <div className="bg-white rounded border border-gray-200 shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-bold text-gray-900">Sổ Lưu Trữ Lịch Sử Nộp Báo Cáo Sở TT&TT</h2>
+              <h2 className="text-sm font-bold text-gray-900">Sổ Lưu Trữ Lịch Sử Nộp Báo Cáo Sở KH&CN</h2>
               <p className="text-xs text-gray-500">Lưu vết số hóa toàn bộ các đợt phát hành và nộp báo cáo định kỳ</p>
             </div>
             <span className="text-xs bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full font-semibold">
@@ -605,7 +605,7 @@ export const GovernmentReportPage: React.FC = () => {
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-2">
                 <Send className="w-5 h-5 text-red-700" />
-                <h3 className="font-bold text-gray-900 text-sm">Xác Nhận Nộp Báo Cáo Sở TT&TT</h3>
+                <h3 className="font-bold text-gray-900 text-sm">Xác Nhận Nộp Báo Cáo Sở KH&CN</h3>
               </div>
               <button
                 onClick={() => setShowSubmitModal(false)}

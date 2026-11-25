@@ -23,11 +23,9 @@ const MODULES = [
 ];
 
 const ROLES = [
-  { key: 'ROLE_SUPER_ADMIN', label: 'Quản trị hệ thống', color: 'text-purple-700 bg-purple-50' },
-  { key: 'ROLE_SOTTTT_ADMIN', label: 'Cán bộ Sở TT&TT Hải Phòng', color: 'text-blue-700 bg-blue-50' },
-  { key: 'ROLE_DISTRICT_OFFICER', label: 'Cán bộ UBND Quận / Huyện', color: 'text-emerald-700 bg-emerald-50' },
+  { key: 'ROLE_SUPER_ADMIN', label: 'Quản trị hệ thống (Admin)', color: 'text-purple-700 bg-purple-50' },
+  { key: 'ROLE_SOTTTT_ADMIN', label: 'Cán bộ Sở KH&CN Hải Phòng', color: 'text-blue-700 bg-blue-50' },
   { key: 'ROLE_COMMUNE_OFFICER', label: 'Cán bộ UBND Xã / Phường', color: 'text-teal-700 bg-teal-50' },
-  { key: 'ROLE_VIETTEL_ENGINEER', label: 'Kỹ sư Viễn thông Viettel', color: 'text-amber-700 bg-amber-50' },
 ];
 
 export const RolePermissionsPage: React.FC = () => {

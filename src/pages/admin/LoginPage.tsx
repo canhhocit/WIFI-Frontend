@@ -147,7 +147,7 @@ export const LoginPage: React.FC = () => {
               >
                 <Building className="w-3.5 h-3.5 text-slate-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-bold text-[11px]">Sở TT&TT</div>
+                  <div className="font-bold text-[11px]">Sở KH&CN</div>
                   <div className="text-[10px] text-slate-500 font-mono">sotttt_admin</div>
                 </div>
               </button>
@@ -163,7 +163,7 @@ export const LoginPage: React.FC = () => {
               >
                 <UserCheck className="w-3.5 h-3.5 text-slate-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-bold text-[11px]">UBND Q.Hồng Bàng</div>
+                  <div className="font-bold text-[11px]">UBND Phường/Xã</div>
                   <div className="text-[10px] text-slate-500 font-mono">hongbang_officer</div>
                 </div>
               </button>

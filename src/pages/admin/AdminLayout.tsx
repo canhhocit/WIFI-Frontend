@@ -173,14 +173,14 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       {
         to: "/admin/government-report",
-        label: "Báo cáo Sở TT&TT / UBND",
+        label: "Báo cáo Sở KH&CN / UBND",
         icon: Landmark,
         module: "SETTINGS",
         tourId: "nav-government-report",
       },
       {
         to: "/admin/users",
-        label: "Cán bộ 5 cấp & Địa bàn",
+        label: "Cán bộ 3 cấp & Địa bàn",
         icon: UserCheck,
         module: "USERS",
         tourId: "nav-users",
@@ -358,7 +358,7 @@ export const AdminLayout: React.FC = () => {
         };
       case "ROLE_SOTTTT_ADMIN":
         return {
-          label: "Sở TT&TT Hải Phòng",
+          label: "Sở KH&CN Hải Phòng",
           scope: "Toàn Thành phố",
           color: "bg-[#ee0033] text-white border-[#c4002b]",
         };

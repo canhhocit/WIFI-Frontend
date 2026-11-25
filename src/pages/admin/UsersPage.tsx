@@ -23,33 +23,33 @@ import { Pagination } from '../../components/Pagination';
 
 const ROLE_LABELS: Record<AdminRoleType, { label: string; color: string; desc: string }> = {
   ROLE_SUPER_ADMIN: {
-    label: 'Quản trị cấp cao (Toàn quyền)',
+    label: 'Quản trị hệ thống (Admin)',
     color: 'bg-purple-100 text-purple-800 border-purple-200',
     desc: 'Toàn quyền cấu hình hệ thống, tài khoản và mạng lưới',
   },
   ROLE_SOTTTT_ADMIN: {
-    label: 'Cán bộ Sở TT&TT',
+    label: 'Cán bộ Sở KH&CN',
     color: 'bg-blue-100 text-blue-800 border-blue-200',
     desc: 'Quản lý điểm Wi-Fi, duyệt tin truyền thông, xem báo cáo toàn thành phố',
   },
   ROLE_DISTRICT_OFFICER: {
-    label: 'Cán bộ Quận / Huyện',
-    color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    label: 'Cán bộ UBND Xã / Phường',
+    color: 'bg-teal-100 text-teal-800 border-teal-200',
     desc: 'Giám sát và cập nhật thông tin điểm Wi-Fi thuộc địa bàn quản lý',
   },
   ROLE_COMMUNE_OFFICER: {
-    label: 'Cán bộ Phường / Xã',
+    label: 'Cán bộ UBND Xã / Phường',
     color: 'bg-teal-100 text-teal-800 border-teal-200',
     desc: 'Theo dõi tình hình hoạt động trạm Wi-Fi Nhà văn hóa cơ sở',
   },
   ROLE_VIETTEL_ENGINEER: {
-    label: 'Kỹ sư Viễn thông Viettel',
+    label: 'Quản trị hệ thống (Kỹ thuật)',
     color: 'bg-amber-100 text-amber-800 border-amber-200',
     desc: 'Kỹ thuật vận hành, cấu hình thiết bị, xử lý sự cố viễn thông',
   },
   ROLE_ADMIN: {
-    label: 'Quản trị viên tiêu chuẩn',
-    color: 'bg-gray-100 text-gray-800 border-gray-200',
+    label: 'Quản trị hệ thống (Admin)',
+    color: 'bg-purple-100 text-purple-800 border-purple-200',
     desc: 'Quyền vận hành chung',
   },
 };
@@ -77,7 +77,7 @@ export const UsersPage: React.FC = () => {
     password: '',
     email: '',
     fullName: '',
-    role: 'ROLE_DISTRICT_OFFICER' as AdminRoleType,
+    role: 'ROLE_COMMUNE_OFFICER' as AdminRoleType,
     adminUnitId: '' as string | number,
     phoneNumber: '',
     enabled: true,
@@ -194,7 +194,7 @@ export const UsersPage: React.FC = () => {
       password: '',
       email: '',
       fullName: '',
-      role: 'ROLE_DISTRICT_OFFICER',
+      role: 'ROLE_COMMUNE_OFFICER',
       adminUnitId: '',
       phoneNumber: '',
       enabled: true,
@@ -223,7 +223,7 @@ export const UsersPage: React.FC = () => {
       password: '',
       email: user.email,
       fullName: user.fullName,
-      role: (user.role as AdminRoleType) || 'ROLE_DISTRICT_OFFICER',
+      role: (user.role as AdminRoleType) || 'ROLE_COMMUNE_OFFICER',
       adminUnitId: user.adminUnitId || '',
       phoneNumber: user.phoneNumber || '',
       enabled: user.enabled,
@@ -334,7 +334,7 @@ export const UsersPage: React.FC = () => {
             <div>
               <h1 className="text-xl font-bold text-gray-900">Quản lý Tài khoản Cán bộ & Phân cấp Quản trị</h1>
               <p className="text-sm text-gray-500">
-                Phân quyền 5 cấp chính quyền Hải Phòng (Sở TT&TT, Quận/Huyện, Xã/Phường, Viettel) & Gán địa bàn phụ trách
+                Phân quyền 3 cấp tài khoản Hải Phòng (Quản trị hệ thống, Sở KH&CN, UBND Xã/Phường) & Gán địa bàn phụ trách
               </p>
             </div>
           </div>
@@ -391,12 +391,10 @@ export const UsersPage: React.FC = () => {
             onChange={(e) => setSelectedRole(e.target.value)}
             className="w-full py-2 px-3 text-sm bg-gray-50 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
           >
-            <option value="ALL">-- Tất cả vai trò chính quyền --</option>
-            <option value="ROLE_SUPER_ADMIN">Quản trị cấp cao (Toàn quyền)</option>
-            <option value="ROLE_SOTTTT_ADMIN">Cán bộ Sở TT&TT</option>
-            <option value="ROLE_DISTRICT_OFFICER">Cán bộ Quận / Huyện</option>
-            <option value="ROLE_COMMUNE_OFFICER">Cán bộ Phường / Xã</option>
-            <option value="ROLE_VIETTEL_ENGINEER">Kỹ sư Viễn thông Viettel</option>
+            <option value="ALL">-- Tất cả vai trò (3 cấp) --</option>
+            <option value="ROLE_SUPER_ADMIN">Quản trị hệ thống (Admin)</option>
+            <option value="ROLE_SOTTTT_ADMIN">Cán bộ Sở KH&CN</option>
+            <option value="ROLE_COMMUNE_OFFICER">Cán bộ UBND Xã / Phường</option>
           </select>
         </div>
 
@@ -708,11 +706,9 @@ export const UsersPage: React.FC = () => {
                       onChange={(e) => setFormData({ ...formData, role: e.target.value as AdminRoleType })}
                       className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="ROLE_SUPER_ADMIN">ROLE_SUPER_ADMIN - Quản trị cấp cao</option>
-                      <option value="ROLE_SOTTTT_ADMIN">ROLE_SOTTTT_ADMIN - Cán bộ Sở TT&TT</option>
-                      <option value="ROLE_DISTRICT_OFFICER">ROLE_DISTRICT_OFFICER - Cán bộ Quận / Huyện</option>
-                      <option value="ROLE_COMMUNE_OFFICER">ROLE_COMMUNE_OFFICER - Cán bộ Phường / Xã</option>
-                      <option value="ROLE_VIETTEL_ENGINEER">ROLE_VIETTEL_ENGINEER - Kỹ sư Viễn thông Viettel</option>
+                      <option value="ROLE_SUPER_ADMIN">Quản trị hệ thống (Admin)</option>
+                      <option value="ROLE_SOTTTT_ADMIN">Cán bộ Sở KH&CN Hải Phòng</option>
+                      <option value="ROLE_COMMUNE_OFFICER">Cán bộ UBND Xã / Phường</option>
                     </select>
                   </div>
 
