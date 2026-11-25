@@ -10,6 +10,7 @@ import {
   CreateLocationRequest,
   UpdateLocationRequest,
   DeviceDto,
+  DeviceDetail,
   GatewayStatusDto,
   MockGatewayConfigDto,
   GatewayTransactionDto,
@@ -172,6 +173,10 @@ export const adminApi = {
   },
 
   // Devices
+  getDeviceDetail: (id: number) => {
+    return request<DeviceDetail>(`/admin/devices/${id}/detail`);
+  },
+
   getDevices: (params: { search?: string; page?: number; size?: number }) => {
     const sp = new URLSearchParams();
     if (params.search) sp.append('search', params.search);

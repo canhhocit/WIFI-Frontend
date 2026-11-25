@@ -25,10 +25,15 @@ import {
   Building2,
   Wifi,
   WifiOff,
-  AlertTriangle
+  AlertTriangle,
+  Eye,
+  User,
+  X,
+  FileText,
+  Clock
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
-import { DeviceDto, NetworkDeviceDto, DeviceTopologySummaryDto, GwnClientDto, LocationDto, GwnPortStatus } from '../../types/models';
+import { DeviceDto, NetworkDeviceDto, DeviceTopologySummaryDto, GwnClientDto, LocationDto, GwnPortStatus, DeviceDetail } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
 import { DeviceSwapModal } from '../../components/DeviceSwapModal';
 import { DeviceMonitoringTopology } from '../../components/DeviceMonitoringTopology';
@@ -57,6 +62,11 @@ export const DevicesPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+
+  // Xem chi tiết thiết bị khách (lịch sử phiên cổng chào + khảo sát)
+  const [detailDevice, setDetailDevice] = useState<DeviceDto | null>(null);
+  const [deviceDetail, setDeviceDetail] = useState<DeviceDetail | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   // ---- Infrastructure: quản lý THEO ĐỊA ĐIỂM (danh sách điểm -> chi tiết điểm) ----
   // Danh sách địa điểm (mức ngoài). Mỗi điểm hiện tóm tắt router + số thiết bị, scale 1500 điểm.
@@ -295,6 +305,27 @@ export const DevicesPage: React.FC = () => {
       setInfraLocPage(0);
       loadInfraLocations();
     }
+  };
+
+  const openDeviceDetail = async (dev: DeviceDto) => {
+    setDetailDevice(dev);
+    setDeviceDetail(null);
+    setLoadingDetail(true);
+    try {
+      setDeviceDetail(await adminApi.getDeviceDetail(dev.id));
+    } catch (err: any) {
+      setError(err?.message || 'Không tải được chi tiết thiết bị.');
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
+  const formatBytes = (n?: number | null) => {
+    if (n == null) return '—';
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    if (n < 1024 * 1024 * 1024) return (n / 1024 / 1024).toFixed(1) + ' MB';
+    return (n / 1024 / 1024 / 1024).toFixed(2) + ' GB';
   };
 
   const handleToggleBlock = async (device: DeviceDto) => {
@@ -546,7 +577,7 @@ export const DevicesPage: React.FC = () => {
                   <tr className="bg-slate-50/70 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
                     <th className="py-3 px-4">Địa chỉ MAC & IP</th>
                     <th className="py-3 px-4">Hệ điều hành / Loại máy</th>
-                    <th className="py-3 px-4">Lần đầu kết nối</th>
+                    <th className="py-3 px-4">Khách / Liên hệ (cổng chào)</th>
                     <th className="py-3 px-4">Lần cuối hoạt động</th>
                     <th className="py-3 px-4">Trạng thái</th>
                     <th className="py-3 px-4 text-right">Kiểm soát</th>
@@ -584,8 +615,25 @@ export const DevicesPage: React.FC = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3.5 px-4 text-slate-500 font-mono text-[11px]">
-                          {formatDate(dev.firstSeenAt)}
+                        <td className="py-3.5 px-4">
+                          {dev.guestName || dev.guestContact ? (
+                            <div>
+                              <div className="flex items-center gap-1.5 text-slate-800 font-semibold">
+                                <User className="w-3.5 h-3.5 text-slate-400" />
+                                {dev.guestName || '—'}
+                              </div>
+                              {dev.guestContact && (
+                                <div className="text-[11px] text-slate-500 ml-5">{dev.guestContact}</div>
+                              )}
+                              {dev.lastLocationName && (
+                                <div className="text-[11px] text-slate-400 ml-5 flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" /> {dev.lastLocationName}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-slate-400 italic">Chưa qua cổng chào</span>
+                          )}
                         </td>
                         <td className="py-3.5 px-4 text-slate-500 font-mono text-[11px]">
                           {formatDate(dev.lastSeenAt)}
@@ -602,31 +650,38 @@ export const DevicesPage: React.FC = () => {
                           )}
                         </td>
                         <td className="py-2.5 px-4 text-right">
-                          {canEdit ? (
+                          <div className="flex items-center justify-end gap-1.5">
                             <button
-                              onClick={() => handleToggleBlock(dev)}
-                              disabled={togglingId === dev.id}
-                              className={`px-2.5 py-1 rounded-sm font-bold text-xs transition cursor-pointer inline-flex items-center gap-1.5 ${
-                                dev.blocked
-                                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                  : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300'
-                              }`}
+                              onClick={() => openDeviceDetail(dev)}
+                              className="px-2.5 py-1 rounded-sm font-semibold text-xs transition cursor-pointer inline-flex items-center gap-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300"
+                              title="Xem lịch sử phiên cổng chào và khảo sát của thiết bị này"
                             >
-                              {togglingId === dev.id ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              ) : dev.blocked ? (
-                                <>
-                                  <ShieldCheck className="w-3.5 h-3.5" /> Bỏ chặn
-                                </>
-                              ) : (
-                                <>
-                                  <ShieldAlert className="w-3.5 h-3.5" /> Chặn thiết bị
-                                </>
-                              )}
+                              <Eye className="w-3.5 h-3.5" /> Chi tiết
                             </button>
-                          ) : (
-                            <span className="text-[11px] text-slate-400 italic">Chỉ xem</span>
-                          )}
+                            {canEdit && (
+                              <button
+                                onClick={() => handleToggleBlock(dev)}
+                                disabled={togglingId === dev.id}
+                                className={`px-2.5 py-1 rounded-sm font-bold text-xs transition cursor-pointer inline-flex items-center gap-1.5 ${
+                                  dev.blocked
+                                    ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                    : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300'
+                                }`}
+                              >
+                                {togglingId === dev.id ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : dev.blocked ? (
+                                  <>
+                                    <ShieldCheck className="w-3.5 h-3.5" /> Bỏ chặn
+                                  </>
+                                ) : (
+                                  <>
+                                    <ShieldAlert className="w-3.5 h-3.5" /> Chặn
+                                  </>
+                                )}
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -1034,6 +1089,95 @@ export const DevicesPage: React.FC = () => {
         clients={connectedClients}
         loading={loadingClients}
       />
+
+      {/* Chi tiết thiết bị khách: lịch sử phiên cổng chào + khảo sát */}
+      {detailDevice && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded shadow-xl border border-slate-300 max-w-2xl w-full max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 sticky top-0 bg-white">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded bg-slate-100 border border-slate-200 flex items-center justify-center text-[#004b87]">
+                  {renderOsIcon(detailDevice.osType)}
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm font-mono">{detailDevice.macAddress}</h3>
+                  <div className="text-[11px] text-slate-500">
+                    {detailDevice.osType || 'Không xác định'} · {detailDevice.ipAddress || '—'}
+                    {detailDevice.hostname ? ` · ${detailDevice.hostname}` : ''}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => { setDetailDevice(null); setDeviceDetail(null); }}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-5">
+              {loadingDetail ? (
+                <div className="py-10 text-center text-slate-400">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#004b87]" /> Đang tải chi tiết...
+                </div>
+              ) : (
+                <>
+                  {/* Lịch sử phiên cổng chào */}
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-slate-400" /> Lịch sử phiên cổng chào ({deviceDetail?.sessions?.length || 0})
+                    </h4>
+                    {deviceDetail && deviceDetail.sessions.length > 0 ? (
+                      <div className="space-y-2">
+                        {deviceDetail.sessions.map((s, i) => (
+                          <div key={i} className="border border-slate-200 rounded p-2.5 text-[11px]">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-semibold text-slate-800 flex items-center gap-1">
+                                <User className="w-3 h-3 text-slate-400" /> {s.guestName || 'Khách'}
+                                {s.guestContact ? ` · ${s.guestContact}` : ''}
+                              </span>
+                              <span className={`px-1.5 py-0.5 rounded font-bold ${s.status === 'AUTHORIZED' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                                {s.status || '—'}
+                              </span>
+                            </div>
+                            <div className="text-slate-500 flex flex-wrap gap-x-3 gap-y-0.5">
+                              {s.locationName && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {s.locationName}</span>}
+                              <span>Bắt đầu: {formatDate(s.authorizedAt || s.createdAt || undefined)}</span>
+                              <span>Hết hạn: {formatDate(s.expiresAt || undefined)}</span>
+                              <span>Tải: ↓{formatBytes(s.bytesDownloaded)} ↑{formatBytes(s.bytesUploaded)}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-slate-400 italic">Thiết bị chưa có phiên đăng nhập qua cổng chào.</p>
+                    )}
+                  </div>
+
+                  {/* Câu trả lời khảo sát */}
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+                      <FileText className="w-4 h-4 text-slate-400" /> Khảo sát đã trả lời ({deviceDetail?.surveys?.length || 0})
+                    </h4>
+                    {deviceDetail && deviceDetail.surveys.length > 0 ? (
+                      <div className="space-y-2">
+                        {deviceDetail.surveys.map((r, i) => (
+                          <div key={i} className="border border-slate-200 rounded p-2.5 text-[11px]">
+                            <div className="text-slate-500 mb-1">Khảo sát #{r.surveyId} · {formatDate(r.submittedAt || undefined)}</div>
+                            <pre className="whitespace-pre-wrap break-words text-slate-700 bg-slate-50 rounded p-2 text-[11px]">{r.answersJson}</pre>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-slate-400 italic">Thiết bị chưa trả lời khảo sát nào.</p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

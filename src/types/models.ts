@@ -319,6 +319,37 @@ export interface DeviceDto {
   firstSeenAt: string;
   lastSeenAt: string;
   blocked: boolean;
+  // Thông tin khách lấy từ cổng chào (GuestSession mới nhất theo MAC)
+  guestName?: string | null;
+  guestContact?: string | null;
+  lastLocationName?: string | null;
+  hasActiveSession?: boolean;
+}
+
+export interface DeviceSessionHistory {
+  locationName?: string | null;
+  guestName?: string | null;
+  guestContact?: string | null;
+  status?: string | null;
+  ipAddress?: string | null;
+  authorizedAt?: string | null;
+  expiresAt?: string | null;
+  createdAt?: string | null;
+  bytesDownloaded?: number | null;
+  bytesUploaded?: number | null;
+}
+
+export interface DeviceSurveyResponse {
+  surveyId?: number | null;
+  locationId?: number | null;
+  answersJson?: string | null;
+  submittedAt?: string | null;
+}
+
+export interface DeviceDetail {
+  device: DeviceDto;
+  sessions: DeviceSessionHistory[];
+  surveys: DeviceSurveyResponse[];
 }
 
 export interface SessionSyncSummaryDto {
