@@ -30,8 +30,8 @@ const ROLES = [
 ];
 
 export const RolePermissionsPage: React.FC = () => {
-  const { canEdit: canEditUsers, canApprove: canApproveUsers, isSuperAdmin } = useRbac('USERS');
-  const canModifyMatrix = isSuperAdmin || canEditUsers || canApproveUsers;
+  const { isSuperAdmin } = useRbac('USERS');
+  const canModifyMatrix = isSuperAdmin;
   const [permissions, setPermissions] = useState<RolePermissionDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);  

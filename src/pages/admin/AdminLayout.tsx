@@ -60,6 +60,7 @@ interface NavItem {
   icon: any;
   end?: boolean;
   module?: RbacModule;
+  adminOnly?: boolean;
   tourId?: string;
 }
 
@@ -190,6 +191,7 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Ma trận phân quyền RBAC",
         icon: KeyRound,
         module: "USERS",
+        adminOnly: true,
         tourId: "nav-role-permissions",
       },
       {
@@ -444,8 +446,12 @@ export const AdminLayout: React.FC = () => {
 
   // Dynamically filter navigation items based on current officer's RBAC role permissions
   const filteredNavGroups = NAV_GROUPS.map((group) => {
-    const visibleItems = group.items.filter((item) =>
-      hasModulePermission(item.module),
+    const visibleItems = group.items.filter(
+      (item) =>
+        (!item.adminOnly ||
+          userRole === "ROLE_SUPER_ADMIN" ||
+          userRole === "ROLE_ADMIN") &&
+        hasModulePermission(item.module),
     );
     return {
       ...group,
@@ -464,6 +470,7 @@ export const AdminLayout: React.FC = () => {
           : location.pathname === item.to ||
           location.pathname.startsWith(`${item.to}/`);
         if (matches) {
+          if (item.adminOnly) return false;
           return hasModulePermission(item.module);
         }
       }
