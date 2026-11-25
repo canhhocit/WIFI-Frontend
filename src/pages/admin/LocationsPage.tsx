@@ -357,10 +357,7 @@ export const LocationsPage: React.FC = () => {
       {/* Title & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Hệ Thống Điểm Phát Wi-Fi</h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Quản lý mạng lưới Nhà văn hóa, cấu hình băng thông, định vị tọa độ GPS và địa bàn hành chính TP Hải Phòng.
-          </p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Danh bạ Nhà văn hóa</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -701,50 +698,54 @@ export const LocationsPage: React.FC = () => {
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-right space-x-1 whitespace-nowrap">
-                      <a
-                        href={`/portal?location=${loc.slug}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#004b87] bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition mr-1"
-                        title="Xem trang chào người dân của điểm này"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Xem Cổng chào</span>
-                      </a>
-                      <button
-                        onClick={() => setDevicesLocation(loc)}
-                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded transition cursor-pointer mr-1"
-                        title="Quản lý / gán Router GWN & Mesh AP tại điểm này"
-                      >
-                        <Cpu className="w-3.5 h-3.5" />
-                        <span>Thiết bị</span>
-                      </button>
-                      <button
-                        onClick={() => navigate(`/admin/gis?selectLocation=${loc.id}`)}
-                        className="p-1 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded-sm transition cursor-pointer"
-                        title="Xem vị trí trên Bản đồ số GIS"
-                      >
-                        <MapPin className="w-4 h-4 text-blue-600" />
-                      </button>
-                      {canEdit && (
-                        <button
-                          onClick={() => handleOpenEdit(loc)}
-                          className="p-1 text-slate-500 hover:text-amber-700 hover:bg-amber-50 rounded-sm transition cursor-pointer"
-                          title="Chỉnh sửa thông tin"
+                    <td className="py-3 px-4">
+                      <div className="flex flex-wrap items-center justify-end gap-1.5">
+                        <a
+                          href={`/portal?location=${loc.slug}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center gap-1 h-7 px-2.5 whitespace-nowrap text-[11px] font-semibold text-[#004b87] bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition"
+                          title="Xem trang chào người dân của điểm này"
                         >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      )}
-                      {canDelete && (
+                          <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                          <span>Cổng chào</span>
+                        </a>
                         <button
-                          onClick={() => setDeletingLocation(loc)}
-                          className="p-1 text-slate-500 hover:text-rose-700 hover:bg-rose-50 rounded-sm transition cursor-pointer"
-                          title="Xóa điểm phát"
+                          onClick={() => navigate(`/admin/devices?locationId=${loc.id}`)}
+                          className="inline-flex items-center justify-center gap-1 h-7 px-2.5 whitespace-nowrap text-[11px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded transition cursor-pointer"
+                          title="Mở trang Thiết bị hạ tầng của điểm này"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Cpu className="w-3.5 h-3.5 shrink-0" />
+                          <span>Thiết bị</span>
                         </button>
-                      )}
+                        {/* Nút "Vị trí bản đồ số" tạm ẩn
+                        <button
+                          onClick={() => navigate(`/admin/gis?selectLocation=${loc.id}`)}
+                          className="inline-flex items-center justify-center h-7 w-7 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded transition cursor-pointer"
+                          title="Xem vị trí trên Bản đồ số GIS"
+                        >
+                          <MapPin className="w-4 h-4 text-blue-600" />
+                        </button>
+                        */}
+                        {canEdit && (
+                          <button
+                            onClick={() => handleOpenEdit(loc)}
+                            className="inline-flex items-center justify-center h-7 w-7 text-slate-500 hover:text-amber-700 hover:bg-amber-50 rounded transition cursor-pointer"
+                            title="Chỉnh sửa thông tin"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            onClick={() => setDeletingLocation(loc)}
+                            className="inline-flex items-center justify-center h-7 w-7 text-slate-500 hover:text-rose-700 hover:bg-rose-50 rounded transition cursor-pointer"
+                            title="Xóa điểm phát"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

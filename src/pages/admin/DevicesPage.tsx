@@ -44,9 +44,11 @@ import { NetworkDeviceFormModal } from '../../components/NetworkDeviceFormModal'
 import { DeviceStatusBadge } from '../../components/DeviceStatusBadge';
 import { Pagination } from '../../components/Pagination';
 import { useRbac } from '../../utils/rbac';
+import { useSearchParams } from 'react-router-dom';
 
 export const DevicesPage: React.FC = () => {
   const { canCreate, canEdit } = useRbac('DEVICES');
+  const [searchParams] = useSearchParams();
   // Trang này chỉ còn THIẾT BỊ HẠ TẦNG. Thiết bị khách truy cập đã có menu riêng "Quản lý phiên truy cập".
   const [activeTab] = useState<'INFRASTRUCTURE'>('INFRASTRUCTURE');
 
@@ -247,6 +249,16 @@ export const DevicesPage: React.FC = () => {
     else if (viewUnassigned) loadUnassignedDetail();
     else loadInfraLocations();
   };
+
+  // Mở thẳng chi tiết 1 điểm khi vào từ "Danh bạ Nhà văn hóa" (nút Thiết bị): /admin/devices?locationId=ID
+  useEffect(() => {
+    const locId = searchParams.get('locationId');
+    if (!locId) return;
+    adminApi.getLocationById(Number(locId))
+      .then((loc) => openLocation(loc))
+      .catch(() => { /* bỏ qua nếu điểm không tồn tại */ });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSyncGrandstream = async () => {
     setSyncingGwn(true);
