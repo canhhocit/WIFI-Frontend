@@ -47,7 +47,8 @@ import { useRbac } from '../../utils/rbac';
 
 export const DevicesPage: React.FC = () => {
   const { canCreate, canEdit } = useRbac('DEVICES');
-  const [activeTab, setActiveTab] = useState<'CLIENT' | 'INFRASTRUCTURE'>('CLIENT');
+  // Trang này chỉ còn THIẾT BỊ HẠ TẦNG. Thiết bị khách truy cập đã có menu riêng "Quản lý phiên truy cập".
+  const [activeTab] = useState<'INFRASTRUCTURE'>('INFRASTRUCTURE');
 
   // Topology data
   const [topologyData, setTopologyData] = useState<DeviceTopologySummaryDto | undefined>(undefined);
@@ -140,13 +141,11 @@ export const DevicesPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (activeTab === 'CLIENT') {
-      loadDevices();
-    } else if (!selectedLoc && !viewUnassigned) {
+    if (!selectedLoc && !viewUnassigned) {
       loadInfraLocations();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, page, pageSize, infraLocPage, infraLocPageSize]);
+  }, [infraLocPage, infraLocPageSize]);
 
   const loadDevices = async () => {
     setLoading(true);
@@ -298,13 +297,8 @@ export const DevicesPage: React.FC = () => {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (activeTab === 'CLIENT') {
-      setPage(0);
-      loadDevices();
-    } else {
-      setInfraLocPage(0);
-      loadInfraLocations();
-    }
+    setInfraLocPage(0);
+    loadInfraLocations();
   };
 
   const openDeviceDetail = async (dev: DeviceDto) => {
@@ -435,26 +429,26 @@ export const DevicesPage: React.FC = () => {
         )}
       </td>
       <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">{formatDate(nd.lastSeenAt)}</td>
-      <td className="py-3 px-4 text-right">
-        <div className="flex items-center justify-end gap-1.5">
+      <td className="py-3 px-4">
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
           <button
             onClick={() => handleViewClients(nd)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 rounded-sm text-xs font-semibold transition cursor-pointer"
+            className="inline-flex items-center justify-center gap-1 h-7 px-2.5 whitespace-nowrap bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 rounded text-[11px] font-semibold transition cursor-pointer"
             title="Xem danh sách người dân đang bắt sóng thực tế và cường độ sóng RSSI"
           >
-            <Users className="w-3.5 h-3.5 text-sky-600" /> {nd.deviceType === 'ACCESS_POINT' ? 'Chi tiết mesh' : 'Xem Client'}
+            <Users className="w-3.5 h-3.5 text-sky-600 shrink-0" /> {nd.deviceType === 'ACCESS_POINT' ? 'Chi tiết mesh' : 'Xem client'}
           </button>
           {canEdit && (nd.deviceType === 'ROUTER' || (nd.vendor && nd.vendor.toLowerCase().includes('grandstream'))) && (
             <button
               onClick={() => setDeviceToReboot(nd)}
               disabled={rebootingId === nd.id || nd.status === 'REBOOTING'}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 disabled:opacity-40 rounded-sm text-xs font-semibold transition cursor-pointer"
+              className="inline-flex items-center justify-center gap-1 h-7 px-2.5 whitespace-nowrap bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 disabled:opacity-40 rounded text-[11px] font-semibold transition cursor-pointer"
               title="Gửi lệnh khởi động lại phần cứng từ xa qua Grandstream Cloud"
             >
               {rebootingId === nd.id ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600 shrink-0" />
               ) : (
-                <Power className="w-3.5 h-3.5 text-rose-600" />
+                <Power className="w-3.5 h-3.5 text-rose-600 shrink-0" />
               )}
               Khởi động lại
             </button>
@@ -465,14 +459,14 @@ export const DevicesPage: React.FC = () => {
               setEditingNetDevice(nd);
               setDeviceFormOpen(true);
             }}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-semibold transition cursor-pointer border ${
+            className={`inline-flex items-center justify-center gap-1 h-7 px-2.5 whitespace-nowrap rounded text-[11px] font-semibold transition cursor-pointer border ${
               !nd.locationId
                 ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300'
                 : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-300'
             }`}
             title="Gán Nhà văn hóa hoặc sửa thông tin thiết bị"
           >
-            <Edit2 className="w-3.5 h-3.5" /> {!nd.locationId ? 'Gán điểm' : 'Sửa'}
+            <Edit2 className="w-3.5 h-3.5 shrink-0" /> {!nd.locationId ? 'Gán điểm' : 'Sửa'}
           </button>
           {canEdit && (
             <button
@@ -480,10 +474,10 @@ export const DevicesPage: React.FC = () => {
                 setSelectedDeviceForSwap(nd);
                 setSwapModalOpen(true);
               }}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-sm text-xs font-semibold transition cursor-pointer"
+              className="inline-flex items-center justify-center gap-1 h-7 px-2.5 whitespace-nowrap bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded text-[11px] font-semibold transition cursor-pointer"
               title="Hoán đổi phần cứng thay thế khi hỏng hóc tại cơ sở"
             >
-              <Repeat className="w-3.5 h-3.5 text-amber-700" /> Thay thế thiết bị
+              <Repeat className="w-3.5 h-3.5 text-amber-700 shrink-0" /> Thay thế
             </button>
           )}
         </div>
@@ -509,10 +503,10 @@ export const DevicesPage: React.FC = () => {
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Quản Lý Thiết Bị & Hạ Tầng</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Thiết Bị Mạng Hạ Tầng</h1>
         </div>
         <button
-          onClick={activeTab === 'CLIENT' ? loadDevices : refreshInfra}
+          onClick={refreshInfra}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" /> Làm mới dữ liệu
@@ -521,191 +515,6 @@ export const DevicesPage: React.FC = () => {
 
       {error && <AlertBanner type="error" message={error} />}
       {syncSuccessMsg && <AlertBanner type="success" message={syncSuccessMsg} />}
-
-      {/* Tab Switcher */}
-      <div className="flex border-b border-slate-300 gap-2">
-        <button
-          onClick={() => setActiveTab('CLIENT')}
-          className={`pb-2.5 px-3.5 text-xs font-bold transition border-b-2 cursor-pointer ${
-            activeTab === 'CLIENT'
-              ? 'border-[#004b87] text-[#004b87]'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          Thiết Bị Khách Truy Cập ({totalElements})
-        </button>
-        <button
-          onClick={() => setActiveTab('INFRASTRUCTURE')}
-          className={`pb-2.5 px-3.5 text-xs font-bold transition border-b-2 cursor-pointer ${
-            activeTab === 'INFRASTRUCTURE'
-              ? 'border-[#004b87] text-[#004b87]'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          Thiết Bị Mạng Hạ Tầng (ONT / Router / AP)
-        </button>
-      </div>
-
-      {/* Tab 1: Client Devices */}
-      {activeTab === 'CLIENT' && (
-        <>
-          <div className="bg-white p-3.5 rounded border border-slate-300 shadow-xs">
-            <form onSubmit={handleSearchSubmit} className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Tìm theo MAC, IP, tên máy hoặc thông tin hệ điều hành..."
-                  className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] transition font-mono"
-                />
-              </div>
-              <button
-                type="submit"
-                className="px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold transition cursor-pointer"
-              >
-                Tìm kiếm
-              </button>
-            </form>
-          </div>
-
-          <div className="bg-white rounded border border-slate-300 shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-slate-50/70 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                    <th className="py-3 px-4">Địa chỉ MAC & IP</th>
-                    <th className="py-3 px-4">Hệ điều hành / Loại máy</th>
-                    <th className="py-3 px-4">Khách / Liên hệ (cổng chào)</th>
-                    <th className="py-3 px-4">Lần cuối hoạt động</th>
-                    <th className="py-3 px-4">Trạng thái</th>
-                    <th className="py-3 px-4 text-right">Kiểm soát</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={6} className="py-12 text-center text-slate-400">
-                        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#004b87]" />
-                        Đang tải danh sách thiết bị khách...
-                      </td>
-                    </tr>
-                  ) : devices.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-12 text-center text-slate-400">
-                        Không tìm thấy thiết bị nào phù hợp.
-                      </td>
-                    </tr>
-                  ) : (
-                    devices.map((dev) => (
-                      <tr key={dev.id} className="hover:bg-slate-50/80 transition">
-                        <td className="py-3.5 px-4 font-mono">
-                          <span className="font-bold text-slate-900 block text-xs">{dev.macAddress}</span>
-                          <span className="text-slate-400 text-[11px] block">{dev.ipAddress || '—'}</span>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-sm bg-slate-100 flex items-center justify-center flex-shrink-0">
-                              {renderOsIcon(dev.osType)}
-                            </div>
-                            <div>
-                              <span className="font-semibold text-slate-800 block">{dev.osType || 'Không xác định'}</span>
-                              {dev.hostname && <span className="text-[11px] text-slate-400 block">{dev.hostname}</span>}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          {dev.guestName || dev.guestContact ? (
-                            <div>
-                              <div className="flex items-center gap-1.5 text-slate-800 font-semibold">
-                                <User className="w-3.5 h-3.5 text-slate-400" />
-                                {dev.guestName || '—'}
-                              </div>
-                              {dev.guestContact && (
-                                <div className="text-[11px] text-slate-500 ml-5">{dev.guestContact}</div>
-                              )}
-                              {dev.lastLocationName && (
-                                <div className="text-[11px] text-slate-400 ml-5 flex items-center gap-1">
-                                  <MapPin className="w-3 h-3" /> {dev.lastLocationName}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-[11px] text-slate-400 italic">Chưa qua cổng chào</span>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-500 font-mono text-[11px]">
-                          {formatDate(dev.lastSeenAt)}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          {dev.blocked ? (
-                            <span className="inline-flex items-center gap-1 font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-sm text-[11px]">
-                              <ShieldAlert className="w-3 h-3 text-rose-500" /> Đã chặn truy cập
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-sm text-[11px]">
-                              <ShieldCheck className="w-3 h-3 text-emerald-500" /> Được phép
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => openDeviceDetail(dev)}
-                              className="px-2.5 py-1 rounded-sm font-semibold text-xs transition cursor-pointer inline-flex items-center gap-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300"
-                              title="Xem lịch sử phiên cổng chào và khảo sát của thiết bị này"
-                            >
-                              <Eye className="w-3.5 h-3.5" /> Chi tiết
-                            </button>
-                            {canEdit && (
-                              <button
-                                onClick={() => handleToggleBlock(dev)}
-                                disabled={togglingId === dev.id}
-                                className={`px-2.5 py-1 rounded-sm font-bold text-xs transition cursor-pointer inline-flex items-center gap-1.5 ${
-                                  dev.blocked
-                                    ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                    : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300'
-                                }`}
-                              >
-                                {togglingId === dev.id ? (
-                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                ) : dev.blocked ? (
-                                  <>
-                                    <ShieldCheck className="w-3.5 h-3.5" /> Bỏ chặn
-                                  </>
-                                ) : (
-                                  <>
-                                    <ShieldAlert className="w-3.5 h-3.5" /> Chặn
-                                  </>
-                                )}
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              totalElements={totalElements}
-              pageSize={pageSize}
-              pageSizeOptions={[5, 10, 15, 20]}
-              onPageChange={setPage}
-              onPageSizeChange={(newSize) => {
-                setPageSize(newSize);
-                setPage(0);
-              }}
-              itemLabel="thiết bị khách"
-            />
-          </div>
-        </>
-      )}
 
       {/* Tab 2: Infrastructure Devices — quản lý THEO ĐỊA ĐIỂM */}
       {activeTab === 'INFRASTRUCTURE' && (
@@ -1106,118 +915,6 @@ export const DevicesPage: React.FC = () => {
         loading={loadingClients}
       />
 
-      {/* Chi tiết thiết bị khách: lịch sử phiên cổng chào + khảo sát */}
-      {detailDevice && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded shadow-xl border border-slate-300 max-w-2xl w-full max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 sticky top-0 bg-white">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded bg-slate-100 border border-slate-200 flex items-center justify-center text-[#004b87]">
-                  {renderOsIcon(detailDevice.osType)}
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-sm font-mono">{detailDevice.macAddress}</h3>
-                  <div className="text-[11px] text-slate-500">
-                    {detailDevice.osType || 'Không xác định'} · {detailDevice.ipAddress || '—'}
-                    {detailDevice.hostname ? ` · ${detailDevice.hostname}` : ''}
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => { setDetailDevice(null); setDeviceDetail(null); }}
-                className="text-slate-400 hover:text-slate-700 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-5 space-y-5">
-              {loadingDetail ? (
-                <div className="py-10 text-center text-slate-400">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#004b87]" /> Đang tải chi tiết...
-                </div>
-              ) : (
-                <>
-                  {/* Lịch sử truy cập (phiên cổng chào) */}
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-slate-400" /> Lịch sử truy cập ({deviceDetail?.sessions?.length || 0} phiên)
-                    </h4>
-                    {deviceDetail && deviceDetail.sessions.length > 0 ? (
-                      <div className="overflow-x-auto border border-slate-200 rounded">
-                        <table className="w-full text-[11px] text-left">
-                          <thead>
-                            <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
-                              <th className="py-1.5 px-2.5 font-semibold">Thời gian</th>
-                              <th className="py-1.5 px-2.5 font-semibold">Điểm truy cập</th>
-                              <th className="py-1.5 px-2.5 font-semibold">Khách</th>
-                              <th className="py-1.5 px-2.5 font-semibold">Dung lượng</th>
-                              <th className="py-1.5 px-2.5 font-semibold text-right">Trạng thái</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {deviceDetail.sessions.map((s, i) => (
-                              <tr key={i} className="hover:bg-slate-50/70">
-                                <td className="py-1.5 px-2.5 text-slate-600 whitespace-nowrap">{formatDate(s.authorizedAt || s.createdAt || undefined)}</td>
-                                <td className="py-1.5 px-2.5 text-slate-600">{s.locationName || '—'}</td>
-                                <td className="py-1.5 px-2.5 text-slate-600">
-                                  {s.guestName ? s.guestName : <span className="text-slate-400 italic">Khách vãng lai</span>}
-                                  {s.guestContact ? <span className="text-slate-400"> · {s.guestContact}</span> : ''}
-                                </td>
-                                <td className="py-1.5 px-2.5 text-slate-500 whitespace-nowrap">↓{formatBytes(s.bytesDownloaded)} · ↑{formatBytes(s.bytesUploaded)}</td>
-                                <td className="py-1.5 px-2.5 text-right">
-                                  <span className={`px-1.5 py-0.5 rounded font-bold ${s.status === 'AUTHORIZED' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                                    {s.status === 'AUTHORIZED' ? 'Đang dùng' : s.status === 'EXPIRED' ? 'Hết hạn' : s.status === 'REVOKED' ? 'Đã thu hồi' : (s.status || '—')}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <p className="text-[11px] text-slate-400 italic">Thiết bị chưa có phiên đăng nhập qua cổng chào.</p>
-                    )}
-                  </div>
-
-                  {/* Khảo sát đã trả lời */}
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
-                      <FileText className="w-4 h-4 text-slate-400" /> Khảo sát đã trả lời ({deviceDetail?.surveys?.length || 0})
-                    </h4>
-                    {deviceDetail && deviceDetail.surveys.length > 0 ? (
-                      <div className="space-y-2">
-                        {deviceDetail.surveys.map((r, i) => (
-                          <div key={i} className="border border-slate-200 rounded p-3">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-xs font-bold text-slate-700">{r.surveyTitle || `Khảo sát #${r.surveyId}`}</span>
-                              <span className="text-[11px] text-slate-400">{formatDate(r.submittedAt || undefined)}</span>
-                            </div>
-                            {r.answers && r.answers.length > 0 ? (
-                              <dl className="space-y-1.5">
-                                {r.answers.map((a, j) => (
-                                  <div key={j} className="text-[11px]">
-                                    <dt className="text-slate-500">{a.question}</dt>
-                                    <dd className="text-slate-800 font-semibold ml-0">{a.answer}</dd>
-                                  </div>
-                                ))}
-                              </dl>
-                            ) : (
-                              <p className="text-[11px] text-slate-400 italic">Không có nội dung trả lời.</p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-[11px] text-slate-400 italic">Thiết bị chưa trả lời khảo sát nào.</p>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
