@@ -263,7 +263,9 @@ export const SessionsPage: React.FC = () => {
                     </td>
                     <td className="py-3 px-4">
                       <span className="font-semibold text-slate-800 block">
-                        {sess.guestName || <span className="text-slate-400 italic font-normal">Khách vãng lai</span>}
+                        {(sess.guestName && sess.guestName.trim() && sess.guestName.trim() !== 'Guest User')
+                          ? sess.guestName
+                          : <span className="text-slate-400 italic font-normal">Khách vãng lai</span>}
                       </span>
                       {sess.guestContact && (
                         <span className="text-[11px] text-slate-400 block truncate max-w-[140px]">
@@ -358,7 +360,7 @@ export const SessionsPage: React.FC = () => {
               </div>
               <div className="p-2.5 bg-slate-50 rounded-sm border border-slate-200">
                 <span className="text-slate-500 block text-[10px] uppercase font-bold">Khách hàng</span>
-                <span className="font-bold text-slate-800">{detailSession.guestName || 'Khách vãng lai'}</span>
+                <span className="font-bold text-slate-800">{(detailSession.guestName && detailSession.guestName.trim() && detailSession.guestName.trim() !== 'Guest User') ? detailSession.guestName : 'Khách vãng lai'}</span>
               </div>
               <div className="p-2.5 bg-slate-50 rounded-sm border border-slate-200">
                 <span className="text-slate-500 block text-[10px] uppercase font-bold">Liên hệ</span>
