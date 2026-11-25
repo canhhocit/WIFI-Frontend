@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, KeyRound, Loader2, Info, ArrowLeft, Shield, UserCheck, Wrench, Building } from 'lucide-react';
+import { ShieldCheck, KeyRound, Loader2, Info, ArrowLeft, Shield, UserCheck, Building } from 'lucide-react';
 import { authApi } from '../../api/authApi';
 import { AlertBanner } from '../../components/AlertBanner';
 import { VietnamFlag } from '../../components/VietnamFlag';
@@ -165,22 +165,6 @@ export const LoginPage: React.FC = () => {
                 <div>
                   <div className="font-bold text-[11px]">UBND Phường/Xã</div>
                   <div className="text-[10px] text-slate-500 font-mono">hongbang_officer</div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleSelectQuickAccount('viettel_tech01', 'password123')}
-                className={`p-2 rounded-sm border text-left transition flex items-start gap-1.5 cursor-pointer ${
-                  username === 'viettel_tech01'
-                    ? 'border-[#ee0033] bg-red-50 text-[#ee0033] font-semibold'
-                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                }`}
-              >
-                <Wrench className="w-3.5 h-3.5 text-slate-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-bold text-[11px]">Kỹ thuật viên</div>
-                  <div className="text-[10px] text-slate-500 font-mono">viettel_tech01</div>
                 </div>
               </button>
             </div>
