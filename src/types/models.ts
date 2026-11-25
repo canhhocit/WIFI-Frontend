@@ -804,6 +804,15 @@ export interface AssignIncidentRequest {
   note?: string;
 }
 
+export interface IncidentAssigneeDto {
+  id: number;
+  username: string;
+  fullName: string;
+  role: string;
+  roleLabel: string;
+  unitGroup: string;
+}
+
 export interface ResolveIncidentRequest {
   resolutionSummary: string;
   rootCauseCategory: RootCauseCategory;

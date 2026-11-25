@@ -69,27 +69,18 @@ export const SurveysPage: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [newSurveyTitle, setNewSurveyTitle] = useState('');
   const [newSurveyDesc, setNewSurveyDesc] = useState('');
-  const [selectedCampaignId, setSelectedCampaignId] = useState<number | undefined>(undefined);
   const [newSurveyQuota, setNewSurveyQuota] = useState(500);
   const [questions, setQuestions] = useState<SurveyQuestionDraft[]>([
     {
       draftId: -1,
-      questionText: 'Quý vị đánh giá chất lượng sóng Wi-Fi tại Nhà văn hóa hôm nay như thế nào?',
+      questionText: '',
       questionType: 'SINGLE_CHOICE',
-      optionsList: ['Rất tốt', 'Ổn định', 'Chập chờn', 'Không vào được mạng'],
+      optionsList: ['', ''],
       required: true,
       branchingRules: [],
     },
-    {
-      draftId: -2,
-      questionText: 'Ý kiến đóng góp thêm về tiện ích chuyển đổi số tại địa phương:',
-      questionType: 'TEXT',
-      optionsList: [],
-      required: false,
-      branchingRules: [],
-    },
   ]);
-  const nextDraftIdRef = useRef(-3);
+  const nextDraftIdRef = useRef(-2);
   const pendingFocusDraftIdRef = useRef<number | null>(null);
   const questionInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const [builderView, setBuilderView] = useState<'QUESTIONS' | 'FLOW'>('QUESTIONS');
@@ -272,7 +263,6 @@ export const SurveysPage: React.FC = () => {
 
       await adminApi.createSurvey({
         id: 0,
-        campaignId: selectedCampaignId,
         title: newSurveyTitle.trim(),
         description: newSurveyDesc.trim() || undefined,
         maxResponsesQuota: Number(newSurveyQuota),
@@ -284,9 +274,8 @@ export const SurveysPage: React.FC = () => {
       setIsCreateOpen(false);
       setNewSurveyTitle('');
       setNewSurveyDesc('');
-      setSelectedCampaignId(undefined);
       setQuestions([
-        { draftId: -1, questionText: '', questionType: 'SINGLE_CHOICE', optionsList: ['Lựa chọn 1', 'Lựa chọn 2'], required: true, branchingRules: [] },
+        { draftId: -1, questionText: '', questionType: 'SINGLE_CHOICE', optionsList: ['', ''], required: true, branchingRules: [] },
       ]);
       nextDraftIdRef.current = -2;
       setBuilderView('QUESTIONS');
@@ -615,27 +604,6 @@ export const SurveysPage: React.FC = () => {
               placeholder="VD: Thăm dò mức độ hài lòng về tiện ích số tại Nhà văn hóa"
               className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
             />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Gắn với Chiến dịch tuyên truyền (Tùy chọn)
-            </label>
-            <select
-              value={selectedCampaignId || ''}
-              onChange={(e) => setSelectedCampaignId(e.target.value ? Number(e.target.value) : undefined)}
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004b87]"
-            >
-              <option value="">-- Áp dụng chung cho toàn bộ mạng Wi-Fi công cộng --</option>
-              {campaigns.map((c) => (
-                <option key={c.id} value={c.id}>
-                  [{c.status}] {c.title}
-                </option>
-              ))}
-            </select>
-            <p className="text-[10.5px] text-slate-500 mt-1">
-              Nếu không chọn chiến dịch, bài khảo sát sẽ tự động phát sóng chung cho tất cả các điểm Nhà văn hóa.
-            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

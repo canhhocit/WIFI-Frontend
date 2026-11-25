@@ -10,6 +10,7 @@ import {
   RootCauseCategory,
   CreateIncidentRequest,
   AssignIncidentRequest,
+  IncidentAssigneeDto,
   ResolveIncidentRequest,
   LocationDto,
   CitizenReportDto
@@ -166,11 +167,15 @@ export const IncidentsPage: React.FC = () => {
   const [createSeverity, setCreateSeverity] = useState<IncidentSeverity>('MAJOR');
   const [createIncidentType, setCreateIncidentType] = useState<string>('SYSTEM_DEGRADATION');
   const [createAssignedTo, setCreateAssignedTo] = useState<string>('');
+  const [createAssignedGroup, setCreateAssignedGroup] = useState<string>('');
+  const [customCreateAssigneeMode, setCustomCreateAssigneeMode] = useState<boolean>(false);
   const [targetCitizenReportId, setTargetCitizenReportId] = useState<number | null>(null);
 
   // Assign form state
-  const [assigneeName, setAssigneeName] = useState<string>('Viettel_KyThuat_01');
-  const [assignGroup, setAssignGroup] = useState<string>('Đội Kỹ thuật Viễn thông Hải Phòng');
+  const [assignees, setAssignees] = useState<IncidentAssigneeDto[]>([]);
+  const [assigneeName, setAssigneeName] = useState<string>('');
+  const [assignGroup, setAssignGroup] = useState<string>('');
+  const [customAssigneeMode, setCustomAssigneeMode] = useState<boolean>(false);
   const [assignNote, setAssignNote] = useState<string>('');
 
   // Resolve form state
@@ -184,19 +189,49 @@ export const IncidentsPage: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [ticketsPage, locsPage, reportsPage] = await Promise.all([
+      const [ticketsPage, locsPage, reportsPage, assigneesList] = await Promise.all([
         adminApi.getIncidents({ size: 500 }),
         adminApi.getLocations({ page: 0, size: 500 }),
         adminApi.getCitizenReports({ size: 500 }).catch(() => ({ content: [], totalElements: 0 })),
+        adminApi.getIncidentAssignees().catch(() => []),
       ]);
       setIncidents(ticketsPage.content);
       setLocations(locsPage.content);
       setCitizenReports(reportsPage.content || []);
+      setAssignees(assigneesList || []);
     } catch (err) {
       console.error('Failed to load incidents:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const openAssignModal = (ticket: IncidentTicketDto) => {
+    setTargetIncidentId(ticket.id);
+    if (ticket.assignedTo) {
+      const matched = assignees.find(
+        (u) => u.fullName === ticket.assignedTo || u.username === ticket.assignedTo
+      );
+      if (matched) {
+        setCustomAssigneeMode(false);
+        setAssigneeName(matched.fullName);
+        setAssignGroup(ticket.assignedGroup || matched.unitGroup);
+      } else {
+        setCustomAssigneeMode(true);
+        setAssigneeName(ticket.assignedTo);
+        setAssignGroup(ticket.assignedGroup || '');
+      }
+    } else if (assignees.length > 0) {
+      const defaultOfficer = assignees[0];
+      setCustomAssigneeMode(false);
+      setAssigneeName(defaultOfficer.fullName);
+      setAssignGroup(defaultOfficer.unitGroup);
+    } else {
+      setCustomAssigneeMode(true);
+      setAssigneeName('');
+      setAssignGroup('');
+    }
+    setShowAssignModal(true);
   };
 
   useEffect(() => {
@@ -289,8 +324,8 @@ export const IncidentsPage: React.FC = () => {
         description: createDescription,
         severity: createSeverity,
         incidentType: createIncidentType || 'SYSTEM_DEGRADATION',
-        assignedTo: createAssignedTo || undefined,
-        assignedGroup: createAssignedTo ? 'Đội Kỹ thuật Viễn thông Hải Phòng' : undefined,
+        assignedTo: createAssignedTo.trim() || undefined,
+        assignedGroup: createAssignedTo.trim() ? (createAssignedGroup.trim() || 'Cán bộ được phân công') : undefined,
         citizenReportId: targetCitizenReportId || undefined,
       };
       const created = await adminApi.createIncident(payload);
@@ -298,6 +333,9 @@ export const IncidentsPage: React.FC = () => {
       setShowCreateModal(false);
       setCreateTitle('');
       setCreateDescription('');
+      setCreateAssignedTo('');
+      setCreateAssignedGroup('');
+      setCustomCreateAssigneeMode(false);
       setTargetCitizenReportId(null);
       await loadData();
     } catch (err: any) {
@@ -313,8 +351,8 @@ export const IncidentsPage: React.FC = () => {
 
     try {
       const payload: AssignIncidentRequest = {
-        assignedTo: assigneeName,
-        assignedGroup: assignGroup,
+        assignedTo: assigneeName.trim(),
+        assignedGroup: assignGroup.trim() || undefined,
         note: assignNote,
       };
       const updated = await adminApi.assignIncident(targetIncidentId, payload);
@@ -326,7 +364,7 @@ export const IncidentsPage: React.FC = () => {
       }
       await loadData();
     } catch (err) {
-      alert('Không thể phân công kỹ thuật viên');
+      alert('Không thể phân công xử lý sự cố');
     }
   };
 
@@ -540,7 +578,7 @@ export const IncidentsPage: React.FC = () => {
                 <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Tìm theo mã SC-..., tên sự cố, địa điểm, kỹ thuật viên..."
+                  placeholder="Tìm theo mã SC-..., tên sự cố, địa điểm, người phụ trách..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-rose-500"
@@ -645,10 +683,10 @@ export const IncidentsPage: React.FC = () => {
                             {t.assignedTo ? (
                               <div>
                                 <div className="font-medium text-gray-900">{t.assignedTo}</div>
-                                <div className="text-[10px] text-gray-400">{t.assignedGroup || 'Đội Viễn thông'}</div>
+                                <div className="text-[10px] text-gray-400">{t.assignedGroup || 'Cán bộ được phân công'}</div>
                               </div>
                             ) : (
-                              <span className="text-gray-400 italic">Chưa điều phối</span>
+                              <span className="text-gray-400 italic">Chưa phân công</span>
                             )}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
@@ -679,17 +717,14 @@ export const IncidentsPage: React.FC = () => {
                             {(canEdit || canApprove) && (t.status === 'OPEN' || t.status === 'NEW') && (
                               <button
                                 type="button"
-                                onClick={() => {
-                                  setTargetIncidentId(t.id);
-                                  setShowAssignModal(true);
-                                }}
+                                onClick={() => openAssignModal(t)}
                                 className="px-2.5 py-1 text-white bg-blue-600 hover:bg-blue-700 rounded text-[11px] font-semibold transition cursor-pointer shadow-xs"
                               >
                                 Phân công
                               </button>
                             )}
 
-                            {/* Khắc phục & Điều phối lại (khi đang xử lý) */}
+                            {/* Khắc phục & Đổi người xử lý (khi đang xử lý) */}
                             {(canEdit || canApprove) && (t.status === 'ASSIGNED' || t.status === 'IN_PROGRESS') && (
                               <>
                                 <button
@@ -704,15 +739,11 @@ export const IncidentsPage: React.FC = () => {
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => {
-                                    setTargetIncidentId(t.id);
-                                    if (t.assignedTo) setAssigneeName(t.assignedTo);
-                                    setShowAssignModal(true);
-                                  }}
+                                  onClick={() => openAssignModal(t)}
                                   className="px-2 py-1 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded text-[11px] font-medium transition cursor-pointer"
-                                  title="Đổi kỹ thuật viên phụ trách"
+                                  title="Đổi cán bộ hoặc đơn vị phụ trách"
                                 >
-                                  Đổi KTV
+                                  Đổi người
                                 </button>
                               </>
                             )}
@@ -980,9 +1011,11 @@ export const IncidentsPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Kỹ thuật viên phụ trách:</span>
-                  <span className="font-semibold text-gray-900">
-                    {selectedIncident.assignedTo ? `${selectedIncident.assignedTo} (${selectedIncident.assignedGroup || 'Đội Viễn thông'})` : 'Chưa điều phối'}
+                  <span className="text-gray-500">Cán bộ / Đơn vị phụ trách:</span>
+                  <span className="font-semibold text-gray-900 text-right">
+                    {selectedIncident.assignedTo
+                      ? `${selectedIncident.assignedTo}${selectedIncident.assignedGroup ? ` (${selectedIncident.assignedGroup})` : ''}`
+                      : 'Chưa phân công'}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -1059,13 +1092,10 @@ export const IncidentsPage: React.FC = () => {
                 {(selectedIncident.status === 'OPEN' || selectedIncident.status === 'NEW') && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setTargetIncidentId(selectedIncident.id);
-                      setShowAssignModal(true);
-                    }}
+                    onClick={() => openAssignModal(selectedIncident)}
                     className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-sm cursor-pointer shadow-xs"
                   >
-                    Phân công kỹ thuật viên
+                    Phân công xử lý
                   </button>
                 )}
 
@@ -1083,14 +1113,10 @@ export const IncidentsPage: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        setTargetIncidentId(selectedIncident.id);
-                        if (selectedIncident.assignedTo) setAssigneeName(selectedIncident.assignedTo);
-                        setShowAssignModal(true);
-                      }}
+                      onClick={() => openAssignModal(selectedIncident)}
                       className="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium rounded-sm cursor-pointer"
                     >
-                      Đổi KTV
+                      Đổi người xử lý
                     </button>
                   </>
                 )}
@@ -1311,15 +1337,42 @@ export const IncidentsPage: React.FC = () => {
 
                   <div>
                     <label className="block font-medium text-slate-700 mb-1.5">
-                      Kỹ thuật viên tiếp nhận <span className="text-slate-400 font-normal">(tùy chọn)</span>
+                      Cán bộ tiếp nhận <span className="text-slate-400 font-normal">(tùy chọn)</span>
                     </label>
-                    <input
-                      type="text"
-                      placeholder="Nhập tên hoặc mã KTV..."
-                      value={createAssignedTo}
-                      onChange={(e) => setCreateAssignedTo(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition"
-                    />
+                    <select
+                      value={customCreateAssigneeMode ? '__CUSTOM__' : createAssignedTo}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '__CUSTOM__') {
+                          setCustomCreateAssigneeMode(true);
+                          setCreateAssignedTo('');
+                          setCreateAssignedGroup('');
+                        } else {
+                          setCustomCreateAssigneeMode(false);
+                          setCreateAssignedTo(val);
+                          const found = assignees.find((u) => u.fullName === val);
+                          setCreateAssignedGroup(found ? found.unitGroup : '');
+                        }
+                      }}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition"
+                    >
+                      <option value="">-- Chưa phân công (Điều phối sau) --</option>
+                      {assignees.map((u) => (
+                        <option key={u.id} value={u.fullName}>
+                          {u.fullName} ({u.roleLabel})
+                        </option>
+                      ))}
+                      <option value="__CUSTOM__">✏️ Nhập tên người / đơn vị khác...</option>
+                    </select>
+                    {customCreateAssigneeMode && (
+                      <input
+                        type="text"
+                        placeholder="Nhập tên cán bộ hoặc đơn vị tiếp nhận..."
+                        value={createAssignedTo}
+                        onChange={(e) => setCreateAssignedTo(e.target.value)}
+                        className="mt-2 w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition"
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -1361,7 +1414,7 @@ export const IncidentsPage: React.FC = () => {
                   <UserCheck className="w-4 h-4" />
                 </div>
                 <h3 className="font-semibold text-slate-900 text-[15px]">
-                  Điều phối kỹ thuật viên xử lý
+                  Phân công xử lý sự cố
                 </h3>
               </div>
               <button
@@ -1377,26 +1430,52 @@ export const IncidentsPage: React.FC = () => {
               <div className="px-6 py-4 space-y-3.5">
                 <div>
                   <label className="block font-medium text-slate-700 mb-1.5">
-                    Kỹ thuật viên phụ trách <span className="text-rose-500">*</span>
+                    Cán bộ / Đơn vị phụ trách <span className="text-rose-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={assigneeName}
-                    onChange={(e) => setAssigneeName(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
-                    placeholder="Ví dụ: KTV Nguyễn Văn An"
-                  />
+                  <select
+                    value={customAssigneeMode ? '__CUSTOM__' : assigneeName}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '__CUSTOM__') {
+                        setCustomAssigneeMode(true);
+                        setAssigneeName('');
+                        setAssignGroup('');
+                      } else {
+                        setCustomAssigneeMode(false);
+                        setAssigneeName(val);
+                        const found = assignees.find((u) => u.fullName === val);
+                        if (found) setAssignGroup(found.unitGroup);
+                      }
+                    }}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+                  >
+                    {assignees.map((u) => (
+                      <option key={u.id} value={u.fullName}>
+                        {u.fullName} — {u.username} ({u.roleLabel})
+                      </option>
+                    ))}
+                    <option value="__CUSTOM__">✏️ Nhập tên cán bộ / đơn vị khác...</option>
+                  </select>
+                  {customAssigneeMode && (
+                    <input
+                      type="text"
+                      required
+                      value={assigneeName}
+                      onChange={(e) => setAssigneeName(e.target.value)}
+                      className="mt-2 w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+                      placeholder="Ví dụ: Cán bộ Sở KH&CN / Đầu mối Viettel..."
+                    />
+                  )}
                 </div>
 
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1.5">Đơn vị / Đội công tác</label>
+                  <label className="block font-medium text-slate-700 mb-1.5">Đơn vị / Bộ phận chủ trì</label>
                   <input
                     type="text"
                     value={assignGroup}
                     onChange={(e) => setAssignGroup(e.target.value)}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
-                    placeholder="Ví dụ: Đội Viễn thông Trung tâm"
+                    placeholder="Ví dụ: Sở Khoa học và Công nghệ TP. Hải Phòng"
                   />
                 </div>
 
@@ -1629,7 +1708,7 @@ export const IncidentsPage: React.FC = () => {
             <form onSubmit={handleReopen} className="text-xs">
               <div className="px-6 py-4 space-y-3.5">
                 <p className="text-slate-600 leading-relaxed">
-                  Phiếu sự cố sẽ được chuyển lại trạng thái <strong>Đang xử lý</strong> để kỹ thuật viên tiếp tục kiểm tra hiện trường.
+                  Phiếu sự cố sẽ được chuyển lại trạng thái <strong>Đang xử lý</strong> để cán bộ phụ trách tiếp tục kiểm tra xử lý.
                 </p>
 
                 <div>

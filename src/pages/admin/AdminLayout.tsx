@@ -473,9 +473,9 @@ export const AdminLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen md:h-screen md:overflow-hidden bg-slate-100 flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen md:h-screen md:overflow-hidden bg-slate-100 flex flex-col md:flex-row font-sans print:block print:h-auto print:min-h-0 print:overflow-visible print:bg-white">
       {/* Mobile Top Header */}
-      <div className="md:hidden bg-white text-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-200 sticky top-0 z-40 shadow-2xs">
+      <div className="md:hidden print:hidden bg-white text-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-200 sticky top-0 z-40 shadow-2xs">
         <div className="flex items-center gap-2.5">
           <VietnamFlag width={30} height={20} className="shadow-xs rounded-xs" />
           <span className="font-bold text-xs uppercase tracking-wide text-[#ee0033]">
@@ -504,7 +504,7 @@ export const AdminLayout: React.FC = () => {
 
       {/* Sidebar Navigation */}
       <aside
-        className={`fixed md:sticky top-0 left-0 z-30 h-screen bg-white text-slate-700 flex flex-col border-r border-slate-200 shadow-2xs transition-all duration-300 ease-in-out ${mobileMenuOpen
+        className={`fixed md:sticky top-0 left-0 z-30 h-screen print:hidden bg-white text-slate-700 flex flex-col border-r border-slate-200 shadow-2xs transition-all duration-300 ease-in-out ${mobileMenuOpen
             ? "translate-x-0 w-72"
             : "-translate-x-full md:translate-x-0"
           } ${desktopCollapsed
@@ -714,9 +714,9 @@ export const AdminLayout: React.FC = () => {
       </aside>
 
       {/* Main Content Container with Top Bar */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden print:block print:overflow-visible">
         {/* Desktop Top Header Bar */}
-        <header className="hidden md:flex h-12 shrink-0 bg-white border-b border-slate-300 px-4 lg:px-6 items-center justify-between shadow-2xs">
+        <header className="hidden md:flex print:hidden h-12 shrink-0 bg-white border-b border-slate-300 px-4 lg:px-6 items-center justify-between shadow-2xs">
           <div className="flex items-center gap-3">
             {/* Desktop Menu Close / Open Toggle Button */}
             <button
@@ -776,7 +776,7 @@ export const AdminLayout: React.FC = () => {
         </header>
 
         {/* Page Body with RBAC Route Guard */}
-        <main className="min-h-0 flex-1 p-4 sm:p-5 lg:p-6 overflow-y-auto overscroll-contain bg-slate-100">
+        <main className="min-h-0 flex-1 p-4 sm:p-5 lg:p-6 overflow-y-auto overscroll-contain bg-slate-100 print:p-0 print:overflow-visible print:bg-white">
           {!isCurrentPathAllowed() ? (
             <div className="max-w-xl mx-auto mt-12 p-6 bg-white border border-slate-300 rounded shadow-xs text-center space-y-4">
               <div className="w-12 h-12 rounded bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto">

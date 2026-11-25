@@ -41,6 +41,7 @@ import {
   IncidentTicketDto,
   CreateIncidentRequest,
   AssignIncidentRequest,
+  IncidentAssigneeDto,
   ResolveIncidentRequest,
   CitizenReportDto,
   GisLocationPinDto,
@@ -641,6 +642,10 @@ export const adminApi = {
 
   getIncidentById: (id: number) => {
     return request<IncidentTicketDto>(`/v1/admin/incidents/${id}`);
+  },
+
+  getIncidentAssignees: () => {
+    return request<IncidentAssigneeDto[]>('/v1/admin/incidents/assignees');
   },
 
   createIncident: (data: CreateIncidentRequest) => {

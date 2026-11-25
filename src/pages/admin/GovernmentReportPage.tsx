@@ -22,6 +22,16 @@ import {
   AlertCircle
 } from 'lucide-react';
 
+const formatDataVolume = (tb: number): string => {
+  if (!tb || tb <= 0) return '0 MB';
+  if (tb >= 1.0) return `${tb.toFixed(2)} TB`;
+  const gb = tb * 1024;
+  if (gb >= 1.0) return `${gb.toFixed(2)} GB`;
+  const mb = gb * 1024;
+  if (mb >= 0.1) return `${mb.toFixed(1)} MB`;
+  return `${Math.round(mb * 1024)} KB`;
+};
+
 export const GovernmentReportPage: React.FC = () => {
   const [report, setReport] = useState<GovernmentReportDto | null>(null);
   const [period, setPeriod] = useState<string>('MONTH');
@@ -133,7 +143,7 @@ export const GovernmentReportPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print:space-y-0">
       {/* Top Header Bar */}
       <div className="print:hidden flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-4 rounded-sm border border-gray-200 shadow-sm">
         <div>
@@ -183,8 +193,9 @@ export const GovernmentReportPage: React.FC = () => {
               >
                 <option value="MONTH">Kỳ báo cáo: Tháng này</option>
                 <option value="PREV_MONTH">Kỳ báo cáo: Tháng trước</option>
-                <option value="QUARTER">Kỳ báo cáo: Quý 3/2026</option>
-                <option value="YEAR">Kỳ báo cáo: Năm 2026</option>
+                <option value="QUARTER">Kỳ báo cáo: Quý {Math.floor(new Date().getMonth() / 3) + 1}/{new Date().getFullYear()}</option>
+                <option value="YEAR">Kỳ báo cáo: Năm {new Date().getFullYear()}</option>
+                <option value="ALL">Kỳ báo cáo: Toàn thời gian</option>
               </select>
 
               <button
@@ -248,14 +259,14 @@ export const GovernmentReportPage: React.FC = () => {
       </div>
 
       {submitSuccessMsg && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-sm flex items-center gap-2">
+        <div className="print:hidden p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-sm flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
           <span>{submitSuccessMsg}</span>
         </div>
       )}
 
       {exportError && (
-        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-sm flex items-center gap-2">
+        <div className="print:hidden p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-sm flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
           <span>{exportError}</span>
         </div>
@@ -263,12 +274,12 @@ export const GovernmentReportPage: React.FC = () => {
 
       {/* TAB 1: Main Report Document Canvas */}
       {activeTab === 'DOCUMENT' && report && (
-        <div className="bg-white p-8 md:p-12 rounded border border-gray-300 shadow-sm print:border-none print:shadow-none print:p-0 max-w-5xl mx-auto font-serif">
+        <div className="bg-white p-8 md:p-12 rounded border border-gray-300 shadow-sm print:border-none print:shadow-none print:p-0 print:max-w-none print:w-full max-w-5xl mx-auto font-serif">
           {/* Official Administrative Header */}
-          <div className="flex justify-between items-start text-center pb-4 border-b-2 border-red-800 text-xs text-gray-800">
+          <div className="flex justify-between items-start text-center pb-4 print:pb-2.5 border-b-2 border-red-800 text-xs text-gray-800 print:break-inside-avoid">
             <div className="w-1/2 text-left">
-              <div className="font-bold uppercase tracking-wide text-xs">ỦY BAN NHÂN DÂN THÀNH PHỐ HẢI PHÒNG</div>
-              <div className="font-bold uppercase text-red-800 text-xs sm:text-sm mt-0.5 tracking-tight">
+              <div className="font-bold uppercase tracking-wide text-xs print:text-[11px]">ỦY BAN NHÂN DÂN THÀNH PHỐ HẢI PHÒNG</div>
+              <div className="font-bold uppercase text-red-800 text-xs sm:text-sm print:text-xs mt-0.5 tracking-tight">
                 SỞ KHOA HỌC VÀ CÔNG NGHỆ
               </div>
               <div className="w-32 h-0.5 bg-red-800 mt-1 mb-1" />
@@ -276,125 +287,121 @@ export const GovernmentReportPage: React.FC = () => {
             </div>
 
             <div className="w-1/2 text-right">
-              <div className="font-bold uppercase tracking-wide text-xs">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
-              <div className="font-bold text-xs mt-0.5">Độc lập - Tự do - Hạnh phúc</div>
+              <div className="font-bold uppercase tracking-wide text-xs print:text-[11px]">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+              <div className="font-bold text-xs print:text-[11px] mt-0.5">Độc lập - Tự do - Hạnh phúc</div>
               <div className="flex justify-end my-1">
                 <div className="w-36 h-0.5 bg-gray-800" />
               </div>
               <div className="text-[11px] text-gray-600 italic font-sans">
-                Hải Phòng, ngày {new Date(report.generatedAt).getDate()} tháng{' '}
-                {new Date(report.generatedAt).getMonth() + 1} năm {new Date(report.generatedAt).getFullYear()}
+                Hải Phòng, ngày {String(new Date(report.generatedAt).getDate()).padStart(2, '0')} tháng{' '}
+                {String(new Date(report.generatedAt).getMonth() + 1).padStart(2, '0')} năm {new Date(report.generatedAt).getFullYear()}
               </div>
             </div>
           </div>
 
           {/* Document Title */}
-          <div className="text-center my-8">
-            <h2 className="text-lg md:text-2xl font-bold text-red-900 tracking-wide uppercase">
+          <div className="text-center my-8 print:my-3.5 print:break-inside-avoid">
+            <h2 className="text-lg md:text-2xl print:text-lg font-bold text-red-900 tracking-wide uppercase">
               BÁO CÁO KỸ THUẬT & VẬN HÀNH HỆ THỐNG MẠNG WI-FI CÔNG CỘNG
             </h2>
-            <p className="text-xs sm:text-sm font-bold text-slate-800 mt-1.5 font-sans">
+            <p className="text-xs sm:text-sm print:text-xs font-bold text-slate-800 mt-1.5 print:mt-1 font-sans">
               Đề án phủ sóng Wi-Fi miễn phí tại 1.584 Nhà văn hóa thôn, tổ dân phố trên địa bàn thành phố Hải Phòng
             </p>
-            <p className="text-xs text-gray-500 italic mt-1 font-mono">
+            <p className="text-xs print:text-[11px] text-gray-500 italic mt-1 font-sans">
               (Kỳ báo cáo: {report.reportPeriod} — Dữ liệu vận hành thời gian thực từ hệ thống)
             </p>
           </div>
 
           {/* Part I: Macro KPIs Summary */}
-          <div className="space-y-3 font-sans">
+          <div className="space-y-3 print:space-y-2 font-sans print:break-inside-avoid">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 font-serif border-b pb-1">
               I. ĐÁNH GIÁ CHỈ SỐ TỔNG THỂ TOÀN THÀNH PHỐ
             </h3>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 py-2">
-              <div className="p-3 bg-slate-50 border rounded-sm">
-                <div className="flex items-center justify-between text-gray-500 text-xs">
+            <div className="grid grid-cols-2 md:grid-cols-4 print:grid-cols-4 gap-3 print:gap-2 py-2 print:py-0.5">
+              <div className="p-3 print:p-2 bg-slate-50 border rounded-sm">
+                <div className="flex items-center justify-between text-gray-500 text-xs print:text-[10.5px]">
                   <span>Quy mô điểm phát</span>
-                  <Building2 className="w-4 h-4 text-gray-400" />
+                  <Building2 className="w-4 h-4 print:w-3.5 print:h-3.5 text-gray-400" />
                 </div>
-                <div className="mt-2 text-2xl font-bold text-gray-900">
-                  {report.activeLocations} / 5 điểm Pilot
+                <div className="mt-2 print:mt-1 text-2xl print:text-base font-bold text-gray-900">
+                  {report.activeLocations} điểm đang phát
                 </div>
-                <div className="text-[11px] text-emerald-700 font-semibold mt-0.5">
-                  Quy hoạch: 1.584 điểm NVH
+                <div className="text-[11px] print:text-[9.5px] text-emerald-700 font-semibold mt-0.5">
+                  Quy hoạch: {report.totalTargetLocations.toLocaleString()} điểm NVH
                 </div>
               </div>
 
-              <div className="p-3 bg-slate-50 border rounded-sm">
-                <div className="flex items-center justify-between text-gray-500 text-xs">
+              <div className="p-3 print:p-2 bg-slate-50 border rounded-sm">
+                <div className="flex items-center justify-between text-gray-500 text-xs print:text-[10.5px]">
                   <span>Độ khả dụng mạng</span>
-                  <Wifi className="w-4 h-4 text-emerald-600" />
+                  <Wifi className="w-4 h-4 print:w-3.5 print:h-3.5 text-emerald-600" />
                 </div>
-                <div className="mt-2 text-2xl font-bold text-emerald-600">
+                <div className="mt-2 print:mt-1 text-2xl print:text-base font-bold text-emerald-600">
                   {report.networkAvailabilityRate}%
                 </div>
-                <div className="text-[11px] text-gray-500 mt-0.5">Cam kết theo đề án: &gt; 99.0%</div>
+                <div className="text-[11px] print:text-[9.5px] text-gray-500 mt-0.5">Cam kết theo đề án: &gt; 99.0%</div>
               </div>
 
-              <div className="p-3 bg-slate-50 border rounded-sm">
-                <div className="flex items-center justify-between text-gray-500 text-xs">
+              <div className="p-3 print:p-2 bg-slate-50 border rounded-sm">
+                <div className="flex items-center justify-between text-gray-500 text-xs print:text-[10.5px]">
                   <span>Lượt người dân truy cập</span>
-                  <Users className="w-4 h-4 text-blue-600" />
+                  <Users className="w-4 h-4 print:w-3.5 print:h-3.5 text-blue-600" />
                 </div>
-                <div className="mt-2 text-2xl font-bold text-blue-600 font-mono">
+                <div className="mt-2 print:mt-1 text-2xl print:text-base font-bold text-blue-600 font-mono">
                   {report.totalCitizenSessions.toLocaleString()}
                 </div>
-                <div className="text-[11px] text-gray-500 mt-0.5">Phiên đăng nhập thành công</div>
+                <div className="text-[11px] print:text-[9.5px] text-gray-500 mt-0.5">Phiên đăng nhập thành công</div>
               </div>
 
-              <div className="p-3 bg-slate-50 border rounded-sm">
-                <div className="flex items-center justify-between text-gray-500 text-xs">
+              <div className="p-3 print:p-2 bg-slate-50 border rounded-sm">
+                <div className="flex items-center justify-between text-gray-500 text-xs print:text-[10.5px]">
                   <span>Dung lượng dữ liệu</span>
-                  <HardDrive className="w-4 h-4 text-indigo-600" />
+                  <HardDrive className="w-4 h-4 print:w-3.5 print:h-3.5 text-indigo-600" />
                 </div>
-                <div className="mt-2 text-2xl font-bold text-indigo-600">
-                  {report.totalDataServedTb >= 1.0
-                    ? `${report.totalDataServedTb} TB`
-                    : report.totalDataServedTb >= 0.001
-                    ? `${(report.totalDataServedTb * 1024).toFixed(2)} GB`
-                    : '180.5 MB'}
+                <div className="mt-2 print:mt-1 text-2xl print:text-base font-bold text-indigo-600">
+                  {formatDataVolume(report.totalDataServedTb)}
                 </div>
-                <div className="text-[11px] text-gray-500 mt-0.5">Dịch vụ công & đời sống nhân dân</div>
+                <div className="text-[11px] print:text-[9.5px] text-gray-500 mt-0.5">Dịch vụ công &amp; đời sống nhân dân</div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 py-1">
-              <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-sm">
-                <div className="text-xs font-semibold text-emerald-900 flex items-center gap-1.5">
-                  <Award className="w-4 h-4 text-emerald-600" />
+            <div className="grid grid-cols-1 md:grid-cols-3 print:grid-cols-3 gap-3 print:gap-2 py-1 print:py-0">
+              <div className="p-3 print:p-2 bg-emerald-50/70 border border-emerald-200 rounded-sm">
+                <div className="text-xs print:text-[10.5px] font-semibold text-emerald-900 flex items-center gap-1.5">
+                  <Award className="w-4 h-4 print:w-3.5 print:h-3.5 text-emerald-600" />
                   Mức độ hài lòng của nhân dân
                 </div>
-                <div className="mt-1 text-2xl font-black text-emerald-700">
+                <div className="mt-1 print:mt-0.5 text-2xl print:text-base font-black text-emerald-700">
                   {report.citizenSatisfactionRate}%
                 </div>
-                <div className="text-[11px] text-emerald-800 mt-0.5">
+                <div className="text-[11px] print:text-[9.5px] text-emerald-800 mt-0.5">
                   Đánh giá Tốt / Rất tốt qua khảo sát trực tuyến
                 </div>
               </div>
 
-              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-sm">
-                <div className="text-xs font-semibold text-blue-900 flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-blue-600" />
+              <div className="p-3 print:p-2 bg-blue-50/70 border border-blue-200 rounded-sm">
+                <div className="text-xs print:text-[10.5px] font-semibold text-blue-900 flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 print:w-3.5 print:h-3.5 text-blue-600" />
                   Tuân thủ cam kết SLA Viễn thông
                 </div>
-                <div className="mt-1 text-2xl font-black text-blue-700">
+                <div className="mt-1 print:mt-0.5 text-2xl print:text-base font-black text-blue-700">
                   {report.telecomSlaComplianceRate}%
                 </div>
-                <div className="text-[11px] text-blue-800 mt-0.5">
+                <div className="text-[11px] print:text-[9.5px] text-blue-800 mt-0.5">
                   Tổng {report.totalIncidentsReported} sự cố kỹ thuật ghi nhận
                 </div>
               </div>
 
-              <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-sm">
-                <div className="text-xs font-semibold text-amber-900 flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-amber-600" />
+              <div className="p-3 print:p-2 bg-amber-50/70 border border-amber-200 rounded-sm">
+                <div className="text-xs print:text-[10.5px] font-semibold text-amber-900 flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 print:w-3.5 print:h-3.5 text-amber-600" />
                   Thời gian phục hồi trung bình (MTTR)
                 </div>
-                <div className="mt-1 text-2xl font-black text-amber-700">
+                <div className="mt-1 print:mt-0.5 text-2xl print:text-base font-black text-amber-700">
                   {report.averageResolutionHours > 0 ? `${report.averageResolutionHours} Giờ` : '0.0 Giờ'}
                 </div>
-                <div className="text-[11px] text-amber-800 mt-0.5">
+                <div className="text-[11px] print:text-[9.5px] text-amber-800 mt-0.5">
                   Hạn mức cam kết tối đa: 4h - 8h
                 </div>
               </div>
@@ -402,68 +409,77 @@ export const GovernmentReportPage: React.FC = () => {
           </div>
 
           {/* Part II: District Breakdown Table */}
-          <div className="mt-8 space-y-3 font-sans">
+          <div className="mt-8 print:mt-3.5 space-y-3 print:space-y-1.5 font-sans">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 font-serif border-b pb-1">
               II. CHI TIẾT TỔNG HỢP THEO 15 QUẬN / HUYỆN THÀNH PHỐ HẢI PHÒNG
             </h3>
 
-            <div className="overflow-x-auto border border-gray-300 rounded-sm">
-              <table className="min-w-full divide-y divide-gray-300 text-xs">
+            <div className="overflow-x-auto print:overflow-visible border border-gray-300 rounded-sm">
+              <table className="min-w-full divide-y divide-gray-300 text-xs print:text-[10px]">
                 <thead className="bg-gray-100 font-serif text-gray-800">
                   <tr>
-                    <th className="px-3 py-2.5 text-center font-bold">STT</th>
-                    <th className="px-3 py-2.5 text-left font-bold">Địa bàn Quận / Huyện</th>
-                    <th className="px-3 py-2.5 text-center font-bold">Chỉ tiêu NVH</th>
-                    <th className="px-3 py-2.5 text-center font-bold">Online</th>
-                    <th className="px-3 py-2.5 text-center font-bold">Độ khả dụng</th>
-                    <th className="px-3 py-2.5 text-right font-bold">Lượt truy cập</th>
-                    <th className="px-3 py-2.5 text-right font-bold">Dữ liệu (GB)</th>
-                    <th className="px-3 py-2.5 text-center font-bold">Sự cố</th>
-                    <th className="px-3 py-2.5 text-center font-bold">Đạt SLA</th>
+                    <th className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-bold">STT</th>
+                    <th className="px-3 py-2.5 print:px-2 print:py-1 text-left font-bold">Địa bàn Quận / Huyện</th>
+                    <th className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-bold">Chỉ tiêu NVH</th>
+                    <th className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-bold">Online</th>
+                    <th className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-bold">Độ khả dụng</th>
+                    <th className="px-3 py-2.5 print:px-1.5 print:py-1 text-right font-bold">Lượt truy cập</th>
+                    <th className="px-3 py-2.5 print:px-1.5 print:py-1 text-right font-bold">Dữ liệu (GB)</th>
+                    <th className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-bold">Sự cố</th>
+                    <th className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-bold">Đạt SLA</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {report.districtBreakdown.map((item, index) => (
-                    <tr key={item.districtId} className="hover:bg-gray-50">
-                      <td className="px-3 py-2 text-center text-gray-500 font-mono">{index + 1}</td>
-                      <td className="px-3 py-2 font-bold text-gray-900">{item.districtName}</td>
-                      <td className="px-3 py-2 text-center font-mono text-gray-700">{item.totalLocations}</td>
-                      <td className={`px-3 py-2 text-center font-mono font-bold ${item.onlineLocations > 0 ? 'text-emerald-700' : 'text-slate-400'}`}>
-                        {item.onlineLocations}
-                      </td>
-                      <td className="px-3 py-2 text-center font-mono text-gray-800">{item.availabilityPercent}%</td>
-                      <td className={`px-3 py-2 text-right font-mono ${item.totalSessions > 0 ? 'text-blue-700 font-bold' : 'text-slate-400'}`}>
-                        {item.totalSessions.toLocaleString()}
-                      </td>
-                      <td className="px-3 py-2 text-right font-mono text-gray-700">{item.totalDataGb.toFixed(2)}</td>
-                      <td className="px-3 py-2 text-center font-mono text-gray-700">{item.totalIncidents}</td>
-                      <td className="px-3 py-2 text-center font-mono text-emerald-600 font-bold">{item.slaCompliancePercent}%</td>
-                    </tr>
-                  ))}
+                  {report.districtBreakdown.map((item, index) => {
+                    const hasData = item.onlineLocations > 0 || item.totalSessions > 0 || item.totalIncidents > 0;
+                    return (
+                      <tr key={item.districtId} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 print:px-1.5 print:py-1 text-center text-gray-500 font-mono">{index + 1}</td>
+                        <td className="px-3 py-2 print:px-2 print:py-1 font-bold text-gray-900">{item.districtName}</td>
+                        <td className="px-3 py-2 print:px-1.5 print:py-1 text-center font-mono text-gray-700">{item.totalLocations}</td>
+                        <td className={`px-3 py-2 print:px-1.5 print:py-1 text-center font-mono font-bold ${item.onlineLocations > 0 ? 'text-emerald-700' : 'text-slate-400'}`}>
+                          {item.onlineLocations}
+                        </td>
+                        <td className={`px-3 py-2 print:px-1.5 print:py-1 text-center font-mono ${hasData ? 'text-gray-800' : 'text-slate-400'}`}>
+                          {hasData ? `${item.availabilityPercent}%` : '—'}
+                        </td>
+                        <td className={`px-3 py-2 print:px-1.5 print:py-1 text-right font-mono ${item.totalSessions > 0 ? 'text-blue-700 font-bold' : 'text-slate-400'}`}>
+                          {item.totalSessions.toLocaleString()}
+                        </td>
+                        <td className="px-3 py-2 print:px-1.5 print:py-1 text-right font-mono text-gray-700">{item.totalDataGb.toFixed(2)}</td>
+                        <td className={`px-3 py-2 print:px-1.5 print:py-1 text-center font-mono ${item.totalIncidents > 0 ? 'text-gray-900 font-semibold' : 'text-slate-400'}`}>
+                          {item.totalIncidents}
+                        </td>
+                        <td className={`px-3 py-2 print:px-1.5 print:py-1 text-center font-mono font-bold ${hasData ? 'text-emerald-600' : 'text-slate-400 font-normal'}`}>
+                          {hasData ? `${item.slaCompliancePercent}%` : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
                   {/* Summary Total Row */}
                   <tr className="bg-slate-100 font-bold border-t-2 border-slate-300">
-                    <td colSpan={2} className="px-3 py-2.5 text-center uppercase tracking-wide text-slate-800">
+                    <td colSpan={2} className="px-3 py-2.5 print:px-2 print:py-1 text-center uppercase tracking-wide text-slate-800">
                       Tổng Cộng Toàn Thành Phố
                     </td>
-                    <td className="px-3 py-2.5 text-center font-mono text-slate-900">
+                    <td className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-mono text-slate-900">
                       {report.districtBreakdown.reduce((s, d) => s + d.totalLocations, 0).toLocaleString()}
                     </td>
-                    <td className="px-3 py-2.5 text-center font-mono text-emerald-700">
+                    <td className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-mono text-emerald-700">
                       {report.activeLocations}
                     </td>
-                    <td className="px-3 py-2.5 text-center font-mono text-slate-900">
+                    <td className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-mono text-slate-900">
                       {report.networkAvailabilityRate}%
                     </td>
-                    <td className="px-3 py-2.5 text-right font-mono text-blue-700">
+                    <td className="px-3 py-2.5 print:px-1.5 print:py-1 text-right font-mono text-blue-700">
                       {report.totalCitizenSessions.toLocaleString()}
                     </td>
-                    <td className="px-3 py-2.5 text-right font-mono text-slate-900">
+                    <td className="px-3 py-2.5 print:px-1.5 print:py-1 text-right font-mono text-slate-900">
                       {report.districtBreakdown.reduce((s, d) => s + d.totalDataGb, 0).toFixed(2)}
                     </td>
-                    <td className="px-3 py-2.5 text-center font-mono text-slate-900">
+                    <td className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-mono text-slate-900">
                       {report.totalIncidentsReported}
                     </td>
-                    <td className="px-3 py-2.5 text-center font-mono text-emerald-700">
+                    <td className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-mono text-emerald-700">
                       {report.telecomSlaComplianceRate}%
                     </td>
                   </tr>
@@ -473,11 +489,11 @@ export const GovernmentReportPage: React.FC = () => {
           </div>
 
           {/* Part III: Security & Digital Policy Note */}
-          <div className="mt-8 space-y-2 text-xs font-sans text-slate-700 bg-slate-50 p-4 rounded border border-slate-200">
-            <h3 className="font-bold text-slate-900 uppercase font-serif text-[11px] tracking-wide">
+          <div className="mt-8 print:mt-3 print:p-2.5 print:break-inside-avoid space-y-2 print:space-y-1 text-xs font-sans text-slate-700 bg-slate-50 p-4 rounded border border-slate-200">
+            <h3 className="font-bold text-slate-900 uppercase font-serif text-[11px] print:text-[10px] tracking-wide">
               III. ĐÁNH GIÁ CÔNG TÁC BẢO ĐẢM AN TOÀN THÔNG TIN & TRUYỀN THÔNG SỐ
             </h3>
-            <ul className="list-disc pl-5 space-y-1 text-[11.5px] leading-relaxed">
+            <ul className="list-disc pl-5 space-y-1 print:space-y-0.5 text-[11.5px] print:text-[9.5px] leading-relaxed print:leading-snug">
               <li>
                 <strong>Cổng chào số chính quyền:</strong> Phát sóng đồng bộ thông điệp chuyển đổi số, liên kết Cổng Dịch vụ công thành phố Hải Phòng và các tiện ích số thiết thực cho nhân dân.
               </li>
@@ -491,12 +507,12 @@ export const GovernmentReportPage: React.FC = () => {
           </div>
 
           {/* Footer Recipients */}
-          <div className="mt-10 pt-4 text-xs font-serif text-gray-800">
-            <div className="text-left text-[11.5px] leading-relaxed font-sans">
-              <div className="font-bold font-serif text-xs text-slate-900 uppercase tracking-wide">Nơi nhận:</div>
-              <div className="text-slate-600 mt-1 space-y-0.5">
+          <div className="mt-10 print:mt-3 print:pt-2 print:break-inside-avoid pt-4 text-xs font-serif text-gray-800">
+            <div className="text-left text-[11.5px] print:text-[9.5px] leading-relaxed print:leading-snug font-sans">
+              <div className="font-bold font-serif text-xs print:text-[10px] text-slate-900 uppercase tracking-wide">Nơi nhận:</div>
+              <div className="text-slate-600 mt-1 space-y-0.5 print:space-y-0">
                 <div>- UBND Thành phố Hải Phòng (để b/c);</div>
-                <div>- Giám đốc Sở KH&CN (để chỉ đạo);</div>
+                <div>- Giám đốc Sở KH&amp;CN (để chỉ đạo);</div>
                 <div>- Viettel Hải Phòng (để phối hợp);</div>
                 <div>- Lưu: VT, CNTT.</div>
               </div>
