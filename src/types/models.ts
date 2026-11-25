@@ -343,11 +343,16 @@ export interface DeviceSessionHistory {
   bytesUploaded?: number | null;
 }
 
+export interface DeviceSurveyAnswer {
+  question: string;
+  answer: string;
+}
+
 export interface DeviceSurveyResponse {
   surveyId?: number | null;
-  locationId?: number | null;
-  answersJson?: string | null;
+  surveyTitle?: string | null;
   submittedAt?: string | null;
+  answers: DeviceSurveyAnswer[];
 }
 
 export interface DeviceDetail {

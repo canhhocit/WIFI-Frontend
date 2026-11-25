@@ -1138,39 +1138,49 @@ export const DevicesPage: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  {/* Lịch sử phiên cổng chào */}
+                  {/* Lịch sử truy cập (phiên cổng chào) */}
                   <div>
                     <h4 className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-slate-400" /> Lịch sử phiên cổng chào ({deviceDetail?.sessions?.length || 0})
+                      <Clock className="w-4 h-4 text-slate-400" /> Lịch sử truy cập ({deviceDetail?.sessions?.length || 0} phiên)
                     </h4>
                     {deviceDetail && deviceDetail.sessions.length > 0 ? (
-                      <div className="space-y-2">
-                        {deviceDetail.sessions.map((s, i) => (
-                          <div key={i} className="border border-slate-200 rounded p-2.5 text-[11px]">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-semibold text-slate-800 flex items-center gap-1">
-                                <User className="w-3 h-3 text-slate-400" /> {s.guestName || 'Khách'}
-                                {s.guestContact ? ` · ${s.guestContact}` : ''}
-                              </span>
-                              <span className={`px-1.5 py-0.5 rounded font-bold ${s.status === 'AUTHORIZED' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                                {s.status || '—'}
-                              </span>
-                            </div>
-                            <div className="text-slate-500 flex flex-wrap gap-x-3 gap-y-0.5">
-                              {s.locationName && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {s.locationName}</span>}
-                              <span>Bắt đầu: {formatDate(s.authorizedAt || s.createdAt || undefined)}</span>
-                              <span>Hết hạn: {formatDate(s.expiresAt || undefined)}</span>
-                              <span>Tải: ↓{formatBytes(s.bytesDownloaded)} ↑{formatBytes(s.bytesUploaded)}</span>
-                            </div>
-                          </div>
-                        ))}
+                      <div className="overflow-x-auto border border-slate-200 rounded">
+                        <table className="w-full text-[11px] text-left">
+                          <thead>
+                            <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
+                              <th className="py-1.5 px-2.5 font-semibold">Thời gian</th>
+                              <th className="py-1.5 px-2.5 font-semibold">Điểm truy cập</th>
+                              <th className="py-1.5 px-2.5 font-semibold">Khách</th>
+                              <th className="py-1.5 px-2.5 font-semibold">Dung lượng</th>
+                              <th className="py-1.5 px-2.5 font-semibold text-right">Trạng thái</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {deviceDetail.sessions.map((s, i) => (
+                              <tr key={i} className="hover:bg-slate-50/70">
+                                <td className="py-1.5 px-2.5 text-slate-600 whitespace-nowrap">{formatDate(s.authorizedAt || s.createdAt || undefined)}</td>
+                                <td className="py-1.5 px-2.5 text-slate-600">{s.locationName || '—'}</td>
+                                <td className="py-1.5 px-2.5 text-slate-600">
+                                  {s.guestName ? s.guestName : <span className="text-slate-400 italic">Khách vãng lai</span>}
+                                  {s.guestContact ? <span className="text-slate-400"> · {s.guestContact}</span> : ''}
+                                </td>
+                                <td className="py-1.5 px-2.5 text-slate-500 whitespace-nowrap">↓{formatBytes(s.bytesDownloaded)} · ↑{formatBytes(s.bytesUploaded)}</td>
+                                <td className="py-1.5 px-2.5 text-right">
+                                  <span className={`px-1.5 py-0.5 rounded font-bold ${s.status === 'AUTHORIZED' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                                    {s.status === 'AUTHORIZED' ? 'Đang dùng' : s.status === 'EXPIRED' ? 'Hết hạn' : s.status === 'REVOKED' ? 'Đã thu hồi' : (s.status || '—')}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     ) : (
                       <p className="text-[11px] text-slate-400 italic">Thiết bị chưa có phiên đăng nhập qua cổng chào.</p>
                     )}
                   </div>
 
-                  {/* Câu trả lời khảo sát */}
+                  {/* Khảo sát đã trả lời */}
                   <div>
                     <h4 className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
                       <FileText className="w-4 h-4 text-slate-400" /> Khảo sát đã trả lời ({deviceDetail?.surveys?.length || 0})
@@ -1178,9 +1188,23 @@ export const DevicesPage: React.FC = () => {
                     {deviceDetail && deviceDetail.surveys.length > 0 ? (
                       <div className="space-y-2">
                         {deviceDetail.surveys.map((r, i) => (
-                          <div key={i} className="border border-slate-200 rounded p-2.5 text-[11px]">
-                            <div className="text-slate-500 mb-1">Khảo sát #{r.surveyId} · {formatDate(r.submittedAt || undefined)}</div>
-                            <pre className="whitespace-pre-wrap break-words text-slate-700 bg-slate-50 rounded p-2 text-[11px]">{r.answersJson}</pre>
+                          <div key={i} className="border border-slate-200 rounded p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-bold text-slate-700">{r.surveyTitle || `Khảo sát #${r.surveyId}`}</span>
+                              <span className="text-[11px] text-slate-400">{formatDate(r.submittedAt || undefined)}</span>
+                            </div>
+                            {r.answers && r.answers.length > 0 ? (
+                              <dl className="space-y-1.5">
+                                {r.answers.map((a, j) => (
+                                  <div key={j} className="text-[11px]">
+                                    <dt className="text-slate-500">{a.question}</dt>
+                                    <dd className="text-slate-800 font-semibold ml-0">{a.answer}</dd>
+                                  </div>
+                                ))}
+                              </dl>
+                            ) : (
+                              <p className="text-[11px] text-slate-400 italic">Không có nội dung trả lời.</p>
+                            )}
                           </div>
                         ))}
                       </div>
