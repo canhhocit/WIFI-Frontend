@@ -16,6 +16,7 @@ import {
   AuditEventDto,
   SessionStatus,
   AdminUnitDto,
+  GwnPortStatus,
   LocationGroupDto,
   CreateLocationGroupRequest,
   NetworkDeviceDto,
@@ -292,12 +293,12 @@ export const adminApi = {
 
   // "AP theo cổng GWN": on/off từng cổng LAN của GWN (biết đúng AP cổng nào chết, không cần MAC).
   getGwnPortStatus: () => {
-    return request<{
-      apiReachable: boolean;
-      gwnName?: string | null;
-      siteName?: string | null;
-      ports: { port: string; label: string; status: string; meshName?: string | null; meshMac?: string | null; meshIp?: string | null }[];
-    }>('/v1/admin/network-devices/gwn-ports');
+    return request<GwnPortStatus>('/v1/admin/network-devices/gwn-ports');
+  },
+
+  // "AP theo cổng GWN" của ĐÚNG một địa điểm (router GWN gắn với điểm đó) — dùng cho màn chi tiết điểm.
+  getGwnPortStatusByLocation: (locationId: number) => {
+    return request<GwnPortStatus>(`/v1/admin/network-devices/location/${locationId}/gwn-ports`);
   },
 
   rebootNetworkDevice: (id: number) => {

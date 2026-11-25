@@ -6,8 +6,6 @@ import {
   ShieldCheck,
   RefreshCw,
   Loader2,
-  ChevronLeft,
-  ChevronRight,
   Monitor,
   Laptop,
   Server,
@@ -16,18 +14,21 @@ import {
   Repeat,
   RotateCw,
   Power,
-  CheckCircle2,
-  XCircle,
   Cpu,
   Users,
   MapPin,
   Upload,
   KeyRound,
   Plus,
-  Edit2
+  Edit2,
+  ChevronLeft,
+  Building2,
+  Wifi,
+  WifiOff,
+  AlertTriangle
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
-import { DeviceDto, NetworkDeviceDto, DeviceTopologySummaryDto, GwnClientDto, LocationDto } from '../../types/models';
+import { DeviceDto, NetworkDeviceDto, DeviceTopologySummaryDto, GwnClientDto, LocationDto, GwnPortStatus } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
 import { DeviceSwapModal } from '../../components/DeviceSwapModal';
 import { DeviceMonitoringTopology } from '../../components/DeviceMonitoringTopology';
@@ -57,16 +58,22 @@ export const DevicesPage: React.FC = () => {
   const [totalElements, setTotalElements] = useState(0);
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
-  // Network infrastructure devices state
-  const [networkDevices, setNetworkDevices] = useState<NetworkDeviceDto[]>([]);
-  const [gwnPorts, setGwnPorts] = useState<any | null>(null);
-  const [loadingNetDev, setLoadingNetDev] = useState(false);
-  const [netPage, setNetPage] = useState(0);
-  const [netPageSize, setNetPageSize] = useState(10);
-  const [netTotalPages, setNetTotalPages] = useState(1);
-  const [netTotalElements, setNetTotalElements] = useState(0);
-  const [deviceTypeFilter, setDeviceTypeFilter] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  // ---- Infrastructure: quản lý THEO ĐỊA ĐIỂM (danh sách điểm -> chi tiết điểm) ----
+  // Danh sách địa điểm (mức ngoài). Mỗi điểm hiện tóm tắt router + số thiết bị, scale 1500 điểm.
+  const [infraLocs, setInfraLocs] = useState<LocationDto[]>([]);
+  const [infraLocSearch, setInfraLocSearch] = useState('');
+  const [infraLocPage, setInfraLocPage] = useState(0);
+  const [infraLocPageSize, setInfraLocPageSize] = useState(12);
+  const [infraLocTotalPages, setInfraLocTotalPages] = useState(1);
+  const [infraLocTotalElements, setInfraLocTotalElements] = useState(0);
+  const [loadingInfraLocs, setLoadingInfraLocs] = useState(false);
+
+  // Chi tiết 1 điểm (hoặc nhóm "chưa gán điểm")
+  const [selectedLoc, setSelectedLoc] = useState<LocationDto | null>(null);
+  const [viewUnassigned, setViewUnassigned] = useState(false);
+  const [locDevices, setLocDevices] = useState<NetworkDeviceDto[]>([]);
+  const [loadingLocDevices, setLoadingLocDevices] = useState(false);
+  const [locPorts, setLocPorts] = useState<GwnPortStatus | null>(null);
 
   // Device swap modal state
   const [swapModalOpen, setSwapModalOpen] = useState(false);
@@ -125,10 +132,11 @@ export const DevicesPage: React.FC = () => {
   useEffect(() => {
     if (activeTab === 'CLIENT') {
       loadDevices();
-    } else {
-      loadNetworkDevices();
+    } else if (!selectedLoc && !viewUnassigned) {
+      loadInfraLocations();
     }
-  }, [activeTab, page, pageSize, netPage, netPageSize]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, page, pageSize, infraLocPage, infraLocPageSize]);
 
   const loadDevices = async () => {
     setLoading(true);
@@ -154,26 +162,81 @@ export const DevicesPage: React.FC = () => {
     }
   };
 
-  const loadNetworkDevices = async () => {
-    setLoadingNetDev(true);
+  // Mức ngoài: danh sách địa điểm (tìm kiếm + phân trang).
+  const loadInfraLocations = async () => {
+    setLoadingInfraLocs(true);
     loadTopology();
     try {
-      const resp = await adminApi.getNetworkDevices({
-        type: deviceTypeFilter || undefined,
-        status: statusFilter || undefined,
-        page: netPage,
-        size: netPageSize,
+      const resp = await adminApi.getLocations({
+        query: infraLocSearch.trim() || undefined,
+        page: infraLocPage,
+        size: infraLocPageSize,
       });
-      setNetworkDevices(resp.content);
-      setNetTotalPages(resp.totalPages);
-      setNetTotalElements(resp.totalElements);
-      adminApi.getGwnPortStatus().then(setGwnPorts).catch(() => setGwnPorts(null));
+      setInfraLocs(resp.content || []);
+      setInfraLocTotalPages(resp.totalPages);
+      setInfraLocTotalElements(resp.totalElements);
       setError(null);
     } catch (err: any) {
-      setError(err?.message || 'Không thể tải danh sách thiết bị hạ tầng.');
+      setError(err?.message || 'Không thể tải danh sách địa điểm.');
     } finally {
-      setLoadingNetDev(false);
+      setLoadingInfraLocs(false);
     }
+  };
+
+  // Chi tiết 1 điểm: thiết bị tại điểm + "AP theo cổng GWN" của router điểm đó.
+  const loadLocationDetail = async (loc: LocationDto) => {
+    setLoadingLocDevices(true);
+    setLocPorts(null);
+    try {
+      const devs = await adminApi.getNetworkDevicesByLocation(loc.id);
+      setLocDevices(devs || []);
+      adminApi.getGwnPortStatusByLocation(loc.id).then(setLocPorts).catch(() => setLocPorts(null));
+      setError(null);
+    } catch (err: any) {
+      setError(err?.message || 'Không thể tải thiết bị của địa điểm.');
+    } finally {
+      setLoadingLocDevices(false);
+    }
+  };
+
+  // Nhóm thiết bị CHƯA GÁN điểm (để kỹ thuật viên gán vào điểm).
+  const loadUnassignedDetail = async () => {
+    setLoadingLocDevices(true);
+    setLocPorts(null);
+    try {
+      const devs = await adminApi.getUnassignedNetworkDevices();
+      setLocDevices(devs || []);
+      setError(null);
+    } catch (err: any) {
+      setError(err?.message || 'Không thể tải thiết bị chưa gán điểm.');
+    } finally {
+      setLoadingLocDevices(false);
+    }
+  };
+
+  const openLocation = (loc: LocationDto) => {
+    setViewUnassigned(false);
+    setSelectedLoc(loc);
+    loadLocationDetail(loc);
+  };
+
+  const openUnassigned = () => {
+    setSelectedLoc(null);
+    setViewUnassigned(true);
+    loadUnassignedDetail();
+  };
+
+  const backToLocationList = () => {
+    setSelectedLoc(null);
+    setViewUnassigned(false);
+    loadInfraLocations();
+  };
+
+  // Làm mới đúng khung đang xem (danh sách điểm / chi tiết điểm / chưa gán).
+  const refreshInfra = () => {
+    if (selectedLoc) loadLocationDetail(selectedLoc);
+    else if (viewUnassigned) loadUnassignedDetail();
+    else loadInfraLocations();
   };
 
   const handleSyncGrandstream = async () => {
@@ -183,7 +246,7 @@ export const DevicesPage: React.FC = () => {
     try {
       const res = await adminApi.syncGrandstreamDevices();
       setSyncSuccessMsg(res.message || `Đồng bộ thành công ${res.syncedCount} thiết bị từ Grandstream Cloud.`);
-      await loadNetworkDevices();
+      refreshInfra();
       await loadTopology();
     } catch (err: any) {
       setError(err?.message || 'Lỗi khi đồng bộ dữ liệu từ Grandstream Cloud.');
@@ -199,7 +262,7 @@ export const DevicesPage: React.FC = () => {
     try {
       const count = await adminApi.refreshMeshStatus();
       setSyncSuccessMsg(`Đã làm mới trạng thái ${count ?? 0} mesh từ GWN Cloud (link cổng LAN).`);
-      await loadNetworkDevices();
+      refreshInfra();
     } catch (err: any) {
       setError(err?.message || 'Lỗi khi làm mới trạng thái mesh từ GWN Cloud.');
     } finally {
@@ -215,7 +278,7 @@ export const DevicesPage: React.FC = () => {
       await adminApi.rebootNetworkDevice(deviceToReboot.id);
       setSyncSuccessMsg(`Đã phát lệnh khởi động lại thành công tới Router ${deviceToReboot.model || ''} (MAC: ${deviceToReboot.macAddress}). Thiết bị đang trong tiến trình Reboot.`);
       setDeviceToReboot(null);
-      await loadNetworkDevices();
+      refreshInfra();
     } catch (err: any) {
       setError(err?.message || 'Không thể gửi lệnh khởi động lại tới thiết bị.');
     } finally {
@@ -229,8 +292,8 @@ export const DevicesPage: React.FC = () => {
       setPage(0);
       loadDevices();
     } else {
-      setNetPage(0);
-      loadNetworkDevices();
+      setInfraLocPage(0);
+      loadInfraLocations();
     }
   };
 
@@ -285,16 +348,131 @@ export const DevicesPage: React.FC = () => {
     }
   };
 
+  // Một dòng thiết bị hạ tầng (dùng lại trong màn chi tiết điểm & nhóm chưa gán).
+  const renderDeviceRow = (nd: NetworkDeviceDto) => (
+    <tr key={nd.id} className="hover:bg-slate-50/80 transition">
+      <td className="py-3 px-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-600">
+            {renderNetDeviceIcon(nd.deviceType)}
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-bold text-slate-900 text-xs">
+                {nd.name
+                  ? nd.name
+                  : nd.deviceType === 'ROUTER'
+                  ? 'Router Gateway'
+                  : nd.deviceType === 'ACCESS_POINT'
+                  ? 'Trạm phát Wi-Fi (AP)'
+                  : nd.deviceType === 'SWITCH'
+                  ? 'Switch chia mạng'
+                  : nd.deviceType === 'ONT'
+                  ? 'Modem quang (ONT)'
+                  : 'Thiết bị mạng'}
+              </span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                {nd.model || 'Tiêu chuẩn'}
+              </span>
+              {nd.gwnNetworkId && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600 border border-slate-200">
+                  Net #{nd.gwnNetworkId}
+                </span>
+              )}
+            </div>
+            <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+              <span className="text-slate-400 font-medium">{nd.vendor}</span>
+            </div>
+          </div>
+        </div>
+      </td>
+      <td className="py-3 px-4 font-mono">
+        <span className="font-bold text-slate-900 block text-xs">{nd.macAddress}</span>
+        <span className="text-slate-400 text-[11px] block">{nd.ipAddress || '—'}</span>
+      </td>
+      <td className="py-3 px-4 font-mono text-slate-700">{nd.serialNumber}</td>
+      <td className="py-3 px-4">
+        <DeviceStatusBadge status={nd.status} monitoringSource={nd.monitoringSource} />
+        {nd.deviceType === 'ACCESS_POINT' && nd.meshCredentialState && (
+          <div
+            className="mt-1 inline-flex items-center gap-1 text-[10px] text-slate-500"
+            title={nd.meshCredentialState === 'MANAGED' ? 'Đã đổi sang mật khẩu quản lý chung' : 'Đang dùng mật khẩu gốc = S/N in trên nhãn'}
+          >
+            <KeyRound className="w-3 h-3" />
+            {nd.meshCredentialState === 'MANAGED' ? 'MK quản lý chung' : 'MK gốc (S/N)'}
+          </div>
+        )}
+      </td>
+      <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">{formatDate(nd.lastSeenAt)}</td>
+      <td className="py-3 px-4 text-right">
+        <div className="flex items-center justify-end gap-1.5">
+          <button
+            onClick={() => handleViewClients(nd)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 rounded-sm text-xs font-semibold transition cursor-pointer"
+            title="Xem danh sách người dân đang bắt sóng thực tế và cường độ sóng RSSI"
+          >
+            <Users className="w-3.5 h-3.5 text-sky-600" /> {nd.deviceType === 'ACCESS_POINT' ? 'Chi tiết mesh' : 'Xem Client'}
+          </button>
+          {canEdit && (nd.deviceType === 'ROUTER' || (nd.vendor && nd.vendor.toLowerCase().includes('grandstream'))) && (
+            <button
+              onClick={() => setDeviceToReboot(nd)}
+              disabled={rebootingId === nd.id || nd.status === 'REBOOTING'}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 disabled:opacity-40 rounded-sm text-xs font-semibold transition cursor-pointer"
+              title="Gửi lệnh khởi động lại phần cứng từ xa qua Grandstream Cloud"
+            >
+              {rebootingId === nd.id ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600" />
+              ) : (
+                <Power className="w-3.5 h-3.5 text-rose-600" />
+              )}
+              Khởi động lại
+            </button>
+          )}
+          <button
+            onClick={() => {
+              loadLocationsList();
+              setEditingNetDevice(nd);
+              setDeviceFormOpen(true);
+            }}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-semibold transition cursor-pointer border ${
+              !nd.locationId
+                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300'
+                : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-300'
+            }`}
+            title="Gán Nhà văn hóa hoặc sửa thông tin thiết bị"
+          >
+            <Edit2 className="w-3.5 h-3.5" /> {!nd.locationId ? 'Gán điểm' : 'Sửa'}
+          </button>
+          {canEdit && (
+            <button
+              onClick={() => {
+                setSelectedDeviceForSwap(nd);
+                setSwapModalOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-sm text-xs font-semibold transition cursor-pointer"
+              title="Hoán đổi phần cứng thay thế khi hỏng hóc tại cơ sở"
+            >
+              <Repeat className="w-3.5 h-3.5 text-amber-700" /> Thay thế thiết bị
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+
+  const detailTitle = viewUnassigned
+    ? 'Thiết bị chưa gán điểm'
+    : selectedLoc?.name || '';
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Quản Lý Thiết Bị & Hạ Tầng</h1>
-          
         </div>
         <button
-          onClick={activeTab === 'CLIENT' ? loadDevices : loadNetworkDevices}
+          onClick={activeTab === 'CLIENT' ? loadDevices : refreshInfra}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" /> Làm mới dữ liệu
@@ -465,53 +643,22 @@ export const DevicesPage: React.FC = () => {
         </>
       )}
 
-      {/* Tab 2: Infrastructure Devices */}
+      {/* Tab 2: Infrastructure Devices — quản lý THEO ĐỊA ĐIỂM */}
       {activeTab === 'INFRASTRUCTURE' && (
         <>
           <DeviceMonitoringTopology topology={topologyData} />
 
+          {/* Thanh công cụ chung (luôn hiện) */}
           <div className="bg-white p-3.5 rounded border border-slate-300 shadow-xs flex flex-wrap gap-2.5 items-center">
-            <div className="w-48">
-              <select
-                value={deviceTypeFilter}
-                onChange={(e) => {
-                  setDeviceTypeFilter(e.target.value);
-                  setNetPage(0);
-                }}
-                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87]"
+            {(selectedLoc || viewUnassigned) && (
+              <button
+                onClick={backToLocationList}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition cursor-pointer"
               >
-                <option value="">-- Tất cả loại thiết bị --</option>
-                <option value="ONT">ONT (Modem quang)</option>
-                <option value="ROUTER">Router điều hướng</option>
-                <option value="ACCESS_POINT">Access Point (AP)</option>
-              </select>
-            </div>
-            <div className="w-48">
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setNetPage(0);
-                }}
-                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87]"
-              >
-                <option value="">-- Tất cả trạng thái --</option>
-                <option value="ONLINE">Đang hoạt động (ONLINE)</option>
-                <option value="OFFLINE">Mất tín hiệu (OFFLINE)</option>
-                <option value="MAINTENANCE">Đang bảo trì (MAINTENANCE)</option>
-              </select>
-            </div>
-            <button
-              onClick={() => {
-                setNetPage(0);
-                loadNetworkDevices();
-              }}
-              className="px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold transition cursor-pointer"
-            >
-              Lọc thiết bị
-            </button>
-
-            <div className="ml-auto flex items-center gap-2">
+                <ChevronLeft className="w-3.5 h-3.5" /> Danh sách địa điểm
+              </button>
+            )}
+            <div className="ml-auto flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => {
                   loadLocationsList();
@@ -569,202 +716,205 @@ export const DevicesPage: React.FC = () => {
             </div>
           </div>
 
-          {gwnPorts && Array.isArray(gwnPorts.ports) && gwnPorts.ports.length > 0 && (
-            <div className="bg-white rounded border border-slate-300 shadow-xs mb-4 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold text-slate-700">
-                  AP theo cổng GWN{gwnPorts.siteName ? ` — ${gwnPorts.siteName}` : ''}
-                </h3>
-                <span className="text-[11px] text-slate-400">
-                  {gwnPorts.apiReachable ? 'Trạng thái cổng LAN trực tiếp từ Grandstream' : 'Chưa kết nối được GWN Cloud'}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                {gwnPorts.ports.map((p: any) => (
-                  <div key={p.port}
-                    className={`rounded border px-3 py-2 flex items-center justify-between ${p.status === 'ONLINE' ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50'}`}>
-                    <div>
-                      <div className="text-xs font-semibold text-slate-700">{p.label}</div>
-                      <div className="text-[11px] text-slate-500">{p.meshName || 'Chưa gán mesh'}</div>
-                    </div>
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${p.status === 'ONLINE' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>
-                      {p.status === 'ONLINE' ? 'ONLINE' : 'OFFLINE'}
-                    </span>
+          {/* ===== MỨC NGOÀI: DANH SÁCH ĐỊA ĐIỂM ===== */}
+          {!selectedLoc && !viewUnassigned && (
+            <>
+              <div className="bg-white p-3.5 rounded border border-slate-300 shadow-xs">
+                <form onSubmit={handleSearchSubmit} className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={infraLocSearch}
+                      onChange={(e) => setInfraLocSearch(e.target.value)}
+                      placeholder="Tìm địa điểm theo tên, mã điểm hoặc địa chỉ..."
+                      className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] transition"
+                    />
                   </div>
-                ))}
+                  <button
+                    type="submit"
+                    className="px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold transition cursor-pointer"
+                  >
+                    Tìm kiếm
+                  </button>
+                  <button
+                    type="button"
+                    onClick={openUnassigned}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-sm text-xs font-semibold transition cursor-pointer"
+                    title="Xem các thiết bị đã import nhưng chưa gán vào địa điểm nào"
+                  >
+                    <AlertTriangle className="w-3.5 h-3.5" /> Chưa gán điểm
+                  </button>
+                </form>
               </div>
-            </div>
+
+              {loadingInfraLocs ? (
+                <div className="bg-white rounded border border-slate-300 shadow-xs py-16 text-center text-slate-400">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#004b87]" />
+                  Đang tải danh sách địa điểm...
+                </div>
+              ) : infraLocs.length === 0 ? (
+                <div className="bg-white rounded border border-slate-300 shadow-xs py-16 text-center text-slate-400">
+                  Không tìm thấy địa điểm nào phù hợp.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {infraLocs.map((loc) => (
+                    <button
+                      key={loc.id}
+                      onClick={() => openLocation(loc)}
+                      className="text-left bg-white rounded border border-slate-300 shadow-xs hover:border-[#004b87] hover:shadow-sm transition p-4 cursor-pointer group"
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-9 h-9 rounded bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0 text-[#004b87] group-hover:bg-sky-50">
+                            <Building2 className="w-4.5 h-4.5" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-bold text-slate-900 text-sm truncate" title={loc.name}>{loc.name}</div>
+                            {loc.locationCode && (
+                              <div className="text-[11px] text-slate-400 font-mono truncate">{loc.locationCode}</div>
+                            )}
+                          </div>
+                        </div>
+                        {loc.hasGwnRouter ? (
+                          <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded shrink-0 ${loc.gwnRouterOnline ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>
+                            {loc.gwnRouterOnline ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+                            {loc.gwnRouterOnline ? 'GWN ONLINE' : 'GWN OFFLINE'}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded shrink-0 bg-slate-100 text-slate-500 border border-slate-200">
+                            Chưa có GWN
+                          </span>
+                        )}
+                      </div>
+                      {loc.address && (
+                        <div className="text-[11px] text-slate-500 flex items-start gap-1 mb-2">
+                          <MapPin className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
+                          <span className="line-clamp-2">{loc.address}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3 text-[11px] text-slate-600 border-t border-slate-100 pt-2">
+                        <span className="inline-flex items-center gap-1">
+                          <Cpu className="w-3.5 h-3.5 text-slate-400" />
+                          <strong className="text-slate-800">{loc.assignedDeviceCount ?? 0}</strong> thiết bị
+                        </span>
+                        {loc.adminUnitName && (
+                          <span className="text-slate-400 truncate">• {loc.adminUnitName}</span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="bg-white rounded border border-slate-300 shadow-xs">
+                <Pagination
+                  currentPage={infraLocPage}
+                  totalPages={infraLocTotalPages}
+                  totalElements={infraLocTotalElements}
+                  pageSize={infraLocPageSize}
+                  pageSizeOptions={[6, 12, 24, 48]}
+                  onPageChange={setInfraLocPage}
+                  onPageSizeChange={(newSize) => {
+                    setInfraLocPageSize(newSize);
+                    setInfraLocPage(0);
+                  }}
+                  itemLabel="địa điểm"
+                />
+              </div>
+            </>
           )}
 
-          <div className="bg-white rounded border border-slate-300 shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-slate-50/70 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                    <th className="py-3 px-4">Loại & Model</th>
-                    <th className="py-3 px-4">Địa chỉ MAC & IP</th>
-                    <th className="py-3 px-4">Serial Number</th>
-                    <th className="py-3 px-4">Trạng thái kết nối</th>
-                    <th className="py-3 px-4">Lần cuối Heartbeat</th>
-                    <th className="py-3 px-4 text-right">Thao tác hạ tầng</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {loadingNetDev ? (
-                    <tr>
-                      <td colSpan={6} className="py-12 text-center text-slate-400">
-                        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#004b87]" />
-                        Đang tải danh sách thiết bị hạ tầng...
-                      </td>
-                    </tr>
-                  ) : networkDevices.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-12 text-center text-slate-400">
-                        Chưa có thiết bị mạng nào được ghi nhận hoặc không có dữ liệu phù hợp.
-                      </td>
-                    </tr>
-                  ) : (
-                    networkDevices.map((nd) => (
-                      <tr key={nd.id} className="hover:bg-slate-50/80 transition">
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-600">
-                              {renderNetDeviceIcon(nd.deviceType)}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="font-bold text-slate-900 text-xs">
-                                  {nd.name
-                                    ? nd.name
-                                    : nd.deviceType === 'ROUTER'
-                                    ? 'Router Gateway'
-                                    : nd.deviceType === 'ACCESS_POINT'
-                                    ? 'Trạm phát Wi-Fi (AP)'
-                                    : nd.deviceType === 'SWITCH'
-                                    ? 'Switch chia mạng'
-                                    : nd.deviceType === 'ONT'
-                                    ? 'Modem quang (ONT)'
-                                    : 'Thiết bị mạng'}
-                                </span>
-                                <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
-                                  {nd.model || 'Tiêu chuẩn'}
-                                </span>
-                                {nd.gwnNetworkId && (
-                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600 border border-slate-200">
-                                    Net #{nd.gwnNetworkId}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
-                                <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                                <span
-                                  className={`truncate max-w-[220px] ${!nd.locationName ? 'text-amber-600 font-semibold' : ''}`}
-                                  title={nd.locationName || 'Chưa gán điểm'}
-                                >
-                                  {nd.locationName || 'Chưa gán điểm'}
-                                </span>
-                                <span className="text-slate-300">•</span>
-                                <span className="text-slate-400 font-medium">{nd.vendor}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 font-mono">
-                          <span className="font-bold text-slate-900 block text-xs">{nd.macAddress}</span>
-                          <span className="text-slate-400 text-[11px] block">{nd.ipAddress || '—'}</span>
-                        </td>
-                        <td className="py-3 px-4 font-mono text-slate-700">
-                          {nd.serialNumber}
-                        </td>
-                        <td className="py-3 px-4">
-                          <DeviceStatusBadge status={nd.status} monitoringSource={nd.monitoringSource} />
-                          {nd.deviceType === 'ACCESS_POINT' && nd.meshCredentialState && (
-                            <div
-                              className="mt-1 inline-flex items-center gap-1 text-[10px] text-slate-500"
-                              title={nd.meshCredentialState === 'MANAGED' ? 'Đã đổi sang mật khẩu quản lý chung' : 'Đang dùng mật khẩu gốc = S/N in trên nhãn'}
-                            >
-                              <KeyRound className="w-3 h-3" />
-                              {nd.meshCredentialState === 'MANAGED' ? 'MK quản lý chung' : 'MK gốc (S/N)'}
-                            </div>
+          {/* ===== MỨC TRONG: CHI TIẾT 1 ĐỊA ĐIỂM (hoặc nhóm chưa gán) ===== */}
+          {(selectedLoc || viewUnassigned) && (
+            <>
+              <div className="bg-white rounded border border-slate-300 shadow-xs p-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded bg-slate-100 border border-slate-200 flex items-center justify-center text-[#004b87]">
+                    {viewUnassigned ? <AlertTriangle className="w-5 h-5 text-amber-600" /> : <Building2 className="w-5 h-5" />}
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-base font-bold text-slate-900 truncate">{detailTitle}</h2>
+                    <div className="text-[11px] text-slate-500 flex items-center gap-2 flex-wrap">
+                      {viewUnassigned ? (
+                        <span>Thiết bị đã nhập kho nhưng chưa gán vào địa điểm — cần gán điểm để giám sát.</span>
+                      ) : (
+                        <>
+                          {selectedLoc?.locationCode && <span className="font-mono">{selectedLoc.locationCode}</span>}
+                          {selectedLoc?.address && (
+                            <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3" /> {selectedLoc.address}</span>
                           )}
-                        </td>
-                        <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">
-                          {formatDate(nd.lastSeenAt)}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => handleViewClients(nd)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 rounded-sm text-xs font-semibold transition cursor-pointer"
-                              title="Xem danh sách người dân đang bắt sóng thực tế và cường độ sóng RSSI"
-                            >
-                              <Users className="w-3.5 h-3.5 text-sky-600" /> {nd.deviceType === 'ACCESS_POINT' ? 'Chi tiết mesh' : 'Xem Client'}
-                            </button>
-                            {canEdit && (nd.deviceType === 'ROUTER' || (nd.vendor && nd.vendor.toLowerCase().includes('grandstream'))) && (
-                              <button
-                                onClick={() => setDeviceToReboot(nd)}
-                                disabled={rebootingId === nd.id || nd.status === 'REBOOTING'}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 disabled:opacity-40 rounded-sm text-xs font-semibold transition cursor-pointer"
-                                title="Gửi lệnh khởi động lại phần cứng từ xa qua Grandstream Cloud"
-                              >
-                                {rebootingId === nd.id ? (
-                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600" />
-                                ) : (
-                                  <Power className="w-3.5 h-3.5 text-rose-600" />
-                                )}
-                                Khởi động lại
-                              </button>
-                            )}
-                            <button
-                              onClick={() => {
-                                loadLocationsList();
-                                setEditingNetDevice(nd);
-                                setDeviceFormOpen(true);
-                              }}
-                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-semibold transition cursor-pointer border ${
-                                !nd.locationId
-                                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300'
-                                  : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-300'
-                              }`}
-                              title="Gán Nhà văn hóa hoặc sửa thông tin thiết bị"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" /> {!nd.locationId ? 'Gán điểm' : 'Sửa'}
-                            </button>
-                            {canEdit && (
-                              <button
-                                onClick={() => {
-                                  setSelectedDeviceForSwap(nd);
-                                  setSwapModalOpen(true);
-                                }}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-sm text-xs font-semibold transition cursor-pointer"
-                                title="Hoán đổi phần cứng thay thế khi hỏng hóc tại cơ sở"
-                              >
-                                <Repeat className="w-3.5 h-3.5 text-amber-700" /> Thay thế thiết bị
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            <Pagination
-              currentPage={netPage}
-              totalPages={netTotalPages}
-              totalElements={netTotalElements}
-              pageSize={netPageSize}
-              pageSizeOptions={[5, 10, 15, 20]}
-              onPageChange={setNetPage}
-              onPageSizeChange={(newSize) => {
-                setNetPageSize(newSize);
-                setNetPage(0);
-              }}
-              itemLabel="thiết bị mạng"
-            />
-          </div>
+              {/* AP theo cổng GWN của riêng điểm này */}
+              {!viewUnassigned && locPorts && Array.isArray(locPorts.ports) && locPorts.ports.length > 0 && (
+                <div className="bg-white rounded border border-slate-300 shadow-xs p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-slate-700">AP theo cổng GWN</h3>
+                    <span className="text-[11px] text-slate-400">
+                      {locPorts.apiReachable ? 'Trạng thái cổng LAN trực tiếp từ Grandstream' : 'Chưa kết nối được GWN Cloud'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {locPorts.ports.map((p) => (
+                      <div key={p.port}
+                        className={`rounded border px-3 py-2 flex items-center justify-between ${p.status === 'ONLINE' ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50'}`}>
+                        <div>
+                          <div className="text-xs font-semibold text-slate-700">{p.label}</div>
+                          <div className="text-[11px] text-slate-500">{p.meshName || 'Chưa gán mesh'}</div>
+                        </div>
+                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${p.status === 'ONLINE' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>
+                          {p.status === 'ONLINE' ? 'ONLINE' : 'OFFLINE'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Bảng thiết bị của điểm */}
+              <div className="bg-white rounded border border-slate-300 shadow-xs overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-50/70 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                        <th className="py-3 px-4">Loại & Model</th>
+                        <th className="py-3 px-4">Địa chỉ MAC & IP</th>
+                        <th className="py-3 px-4">Serial Number</th>
+                        <th className="py-3 px-4">Trạng thái kết nối</th>
+                        <th className="py-3 px-4">Lần cuối Heartbeat</th>
+                        <th className="py-3 px-4 text-right">Thao tác hạ tầng</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {loadingLocDevices ? (
+                        <tr>
+                          <td colSpan={6} className="py-12 text-center text-slate-400">
+                            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#004b87]" />
+                            Đang tải thiết bị...
+                          </td>
+                        </tr>
+                      ) : locDevices.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-12 text-center text-slate-400">
+                            {viewUnassigned ? 'Không có thiết bị nào chưa gán điểm.' : 'Địa điểm này chưa có thiết bị mạng nào.'}
+                          </td>
+                        </tr>
+                      ) : (
+                        locDevices.map((nd) => renderDeviceRow(nd))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
 
@@ -775,7 +925,7 @@ export const DevicesPage: React.FC = () => {
           setSelectedDeviceForSwap(null);
         }}
         onSuccess={() => {
-          loadNetworkDevices();
+          refreshInfra();
         }}
         device={selectedDeviceForSwap}
       />
@@ -839,7 +989,7 @@ export const DevicesPage: React.FC = () => {
       <NetworkDeviceImportModal
         isOpen={importOpen}
         onClose={() => setImportOpen(false)}
-        onImported={() => { loadNetworkDevices(); }}
+        onImported={() => { refreshInfra(); }}
       />
       <NetworkDeviceFormModal
         isOpen={deviceFormOpen}
@@ -847,14 +997,14 @@ export const DevicesPage: React.FC = () => {
           setDeviceFormOpen(false);
           setEditingNetDevice(null);
         }}
-        onSuccess={() => loadNetworkDevices()}
+        onSuccess={() => refreshInfra()}
         device={editingNetDevice}
         locations={allLocations}
       />
       <MeshApModal
         device={meshDevice}
         onClose={() => setMeshDevice(null)}
-        onRefreshed={() => { loadNetworkDevices(); }}
+        onRefreshed={() => { refreshInfra(); }}
       />
       <ConnectedClientsModal
         isOpen={clientsModalOpen}

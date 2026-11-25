@@ -107,6 +107,22 @@ export interface NetworkDeviceDto {
   meshPasswordRotatedAt?: string;
 }
 
+export interface GwnPort {
+  port: string;
+  label: string;
+  status: string;
+  meshName?: string | null;
+  meshMac?: string | null;
+  meshIp?: string | null;
+}
+
+export interface GwnPortStatus {
+  apiReachable: boolean;
+  gwnName?: string | null;
+  siteName?: string | null;
+  ports: GwnPort[];
+}
+
 export interface NetworkDeviceUpsertRequest {
   locationId?: number | null;
   name?: string;
