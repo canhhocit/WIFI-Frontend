@@ -41,8 +41,12 @@ export interface LocationDto {
   hasGwnRouter?: boolean;
   gwnRouterOnline?: boolean;
   assignedDeviceCount?: number;
-  /** GREEN (bình thường) | ORANGE (một phần mesh lỗi) | RED (mất kết nối/router offline) | GRAY (chưa có GWN) */
+  /** GREEN (đủ AP) | ORANGE (thiếu AP) | RED (router offline/mất kết nối hoặc 0 AP) | GRAY (chưa có GWN) */
   healthStatus?: string;
+  /** Số AP thực đang kết nối (= số cổng LAN ON của router GWN), cache nền. null = chưa có dữ liệu. */
+  activeApCount?: number | null;
+  /** Số AP kỳ vọng mỗi điểm (cố định 4). */
+  expectedApCount?: number;
   createdAt?: string;
   updatedAt?: string;
 }

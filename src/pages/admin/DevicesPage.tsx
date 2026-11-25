@@ -493,8 +493,8 @@ export const DevicesPage: React.FC = () => {
 
   // Phân màu sức khỏe điểm: xanh = bình thường, cam = một phần mesh lỗi, đỏ = mất kết nối, xám = chưa có GWN.
   const HEALTH_STYLE: Record<string, { card: string; chip: string; dot: string; label: string }> = {
-    GREEN: { card: 'border-emerald-300 bg-emerald-50/40 hover:border-emerald-500', chip: 'bg-emerald-600 text-white', dot: 'bg-emerald-500', label: 'Bình thường' },
-    ORANGE: { card: 'border-amber-300 bg-amber-50/60 hover:border-amber-500', chip: 'bg-amber-500 text-white', dot: 'bg-amber-500', label: 'Mesh lỗi một phần' },
+    GREEN: { card: 'border-emerald-300 bg-emerald-50/40 hover:border-emerald-500', chip: 'bg-emerald-600 text-white', dot: 'bg-emerald-500', label: 'Đủ AP' },
+    ORANGE: { card: 'border-amber-300 bg-amber-50/60 hover:border-amber-500', chip: 'bg-amber-500 text-white', dot: 'bg-amber-500', label: 'Thiếu AP' },
     RED: { card: 'border-rose-300 bg-rose-50/60 hover:border-rose-500', chip: 'bg-rose-600 text-white', dot: 'bg-rose-500', label: 'Mất kết nối' },
     GRAY: { card: 'border-slate-300 bg-white hover:border-slate-400', chip: 'bg-slate-200 text-slate-600', dot: 'bg-slate-400', label: 'Chưa có GWN' },
   };
@@ -869,10 +869,15 @@ export const DevicesPage: React.FC = () => {
                         </div>
                       )}
                       <div className="flex items-center gap-3 text-[11px] text-slate-600 border-t border-slate-100 pt-2">
-                        <span className="inline-flex items-center gap-1">
-                          <Cpu className="w-3.5 h-3.5 text-slate-400" />
-                          <strong className="text-slate-800">{loc.assignedDeviceCount ?? 0}</strong> thiết bị
+                        <span className="inline-flex items-center gap-1" title="Số AP đang kết nối (cổng LAN ON) / số AP kỳ vọng">
+                          <Radio className="w-3.5 h-3.5 text-slate-400" />
+                          AP: <strong className={`${(loc.activeApCount ?? null) === null ? 'text-slate-500' : (loc.activeApCount! < (loc.expectedApCount ?? 4) ? 'text-amber-600' : 'text-emerald-700')}`}>
+                            {loc.activeApCount ?? '?'}/{loc.expectedApCount ?? 4}
+                          </strong>
                         </span>
+                        {loc.hasGwnRouter && (
+                          <span className="text-slate-400">• 1 GWN</span>
+                        )}
                         {loc.adminUnitName && (
                           <span className="text-slate-400 truncate">• {loc.adminUnitName}</span>
                         )}
@@ -932,7 +937,18 @@ export const DevicesPage: React.FC = () => {
               {!viewUnassigned && locPorts && Array.isArray(locPorts.ports) && locPorts.ports.length > 0 && (
                 <div className="bg-white rounded border border-slate-300 shadow-xs p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-slate-700">AP theo cổng GWN</h3>
+                    <h3 className="text-sm font-bold text-slate-700">
+                      AP theo cổng GWN
+                      {(() => {
+                        const on = locPorts.ports.filter((p) => p.status === 'ONLINE').length;
+                        const exp = selectedLoc?.expectedApCount ?? 4;
+                        return (
+                          <span className={`ml-2 text-[11px] font-bold px-1.5 py-0.5 rounded ${on < exp ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                            AP đang kết nối: {on}/{exp}
+                          </span>
+                        );
+                      })()}
+                    </h3>
                     <span className="text-[11px] text-slate-400">
                       {locPorts.apiReachable ? 'Trạng thái cổng LAN trực tiếp từ Grandstream' : 'Chưa kết nối được GWN Cloud'}
                     </span>
