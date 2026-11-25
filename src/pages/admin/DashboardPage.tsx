@@ -6,7 +6,7 @@ import {
   ArrowRight,
   BellRing,
   Clock,
-  Map as MapIcon,
+  // Map as MapIcon,
   MapPin,
   RefreshCw,
   Router,
@@ -23,18 +23,18 @@ import {
 } from '../../types/models';
 import { StatusBadge } from '../../components/Badge';
 import { DeviceMonitoringTopology } from '../../components/DeviceMonitoringTopology';
-import { LeafletGisMap } from '../../components/gis/LeafletGisMap';
+// import { LeafletGisMap } from '../../components/gis/LeafletGisMap';
 
 export const DashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardOverviewDto | null>(null);
   const [pins, setPins] = useState<GisLocationPinDto[]>([]);
-  const [selectedPin, setSelectedPin] = useState<GisLocationPinDto | null>(null);
+  // const [selectedPin, setSelectedPin] = useState<GisLocationPinDto | null>(null);
   const [incidents, setIncidents] = useState<IncidentTicketDto[]>([]);
   const [openIncidentCount, setOpenIncidentCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mapError, setMapError] = useState<string | null>(null);
+  // const [mapError, setMapError] = useState<string | null>(null);
   const [incidentError, setIncidentError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const loadingRef = useRef(false);
@@ -62,13 +62,14 @@ export const DashboardPage: React.FC = () => {
 
       if (gisResult.status === 'fulfilled') {
         setPins(gisResult.value);
-        setMapError(null);
-        setSelectedPin((previous) => previous
-          ? gisResult.value.find((pin) => pin.id === previous.id) || null
-          : null);
-      } else {
-        setMapError('Không tải được dữ liệu bản đồ. Kiểm tra quyền truy cập hoặc thử làm mới.');
+        // setMapError(null);
+        // setSelectedPin((previous) => previous
+        //   ? gisResult.value.find((pin) => pin.id === previous.id) || null
+        //   : null);
       }
+      // else {
+      //   setMapError('Không tải được dữ liệu bản đồ. Kiểm tra quyền truy cập hoặc thử làm mới.');
+      // }
 
       const incidentResults = [openResult, assignedResult, inProgressResult];
       const incidentPages: PageResponse<IncidentTicketDto>[] = incidentResults.flatMap((result) =>
@@ -222,6 +223,7 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+        {/*
         <section className="overflow-hidden rounded border border-slate-300 bg-white shadow-xs xl:col-span-8">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
             <div>
@@ -251,8 +253,9 @@ export const DashboardPage: React.FC = () => {
             </div>
           )}
         </section>
+        */}
 
-        <section className="rounded border border-slate-300 bg-white shadow-xs xl:col-span-4">
+        <section className="rounded border border-slate-300 bg-white shadow-xs xl:col-span-12">
           <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
             <div>
               <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900">
