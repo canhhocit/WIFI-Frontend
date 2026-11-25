@@ -21,6 +21,8 @@ import {
   NetworkDeviceDto,
   MeshApSnapshotDto,
   NetworkDeviceImportResultDto,
+  NetworkDeviceUpsertRequest,
+  AssignDeviceLocationRequest,
   DeviceSwapRequest,
   DeviceSyncSummaryDto,
   GwnClientDto,
@@ -236,6 +238,35 @@ export const adminApi = {
 
   getNetworkDeviceById: (id: number) => {
     return request<NetworkDeviceDto>(`/v1/admin/network-devices/${id}`);
+  },
+
+  getNetworkDevicesByLocation: (locationId: number) => {
+    return request<NetworkDeviceDto[]>(`/v1/admin/network-devices/location/${locationId}`);
+  },
+
+  getUnassignedNetworkDevices: () => {
+    return request<NetworkDeviceDto[]>('/v1/admin/network-devices/unassigned');
+  },
+
+  createNetworkDevice: (data: NetworkDeviceUpsertRequest) => {
+    return request<NetworkDeviceDto>('/v1/admin/network-devices', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateNetworkDevice: (id: number, data: NetworkDeviceUpsertRequest) => {
+    return request<NetworkDeviceDto>(`/v1/admin/network-devices/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  assignNetworkDeviceLocation: (id: number, data: AssignDeviceLocationRequest) => {
+    return request<NetworkDeviceDto>(`/v1/admin/network-devices/${id}/assign-location`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
   },
 
   swapNetworkDevice: (data: DeviceSwapRequest) => {

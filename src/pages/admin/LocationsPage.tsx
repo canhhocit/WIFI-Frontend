@@ -18,7 +18,8 @@ import {
   Globe2,
   Users,
   GitMerge,
-  Tag
+  Tag,
+  Cpu
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { LocationDto, CreateLocationRequest, UpdateLocationRequest, AdminUnitDto, LocationGroupDto } from '../../types/models';
@@ -27,6 +28,7 @@ import { AlertBanner } from '../../components/AlertBanner';
 import { ExcelImportModal } from '../../components/ExcelImportModal';
 import { MergeAdminUnitsModal } from '../../components/MergeAdminUnitsModal';
 import { LocationGroupModal } from '../../components/LocationGroupModal';
+import { LocationDevicesModal } from '../../components/LocationDevicesModal';
 import { ImageUploadInput } from '../../components/ImageUploadInput';
 import { DISTRICT_CENTERS } from '../../components/gis/LeafletGisMap';
 import { Pagination } from '../../components/Pagination';
@@ -62,6 +64,7 @@ export const LocationsPage: React.FC = () => {
   const [mergeSuccessMsg, setMergeSuccessMsg] = useState<string | null>(null);
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [locationGroups, setLocationGroups] = useState<LocationGroupDto[]>([]);
+  const [devicesLocation, setDevicesLocation] = useState<LocationDto | null>(null);
 
   useEffect(() => {
     const st = searchParams.get('status');
@@ -643,14 +646,49 @@ export const LocationsPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      {loc.active ? (
-                        <span className="inline-flex items-center gap-1 font-semibold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-sm text-[11px]">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Hoạt động
-                        </span>
+                      {!loc.active ? (
+                        <div>
+                          <span className="inline-flex items-center gap-1 font-semibold text-slate-600 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded-sm text-[11px]">
+                            <XCircle className="w-3 h-3 text-slate-500" /> Tạm dừng
+                          </span>
+                        </div>
+                      ) : !loc.hasGwnRouter ? (
+                        <button
+                          type="button"
+                          onClick={() => setDevicesLocation(loc)}
+                          className="text-left group cursor-pointer"
+                          title="Điểm chưa gắn Router GWN nên chưa hoạt động — bấm để gán thiết bị"
+                        >
+                          <span className="inline-flex items-center gap-1 font-semibold text-amber-800 bg-amber-50 group-hover:bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-sm text-[11px] transition">
+                            <XCircle className="w-3 h-3 text-amber-600" /> Chưa hoạt động
+                          </span>
+                          <div className="text-[10px] text-amber-700 mt-0.5 font-medium group-hover:underline">
+                            Chưa gán thiết bị GWN →
+                          </div>
+                        </button>
+                      ) : loc.gwnRouterOnline === false ? (
+                        <button
+                          type="button"
+                          onClick={() => setDevicesLocation(loc)}
+                          className="text-left group cursor-pointer"
+                          title="Router GWN tại điểm đang OFFLINE"
+                        >
+                          <span className="inline-flex items-center gap-1 font-semibold text-rose-800 bg-rose-50 border border-rose-300 px-2 py-0.5 rounded-sm text-[11px]">
+                            <XCircle className="w-3 h-3 text-rose-600" /> Mất kết nối
+                          </span>
+                          <div className="text-[10px] text-rose-600 mt-0.5">
+                            Router GWN offline
+                          </div>
+                        </button>
                       ) : (
-                        <span className="inline-flex items-center gap-1 font-semibold text-slate-600 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded-sm text-[11px]">
-                          <XCircle className="w-3 h-3 text-slate-500" /> Tạm dừng
-                        </span>
+                        <div>
+                          <span className="inline-flex items-center gap-1 font-semibold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-sm text-[11px]">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Hoạt động
+                          </span>
+                          <div className="text-[10px] text-emerald-700 mt-0.5">
+                            Đã gán GWN ({loc.assignedDeviceCount ?? 1} thiết bị)
+                          </div>
+                        </div>
                       )}
                     </td>
                     <td className="py-3 px-4 text-right space-x-1 whitespace-nowrap">
@@ -664,6 +702,14 @@ export const LocationsPage: React.FC = () => {
                         <ExternalLink className="w-3.5 h-3.5" />
                         <span>Xem Cổng chào</span>
                       </a>
+                      <button
+                        onClick={() => setDevicesLocation(loc)}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded transition cursor-pointer mr-1"
+                        title="Quản lý / gán Router GWN & Mesh AP tại điểm này"
+                      >
+                        <Cpu className="w-3.5 h-3.5" />
+                        <span>Thiết bị</span>
+                      </button>
                       <button
                         onClick={() => navigate(`/admin/gis?selectLocation=${loc.id}`)}
                         className="p-1 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded-sm transition cursor-pointer"
@@ -1345,6 +1391,14 @@ export const LocationsPage: React.FC = () => {
         onClose={() => setIsGroupModalOpen(false)}
         groups={locationGroups}
         onRefresh={loadGroups}
+      />
+
+      <LocationDevicesModal
+        isOpen={!!devicesLocation}
+        onClose={() => setDevicesLocation(null)}
+        location={devicesLocation}
+        allLocations={locations}
+        onUpdated={() => loadLocations()}
       />
     </div>
   );

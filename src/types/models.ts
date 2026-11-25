@@ -38,6 +38,9 @@ export interface LocationDto {
   contactName?: string;
   contactPhone?: string;
   active: boolean;
+  hasGwnRouter?: boolean;
+  gwnRouterOnline?: boolean;
+  assignedDeviceCount?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -82,6 +85,8 @@ export interface NetworkDeviceDto {
   locationName?: string;
   locationCode?: string;
   adminUnitName?: string;
+  name?: string;
+  gwnNetworkId?: string;
   deviceType: string;
   serialNumber: string;
   macAddress: string;
@@ -100,6 +105,25 @@ export interface NetworkDeviceDto {
   /** FACTORY = mesh đang dùng S/N gốc, MANAGED = đã đổi sang mật khẩu quản lý chung */
   meshCredentialState?: string;
   meshPasswordRotatedAt?: string;
+}
+
+export interface NetworkDeviceUpsertRequest {
+  locationId?: number | null;
+  name?: string;
+  deviceType: string;
+  macAddress: string;
+  serialNumber: string;
+  model?: string;
+  vendor?: string;
+  ipAddress?: string;
+  gwnNetworkId?: string;
+  status?: string;
+}
+
+export interface AssignDeviceLocationRequest {
+  locationId?: number | null;
+  name?: string;
+  gwnNetworkId?: string;
 }
 
 export interface NetworkDeviceImportResultDto {
@@ -577,6 +601,9 @@ export interface SurveyDto {
   maxResponsesQuota?: number;
   currentResponsesCount: number;
   active: boolean;
+  hasGwnRouter?: boolean;
+  gwnRouterOnline?: boolean;
+  assignedDeviceCount?: number;
   createdAt?: string;
   updatedAt?: string;
   questions?: SurveyQuestionDto[];
@@ -849,6 +876,7 @@ export interface GisLocationPinDto {
   status: 'ONLINE' | 'OFFLINE' | 'DEGRADED';
   totalDevices: number;
   onlineDevices: number;
+  hasGwnRouter?: boolean;
   activeSessionsCount: number;
   openIncidentsCount: number;
 }
@@ -1018,6 +1046,9 @@ export interface DnsDomainRuleDto {
   category?: string;
   description?: string;
   active: boolean;
+  hasGwnRouter?: boolean;
+  gwnRouterOnline?: boolean;
+  assignedDeviceCount?: number;
   createdAt?: string;
 }
 

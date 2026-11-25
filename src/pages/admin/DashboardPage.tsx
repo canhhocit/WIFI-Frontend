@@ -104,12 +104,19 @@ export const DashboardPage: React.FC = () => {
     return () => window.clearInterval(interval);
   }, [loadOverview]);
 
-  const mapStats = useMemo(() => ({
-    total: pins.length,
-    online: pins.filter((pin) => pin.status === 'ONLINE').length,
-    degraded: pins.filter((pin) => pin.status === 'DEGRADED').length,
-    offline: pins.filter((pin) => pin.status === 'OFFLINE').length,
-  }), [pins]);
+  const mapStats = useMemo(() => {
+    const online = pins.filter((pin) => pin.status === 'ONLINE').length;
+    const degraded = pins.filter((pin) => pin.status === 'DEGRADED').length;
+    const unassigned = pins.filter((pin) => pin.active && pin.hasGwnRouter === false).length;
+    const offline = pins.filter((pin) => pin.status === 'OFFLINE' && !(pin.active && pin.hasGwnRouter === false)).length;
+    return {
+      total: pins.length,
+      online,
+      degraded,
+      unassigned,
+      offline,
+    };
+  }, [pins]);
 
   const incidentStatusLabel: Record<string, string> = {
     NEW: 'Mới tiếp nhận',
@@ -197,28 +204,34 @@ export const DashboardPage: React.FC = () => {
         <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover hover:border-slate-300">
           <div className="flex items-center justify-between text-xs text-slate-500"><span>Điểm phát</span><MapPin className="h-4 w-4 text-slate-400" /></div>
           <div className="mt-1 font-mono text-2xl font-extrabold text-slate-900 tabular-nums">{mapStats.total || data?.totalLocations || 0}</div>
-          <div className="mt-1 text-[11px] text-slate-500">{mapStats.online} đang hoạt động</div>
+          <div className="mt-1 text-[11px] text-slate-500">
+            {mapStats.online} đang hoạt động{mapStats.unassigned > 0 ? ` • ${mapStats.unassigned} chưa gán GWN` : ''}
+          </div>
         </div>
         <div className="rounded-xl border border-emerald-200/90 bg-white p-4 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover hover:border-emerald-300">
           <div className="flex items-center justify-between text-xs font-medium text-emerald-700">
             <span className="inline-flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 text-emerald-500 live-pulse" />
+              <span className={`h-2 w-2 rounded-full ${mapStats.online > 0 ? 'bg-emerald-500 text-emerald-500 live-pulse' : 'bg-slate-400'}`} />
               Đang hoạt động
             </span>
             <Wifi className="h-4 w-4" />
           </div>
           <div className="mt-1 font-mono text-2xl font-extrabold text-emerald-700 tabular-nums">{mapStats.online}</div>
-          <div className="mt-1 text-[11px] text-slate-500">Điểm online</div>
+          <div className="mt-1 text-[11px] text-slate-500">Điểm đã gán GWN online</div>
         </div>
         <div className="rounded-xl border border-amber-200/90 bg-white p-4 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover hover:border-amber-300">
-          <div className="flex items-center justify-between text-xs font-medium text-amber-700"><span>Suy giảm</span><BellRing className="h-4 w-4" /></div>
-          <div className="mt-1 font-mono text-2xl font-extrabold text-amber-700 tabular-nums">{mapStats.degraded}</div>
-          <div className="mt-1 text-[11px] text-slate-500">Điểm cần kiểm tra</div>
+          <div className="flex items-center justify-between text-xs font-medium text-amber-700"><span>Chưa gán / Suy giảm</span><BellRing className="h-4 w-4" /></div>
+          <div className="mt-1 font-mono text-2xl font-extrabold text-amber-700 tabular-nums">{mapStats.unassigned + mapStats.degraded}</div>
+          <div className="mt-1 text-[11px] text-slate-500">
+            {mapStats.unassigned > 0
+              ? `${mapStats.unassigned} chưa gán GWN${mapStats.degraded > 0 ? ` • ${mapStats.degraded} suy giảm` : ''}`
+              : 'Điểm cần kiểm tra'}
+          </div>
         </div>
         <div className="rounded-xl border border-red-200/90 bg-white p-4 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover hover:border-red-300">
           <div className="flex items-center justify-between text-xs font-medium text-red-700"><span>Mất kết nối</span><WifiOff className="h-4 w-4" /></div>
           <div className="mt-1 font-mono text-2xl font-extrabold text-red-700 tabular-nums">{mapStats.offline}</div>
-          <div className="mt-1 text-[11px] text-slate-500">Điểm offline</div>
+          <div className="mt-1 text-[11px] text-slate-500">Điểm offline / tạm dừng</div>
         </div>
       </div>
 

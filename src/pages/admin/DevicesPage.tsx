@@ -22,16 +22,19 @@ import {
   Users,
   MapPin,
   Upload,
-  KeyRound
+  KeyRound,
+  Plus,
+  Edit2
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
-import { DeviceDto, NetworkDeviceDto, DeviceTopologySummaryDto, GwnClientDto } from '../../types/models';
+import { DeviceDto, NetworkDeviceDto, DeviceTopologySummaryDto, GwnClientDto, LocationDto } from '../../types/models';
 import { AlertBanner } from '../../components/AlertBanner';
 import { DeviceSwapModal } from '../../components/DeviceSwapModal';
 import { DeviceMonitoringTopology } from '../../components/DeviceMonitoringTopology';
 import { ConnectedClientsModal } from '../../components/ConnectedClientsModal';
 import { MeshApModal } from '../../components/MeshApModal';
 import { NetworkDeviceImportModal } from '../../components/NetworkDeviceImportModal';
+import { NetworkDeviceFormModal } from '../../components/NetworkDeviceFormModal';
 import { DeviceStatusBadge } from '../../components/DeviceStatusBadge';
 import { Pagination } from '../../components/Pagination';
 
@@ -82,6 +85,21 @@ export const DevicesPage: React.FC = () => {
   // Mesh AP: đọc trực tiếp từ thiết bị
   const [meshDevice, setMeshDevice] = useState<NetworkDeviceDto | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+
+  // Create / Edit / Assign device modal
+  const [deviceFormOpen, setDeviceFormOpen] = useState(false);
+  const [editingNetDevice, setEditingNetDevice] = useState<NetworkDeviceDto | null>(null);
+  const [allLocations, setAllLocations] = useState<LocationDto[]>([]);
+
+  const loadLocationsList = async () => {
+    if (allLocations.length > 0) return;
+    try {
+      const resp = await adminApi.getLocations({ size: 2000 });
+      setAllLocations(resp.content || []);
+    } catch {
+      // Ignore silent error
+    }
+  };
 
   const handleViewClients = async (dev: NetworkDeviceDto) => {
     if (dev.deviceType === 'ACCESS_POINT' || dev.deviceType === 'AP') {
@@ -487,6 +505,17 @@ export const DevicesPage: React.FC = () => {
 
             <div className="ml-auto flex items-center gap-2">
               <button
+                onClick={() => {
+                  loadLocationsList();
+                  setEditingNetDevice(null);
+                  setDeviceFormOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-semibold transition cursor-pointer shadow-xs"
+                title="Thêm mới Router Grandstream GWN hoặc Access Point Viettel và gán vào Nhà văn hóa"
+              >
+                <Plus className="w-3.5 h-3.5" /> Thêm thiết bị
+              </button>
+              <button
                 onClick={() => setImportOpen(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-sm text-xs font-semibold transition cursor-pointer shadow-xs"
                 title="Import danh sách thiết bị bàn giao (MAC + S/N) từ file Excel/CSV"
@@ -566,7 +595,9 @@ export const DevicesPage: React.FC = () => {
                             <div>
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="font-bold text-slate-900 text-xs">
-                                  {nd.deviceType === 'ROUTER'
+                                  {nd.name
+                                    ? nd.name
+                                    : nd.deviceType === 'ROUTER'
                                     ? 'Router Gateway'
                                     : nd.deviceType === 'ACCESS_POINT'
                                     ? 'Trạm phát Wi-Fi (AP)'
@@ -579,10 +610,18 @@ export const DevicesPage: React.FC = () => {
                                 <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
                                   {nd.model || 'Tiêu chuẩn'}
                                 </span>
+                                {nd.gwnNetworkId && (
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600 border border-slate-200">
+                                    Net #{nd.gwnNetworkId}
+                                  </span>
+                                )}
                               </div>
                               <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
                                 <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                                <span className="truncate max-w-[220px]" title={nd.locationName || 'Chưa gán điểm'}>
+                                <span
+                                  className={`truncate max-w-[220px] ${!nd.locationName ? 'text-amber-600 font-semibold' : ''}`}
+                                  title={nd.locationName || 'Chưa gán điểm'}
+                                >
                                   {nd.locationName || 'Chưa gán điểm'}
                                 </span>
                                 <span className="text-slate-300">•</span>
@@ -637,6 +676,21 @@ export const DevicesPage: React.FC = () => {
                                 Khởi động lại
                               </button>
                             )}
+                            <button
+                              onClick={() => {
+                                loadLocationsList();
+                                setEditingNetDevice(nd);
+                                setDeviceFormOpen(true);
+                              }}
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-semibold transition cursor-pointer border ${
+                                !nd.locationId
+                                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300'
+                                  : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-300'
+                              }`}
+                              title="Gán Nhà văn hóa hoặc sửa thông tin thiết bị"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" /> {!nd.locationId ? 'Gán điểm' : 'Sửa'}
+                            </button>
                             <button
                               onClick={() => {
                                 setSelectedDeviceForSwap(nd);
@@ -745,6 +799,16 @@ export const DevicesPage: React.FC = () => {
         isOpen={importOpen}
         onClose={() => setImportOpen(false)}
         onImported={() => { loadNetworkDevices(); }}
+      />
+      <NetworkDeviceFormModal
+        isOpen={deviceFormOpen}
+        onClose={() => {
+          setDeviceFormOpen(false);
+          setEditingNetDevice(null);
+        }}
+        onSuccess={() => loadNetworkDevices()}
+        device={editingNetDevice}
+        locations={allLocations}
       />
       <MeshApModal
         device={meshDevice}
