@@ -194,12 +194,8 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
 
       {showSummaryCards && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        {/* Card 1: Tổng địa điểm */}
-        <div
-          onClick={() => navigate('/admin/locations')}
-          className="bg-white p-4 rounded border border-slate-200 shadow-xs flex items-center justify-between cursor-pointer group hover:border-[#004b87]/50 hover:shadow-sm transition-all"
-          title="Nhấp để chuyển đến Quản lý Điểm phát sóng"
-        >
+        {/* Card 1: Tổng địa điểm — tạm chỉ hiển thị, không click */}
+        <div className="bg-white p-4 rounded border border-slate-200 shadow-xs flex items-center justify-between">
           <div className="flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0 group-hover:scale-105 transition-transform">
               <MapPin className="w-5 h-5 text-emerald-600" />
@@ -213,15 +209,10 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
               </div>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#004b87] group-hover:translate-x-0.5 transition-all" />
         </div>
 
-        {/* Card 2: Địa điểm lỗi */}
-        <div
-          onClick={() => navigate('/admin/locations?status=ERROR')}
-          className="bg-white p-4 rounded border border-slate-200 shadow-xs flex items-center justify-between cursor-pointer group hover:border-rose-400/50 hover:shadow-sm transition-all"
-          title="Nhấp để lọc danh sách các địa điểm đang gặp lỗi hoặc tạm dừng"
-        >
+        {/* Card 2: Địa điểm lỗi — tạm chỉ hiển thị, không click */}
+        <div className="bg-white p-4 rounded border border-slate-200 shadow-xs flex items-center justify-between">
           <div className="flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 flex-shrink-0 group-hover:scale-105 transition-transform">
               <MapPinOff className="w-5 h-5 text-rose-500" />
@@ -235,15 +226,10 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
               </div>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all" />
         </div>
 
-        {/* Card 3: Tổng thiết bị */}
-        <div
-          onClick={() => handleOpenModal('ALL_DEVICES')}
-          className="bg-white p-4 rounded border border-slate-200 shadow-xs flex items-center justify-between cursor-pointer group hover:border-[#004b87]/50 hover:shadow-sm transition-all"
-          title="Nhấp để xem danh sách tất cả thiết bị"
-        >
+        {/* Card 3: Tổng thiết bị — tạm chỉ hiển thị, không click */}
+        <div className="bg-white p-4 rounded border border-slate-200 shadow-xs flex items-center justify-between">
           <div className="flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-full bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 flex-shrink-0 group-hover:scale-105 transition-transform">
               <RouterIcon className="w-5 h-5 text-sky-600" />
@@ -257,15 +243,10 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
               </div>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#004b87] group-hover:translate-x-0.5 transition-all" />
         </div>
 
-        {/* Card 4: Thiết bị lỗi */}
-        <div
-          onClick={() => handleOpenModal('ERROR_DEVICES')}
-          className="bg-white p-4 rounded border border-slate-200 shadow-xs flex items-center justify-between cursor-pointer group hover:border-rose-400/50 hover:shadow-sm transition-all"
-          title="Nhấp để xem các thiết bị đang mất kết nối"
-        >
+        {/* Card 4: Thiết bị lỗi — tạm chỉ hiển thị, không click */}
+        <div className="bg-white p-4 rounded border border-slate-200 shadow-xs flex items-center justify-between">
           <div className="flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 flex-shrink-0 group-hover:scale-105 transition-transform">
               <WifiOff className="w-5 h-5 text-rose-500" />
@@ -279,7 +260,6 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
               </div>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all" />
         </div>
         </div>
       )}
