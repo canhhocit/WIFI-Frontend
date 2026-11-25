@@ -460,6 +460,15 @@ export const DevicesPage: React.FC = () => {
     </tr>
   );
 
+  // Phân màu sức khỏe điểm: xanh = bình thường, cam = một phần mesh lỗi, đỏ = mất kết nối, xám = chưa có GWN.
+  const HEALTH_STYLE: Record<string, { card: string; chip: string; dot: string; label: string }> = {
+    GREEN: { card: 'border-emerald-300 bg-emerald-50/40 hover:border-emerald-500', chip: 'bg-emerald-600 text-white', dot: 'bg-emerald-500', label: 'Bình thường' },
+    ORANGE: { card: 'border-amber-300 bg-amber-50/60 hover:border-amber-500', chip: 'bg-amber-500 text-white', dot: 'bg-amber-500', label: 'Mesh lỗi một phần' },
+    RED: { card: 'border-rose-300 bg-rose-50/60 hover:border-rose-500', chip: 'bg-rose-600 text-white', dot: 'bg-rose-500', label: 'Mất kết nối' },
+    GRAY: { card: 'border-slate-300 bg-white hover:border-slate-400', chip: 'bg-slate-200 text-slate-600', dot: 'bg-slate-400', label: 'Chưa có GWN' },
+  };
+  const healthOf = (h?: string) => HEALTH_STYLE[(h || 'GRAY') as keyof typeof HEALTH_STYLE] || HEALTH_STYLE.GRAY;
+
   const detailTitle = viewUnassigned
     ? 'Thiết bị chưa gán điểm'
     : selectedLoc?.name || '';
@@ -758,16 +767,29 @@ export const DevicesPage: React.FC = () => {
                   Không tìm thấy địa điểm nào phù hợp.
                 </div>
               ) : (
+                <>
+                {/* Chú thích màu sức khỏe điểm */}
+                <div className="bg-white rounded border border-slate-300 shadow-xs px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-slate-600">
+                  <span className="font-semibold text-slate-500">Chú thích:</span>
+                  {(['GREEN', 'ORANGE', 'RED', 'GRAY'] as const).map((h) => (
+                    <span key={h} className="inline-flex items-center gap-1.5">
+                      <span className={`w-2.5 h-2.5 rounded-full ${healthOf(h).dot}`} />
+                      {healthOf(h).label}
+                    </span>
+                  ))}
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {infraLocs.map((loc) => (
+                  {infraLocs.map((loc) => {
+                    const hs = healthOf(loc.healthStatus);
+                    return (
                     <button
                       key={loc.id}
                       onClick={() => openLocation(loc)}
-                      className="text-left bg-white rounded border border-slate-300 shadow-xs hover:border-[#004b87] hover:shadow-sm transition p-4 cursor-pointer group"
+                      className={`text-left rounded border shadow-xs hover:shadow-sm transition p-4 cursor-pointer group border-l-4 ${hs.card}`}
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="flex items-center gap-2 min-w-0">
-                          <div className="w-9 h-9 rounded bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0 text-[#004b87] group-hover:bg-sky-50">
+                          <div className="w-9 h-9 rounded bg-white/70 border border-slate-200 flex items-center justify-center flex-shrink-0 text-[#004b87]">
                             <Building2 className="w-4.5 h-4.5" />
                           </div>
                           <div className="min-w-0">
@@ -777,16 +799,13 @@ export const DevicesPage: React.FC = () => {
                             )}
                           </div>
                         </div>
-                        {loc.hasGwnRouter ? (
-                          <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded shrink-0 ${loc.gwnRouterOnline ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>
-                            {loc.gwnRouterOnline ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-                            {loc.gwnRouterOnline ? 'GWN ONLINE' : 'GWN OFFLINE'}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded shrink-0 bg-slate-100 text-slate-500 border border-slate-200">
-                            Chưa có GWN
-                          </span>
-                        )}
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded shrink-0 ${hs.chip}`}>
+                          {loc.healthStatus === 'GREEN' ? <Wifi className="w-3 h-3" />
+                            : loc.healthStatus === 'RED' ? <WifiOff className="w-3 h-3" />
+                            : loc.healthStatus === 'ORANGE' ? <AlertTriangle className="w-3 h-3" />
+                            : null}
+                          {hs.label}
+                        </span>
                       </div>
                       {loc.address && (
                         <div className="text-[11px] text-slate-500 flex items-start gap-1 mb-2">
@@ -804,8 +823,10 @@ export const DevicesPage: React.FC = () => {
                         )}
                       </div>
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
+                </>
               )}
 
               <div className="bg-white rounded border border-slate-300 shadow-xs">

@@ -41,6 +41,8 @@ export interface LocationDto {
   hasGwnRouter?: boolean;
   gwnRouterOnline?: boolean;
   assignedDeviceCount?: number;
+  /** GREEN (bình thường) | ORANGE (một phần mesh lỗi) | RED (mất kết nối/router offline) | GRAY (chưa có GWN) */
+  healthStatus?: string;
   createdAt?: string;
   updatedAt?: string;
 }
