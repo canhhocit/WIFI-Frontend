@@ -22,7 +22,7 @@ import { AdminUserDto, AdminUnitDto, CreateAdminUserRequest, UpdateAdminUserRequ
 import { Pagination } from '../../components/Pagination';
 import { useRbac } from '../../utils/rbac';
 
-const ROLE_LABELS: Record<AdminRoleType, { label: string; color: string; desc: string }> = {
+const ROLE_LABELS: Record<string, { label: string; color: string; desc: string }> = {
   ROLE_SUPER_ADMIN: {
     label: 'Quản trị hệ thống (Admin)',
     color: 'bg-purple-100 text-purple-800 border-purple-200',

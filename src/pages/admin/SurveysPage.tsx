@@ -90,6 +90,8 @@ export const SurveysPage: React.FC = () => {
     },
   ]);
   const nextDraftIdRef = useRef(-3);
+  const pendingFocusDraftIdRef = useRef<number | null>(null);
+  const questionInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const [builderView, setBuilderView] = useState<'QUESTIONS' | 'FLOW'>('QUESTIONS');
   const [flowZoom, setFlowZoom] = useState(100);
 
@@ -148,10 +150,13 @@ export const SurveysPage: React.FC = () => {
   };
 
   const handleAddQuestion = () => {
-    setQuestions([
-      ...questions,
+    const draftId = nextDraftIdRef.current--;
+    pendingFocusDraftIdRef.current = draftId;
+    setBuilderView('QUESTIONS');
+    setQuestions((prev) => [
+      ...prev,
       {
-        draftId: nextDraftIdRef.current--,
+        draftId,
         questionText: '',
         questionType: 'SINGLE_CHOICE',
         optionsList: ['Rất hài lòng', 'Hài lòng', 'Chưa hài lòng'],
@@ -160,6 +165,17 @@ export const SurveysPage: React.FC = () => {
       },
     ]);
   };
+
+  useEffect(() => {
+    const draftId = pendingFocusDraftIdRef.current;
+    if (draftId == null || builderView !== 'QUESTIONS') return;
+    const inputEl = questionInputRefs.current[draftId];
+    if (inputEl) {
+      pendingFocusDraftIdRef.current = null;
+      inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      inputEl.focus();
+    }
+  }, [questions, builderView]);
 
   const handleRemoveQuestion = (index: number) => {
     const removedId = questions[index]?.draftId;
@@ -731,7 +747,7 @@ export const SurveysPage: React.FC = () => {
             ) : (
               <div className="space-y-3">
             {questions.map((q, idx) => (
-              <div key={idx} className="p-3.5 bg-slate-50 border border-slate-200 rounded space-y-2.5 relative">
+              <div key={q.draftId} className="p-3.5 bg-slate-50 border border-slate-200 rounded space-y-2.5 relative">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-slate-800 text-[11px] bg-slate-200/80 px-2 py-0.5 rounded">
                     Câu hỏi #{idx + 1}
@@ -787,6 +803,10 @@ export const SurveysPage: React.FC = () => {
                 </div>
 
                 <input
+                  ref={(el) => {
+                    if (el) questionInputRefs.current[q.draftId] = el;
+                    else delete questionInputRefs.current[q.draftId];
+                  }}
                   type="text"
                   value={q.questionText}
                   onChange={(e) => {
@@ -884,6 +904,13 @@ export const SurveysPage: React.FC = () => {
                 </div>
               </div>
             ))}
+                <button
+                  type="button"
+                  onClick={handleAddQuestion}
+                  className="w-full min-h-10 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-[#004b87] bg-sky-50/70 hover:bg-sky-100 border border-dashed border-sky-300 rounded transition cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" /> Thêm câu hỏi (#{questions.length + 1})
+                </button>
               </div>
             )}
           </div>
