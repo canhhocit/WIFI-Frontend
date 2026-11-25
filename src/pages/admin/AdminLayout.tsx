@@ -298,7 +298,7 @@ export const AdminLayout: React.FC = () => {
       })
       .catch(() => navigate("/admin/login"));
 
-    adminApi.getGatewayStatus().then(setGatewayStatus).catch(console.error);
+    adminApi.getGatewayStatus().then(setGatewayStatus).catch(() => {});
 
     const loadPermissions = async () => {
       try {
