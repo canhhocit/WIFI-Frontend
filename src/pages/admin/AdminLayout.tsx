@@ -472,16 +472,16 @@ export const AdminLayout: React.FC = () => {
   return (
     <div className="min-h-screen md:h-screen md:overflow-hidden bg-slate-100 flex flex-col md:flex-row font-sans">
       {/* Mobile Top Header */}
-      <div className="md:hidden bg-[#14141e] text-white px-4 py-3 flex items-center justify-between border-b border-[#222232] sticky top-0 z-40">
+      <div className="md:hidden bg-white text-[#ee0033] px-4 py-3 flex items-center justify-between border-b border-red-100 sticky top-0 z-40 shadow-2xs">
         <div className="flex items-center gap-2.5">
           <VietnamFlag width={30} height={20} className="shadow-xs rounded-xs" />
-          <span className="font-bold text-xs uppercase tracking-wide text-slate-100">
+          <span className="font-bold text-xs uppercase tracking-wide text-[#ee0033]">
             Wi-Fi Hải Phòng • Quản Trị
           </span>
         </div>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-1.5 rounded text-slate-300 hover:text-white hover:bg-[#252538] cursor-pointer"
+          className="p-1.5 rounded text-[#ee0033] hover:bg-red-50 cursor-pointer"
         >
           {mobileMenuOpen ? (
             <X className="w-5 h-5" />
@@ -501,7 +501,7 @@ export const AdminLayout: React.FC = () => {
 
       {/* Sidebar Navigation */}
       <aside
-        className={`fixed md:sticky top-0 left-0 z-30 h-screen bg-[#14141e] text-slate-300 flex flex-col border-r border-[#252538] transition-all duration-300 ease-in-out ${mobileMenuOpen
+        className={`fixed md:sticky top-0 left-0 z-30 h-screen bg-white text-[#ee0033] flex flex-col border-r border-slate-200 shadow-2xs transition-all duration-300 ease-in-out ${mobileMenuOpen
             ? "translate-x-0 w-72"
             : "-translate-x-full md:translate-x-0"
           } ${desktopCollapsed
@@ -513,7 +513,7 @@ export const AdminLayout: React.FC = () => {
           {/* Department & Viettel Telecom Brand Banner */}
           <div
             data-tour="welcome-card"
-            className={`border-b border-[#252538] bg-gradient-to-b from-[#1a1a27] via-[#161622] to-[#14141e] flex items-center transition-all ${desktopCollapsed
+            className={`border-b border-red-100 bg-white flex items-center transition-all ${desktopCollapsed
                 ? "p-2.5 flex-col gap-2 justify-center"
                 : "p-3.5 justify-between"
               }`}
@@ -523,23 +523,23 @@ export const AdminLayout: React.FC = () => {
                 }`}
             >
               <div
-                className="flex-shrink-0 drop-shadow-md cursor-pointer"
+                className="flex-shrink-0 drop-shadow-xs cursor-pointer"
                 onClick={desktopCollapsed ? toggleDesktopSidebar : undefined}
                 title="UBND TP. Hải Phòng × Viettel Telecom"
               >
                 <VietnamFlag
                   width={desktopCollapsed ? 30 : 36}
                   height={desktopCollapsed ? 20 : 24}
-                  className="rounded-xs shadow-md border border-amber-300/40"
+                  className="rounded-xs shadow-xs border border-red-200"
                 />
               </div>
               {!desktopCollapsed && (
                 <div className="overflow-hidden min-w-0">
-                  <div className="text-[10px] font-extrabold text-amber-300 uppercase tracking-wider leading-tight truncate">
+                  <div className="text-[10px] font-extrabold text-[#ee0033] uppercase tracking-wider leading-tight truncate">
                     UBND TP. HẢI PHÒNG
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-xs text-white font-bold tracking-tight truncate">
+                    <span className="text-xs text-[#ee0033] font-bold tracking-tight truncate">
                       Quản Trị Wi-Fi
                     </span>
                     <span className="px-1.5 py-0.2 rounded-xs bg-[#ee0033] text-white text-[9px] font-black uppercase tracking-wider">
@@ -555,7 +555,7 @@ export const AdminLayout: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-[#252538] transition cursor-pointer"
+                className="p-1.5 rounded text-[#ee0033] hover:bg-red-50 transition cursor-pointer"
                 title="Đóng menu điều hướng"
               >
                 <X className="w-4 h-4" />
@@ -564,37 +564,37 @@ export const AdminLayout: React.FC = () => {
           </div>
 
           {!desktopCollapsed && (
-            <div className="px-3 py-2 border-b border-[#252538] bg-[#1a1a27] flex items-center justify-between text-[11px]">
+            <div className="px-3 py-2 border-b border-red-100 bg-white flex items-center justify-between text-[11px]">
               <div className="flex items-center gap-2">
-                <ViettelLogo height={14} variant="simple" color="white" showTagline={false} />
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Viettel Telecom</span>
+                <ViettelLogo height={14} variant="simple" color="red" showTagline={false} />
+                <span className="text-[10px] font-bold text-[#ee0033] uppercase tracking-wide">Viettel Telecom</span>
               </div>
               <a
                 href="/portal"
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Mở Cổng chào Người dân (/portal)"
-                className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-[#ff4d6d] hover:text-white hover:underline transition"
+                className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-[#ee0033] hover:text-[#b80028] hover:underline transition"
               >
                 <span>Xem Portal</span>
-                <ExternalLink className="w-3 h-3 text-[#ff4d6d]" />
+                <ExternalLink className="w-3 h-3 text-[#ee0033]" />
               </a>
             </div>
           )}
 
           {/* Categorized Nav Groups (Generated dynamically by Role) */}
           <nav
-            className={`flex-1 overflow-y-auto custom-scrollbar transition-all ${desktopCollapsed ? "px-2 py-3 space-y-3" : "px-3 py-3 space-y-4"
+            className={`flex-1 overflow-y-auto custom-scrollbar bg-white transition-all ${desktopCollapsed ? "px-2 py-3 space-y-3" : "px-3 py-3 space-y-4"
               }`}
           >
             {filteredNavGroups.map((group, gIdx) => (
               <div key={group.groupTitle} className="space-y-1">
                 {!desktopCollapsed ? (
-                  <div className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <div className="px-3 text-[10px] font-bold text-[#ee0033]/75 uppercase tracking-wider">
                     {group.groupTitle}
                   </div>
                 ) : (
-                  gIdx > 0 && <div className="h-px bg-[#222232] my-2 mx-1" />
+                  gIdx > 0 && <div className="h-px bg-red-100 my-2 mx-1" />
                 )}
                 <div className="space-y-1">
                   {group.items.map((item) => {
@@ -614,14 +614,14 @@ export const AdminLayout: React.FC = () => {
                             ? "justify-center p-2.5"
                             : "gap-2.5 px-3 py-1.5 text-xs font-medium"
                           } ${isActive
-                            ? "bg-[#ee0033] text-white font-semibold shadow-xs"
-                            : "text-slate-300 hover:text-white hover:bg-[#252538]"
+                            ? "bg-red-50 text-[#ee0033] font-bold border border-red-200 border-l-4 border-l-[#ee0033] shadow-2xs"
+                            : "text-[#ee0033] hover:text-[#b80028] hover:bg-red-50/60"
                           }`}
                       >
                         <Icon
                           className={`w-4 h-4 flex-shrink-0 transition-transform ${isActive
-                              ? "text-white"
-                              : "text-slate-400 group-hover:text-white"
+                              ? "text-[#ee0033]"
+                              : "text-[#ee0033]/80 group-hover:text-[#ee0033]"
                             }`}
                         />
                         {!desktopCollapsed && (
@@ -637,7 +637,7 @@ export const AdminLayout: React.FC = () => {
           {/* User Profile & Logout */}
           <div
             data-tour="user-profile"
-            className={`border-t border-[#252538] bg-[#14141e] flex items-center transition-all ${desktopCollapsed
+            className={`border-t border-red-100 bg-white flex items-center transition-all ${desktopCollapsed
                 ? "p-2 flex-col gap-2 justify-center"
                 : "p-3 justify-between gap-2"
               }`}
@@ -646,13 +646,13 @@ export const AdminLayout: React.FC = () => {
               <>
                 <div className="truncate pr-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-slate-200 truncate">
+                    <span className="text-xs font-bold text-[#ee0033] truncate">
                       {currentUser?.fullName ||
                         currentUser?.username ||
                         "Cán bộ Quản trị"}
                     </span>
                   </div>
-                  <div className="text-[10px] text-slate-400 font-mono truncate mt-0.5">
+                  <div className="text-[10px] text-[#ee0033]/75 font-mono truncate mt-0.5">
                     {currentUser?.email || "admin@haiphong.gov.vn"}
                   </div>
                 </div>
@@ -660,14 +660,14 @@ export const AdminLayout: React.FC = () => {
                   <button
                     onClick={() => setIsChangePasswordOpen(true)}
                     title="Đổi mật khẩu tài khoản"
-                    className="p-1.5 rounded text-slate-400 hover:text-amber-400 hover:bg-[#252538] border border-transparent hover:border-amber-900/30 transition cursor-pointer"
+                    className="p-1.5 rounded text-[#ee0033] hover:bg-red-50 border border-transparent hover:border-red-200 transition cursor-pointer"
                   >
                     <KeyRound className="w-4 h-4" />
                   </button>
                   <button
                     onClick={handleLogout}
                     title="Đăng xuất an toàn"
-                    className="p-1.5 rounded text-slate-400 hover:text-red-400 hover:bg-[#252538] border border-transparent hover:border-red-900/30 transition cursor-pointer"
+                    className="p-1.5 rounded text-[#ee0033] hover:bg-red-50 border border-transparent hover:border-red-200 transition cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
                   </button>
@@ -676,7 +676,7 @@ export const AdminLayout: React.FC = () => {
             ) : (
               <div className="flex flex-col items-center gap-2 w-full py-1">
                 <div
-                  className="w-8 h-8 rounded-full bg-[#ee0033] text-white flex items-center justify-center font-bold text-xs shadow-xs"
+                  className="w-8 h-8 rounded-full bg-red-50 text-[#ee0033] border border-red-200 flex items-center justify-center font-bold text-xs shadow-2xs"
                   title={`${currentUser?.fullName || currentUser?.username || "Cán bộ"} (${currentUser?.email || "admin@haiphong.gov.vn"})`}
                 >
                   {(
@@ -690,14 +690,14 @@ export const AdminLayout: React.FC = () => {
                 <button
                   onClick={() => setIsChangePasswordOpen(true)}
                   title="Đổi mật khẩu tài khoản"
-                  className="p-2 rounded text-slate-400 hover:text-amber-400 hover:bg-[#252538] transition cursor-pointer"
+                  className="p-2 rounded text-[#ee0033] hover:bg-red-50 transition cursor-pointer"
                 >
                   <KeyRound className="w-4 h-4" />
                 </button>
                 <button
                   onClick={handleLogout}
                   title="Đăng xuất an toàn"
-                  className="p-2 rounded text-slate-400 hover:text-red-400 hover:bg-[#252538] transition cursor-pointer"
+                  className="p-2 rounded text-[#ee0033] hover:bg-red-50 transition cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
