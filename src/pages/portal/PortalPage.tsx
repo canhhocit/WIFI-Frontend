@@ -35,6 +35,35 @@ import { ViettelLogo } from '../../components/ViettelLogo';
 import { ReportIssueModal } from '../../components/ReportIssueModal';
 import { CitizenDigitalMediaModal } from '../../components/CitizenDigitalMediaModal';
 import { Play, Tv, Video, Eye, Share2, FileText, Image as ImageIcon } from 'lucide-react';
+import { normalizeMediaUrl, getYouTubeThumbnailUrl } from '../../utils/mediaUrl';
+
+const DEFAULT_FALLBACK_PORTAL_DATA: PortalInitResponse = {
+  location: {
+    id: 1,
+    slug: 'hp-hb-nvh01',
+    name: 'Nhà văn hóa Hải Phòng',
+    address: 'Thành phố Hải Phòng',
+    description: 'Điểm phát sóng Wi-Fi công cộng miễn phí phục vụ Nhân dân và dịch vụ công trực tuyến.',
+    sessionDurationMinutes: 120,
+    maxBandwidthMbps: 20,
+    maxConcurrentUsers: 50,
+    active: true,
+    welcomeMessage: 'Chào mừng Nhân dân đến với hệ thống Wi-Fi công cộng Thành phố Hải Phòng',
+    promoBannerUrl: '/banners/haiphong_culture_house.jpg',
+    backgroundImageUrl: '/banners/haiphong_city_bg.jpg',
+    termsAndConditions:
+      'Bằng việc truy cập mạng Wi-Fi công cộng này, quý vị đồng ý tuân thủ quy tắc ứng xử trên không gian mạng và các quy định pháp luật hiện hành.',
+  },
+  clientIp: '127.0.0.1',
+  clientMacHint: '02:42:ac:11:00:01',
+  mockGateway: false,
+  gatewayNotice: 'Live Gateway Connected.',
+  macRemembered: false,
+  otpRequired: false,
+  currentActiveUsers: 0,
+  maxConcurrentUsers: 50,
+  capacityReached: false,
+};
 
 const getOrCreateLocalClientMac = () => {
   try {
@@ -102,8 +131,26 @@ export const PortalPage: React.FC = () => {
   const isEmbeddedPreview = searchParams.get('previewMode') === 'embedded';
   const isPreviewMode = Boolean(previewToken || isEmbeddedPreview);
 
-  const [portalData, setPortalData] = useState<PortalInitResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Instant shell hydration for iOS Captive Network Assistant (CNA) & Android CaptivePortalLogin:
+  // Avoid blocking initial paint on a full-screen spinner when opening /portal on iPhone.
+  const [portalData, setPortalData] = useState<PortalInitResponse | null>(() => {
+    if (previewToken || isEmbeddedPreview) return null;
+    try {
+      const rawSearch = window.location.search || '';
+      const norm = rawSearch.startsWith('?') ? rawSearch.slice(1).replace(/\?/g, '&') : rawSearch.replace(/\?/g, '&');
+      const params = new URLSearchParams(norm);
+      const slug = params.get('location') || 'default';
+      const saved = sessionStorage.getItem(`wifi_portal_init_shared_${slug}`) || localStorage.getItem(`wifi_portal_init_shared_${slug}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.data && Date.now() - parsed.timestamp < 600000) {
+          return parsed.data as PortalInitResponse;
+        }
+      }
+    } catch (_) {}
+    return DEFAULT_FALLBACK_PORTAL_DATA;
+  });
+  const [loading, setLoading] = useState<boolean>(() => Boolean(previewToken || isEmbeddedPreview));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successInfo, setSuccessInfo] = useState<string | null>(null);
@@ -345,11 +392,12 @@ export const PortalPage: React.FC = () => {
     setError(null);
     const slug = overrideSlug !== undefined ? overrideSlug : locationParam;
     const cacheKey = `wifi_portal_init_${slug || 'default'}_${effectiveClientMac || 'guest'}`;
+    const sharedCacheKey = `wifi_portal_init_shared_${slug || 'default'}`;
 
     // Fast local memory cache: if citizen opened portal recently, display immediately without spinner
     if (!isEmbeddedPreview && !previewToken) {
       try {
-        const cached = sessionStorage.getItem(cacheKey);
+        const cached = sessionStorage.getItem(cacheKey) || sessionStorage.getItem(sharedCacheKey) || localStorage.getItem(sharedCacheKey);
         if (cached) {
           const parsed = JSON.parse(cached);
           if (parsed && parsed.data && (Date.now() - parsed.timestamp < 300000)) { // 5 mins TTL
@@ -363,7 +411,7 @@ export const PortalPage: React.FC = () => {
       } catch (_) {}
     }
 
-    if (!portalData) {
+    if (!portalData && (isEmbeddedPreview || previewToken)) {
       setLoading(true);
     }
 
@@ -376,7 +424,10 @@ export const PortalPage: React.FC = () => {
       }
       if (!isEmbeddedPreview && !previewToken) {
         try {
-          sessionStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: Date.now() }));
+          const payload = JSON.stringify({ data, timestamp: Date.now() });
+          sessionStorage.setItem(cacheKey, payload);
+          sessionStorage.setItem(sharedCacheKey, payload);
+          localStorage.setItem(sharedCacheKey, payload);
         } catch (_) {}
       }
     } catch (err: any) {
@@ -588,6 +639,51 @@ export const PortalPage: React.FC = () => {
       setSuccessInfo('Kết nối thành công! Đã cấp quyền truy cập Internet.');
     } catch (err: any) {
       setError(err?.message || 'Xác thực truy cập không thành công. Vui lòng thử lại.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleConnectAndWatchVideo = async (externalVideoUrl?: string) => {
+    if (isPreviewMode || !portalData) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const session = await portalApi.login({
+        locationSlug: portalData.location.slug,
+        macAddress: effectiveClientMac,
+        guestName: guestName.trim() || undefined,
+        guestContact: phoneNumber.trim() || undefined,
+        consentGiven: true,
+      });
+
+      const dest = externalVideoUrl || targetDestination;
+      try {
+        const cleanMac = (effectiveClientMac || macAddress || '0242ac110001').replace(/[:-]/g, '').toLowerCase();
+        const authEndpoints = [
+          localRouterLoginUrl,
+          ...(rawLoginUrl && !rawLoginUrl.includes('cwp.gwnportal.cloud') ? [rawLoginUrl] : []),
+        ];
+        authEndpoints.forEach((endpoint) => {
+          try {
+            const sep = endpoint.includes('?') ? '&' : '?';
+            const excapUrl = `${endpoint}${sep}username=${encodeURIComponent(cleanMac + '@gwn')}&password=${encodeURIComponent(session.sessionToken || 'guest')}&redirect=${encodeURIComponent(dest)}`;
+            fetch(excapUrl, { mode: 'no-cors' }).catch(() => {});
+            const img = new Image();
+            img.src = excapUrl;
+          } catch (_) {}
+        });
+      } catch (_) {}
+
+      setShowMediaModal(false);
+      setConnectedSession(session);
+      if (externalVideoUrl) {
+        setTimeout(() => {
+          executePostAuthRedirect(externalVideoUrl);
+        }, 600);
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Không thể kích hoạt kết nối Wi-Fi.');
     } finally {
       setSubmitting(false);
     }
@@ -806,8 +902,8 @@ export const PortalPage: React.FC = () => {
 
   const activeCampaign = portalData?.activeCampaign;
 
-  // Background Wallpaper Priority:
-  const backgroundWallpaperUrl =
+  // Background Wallpaper Priority (Normalized to same-origin /uploads/... so iOS CNA never hangs on external bucket timeouts):
+  const rawBackgroundWallpaperUrl =
     (portalData?.location.backgroundImageUrl &&
      portalData.location.backgroundImageUrl !== '/banners/haiphong_city_bg.jpg'
       ? portalData.location.backgroundImageUrl
@@ -815,12 +911,19 @@ export const PortalPage: React.FC = () => {
     template?.backgroundImageUrl ||
     portalData?.location.backgroundImageUrl ||
     '/banners/haiphong_city_bg.jpg';
+  const backgroundWallpaperUrl = normalizeMediaUrl(rawBackgroundWallpaperUrl) || '/banners/haiphong_city_bg.jpg';
 
   // Banner Photo Priority: Always show the location's own actual culture house photo
-  const localBannerUrl =
+  const rawLocalBannerUrl =
     portalData?.location.promoBannerUrl ||
     template?.bannerUrl ||
     '/banners/haiphong_culture_house.jpg';
+  const localBannerUrl = normalizeMediaUrl(rawLocalBannerUrl) || '/banners/haiphong_culture_house.jpg';
+
+  const campaignBannerPreviewUrl =
+    normalizeMediaUrl(activeCampaign?.bannerUrl) ||
+    getYouTubeThumbnailUrl(activeCampaign?.videoUrl, true) ||
+    '/banners/haiphong_city_bg.jpg';
 
   return (
     <div
@@ -840,12 +943,12 @@ export const PortalPage: React.FC = () => {
       )}
       {/* Official City Architectural Wallpaper Background */}
       <div
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url('${backgroundWallpaperUrl}')` }}
       />
-      {/* GovTech Backdrop Overlay tinted by template.backgroundColor */}
+      {/* GovTech Backdrop Overlay tinted by template.backgroundColor (avoid heavy full-screen backdrop-blur on mobile iOS WebKit) */}
       <div
-        className="fixed inset-0 backdrop-blur-[2px] transition-colors duration-500"
+        className="fixed inset-0 sm:backdrop-blur-[2px] transition-colors duration-300"
         style={{ background: bgOverlayGradient }}
       />
 
@@ -870,7 +973,7 @@ export const PortalPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 {template?.logoUrl ? (
                   <img
-                    src={template.logoUrl}
+                    src={normalizeMediaUrl(template.logoUrl)}
                     alt="Biểu trưng chính thức"
                     className="h-7 w-auto max-w-[110px] object-contain drop-shadow-sm"
                   />
@@ -1101,8 +1204,10 @@ export const PortalPage: React.FC = () => {
                 title="Chạm để xem bản tin chi tiết"
               >
                 <img
-                  src={activeCampaign.bannerUrl || '/banners/haiphong_city_bg.jpg'}
+                  src={campaignBannerPreviewUrl}
                   alt={activeCampaign.title}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                   onError={(e) => {
                     (e.currentTarget as HTMLImageElement).src = '/banners/haiphong_city_bg.jpg';
@@ -1681,6 +1786,8 @@ export const PortalPage: React.FC = () => {
           isOpen={showMediaModal}
           onClose={() => setShowMediaModal(false)}
           campaign={activeCampaign}
+          onConnectToWatchVideo={isPreviewMode ? undefined : handleConnectAndWatchVideo}
+          isConnectingWifi={submitting}
         />
       )}
     </div>

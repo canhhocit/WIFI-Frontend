@@ -41,6 +41,12 @@ import { VideoUploadInput } from '../../components/VideoUploadInput';
 import { VietnamFlag } from '../../components/VietnamFlag';
 import { Pagination } from '../../components/Pagination';
 import { useRbac } from '../../utils/rbac';
+import {
+  normalizeMediaUrl,
+  getYouTubeEmbedUrl,
+  getYouTubeThumbnailUrl,
+  inferVideoMimeType,
+} from '../../utils/mediaUrl';
 
 export const CampaignsPage: React.FC = () => {
   const { canCreate, canEdit, canDelete, canApprove } = useRbac('CAMPAIGNS');
@@ -108,22 +114,11 @@ export const CampaignsPage: React.FC = () => {
   };
 
   const getYouTubeThumbnail = (url?: string): string | null => {
-    if (!url) return null;
-    const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
-    if (match && match[2].length === 11) {
-      return `https://img.youtube.com/vi/${match[2]}/hqdefault.jpg`;
-    }
-    return null;
+    return getYouTubeThumbnailUrl(url, true);
   };
 
   const getEmbedUrl = (url?: string): string | null => {
-    if (!url) return null;
-    const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
-    if (match && match[2].length === 11) {
-      return `https://www.youtube.com/embed/${match[2]}?autoplay=1&rel=0`;
-    }
-    if (url.includes('youtube.com/embed')) return url;
-    return null;
+    return getYouTubeEmbedUrl(url, false);
   };
 
   const resetFormData = () => {
@@ -462,7 +457,7 @@ export const CampaignsPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {paginatedCampaigns.map((c: CampaignDto) => {
             const ytThumbnail = getYouTubeThumbnail(c.videoUrl);
-            const displayBanner = c.bannerUrl || ytThumbnail || '/banners/haiphong_city_bg.jpg';
+            const displayBanner = normalizeMediaUrl(c.bannerUrl) || ytThumbnail || '/banners/haiphong_city_bg.jpg';
             const hasVideo = !!c.videoUrl;
 
             return (
@@ -668,7 +663,7 @@ export const CampaignsPage: React.FC = () => {
                         {c.bannerUrl || c.videoUrl ? (
                           <div className="relative w-12 h-8 rounded-sm overflow-hidden border border-slate-200 flex-shrink-0 bg-slate-900">
                             <img
-                              src={c.bannerUrl || getYouTubeThumbnail(c.videoUrl) || '/banners/haiphong_city_bg.jpg'}
+                              src={normalizeMediaUrl(c.bannerUrl) || getYouTubeThumbnail(c.videoUrl) || '/banners/haiphong_city_bg.jpg'}
                               alt=""
                               className="w-full h-full object-cover"
                               onError={(e) => {
@@ -989,16 +984,25 @@ export const CampaignsPage: React.FC = () => {
                                 src={getEmbedUrl(simulatingCampaign.videoUrl)!}
                                 title={simulatingCampaign.title}
                                 className="w-full h-full border-0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerPolicy="strict-origin-when-cross-origin"
                                 allowFullScreen
                               />
                             ) : (
                               <video
-                                src={simulatingCampaign.videoUrl}
+                                key={normalizeMediaUrl(simulatingCampaign.videoUrl)}
                                 controls
                                 playsInline
+                                poster={normalizeMediaUrl(simulatingCampaign.bannerUrl) || '/banners/haiphong_city_bg.jpg'}
+                                preload="metadata"
                                 className="w-full h-full object-contain"
-                              />
+                              >
+                                <source
+                                  src={normalizeMediaUrl(simulatingCampaign.videoUrl)}
+                                  type={inferVideoMimeType(simulatingCampaign.videoUrl)}
+                                />
+                                <source src={normalizeMediaUrl(simulatingCampaign.videoUrl)} />
+                              </video>
                             )}
                           </div>
                         </div>

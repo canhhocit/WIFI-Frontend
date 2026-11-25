@@ -14,6 +14,11 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { adminApi } from '../api/adminApi';
+import {
+  normalizeMediaUrl,
+  getYouTubeEmbedUrl as buildYouTubeEmbedUrl,
+  inferVideoMimeType,
+} from '../utils/mediaUrl';
 
 interface VideoUploadInputProps {
   value?: string;
@@ -40,18 +45,12 @@ export const VideoUploadInput: React.FC<VideoUploadInputProps> = ({
 
   // Phân tích xem có phải link YouTube không
   const getYouTubeEmbedUrl = (url: string): string | null => {
-    if (!url) return null;
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    if (match && match[2].length === 11) {
-      return `https://www.youtube.com/embed/${match[2]}?rel=0`;
-    }
-    if (url.includes('youtube.com/embed')) return url;
-    return null;
+    return buildYouTubeEmbedUrl(url, false);
   };
 
-  const isYouTube = !!getYouTubeEmbedUrl(value);
-  const ytEmbedUrl = getYouTubeEmbedUrl(value);
+  const normalizedValue = normalizeMediaUrl(value);
+  const isYouTube = !!getYouTubeEmbedUrl(normalizedValue);
+  const ytEmbedUrl = getYouTubeEmbedUrl(normalizedValue);
 
   const handleFileSelect = async (file: File) => {
     setError(null);
@@ -255,17 +254,20 @@ export const VideoUploadInput: React.FC<VideoUploadInputProps> = ({
                 src={ytEmbedUrl}
                 title="Preview Video Tuyên Truyền"
                 className="w-full h-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen
               />
             ) : (
               <video
-                src={value}
+                key={normalizedValue}
                 controls
                 playsInline
                 className="w-full h-full object-contain"
                 preload="metadata"
               >
+                <source src={normalizedValue} type={inferVideoMimeType(normalizedValue)} />
+                <source src={normalizedValue} />
                 Trình duyệt không hỗ trợ phát trực tiếp video này.
               </video>
             )}
