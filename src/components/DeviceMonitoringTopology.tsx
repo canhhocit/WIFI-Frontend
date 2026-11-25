@@ -371,17 +371,13 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
             <div className="w-full h-[2px] text-sky-500/70 signal-flow-line rounded-full" />
           </div>
 
-          {/* Node 3: AP (Access Point) */}
+          {/* Node 3: AP (Access Point) — TẠM KHÓA click để demo (modal AP chưa phản ánh đúng AP theo cổng) */}
           <div
-            onClick={() => handleOpenModal('AP')}
-            className="flex-1 flex flex-col items-center text-center cursor-pointer group p-3 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all"
-            title="Nhấp để xem chi tiết Access Point"
+            /* onClick={() => handleOpenModal('AP')} */
+            className="flex-1 flex flex-col items-center text-center group p-3 rounded-lg border border-transparent transition-all"
           >
-            <span className="text-xs font-semibold text-slate-700 mb-2 group-hover:text-[#004b87] flex items-center gap-1 transition-colors">
+            <span className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1 transition-colors">
               AP
-              <span className="text-[10px] text-slate-400 font-normal group-hover:inline hidden">
-                (Xem chi tiết)
-              </span>
             </span>
             <div className="w-16 h-12 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
               {/* Ceiling Wi-Fi AP Disc Vector */}
