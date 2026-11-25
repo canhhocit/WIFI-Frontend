@@ -159,6 +159,15 @@ export const UsersPage: React.FC = () => {
   const districtUnits = adminUnits.filter((u) => u.level === 2);
   const wardUnits = adminUnits.filter((u) => u.level === 3);
 
+  const formatOfficerFullName = (name?: string) => {
+    if (!name) return '';
+    return name
+      .replace(/Sở TT&TT/gi, 'Sở KH&CN')
+      .replace(/Sở Thông tin và Truyền thông/gi, 'Sở Khoa học và Công nghệ')
+      .replace(/UBND Quận/gi, 'UBND Phường')
+      .replace(/UBND Huyện/gi, 'UBND Xã');
+  };
+
   const resolveUserUnitDisplay = (user: AdminUserDto) => {
     if (user.adminUnitId) {
       const unit = adminUnits.find((u) => u.id === user.adminUnitId);
@@ -167,21 +176,27 @@ export const UsersPage: React.FC = () => {
           return { title: unit.name, subtitle: 'Toàn thành phố', level: 1 };
         }
         if (unit.level === 2) {
-          return { title: unit.name, subtitle: 'Quận / Huyện', level: 2 };
+          const wardTitle = unit.name
+            .replace(/^Quận\s+/i, 'Phường ')
+            .replace(/^Huyện\s+/i, 'Xã ');
+          return { title: wardTitle, subtitle: 'Xã / Phường', level: 3 };
         }
         if (unit.level === 3) {
-          const parentDistrict = unit.parentName || adminUnits.find((d) => d.id === unit.parentId)?.name;
           return {
             title: unit.name,
-            subtitle: parentDistrict ? parentDistrict : 'Phường / Xã',
+            subtitle: 'Xã / Phường',
             level: 3,
           };
         }
       }
     }
     if (user.adminUnitName) {
-      const cleaned = user.adminUnitName.replace(/\s*\(Cấp\s*\d+[^)]*\)|\s*\(\d+\)/gi, '').trim();
-      return { title: cleaned, subtitle: 'Địa bàn được phân công', level: 2 };
+      const cleaned = user.adminUnitName
+        .replace(/\s*\(Cấp\s*\d+[^)]*\)|\s*\(\d+\)/gi, '')
+        .replace(/^Quận\s+/i, 'Phường ')
+        .replace(/^Huyện\s+/i, 'Xã ')
+        .trim();
+      return { title: cleaned, subtitle: 'Xã / Phường', level: 3 };
     }
     return null;
   };
@@ -222,8 +237,8 @@ export const UsersPage: React.FC = () => {
       username: user.username,
       password: '',
       email: user.email,
-      fullName: user.fullName,
-      role: (user.role as AdminRoleType) || 'ROLE_COMMUNE_OFFICER',
+      fullName: formatOfficerFullName(user.fullName),
+      role: (user.role === 'ROLE_DISTRICT_OFFICER' ? 'ROLE_COMMUNE_OFFICER' : (user.role as AdminRoleType)) || 'ROLE_COMMUNE_OFFICER',
       adminUnitId: user.adminUnitId || '',
       phoneNumber: user.phoneNumber || '',
       enabled: user.enabled,
@@ -307,7 +322,15 @@ export const UsersPage: React.FC = () => {
   };
 
   const filteredUsers = users.filter((u) => {
-    if (selectedRole !== 'ALL' && u.role !== selectedRole) return false;
+    if (selectedRole !== 'ALL') {
+      if (selectedRole === 'ROLE_COMMUNE_OFFICER') {
+        if (u.role !== 'ROLE_COMMUNE_OFFICER' && u.role !== 'ROLE_DISTRICT_OFFICER') return false;
+      } else if (selectedRole === 'ROLE_SUPER_ADMIN') {
+        if (u.role !== 'ROLE_SUPER_ADMIN' && u.role !== 'ROLE_ADMIN' && u.role !== 'ROLE_VIETTEL_ENGINEER') return false;
+      } else if (u.role !== selectedRole) {
+        return false;
+      }
+    }
     if (selectedUnitFilter !== 'ALL') {
       const filterId = Number(selectedUnitFilter);
       if (!u.adminUnitId) return false;
@@ -473,7 +496,7 @@ export const UsersPage: React.FC = () => {
                   return (
                     <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="py-3.5 px-4">
-                        <div className="font-semibold text-gray-900">{user.fullName}</div>
+                        <div className="font-semibold text-gray-900">{formatOfficerFullName(user.fullName)}</div>
                         <div className="text-xs text-gray-500 font-mono">@{user.username}</div>
                       </td>
 
