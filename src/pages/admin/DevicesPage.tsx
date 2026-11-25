@@ -531,7 +531,7 @@ export const DevicesPage: React.FC = () => {
       {/* Tab 2: Infrastructure Devices — quản lý THEO ĐỊA ĐIỂM */}
       {activeTab === 'INFRASTRUCTURE' && (
         <>
-          <DeviceMonitoringTopology topology={topologyData} />
+          <DeviceMonitoringTopology topology={topologyData} showLocationCards={false} />
 
           {/* Thanh công cụ chung (luôn hiện) */}
           <div className="bg-white p-3.5 rounded border border-slate-300 shadow-xs flex flex-wrap gap-2.5 items-center">

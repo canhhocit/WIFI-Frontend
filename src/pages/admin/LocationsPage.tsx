@@ -67,6 +67,18 @@ export const LocationsPage: React.FC = () => {
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [locationGroups, setLocationGroups] = useState<LocationGroupDto[]>([]);
   const [devicesLocation, setDevicesLocation] = useState<LocationDto | null>(null);
+  // Thống kê địa điểm (chuyển từ trang Thiết bị sang đây): tổng / lỗi / hoạt động tốt.
+  const [locStats, setLocStats] = useState<{ total: number; error: number; good: number } | null>(null);
+  useEffect(() => {
+    adminApi.getOverview()
+      .then((o) => {
+        const t = o.topology;
+        const total = t?.totalLocations ?? 0;
+        const err = t?.errorLocations ?? 0;
+        setLocStats({ total, error: err, good: Math.max(0, total - err) });
+      })
+      .catch(() => { /* không chặn trang nếu lỗi thống kê */ });
+  }, []);
 
   useEffect(() => {
     const st = searchParams.get('status');
@@ -419,6 +431,39 @@ export const LocationsPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Thống kê địa điểm (chỉ hiển thị) */}
+      {locStats && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div className="bg-white p-4 rounded border border-slate-200 shadow-xs flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-full bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 flex-shrink-0">
+              <MapPin className="w-5 h-5 text-sky-600" />
+            </div>
+            <div>
+              <div className="text-xs text-slate-500 font-medium">Tổng điểm</div>
+              <div className="text-base font-bold text-slate-900 mt-0.5">{locStats.total} <span className="text-xs font-normal text-slate-600">địa điểm</span></div>
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded border border-slate-200 shadow-xs flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <div className="text-xs text-slate-500 font-medium">Điểm hoạt động tốt</div>
+              <div className="text-base font-bold text-slate-900 mt-0.5">{locStats.good} <span className="text-xs font-normal text-slate-600">địa điểm</span></div>
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded border border-slate-200 shadow-xs flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 flex-shrink-0">
+              <XCircle className="w-5 h-5 text-rose-500" />
+            </div>
+            <div>
+              <div className="text-xs text-slate-500 font-medium">Điểm lỗi</div>
+              <div className="text-base font-bold text-slate-900 mt-0.5">{locStats.error} <span className="text-xs font-normal text-slate-600">địa điểm</span></div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && <AlertBanner type="error" message={error} />}
 

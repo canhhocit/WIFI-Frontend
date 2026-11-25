@@ -32,6 +32,8 @@ interface DeviceMonitoringTopologyProps {
   topology?: DeviceTopologySummaryDto;
   onRefresh?: () => void;
   showSummaryCards?: boolean;
+  /** Hiện 2 thẻ địa điểm (Tổng/Lỗi). Trang Thiết bị đặt false — thống kê địa điểm đã nằm ở "Danh bạ Nhà văn hóa". */
+  showLocationCards?: boolean;
 }
 
 type ModalCategory = 'ROUTER' | 'SWITCH' | 'AP' | 'CLIENT' | 'ALL_DEVICES' | 'ERROR_DEVICES' | null;
@@ -40,6 +42,7 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
   topology,
   onRefresh,
   showSummaryCards = true,
+  showLocationCards = true,
 }) => {
   const navigate = useNavigate();
 
@@ -193,7 +196,8 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
       </div>
 
       {showSummaryCards && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 ${showLocationCards ? 'lg:grid-cols-4' : 'lg:grid-cols-2'} gap-3.5`}>
+        {showLocationCards && (<>
         {/* Card 1: Tổng địa điểm — tạm chỉ hiển thị, không click */}
         <div className="bg-white p-4 rounded border border-slate-200 shadow-xs flex items-center justify-between">
           <div className="flex items-center gap-3.5">
@@ -227,8 +231,9 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
             </div>
           </div>
         </div>
+        </>)}
 
-        {/* Card 3: Tổng thiết bị — tạm chỉ hiển thị, không click */}
+        {/* Card 3: Thiết bị hoạt động — tạm chỉ hiển thị, không click */}
         <div className="bg-white p-4 rounded border border-slate-200 shadow-xs flex items-center justify-between">
           <div className="flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-full bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 flex-shrink-0 group-hover:scale-105 transition-transform">
@@ -236,7 +241,7 @@ export const DeviceMonitoringTopology: React.FC<DeviceMonitoringTopologyProps> =
             </div>
             <div>
               <div className="text-xs text-slate-500 font-medium group-hover:text-[#004b87] transition-colors">
-                Tổng thiết bị
+                Thiết bị hoạt động
               </div>
               <div className="text-base font-bold text-slate-900 mt-0.5">
                 {totalDevices} <span className="text-xs font-normal text-slate-600">thiết bị</span>
