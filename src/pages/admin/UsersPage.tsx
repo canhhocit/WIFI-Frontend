@@ -20,6 +20,7 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { AdminUserDto, AdminUnitDto, CreateAdminUserRequest, UpdateAdminUserRequest, AdminRoleType } from '../../types/models';
 import { Pagination } from '../../components/Pagination';
+import { useRbac } from '../../utils/rbac';
 
 const ROLE_LABELS: Record<AdminRoleType, { label: string; color: string; desc: string }> = {
   ROLE_SUPER_ADMIN: {
@@ -55,6 +56,7 @@ const ROLE_LABELS: Record<AdminRoleType, { label: string; color: string; desc: s
 };
 
 export const UsersPage: React.FC = () => {
+  const { canCreate, canEdit, canDelete } = useRbac('USERS');
   const [users, setUsers] = useState<AdminUserDto[]>([]);
   const [adminUnits, setAdminUnits] = useState<AdminUnitDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -371,13 +373,15 @@ export const UsersPage: React.FC = () => {
             <RefreshCw className="w-4 h-4" />
             Làm mới
           </button>
-          <button
-            onClick={handleOpenCreate}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm transition-colors"
-          >
-            <UserPlus className="w-4 h-4" />
-            Thêm Cán bộ Mới
-          </button>
+          {canCreate && (
+            <button
+              onClick={handleOpenCreate}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm transition-colors"
+            >
+              <UserPlus className="w-4 h-4" />
+              Thêm Cán bộ Mới
+            </button>
+          )}
         </div>
       </div>
 
@@ -566,7 +570,7 @@ export const UsersPage: React.FC = () => {
 
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {user.locked && (
+                          {canEdit && user.locked && (
                             <button
                               onClick={() => handleUnlockUser(user)}
                               title="Mở khóa tài khoản cán bộ"
@@ -575,23 +579,27 @@ export const UsersPage: React.FC = () => {
                               <Unlock className="w-4 h-4" />
                             </button>
                           )}
-                          <button
-                            onClick={() => handleOpenEdit(user)}
-                            title="Sửa thông tin cán bộ"
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors cursor-pointer"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleToggleStatus(user)}
-                            title={user.enabled ? 'Vô hiệu hóa tài khoản' : 'Kích hoạt tài khoản'}
-                            className={`p-1.5 rounded-sm transition-colors cursor-pointer ${
-                              user.enabled ? 'text-gray-400 hover:text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'
-                            }`}
-                          >
-                            {user.enabled ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-                          </button>
-                          {user.username !== 'admin' && (
+                          {canEdit && (
+                            <>
+                              <button
+                                onClick={() => handleOpenEdit(user)}
+                                title="Sửa thông tin cán bộ"
+                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-sm transition-colors cursor-pointer"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleToggleStatus(user)}
+                                title={user.enabled ? 'Vô hiệu hóa tài khoản' : 'Kích hoạt tài khoản'}
+                                className={`p-1.5 rounded-sm transition-colors cursor-pointer ${
+                                  user.enabled ? 'text-gray-400 hover:text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'
+                                }`}
+                              >
+                                {user.enabled ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                              </button>
+                            </>
+                          )}
+                          {canDelete && user.username !== 'admin' && (
                             <button
                               onClick={() => handleDeleteUser(user)}
                               title="Xóa tài khoản cán bộ"
@@ -599,6 +607,9 @@ export const UsersPage: React.FC = () => {
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
+                          )}
+                          {!canEdit && !canDelete && (
+                            <span className="text-[11px] text-gray-400 italic">Chỉ xem</span>
                           )}
                         </div>
                       </td>

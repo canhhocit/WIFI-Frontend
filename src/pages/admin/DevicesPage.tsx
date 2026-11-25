@@ -37,8 +37,10 @@ import { NetworkDeviceImportModal } from '../../components/NetworkDeviceImportMo
 import { NetworkDeviceFormModal } from '../../components/NetworkDeviceFormModal';
 import { DeviceStatusBadge } from '../../components/DeviceStatusBadge';
 import { Pagination } from '../../components/Pagination';
+import { useRbac } from '../../utils/rbac';
 
 export const DevicesPage: React.FC = () => {
+  const { canCreate, canEdit } = useRbac('DEVICES');
   const [activeTab, setActiveTab] = useState<'CLIENT' | 'INFRASTRUCTURE'>('CLIENT');
 
   // Topology data
@@ -411,27 +413,31 @@ export const DevicesPage: React.FC = () => {
                           )}
                         </td>
                         <td className="py-2.5 px-4 text-right">
-                          <button
-                            onClick={() => handleToggleBlock(dev)}
-                            disabled={togglingId === dev.id}
-                            className={`px-2.5 py-1 rounded-sm font-bold text-xs transition cursor-pointer inline-flex items-center gap-1.5 ${
-                              dev.blocked
-                                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300'
-                            }`}
-                          >
-                            {togglingId === dev.id ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : dev.blocked ? (
-                              <>
-                                <ShieldCheck className="w-3.5 h-3.5" /> Bỏ chặn
-                              </>
-                            ) : (
-                              <>
-                                <ShieldAlert className="w-3.5 h-3.5" /> Chặn thiết bị
-                              </>
-                            )}
-                          </button>
+                          {canEdit ? (
+                            <button
+                              onClick={() => handleToggleBlock(dev)}
+                              disabled={togglingId === dev.id}
+                              className={`px-2.5 py-1 rounded-sm font-bold text-xs transition cursor-pointer inline-flex items-center gap-1.5 ${
+                                dev.blocked
+                                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                  : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300'
+                              }`}
+                            >
+                              {togglingId === dev.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : dev.blocked ? (
+                                <>
+                                  <ShieldCheck className="w-3.5 h-3.5" /> Bỏ chặn
+                                </>
+                              ) : (
+                                <>
+                                  <ShieldAlert className="w-3.5 h-3.5" /> Chặn thiết bị
+                                </>
+                              )}
+                            </button>
+                          ) : (
+                            <span className="text-[11px] text-slate-400 italic">Chỉ xem</span>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -515,29 +521,33 @@ export const DevicesPage: React.FC = () => {
               >
                 <Plus className="w-3.5 h-3.5" /> Thêm thiết bị
               </button>
-              <button
-                onClick={() => setImportOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-sm text-xs font-semibold transition cursor-pointer shadow-xs"
-                title="Import danh sách thiết bị bàn giao (MAC + S/N) từ file Excel/CSV"
-              >
-                <Upload className="w-3.5 h-3.5" /> Import danh sách thiết bị
-              </button>
-              <button
-                onClick={handleSyncGrandstream}
-                disabled={syncingGwn}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-700 hover:bg-sky-800 disabled:opacity-50 text-white rounded-sm text-xs font-semibold transition cursor-pointer shadow-xs"
-                title="Đồng bộ danh sách thiết bị Router và trạng thái thực tế từ Grandstream GDMS/GWN Cloud"
-              >
-                {syncingGwn ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Đang đồng bộ...
-                  </>
-                ) : (
-                  <>
-                    <RotateCw className="w-3.5 h-3.5" /> Đồng bộ từ Grandstream Cloud
-                  </>
-                )}
-              </button>
+              {canCreate && (
+                <button
+                  onClick={() => setImportOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-sm text-xs font-semibold transition cursor-pointer shadow-xs"
+                  title="Import danh sách thiết bị bàn giao (MAC + S/N) từ file Excel/CSV"
+                >
+                  <Upload className="w-3.5 h-3.5" /> Import danh sách thiết bị
+                </button>
+              )}
+              {canEdit && (
+                <button
+                  onClick={handleSyncGrandstream}
+                  disabled={syncingGwn}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-700 hover:bg-sky-800 disabled:opacity-50 text-white rounded-sm text-xs font-semibold transition cursor-pointer shadow-xs"
+                  title="Đồng bộ danh sách thiết bị Router và trạng thái thực tế từ Grandstream GDMS/GWN Cloud"
+                >
+                  {syncingGwn ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Đang đồng bộ...
+                    </>
+                  ) : (
+                    <>
+                      <RotateCw className="w-3.5 h-3.5" /> Đồng bộ từ Grandstream Cloud
+                    </>
+                  )}
+                </button>
+              )}
               <button
                 onClick={handleRefreshMeshStatus}
                 disabled={refreshingMesh}
@@ -661,7 +671,7 @@ export const DevicesPage: React.FC = () => {
                             >
                               <Users className="w-3.5 h-3.5 text-sky-600" /> {nd.deviceType === 'ACCESS_POINT' ? 'Chi tiết mesh' : 'Xem Client'}
                             </button>
-                            {(nd.deviceType === 'ROUTER' || (nd.vendor && nd.vendor.toLowerCase().includes('grandstream'))) && (
+                            {canEdit && (nd.deviceType === 'ROUTER' || (nd.vendor && nd.vendor.toLowerCase().includes('grandstream'))) && (
                               <button
                                 onClick={() => setDeviceToReboot(nd)}
                                 disabled={rebootingId === nd.id || nd.status === 'REBOOTING'}
@@ -691,16 +701,18 @@ export const DevicesPage: React.FC = () => {
                             >
                               <Edit2 className="w-3.5 h-3.5" /> {!nd.locationId ? 'Gán điểm' : 'Sửa'}
                             </button>
-                            <button
-                              onClick={() => {
-                                setSelectedDeviceForSwap(nd);
-                                setSwapModalOpen(true);
-                              }}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-sm text-xs font-semibold transition cursor-pointer"
-                              title="Hoán đổi phần cứng thay thế khi hỏng hóc tại cơ sở"
-                            >
-                              <Repeat className="w-3.5 h-3.5 text-amber-700" /> Thay thế thiết bị
-                            </button>
+                            {canEdit && (
+                              <button
+                                onClick={() => {
+                                  setSelectedDeviceForSwap(nd);
+                                  setSwapModalOpen(true);
+                                }}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-sm text-xs font-semibold transition cursor-pointer"
+                                title="Hoán đổi phần cứng thay thế khi hỏng hóc tại cơ sở"
+                              >
+                                <Repeat className="w-3.5 h-3.5 text-amber-700" /> Thay thế thiết bị
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

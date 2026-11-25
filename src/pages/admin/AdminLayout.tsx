@@ -363,20 +363,15 @@ export const AdminLayout: React.FC = () => {
           color: "bg-[#ee0033] text-white border-[#c4002b]",
         };
       case "ROLE_DISTRICT_OFFICER":
-        return {
-          label: "Cán bộ Quận/Huyện",
-          scope: currentUser?.adminUnitName || "Địa bàn Quận / Huyện",
-          color: "bg-slate-700 text-slate-100 border-slate-600",
-        };
       case "ROLE_COMMUNE_OFFICER":
         return {
-          label: "Cán bộ Phường/Xã",
-          scope: currentUser?.adminUnitName || "Cơ sở Phường / Xã",
+          label: "Cán bộ UBND Xã / Phường",
+          scope: currentUser?.adminUnitName?.replace(/^Quận\s+/i, "Phường ") || "Cơ sở Phường / Xã",
           color: "bg-slate-700 text-slate-100 border-slate-600",
         };
       case "ROLE_VIETTEL_ENGINEER":
         return {
-          label: "Kỹ sư Viettel",
+          label: "Quản trị hệ thống (Kỹ thuật)",
           scope: "Hạ tầng Viễn thông",
           color: "bg-[#c4002b] text-blue-100 border-blue-700",
         };
@@ -398,10 +393,17 @@ export const AdminLayout: React.FC = () => {
     if (userRole === "ROLE_SUPER_ADMIN" || userRole === "ROLE_ADMIN")
       return true;
 
+    const effectiveRole =
+      userRole === "ROLE_DISTRICT_OFFICER" ? "ROLE_COMMUNE_OFFICER" : userRole;
+
     if (permissions && permissions.length > 0) {
-      const match = permissions.find(
-        (p) => p.roleName === userRole && p.moduleName === module,
-      );
+      const match =
+        permissions.find(
+          (p) => p.roleName === effectiveRole && p.moduleName === module,
+        ) ||
+        permissions.find(
+          (p) => p.roleName === userRole && p.moduleName === module,
+        );
       if (match) {
         return Boolean(match.canView);
       }

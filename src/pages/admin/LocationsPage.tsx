@@ -32,6 +32,7 @@ import { LocationDevicesModal } from '../../components/LocationDevicesModal';
 import { ImageUploadInput } from '../../components/ImageUploadInput';
 import { DISTRICT_CENTERS } from '../../components/gis/LeafletGisMap';
 import { Pagination } from '../../components/Pagination';
+import { useRbac } from '../../utils/rbac';
 
 const toSlug = (text: string) => {
   return text
@@ -44,6 +45,7 @@ const toSlug = (text: string) => {
 };
 
 export const LocationsPage: React.FC = () => {
+  const { canCreate, canEdit, canDelete } = useRbac('LOCATIONS');
   const navigate = useNavigate();
   const [locations, setLocations] = useState<LocationDto[]>([]);
   const [districts, setDistricts] = useState<AdminUnitDto[]>([]);
@@ -377,39 +379,47 @@ export const LocationsPage: React.FC = () => {
               </>
             )}
           </button>
-          <button
-            onClick={() => setIsExcelModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-sm text-xs font-bold transition shadow-xs cursor-pointer"
-            title="Nhập hàng loạt điểm phát từ file Excel"
-          >
-            <Download className="w-3.5 h-3.5" /> Nhập Excel các điểm
-          </button>
-          <button
-            onClick={() => setIsMergeModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-sm text-xs font-bold transition shadow-xs cursor-pointer"
-            title="Sáp nhập đơn vị hành chính và điều chuyển điểm Wi-Fi"
-          >
-            <GitMerge className="w-3.5 h-3.5 text-indigo-200" /> Sáp Nhập Địa Bàn
-          </button>
-          <button
-            onClick={() => setIsGroupModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-700 hover:bg-sky-800 text-white rounded-sm text-xs font-bold transition shadow-xs cursor-pointer"
-            title="Quản lý các nhóm điểm tùy biến ngoài ranh giới địa chính"
-          >
-            <Tag className="w-3.5 h-3.5 text-sky-200" /> Nhóm Tùy Biến
-          </button>
+          {canCreate && (
+            <button
+              onClick={() => setIsExcelModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-sm text-xs font-bold transition shadow-xs cursor-pointer"
+              title="Nhập hàng loạt điểm phát từ file Excel"
+            >
+              <Download className="w-3.5 h-3.5" /> Nhập Excel các điểm
+            </button>
+          )}
+          {canEdit && (
+            <>
+              <button
+                onClick={() => setIsMergeModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-sm text-xs font-bold transition shadow-xs cursor-pointer"
+                title="Sáp nhập đơn vị hành chính và điều chuyển điểm Wi-Fi"
+              >
+                <GitMerge className="w-3.5 h-3.5 text-indigo-200" /> Sáp Nhập Địa Bàn
+              </button>
+              <button
+                onClick={() => setIsGroupModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-700 hover:bg-sky-800 text-white rounded-sm text-xs font-bold transition shadow-xs cursor-pointer"
+                title="Quản lý các nhóm điểm tùy biến ngoài ranh giới địa chính"
+              >
+                <Tag className="w-3.5 h-3.5 text-sky-200" /> Nhóm Tùy Biến
+              </button>
+            </>
+          )}
           <button
             onClick={loadLocations}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-slate-50 bg-white rounded-sm text-xs font-semibold text-slate-700 transition shadow-xs cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" /> Làm mới
           </button>
-          <button
-            onClick={handleOpenCreate}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition shadow-xs cursor-pointer"
-          >
-            <Plus className="w-4 h-4" /> Thêm điểm phát
-          </button>
+          {canCreate && (
+            <button
+              onClick={handleOpenCreate}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition shadow-xs cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Thêm điểm phát
+            </button>
+          )}
         </div>
       </div>
 
@@ -717,20 +727,24 @@ export const LocationsPage: React.FC = () => {
                       >
                         <MapPin className="w-4 h-4 text-blue-600" />
                       </button>
-                      <button
-                        onClick={() => handleOpenEdit(loc)}
-                        className="p-1 text-slate-500 hover:text-amber-700 hover:bg-amber-50 rounded-sm transition cursor-pointer"
-                        title="Chỉnh sửa thông tin"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setDeletingLocation(loc)}
-                        className="p-1 text-slate-500 hover:text-rose-700 hover:bg-rose-50 rounded-sm transition cursor-pointer"
-                        title="Xóa điểm phát"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {canEdit && (
+                        <button
+                          onClick={() => handleOpenEdit(loc)}
+                          className="p-1 text-slate-500 hover:text-amber-700 hover:bg-amber-50 rounded-sm transition cursor-pointer"
+                          title="Chỉnh sửa thông tin"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          onClick={() => setDeletingLocation(loc)}
+                          className="p-1 text-slate-500 hover:text-rose-700 hover:bg-rose-50 rounded-sm transition cursor-pointer"
+                          title="Xóa điểm phát"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

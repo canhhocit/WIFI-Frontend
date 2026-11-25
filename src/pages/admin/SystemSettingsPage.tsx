@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { SystemSettingDto } from '../../types/models';
+import { useRbac } from '../../utils/rbac';
 
 const FRIENDLY_NAMES: Record<string, { title: string; unit?: string }> = {
   'network.ntp.server': { title: 'Máy chủ đồng bộ thời gian NTP', unit: 'FQDN / IP' },
@@ -27,6 +28,7 @@ const FRIENDLY_NAMES: Record<string, { title: string; unit?: string }> = {
 };
 
 export const SystemSettingsPage: React.FC = () => {
+  const { canCreate, canEdit } = useRbac('SETTINGS');
   const [settings, setSettings] = useState<SystemSettingDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>('ALL');
@@ -157,13 +159,15 @@ export const SystemSettingsPage: React.FC = () => {
             <RefreshCw className="w-4 h-4" />
             Làm mới
           </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm transition-colors cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            Thêm Tham Số
-          </button>
+          {(canCreate || canEdit) && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Thêm Tham Số
+            </button>
+          )}
         </div>
       </div>
 
@@ -254,9 +258,10 @@ export const SystemSettingsPage: React.FC = () => {
                     </label>
                     <input
                       type="text"
+                      disabled={!canEdit}
                       value={formData[item.settingKey] ?? ''}
                       onChange={(e) => handleChange(item.settingKey, e.target.value)}
-                      className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                      className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono disabled:opacity-60"
                     />
                   </div>
                 </div>
@@ -265,14 +270,18 @@ export const SystemSettingsPage: React.FC = () => {
                   <span className="text-[11px] text-gray-400">
                     Cập nhật: {item.updatedAt ? new Date(item.updatedAt).toLocaleString('vi-VN') : 'Mặc định'}
                   </span>
-                  <button
-                    onClick={() => handleSaveSetting(item)}
-                    disabled={savingKey === item.settingKey}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-sm shadow-xs transition-colors cursor-pointer"
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                    {savingKey === item.settingKey ? 'Đang lưu...' : 'Lưu Thay Đổi'}
-                  </button>
+                  {canEdit ? (
+                    <button
+                      onClick={() => handleSaveSetting(item)}
+                      disabled={savingKey === item.settingKey}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-sm shadow-xs transition-colors cursor-pointer"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      {savingKey === item.settingKey ? 'Đang lưu...' : 'Lưu Thay Đổi'}
+                    </button>
+                  ) : (
+                    <span className="text-[11px] text-gray-400 italic">Chỉ xem</span>
+                  )}
                 </div>
               </div>
             );

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { adminApi } from '../../api/adminApi';
 import { Pagination } from '../../components/Pagination';
+import { useRbac } from '../../utils/rbac';
 import {
   IncidentTicketDto,
   IncidentSeverity,
@@ -134,6 +135,7 @@ const CITIZEN_ISSUE_LABELS: Record<string, { text: string; color: string }> = {
 };
 
 export const IncidentsPage: React.FC = () => {
+  const { canCreate, canEdit, canApprove } = useRbac('INCIDENTS');
   const [searchParams] = useSearchParams();
   const preselectedLocationId = searchParams.get('createLocationId');
 
@@ -446,13 +448,15 @@ export const IncidentsPage: React.FC = () => {
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             Làm mới
           </button>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-sm shadow-sm cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            Báo cáo sự cố mới
-          </button>
+          {canCreate && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-sm shadow-sm cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Báo cáo sự cố mới
+            </button>
+          )}
         </div>
       </div>
 
@@ -672,7 +676,7 @@ export const IncidentsPage: React.FC = () => {
                             </button>
 
                             {/* Phân công (khi phiếu mới) */}
-                            {(t.status === 'OPEN' || t.status === 'NEW') && (
+                            {(canEdit || canApprove) && (t.status === 'OPEN' || t.status === 'NEW') && (
                               <button
                                 type="button"
                                 onClick={() => {
@@ -686,7 +690,7 @@ export const IncidentsPage: React.FC = () => {
                             )}
 
                             {/* Khắc phục & Điều phối lại (khi đang xử lý) */}
-                            {(t.status === 'ASSIGNED' || t.status === 'IN_PROGRESS') && (
+                            {(canEdit || canApprove) && (t.status === 'ASSIGNED' || t.status === 'IN_PROGRESS') && (
                               <>
                                 <button
                                   type="button"
@@ -714,7 +718,7 @@ export const IncidentsPage: React.FC = () => {
                             )}
 
                             {/* Đóng phiếu & Mở lại (khi đã khắc phục) */}
-                            {t.status === 'RESOLVED' && (
+                            {(canApprove || canEdit) && t.status === 'RESOLVED' && (
                               <>
                                 <button
                                   type="button"
@@ -742,7 +746,7 @@ export const IncidentsPage: React.FC = () => {
                             )}
 
                             {/* Mở lại khi đã đóng */}
-                            {t.status === 'CLOSED' && (
+                            {(canApprove || canEdit) && t.status === 'CLOSED' && (
                               <button
                                 type="button"
                                 onClick={() => {

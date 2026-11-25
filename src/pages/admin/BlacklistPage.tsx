@@ -13,8 +13,10 @@ import {
   AlertOctagon
 } from 'lucide-react';
 import { Pagination } from '../../components/Pagination';
+import { useRbac } from '../../utils/rbac';
 
 export const BlacklistPage: React.FC = () => {
+  const { canCreate, canEdit, canDelete } = useRbac('INCIDENTS');
   const [blacklist, setBlacklist] = useState<MacBlacklistDto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
@@ -128,13 +130,15 @@ export const BlacklistPage: React.FC = () => {
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             Làm mới
           </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-sm shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Chặn địa chỉ MAC mới
-          </button>
+          {canCreate && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-sm shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Chặn địa chỉ MAC mới
+            </button>
+          )}
         </div>
       </div>
 
@@ -256,12 +260,16 @@ export const BlacklistPage: React.FC = () => {
                     </td>
                     <td className="px-4 py-3 text-right">
                       {item.active ? (
-                        <button
-                          onClick={() => handleUnblock(item.id, item.macAddress)}
-                          className="px-2.5 py-1 text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded text-[11px] font-medium"
-                        >
-                          Gỡ chặn
-                        </button>
+                        canDelete || canEdit ? (
+                          <button
+                            onClick={() => handleUnblock(item.id, item.macAddress)}
+                            className="px-2.5 py-1 text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded text-[11px] font-medium"
+                          >
+                            Gỡ chặn
+                          </button>
+                        ) : (
+                          <span className="text-gray-400 text-[11px] italic">Chỉ xem</span>
+                        )
                       ) : (
                         <span className="text-gray-400 text-[11px] italic">Bình thường</span>
                       )}

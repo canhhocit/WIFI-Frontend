@@ -17,8 +17,10 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { DnsDomainRuleDto, CreateDnsDomainRuleRequest } from '../../types/models';
 import { Pagination } from '../../components/Pagination';
+import { useRbac } from '../../utils/rbac';
 
 export const DnsFilteringPage: React.FC = () => {
+  const { canCreate, canEdit, canDelete } = useRbac('CAMPAIGNS');
   const [rules, setRules] = useState<DnsDomainRuleDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [ruleTypeFilter, setRuleTypeFilter] = useState<'ALL' | 'WHITELIST' | 'BLOCKLIST'>('ALL');
@@ -171,13 +173,15 @@ export const DnsFilteringPage: React.FC = () => {
             <RefreshCw className="w-4 h-4" />
             Làm mới
           </button>
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Thêm Tên miền
-          </button>
+          {canCreate && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-sm shadow-sm transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Thêm Tên miền
+            </button>
+          )}
         </div>
       </div>
 
@@ -317,29 +321,38 @@ export const DnsFilteringPage: React.FC = () => {
 
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => openEditModal(rule)}
-                            title="Chỉnh sửa quy tắc"
-                            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-sm transition-colors cursor-pointer"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleToggle(rule)}
-                            title={rule.active ? 'Tạm dừng quy tắc' : 'Kích hoạt quy tắc'}
-                            className={`p-1.5 rounded-sm transition-colors cursor-pointer ${
-                              rule.active ? 'text-emerald-600 hover:bg-emerald-50' : 'text-gray-400 hover:text-emerald-600'
-                            }`}
-                          >
-                            {rule.active ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
-                          </button>
-                          <button
-                            onClick={() => handleDelete(rule)}
-                            title="Xóa quy tắc tên miền"
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-sm transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {canEdit && (
+                            <>
+                              <button
+                                onClick={() => openEditModal(rule)}
+                                title="Chỉnh sửa quy tắc"
+                                className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-sm transition-colors cursor-pointer"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleToggle(rule)}
+                                title={rule.active ? 'Tạm dừng quy tắc' : 'Kích hoạt quy tắc'}
+                                className={`p-1.5 rounded-sm transition-colors cursor-pointer ${
+                                  rule.active ? 'text-emerald-600 hover:bg-emerald-50' : 'text-gray-400 hover:text-emerald-600'
+                                }`}
+                              >
+                                {rule.active ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                              </button>
+                            </>
+                          )}
+                          {canDelete && (
+                            <button
+                              onClick={() => handleDelete(rule)}
+                              title="Xóa quy tắc tên miền"
+                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-sm transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                          {!canEdit && !canDelete && (
+                            <span className="text-[11px] text-gray-400 italic">Chỉ xem</span>
+                          )}
                         </div>
                       </td>
                     </tr>

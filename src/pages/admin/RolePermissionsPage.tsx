@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { RolePermissionDto } from '../../types/models';
+import { useRbac } from '../../utils/rbac';
 
 const MODULES = [
   { key: 'LOCATIONS', label: '1. Điểm phát Wi-Fi' },
@@ -29,6 +30,8 @@ const ROLES = [
 ];
 
 export const RolePermissionsPage: React.FC = () => {
+  const { canEdit: canEditUsers, canApprove: canApproveUsers, isSuperAdmin } = useRbac('USERS');
+  const canModifyMatrix = isSuperAdmin || canEditUsers || canApproveUsers;
   const [permissions, setPermissions] = useState<RolePermissionDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);  
@@ -58,6 +61,18 @@ export const RolePermissionsPage: React.FC = () => {
   }, []);
 
   const getPerm = (role: string, module: string): RolePermissionDto => {
+    if (role === 'ROLE_SUPER_ADMIN') {
+      return {
+        id: 0,
+        roleName: role,
+        moduleName: module,
+        canView: true,
+        canCreate: true,
+        canEdit: true,
+        canDelete: true,
+        canApprove: true,
+      };
+    }
     const found = permissions.find((p) => p.roleName === role && p.moduleName === module);
     if (found) return found;
     return {
@@ -154,14 +169,16 @@ export const RolePermissionsPage: React.FC = () => {
             <RefreshCw className="w-4 h-4" />
             Làm mới
           </button>
-          <button
-            onClick={handleSaveRole}
-            disabled={saving || selectedRole === 'ROLE_SUPER_ADMIN'}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-sm shadow-sm transition-colors"
-          >
-            <Save className="w-4 h-4" />
-            {saving ? 'Đang lưu...' : 'Lưu Quyền Hạn'}
-          </button>
+          {canModifyMatrix && (
+            <button
+              onClick={handleSaveRole}
+              disabled={saving || selectedRole === 'ROLE_SUPER_ADMIN'}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-sm shadow-sm transition-colors"
+            >
+              <Save className="w-4 h-4" />
+              {saving ? 'Đang lưu...' : 'Lưu Quyền Hạn'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -225,7 +242,7 @@ export const RolePermissionsPage: React.FC = () => {
           <tbody className="divide-y divide-gray-100">
             {MODULES.map((mod) => {
               const perm = getPerm(selectedRole, mod.key);
-              const isSuper = selectedRole === 'ROLE_SUPER_ADMIN';
+              const isSuper = selectedRole === 'ROLE_SUPER_ADMIN' || !canModifyMatrix;
 
               return (
                 <tr key={mod.key} className="hover:bg-gray-50/50 transition-colors">

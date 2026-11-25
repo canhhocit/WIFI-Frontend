@@ -40,8 +40,10 @@ import { MultiImageUploadInput } from '../../components/MultiImageUploadInput';
 import { VideoUploadInput } from '../../components/VideoUploadInput';
 import { VietnamFlag } from '../../components/VietnamFlag';
 import { Pagination } from '../../components/Pagination';
+import { useRbac } from '../../utils/rbac';
 
 export const CampaignsPage: React.FC = () => {
+  const { canCreate, canEdit, canDelete, canApprove } = useRbac('CAMPAIGNS');
   const [campaigns, setCampaigns] = useState<CampaignDto[]>([]);
   const [locations, setLocations] = useState<LocationDto[]>([]);
   const [adminUnits, setAdminUnits] = useState<AdminUnitDto[]>([]);
@@ -365,15 +367,17 @@ export const CampaignsPage: React.FC = () => {
             <Eye className="w-3.5 h-3.5 text-[#004b87]" />
             Thiết kế / xem trước cổng
           </Link>
-          <button
-            onClick={() => {
-              resetFormData();
-              setIsCreateOpen(true);
-            }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition shadow-xs cursor-pointer"
-          >
-            <Plus className="w-4 h-4" /> Tạo chiến dịch mới
-          </button>
+          {canCreate && (
+            <button
+              onClick={() => {
+                resetFormData();
+                setIsCreateOpen(true);
+              }}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition shadow-xs cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Tạo chiến dịch mới
+            </button>
+          )}
         </div>
       </div>
 
@@ -584,17 +588,19 @@ export const CampaignsPage: React.FC = () => {
                     >
                       <Eye className="w-3 h-3" /> Xem trước
                     </button>
-                    <button
-                      onClick={() => openEdit(c)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-sm font-semibold transition cursor-pointer"
-                      title="Chỉnh sửa chiến dịch"
-                    >
-                      <Edit3 className="w-3 h-3" /> Sửa
-                    </button>
+                    {canEdit && (
+                      <button
+                        onClick={() => openEdit(c)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-sm font-semibold transition cursor-pointer"
+                        title="Chỉnh sửa chiến dịch"
+                      >
+                        <Edit3 className="w-3 h-3" /> Sửa
+                      </button>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-1">
-                    {(c.status === 'DRAFT' || c.status === 'REJECTED') && (
+                    {canEdit && (c.status === 'DRAFT' || c.status === 'REJECTED') && (
                       <button
                         onClick={() => handleSubmitForApproval(c.id)}
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-[#003865] border border-sky-200 rounded-sm font-bold transition cursor-pointer"
@@ -604,7 +610,7 @@ export const CampaignsPage: React.FC = () => {
                       </button>
                     )}
 
-                    {c.status === 'PENDING_APPROVAL' && (
+                    {canApprove && c.status === 'PENDING_APPROVAL' && (
                       <>
                         <button
                           onClick={() => setActionCampaign({ c, action: 'APPROVE' })}
@@ -623,13 +629,15 @@ export const CampaignsPage: React.FC = () => {
                       </>
                     )}
 
-                    <button
-                      onClick={() => handleDeleteCampaign(c.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-sm transition cursor-pointer"
-                      title="Xóa chiến dịch"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {canDelete && (
+                      <button
+                        onClick={() => handleDeleteCampaign(c.id)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-sm transition cursor-pointer"
+                        title="Xóa chiến dịch"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -748,15 +756,17 @@ export const CampaignsPage: React.FC = () => {
                         <Eye className="w-3 h-3" /> Xem trước
                       </button>
 
-                      <button
-                        onClick={() => openEdit(c)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-sm text-xs font-semibold transition cursor-pointer"
-                        title="Chỉnh sửa"
-                      >
-                        <Edit3 className="w-3 h-3" /> Sửa
-                      </button>
+                      {canEdit && (
+                        <button
+                          onClick={() => openEdit(c)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-sm text-xs font-semibold transition cursor-pointer"
+                          title="Chỉnh sửa"
+                        >
+                          <Edit3 className="w-3 h-3" /> Sửa
+                        </button>
+                      )}
 
-                      {(c.status === 'DRAFT' || c.status === 'REJECTED') && (
+                      {canEdit && (c.status === 'DRAFT' || c.status === 'REJECTED') && (
                         <button
                           onClick={() => handleSubmitForApproval(c.id)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-[#003865] border border-sky-200 rounded-sm text-xs font-bold transition cursor-pointer"
@@ -766,7 +776,7 @@ export const CampaignsPage: React.FC = () => {
                         </button>
                       )}
 
-                      {c.status === 'PENDING_APPROVAL' && (
+                      {canApprove && c.status === 'PENDING_APPROVAL' && (
                         <>
                           <button
                             onClick={() => setActionCampaign({ c, action: 'APPROVE' })}
@@ -785,13 +795,15 @@ export const CampaignsPage: React.FC = () => {
                         </>
                       )}
 
-                      <button
-                        onClick={() => handleDeleteCampaign(c.id)}
-                        className="inline-flex items-center p-1 text-slate-400 hover:text-rose-600 rounded-sm transition cursor-pointer"
-                        title="Xóa"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {canDelete && (
+                        <button
+                          onClick={() => handleDeleteCampaign(c.id)}
+                          className="inline-flex items-center p-1 text-slate-400 hover:text-rose-600 rounded-sm transition cursor-pointer"
+                          title="Xóa"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

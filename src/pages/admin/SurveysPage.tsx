@@ -45,6 +45,7 @@ import {
 import { Modal } from '../../components/Modal';
 import { AlertBanner } from '../../components/AlertBanner';
 import { Pagination } from '../../components/Pagination';
+import { useRbac } from '../../utils/rbac';
 
 type SurveyQuestionDraft = {
   draftId: number;
@@ -56,6 +57,7 @@ type SurveyQuestionDraft = {
 };
 
 export const SurveysPage: React.FC = () => {
+  const { canCreate, canEdit, canDelete } = useRbac('CAMPAIGNS');
   const [surveys, setSurveys] = useState<SurveyDto[]>([]);
   const [campaigns, setCampaigns] = useState<CampaignDto[]>([]);
   const [locations, setLocations] = useState<LocationDto[]>([]);
@@ -436,12 +438,14 @@ export const SurveysPage: React.FC = () => {
           >
             <RefreshCw className="w-3.5 h-3.5" /> Làm mới
           </button>
-          <button
-            onClick={() => setIsCreateOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition shadow-sm shadow-sky-600/20 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" /> Tạo bài khảo sát mới
-          </button>
+          {canCreate && (
+            <button
+              onClick={() => setIsCreateOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#004b87] hover:bg-[#003865] text-white rounded-sm text-xs font-bold transition shadow-sm shadow-sky-600/20 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Tạo bài khảo sát mới
+            </button>
+          )}
         </div>
       </div>
 
@@ -525,8 +529,11 @@ export const SurveysPage: React.FC = () => {
 
                       <td className="py-3.5 px-4">
                         <button
-                          onClick={() => handleToggleSurvey(s)}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold transition cursor-pointer ${
+                          onClick={canEdit ? () => handleToggleSurvey(s) : undefined}
+                          disabled={!canEdit}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold transition ${
+                            canEdit ? 'cursor-pointer' : 'cursor-default opacity-80'
+                          } ${
                             s.active
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
                               : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200'
@@ -552,13 +559,15 @@ export const SurveysPage: React.FC = () => {
                             <span>Xem kết quả & Phân tích</span>
                           </button>
 
-                          <button
-                            onClick={() => handleDeleteSurvey(s)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition cursor-pointer"
-                            title="Xóa khảo sát"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {canDelete && (
+                            <button
+                              onClick={() => handleDeleteSurvey(s)}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition cursor-pointer"
+                              title="Xóa khảo sát"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
