@@ -83,7 +83,7 @@ export const LoginPage: React.FC = () => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-[#ee0033] focus:ring-2 focus:ring-red-100 text-slate-900 font-mono transition"
-                placeholder="vd: admin hoặc viettel_tech01"
+                placeholder="vd: admin hoặc sotttt_admin"
                 required
               />
             </div>

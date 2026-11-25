@@ -43,11 +43,6 @@ const ROLE_LABELS: Record<AdminRoleType, { label: string; color: string; desc: s
     color: 'bg-teal-100 text-teal-800 border-teal-200',
     desc: 'Theo dõi tình hình hoạt động trạm Wi-Fi Nhà văn hóa cơ sở',
   },
-  ROLE_VIETTEL_ENGINEER: {
-    label: 'Quản trị hệ thống (Kỹ thuật)',
-    color: 'bg-amber-100 text-amber-800 border-amber-200',
-    desc: 'Kỹ thuật vận hành, cấu hình thiết bị, xử lý sự cố viễn thông',
-  },
   ROLE_ADMIN: {
     label: 'Quản trị hệ thống (Admin)',
     color: 'bg-purple-100 text-purple-800 border-purple-200',
@@ -328,7 +323,7 @@ export const UsersPage: React.FC = () => {
       if (selectedRole === 'ROLE_COMMUNE_OFFICER') {
         if (u.role !== 'ROLE_COMMUNE_OFFICER' && u.role !== 'ROLE_DISTRICT_OFFICER') return false;
       } else if (selectedRole === 'ROLE_SUPER_ADMIN') {
-        if (u.role !== 'ROLE_SUPER_ADMIN' && u.role !== 'ROLE_ADMIN' && u.role !== 'ROLE_VIETTEL_ENGINEER') return false;
+        if (u.role !== 'ROLE_SUPER_ADMIN' && u.role !== 'ROLE_ADMIN') return false;
       } else if (u.role !== selectedRole) {
         return false;
       }

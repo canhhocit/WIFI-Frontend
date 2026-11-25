@@ -371,12 +371,6 @@ export const AdminLayout: React.FC = () => {
           scope: currentUser?.adminUnitName?.replace(/^Quận\s+/i, "Phường ") || "Cơ sở Phường / Xã",
           color: "bg-slate-700 text-slate-100 border-slate-600",
         };
-      case "ROLE_VIETTEL_ENGINEER":
-        return {
-          label: "Quản trị hệ thống (Kỹ thuật)",
-          scope: "Hạ tầng Viễn thông",
-          color: "bg-[#c4002b] text-blue-100 border-blue-700",
-        };
       default:
         return {
           label: "Cán bộ Vận hành",
