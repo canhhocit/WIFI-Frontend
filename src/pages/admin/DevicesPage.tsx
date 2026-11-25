@@ -514,6 +514,11 @@ export const DevicesPage: React.FC = () => {
     ? 'Thiết bị chưa gán điểm'
     : selectedLoc?.name || '';
 
+  // Tạm thời ẩn các bản ghi AP nhập tay (ACCESS_POINT / AP) khỏi bảng thiết bị vì AP đã được theo dõi tự động qua "AP theo cổng GWN".
+  const visibleLocDevices = locDevices.filter(
+    (nd) => nd.deviceType !== 'ACCESS_POINT' && nd.deviceType !== 'AP'
+  );
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Title */}
@@ -783,7 +788,6 @@ export const DevicesPage: React.FC = () => {
                         className={`rounded border px-3 py-2 flex items-center justify-between ${p.status === 'ONLINE' ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50'}`}>
                         <div>
                           <div className="text-xs font-semibold text-slate-700">{p.label}</div>
-                          {p.meshName && <div className="text-[11px] text-slate-500">{p.meshName}</div>}
                           {p.status === 'ONLINE' && locClients.length > 0 && (
                             <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
                               <Users className="w-3 h-3 text-slate-400" /> {nClients} client
@@ -859,14 +863,14 @@ export const DevicesPage: React.FC = () => {
                             Đang tải thiết bị...
                           </td>
                         </tr>
-                      ) : locDevices.length === 0 ? (
+                      ) : visibleLocDevices.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="py-12 text-center text-slate-400">
                             {viewUnassigned ? 'Không có thiết bị nào chưa gán điểm.' : 'Địa điểm này chưa có thiết bị mạng nào.'}
                           </td>
                         </tr>
                       ) : (
-                        locDevices.map((nd) => renderDeviceRow(nd))
+                        visibleLocDevices.map((nd) => renderDeviceRow(nd))
                       )}
                     </tbody>
                   </table>
