@@ -411,28 +411,25 @@ export const AdminLayout: React.FC = () => {
         return true;
       case "DEVICES":
         return (
-          userRole === "ROLE_VIETTEL_ENGINEER" ||
-          userRole === "ROLE_SOTTTT_ADMIN"
+          effectiveRole === "ROLE_VIETTEL_ENGINEER" ||
+          effectiveRole === "ROLE_SOTTTT_ADMIN" ||
+          effectiveRole === "ROLE_COMMUNE_OFFICER"
         );
       case "CAMPAIGNS":
         return (
-          userRole === "ROLE_SOTTTT_ADMIN" ||
-          userRole === "ROLE_DISTRICT_OFFICER" ||
-          userRole === "ROLE_COMMUNE_OFFICER"
+          effectiveRole === "ROLE_SOTTTT_ADMIN" ||
+          effectiveRole === "ROLE_COMMUNE_OFFICER"
         );
       case "INCIDENTS":
         return (
-          userRole === "ROLE_VIETTEL_ENGINEER" ||
-          userRole === "ROLE_SOTTTT_ADMIN" ||
-          userRole === "ROLE_DISTRICT_OFFICER"
+          effectiveRole === "ROLE_VIETTEL_ENGINEER" ||
+          effectiveRole === "ROLE_SOTTTT_ADMIN" ||
+          effectiveRole === "ROLE_COMMUNE_OFFICER"
         );
       case "USERS":
-        return userRole === "ROLE_SOTTTT_ADMIN";
+        return effectiveRole === "ROLE_SOTTTT_ADMIN";
       case "SETTINGS":
-        return (
-          userRole === "ROLE_SOTTTT_ADMIN" ||
-          userRole === "ROLE_DISTRICT_OFFICER"
-        );
+        return effectiveRole === "ROLE_SOTTTT_ADMIN";
       default:
         return true;
     }
