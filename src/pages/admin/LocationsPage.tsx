@@ -953,46 +953,52 @@ export const LocationsPage: React.FC = () => {
 
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
+            <div className="flex flex-col">
               <label className="block text-xs font-bold text-slate-700 mb-1">Thời lượng phiên (phút)</label>
-              <input
-                type="number"
-                min="1"
-                max="1440"
-                value={formData.sessionDurationMinutes}
-                onChange={(e) => setFormData({ ...formData, sessionDurationMinutes: Number(e.target.value) })}
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
-                required
-              />
-              <span className="text-[10px] text-slate-500 mt-0.5 block">Hết giờ tự động ngắt</span>
+              <div className="mt-auto">
+                <input
+                  type="number"
+                  min="1"
+                  max="1440"
+                  value={formData.sessionDurationMinutes}
+                  onChange={(e) => setFormData({ ...formData, sessionDurationMinutes: Number(e.target.value) })}
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
+                  required
+                />
+                <span className="text-[10px] text-slate-500 mt-0.5 block">Hết giờ tự động ngắt</span>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Giới hạn băng thông (Mbps)</label>
-              <input
-                type="number"
-                min="1"
-                max="500"
-                value={formData.maxBandwidthMbps}
-                onChange={(e) => setFormData({ ...formData, maxBandwidthMbps: Number(e.target.value) })}
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
-                required
-              />
-              <span className="text-[10px] text-slate-500 mt-0.5 block">Tốc độ tối đa mỗi máy</span>
+            <div className="flex flex-col">
+              <label className="block text-xs font-bold text-slate-700 mb-1">Băng thông (Mbps)</label>
+              <div className="mt-auto">
+                <input
+                  type="number"
+                  min="1"
+                  max="500"
+                  value={formData.maxBandwidthMbps}
+                  onChange={(e) => setFormData({ ...formData, maxBandwidthMbps: Number(e.target.value) })}
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
+                  required
+                />
+                <span className="text-[10px] text-slate-500 mt-0.5 block">Tốc độ tối đa mỗi máy</span>
+              </div>
             </div>
 
-            <div>
+            <div className="flex flex-col">
               <label className="block text-xs font-bold text-slate-700 mb-1">Giới hạn tải (Users)</label>
-              <input
-                type="number"
-                min="1"
-                max="10000"
-                value={formData.maxConcurrentUsers}
-                onChange={(e) => setFormData({ ...formData, maxConcurrentUsers: Number(e.target.value) })}
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
-                required
-              />
-              <span className="text-[10px] text-slate-500 mt-0.5 block">Số máy truy cập đồng thời</span>
+              <div className="mt-auto">
+                <input
+                  type="number"
+                  min="1"
+                  max="10000"
+                  value={formData.maxConcurrentUsers}
+                  onChange={(e) => setFormData({ ...formData, maxConcurrentUsers: Number(e.target.value) })}
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
+                  required
+                />
+                <span className="text-[10px] text-slate-500 mt-0.5 block">Số máy truy cập đồng thời</span>
+              </div>
             </div>
           </div>
 
@@ -1184,46 +1190,52 @@ export const LocationsPage: React.FC = () => {
 
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
+            <div className="flex flex-col">
               <label className="block text-xs font-bold text-slate-700 mb-1">Thời lượng phiên (phút)</label>
-              <input
-                type="number"
-                min="1"
-                max="1440"
-                value={formData.sessionDurationMinutes}
-                onChange={(e) => setFormData({ ...formData, sessionDurationMinutes: Number(e.target.value) })}
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
-                required
-              />
-              <span className="text-[10px] text-slate-500 mt-0.5 block">Hết giờ tự động ngắt</span>
+              <div className="mt-auto">
+                <input
+                  type="number"
+                  min="1"
+                  max="1440"
+                  value={formData.sessionDurationMinutes}
+                  onChange={(e) => setFormData({ ...formData, sessionDurationMinutes: Number(e.target.value) })}
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
+                  required
+                />
+                <span className="text-[10px] text-slate-500 mt-0.5 block">Hết giờ tự động ngắt</span>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Giới hạn băng thông (Mbps)</label>
-              <input
-                type="number"
-                min="1"
-                max="500"
-                value={formData.maxBandwidthMbps}
-                onChange={(e) => setFormData({ ...formData, maxBandwidthMbps: Number(e.target.value) })}
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
-                required
-              />
-              <span className="text-[10px] text-slate-500 mt-0.5 block">Tốc độ tối đa mỗi máy</span>
+            <div className="flex flex-col">
+              <label className="block text-xs font-bold text-slate-700 mb-1">Băng thông (Mbps)</label>
+              <div className="mt-auto">
+                <input
+                  type="number"
+                  min="1"
+                  max="500"
+                  value={formData.maxBandwidthMbps}
+                  onChange={(e) => setFormData({ ...formData, maxBandwidthMbps: Number(e.target.value) })}
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
+                  required
+                />
+                <span className="text-[10px] text-slate-500 mt-0.5 block">Tốc độ tối đa mỗi máy</span>
+              </div>
             </div>
 
-            <div>
+            <div className="flex flex-col">
               <label className="block text-xs font-bold text-slate-700 mb-1">Giới hạn tải (Users)</label>
-              <input
-                type="number"
-                min="1"
-                max="10000"
-                value={formData.maxConcurrentUsers}
-                onChange={(e) => setFormData({ ...formData, maxConcurrentUsers: Number(e.target.value) })}
-                className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
-                required
-              />
-              <span className="text-[10px] text-slate-500 mt-0.5 block">Số máy truy cập đồng thời</span>
+              <div className="mt-auto">
+                <input
+                  type="number"
+                  min="1"
+                  max="10000"
+                  value={formData.maxConcurrentUsers}
+                  onChange={(e) => setFormData({ ...formData, maxConcurrentUsers: Number(e.target.value) })}
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] font-mono"
+                  required
+                />
+                <span className="text-[10px] text-slate-500 mt-0.5 block">Số máy truy cập đồng thời</span>
+              </div>
             </div>
           </div>
 
