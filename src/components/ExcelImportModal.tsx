@@ -132,7 +132,7 @@ export const ExcelImportModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
                 <div>
                   <h4 className="text-xs font-bold text-blue-900">1. Tải về file mẫu Excel chuẩn</h4>
                   <p className="text-[11px] text-blue-700 mt-0.5">
-                    Mẫu Excel gồm 13 cột bắt buộc với các dữ liệu mẫu của Hồng Bàng, Ngô Quyền, Cát Bà.
+                    Mẫu Excel gồm 13 cột chuẩn với mã địa bàn Phường / Xã / Đặc khu mới (Hồng Bàng, Ngô Quyền, Đặc khu Cát Hải).
                   </p>
                 </div>
                 <button

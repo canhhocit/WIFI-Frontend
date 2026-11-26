@@ -400,7 +400,8 @@ export const adminApi = {
 
   downloadExcelTemplate: async () => {
     const token = localStorage.getItem('admin_token');
-    const res = await fetch('/api/admin/locations/import/template', {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+    const res = await fetch(`${API_BASE_URL}/admin/locations/import/template`, {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
@@ -410,7 +411,7 @@ export const adminApi = {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = '1584_Diem_WiFi_HaiPhong_Template.xlsx';
+    a.download = 'Danh_sach_Diem_WiFi_HaiPhong_Template.xlsx';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -424,7 +425,8 @@ export const adminApi = {
 
   downloadExcelErrors: async (sessionId: string) => {
     const token = localStorage.getItem('admin_token');
-    const res = await fetch(`/api/admin/locations/import/errors/${sessionId}`, {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+    const res = await fetch(`${API_BASE_URL}/admin/locations/import/errors/${sessionId}`, {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
@@ -448,17 +450,25 @@ export const adminApi = {
 
   exportLocationsExcel: async () => {
     const token = localStorage.getItem('admin_token');
-    const res = await fetch('/api/admin/locations/export', {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+    const res = await fetch(`${API_BASE_URL}/admin/locations/export`, {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
-    if (!res.ok) throw new Error('Không thể xuất dữ liệu điểm phát sóng (' + res.status + ')');
+    if (!res.ok) {
+      let msg = 'Không thể xuất dữ liệu điểm phát sóng (' + res.status + ')';
+      try {
+        const json = await res.json();
+        if (json?.message) msg = json.message;
+      } catch { /* ignore non-JSON error body */ }
+      throw new Error(msg);
+    }
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'Danh_sach_1584_Diem_WiFi.xlsx';
+    a.download = 'Danh_sach_Diem_WiFi_HaiPhong.xlsx';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
