@@ -208,13 +208,13 @@ export const GisMapPage: React.FC = () => {
             />
           </div>
 
-          {/* District Selector */}
+          {/* Admin Unit Selector (114 Phường / Xã / Đặc khu) */}
           <select
             value={selectedDistrict}
             onChange={(e) => setSelectedDistrict(e.target.value)}
             className="text-xs border border-gray-300 rounded-sm px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            <option value="ALL">-- Tất cả Quận/Huyện TP Hải Phòng --</option>
+            <option value="ALL">-- Tất cả {districts.length || 114} Phường / Xã / Đặc khu --</option>
             {districts.map((d) => (
               <option key={d.id} value={d.name}>
                 {d.name}
@@ -374,7 +374,7 @@ export const GisMapPage: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Mã & Điểm phát</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Quận / Huyện</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Phường / Xã / Đặc khu</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Thiết bị (Online/Tổng)</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Phiên Wi-Fi</th>

@@ -67,24 +67,34 @@ interface LeafletGisMapProps {
   compact?: boolean;
 }
 
-// Tọa độ trung tâm TP. Hải Phòng và 15 Quận / Huyện
+// Tọa độ trung tâm TP. Hải Phòng mới và một số Phường / Xã / Đặc khu tiêu biểu
 export const DISTRICT_CENTERS: Record<string, { lat: number; lng: number; zoom: number }> = {
   ALL: { lat: 20.8449, lng: 106.6881, zoom: 11 },
-  'Quận Hồng Bàng': { lat: 20.8651, lng: 106.6838, zoom: 14 },
-  'Quận Ngô Quyền': { lat: 20.8580, lng: 106.7000, zoom: 14 },
-  'Quận Lê Chân': { lat: 20.8450, lng: 106.6780, zoom: 14 },
-  'Quận Hải An': { lat: 20.8350, lng: 106.7250, zoom: 13 },
-  'Quận Kiến An': { lat: 20.8050, lng: 106.6280, zoom: 13 },
-  'Quận Đồ Sơn': { lat: 20.7100, lng: 106.7850, zoom: 13 },
-  'Quận Dương Kinh': { lat: 20.7850, lng: 106.7150, zoom: 13 },
-  'Huyện Thủy Nguyên': { lat: 20.9350, lng: 106.6850, zoom: 12 },
-  'Huyện An Dương': { lat: 20.8750, lng: 106.6050, zoom: 12 },
-  'Huyện An Lão': { lat: 20.8250, lng: 106.5450, zoom: 12 },
-  'Huyện Kiến Thụy': { lat: 20.7650, lng: 106.6650, zoom: 12 },
-  'Huyện Tiên Lãng': { lat: 20.7250, lng: 106.5650, zoom: 12 },
-  'Huyện Vĩnh Bảo': { lat: 20.6850, lng: 106.4850, zoom: 12 },
-  'Huyện Cát Hải': { lat: 20.7275, lng: 107.0494, zoom: 12 },
-  'Huyện Bạch Long Vĩ': { lat: 20.1333, lng: 107.7167, zoom: 14 },
+  'Phường Hồng Bàng': { lat: 20.8651, lng: 106.6838, zoom: 14 },
+  'Phường Hồng An': { lat: 20.8780, lng: 106.6280, zoom: 14 },
+  'Phường Ngô Quyền': { lat: 20.8580, lng: 106.7000, zoom: 14 },
+  'Phường Gia Viên': { lat: 20.8470, lng: 106.6970, zoom: 14 },
+  'Phường Lê Chân': { lat: 20.8450, lng: 106.6780, zoom: 14 },
+  'Phường An Biên': { lat: 20.8380, lng: 106.6680, zoom: 14 },
+  'Phường Hải An': { lat: 20.8350, lng: 106.7250, zoom: 13 },
+  'Phường Đông Hải': { lat: 20.8450, lng: 106.7550, zoom: 13 },
+  'Phường Kiến An': { lat: 20.8050, lng: 106.6280, zoom: 13 },
+  'Phường Phù Liễn': { lat: 20.8180, lng: 106.6150, zoom: 13 },
+  'Phường Đồ Sơn': { lat: 20.7100, lng: 106.7850, zoom: 13 },
+  'Phường Nam Đồ Sơn': { lat: 20.7350, lng: 106.7450, zoom: 13 },
+  'Phường Dương Kinh': { lat: 20.7850, lng: 106.7150, zoom: 13 },
+  'Phường Hưng Đạo': { lat: 20.7980, lng: 106.6950, zoom: 13 },
+  'Phường Thủy Nguyên': { lat: 20.9350, lng: 106.6850, zoom: 13 },
+  'Phường An Dương': { lat: 20.8750, lng: 106.6050, zoom: 13 },
+  'Phường Hải Dương': { lat: 20.9373, lng: 106.3146, zoom: 13 },
+  'Phường Chu Văn An': { lat: 21.1100, lng: 106.3950, zoom: 13 },
+  'Phường Kinh Môn': { lat: 20.9900, lng: 106.5500, zoom: 13 },
+  'Xã An Lão': { lat: 20.8250, lng: 106.5450, zoom: 13 },
+  'Xã Kiến Thụy': { lat: 20.7650, lng: 106.6650, zoom: 13 },
+  'Xã Tiên Lãng': { lat: 20.7250, lng: 106.5650, zoom: 13 },
+  'Xã Vĩnh Bảo': { lat: 20.6850, lng: 106.4850, zoom: 13 },
+  'Đặc khu Cát Hải': { lat: 20.7275, lng: 107.0494, zoom: 12 },
+  'Đặc khu Bạch Long Vĩ': { lat: 20.1333, lng: 107.7167, zoom: 14 },
 };
 
 function distanceInMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -275,15 +285,31 @@ export const LeafletGisMap: React.FC<LeafletGisMapProps> = ({
     } catch {}
   }, [activeBasemap]);
 
-  // 3. Bay tới vị trí Quận/Huyện được chọn
+  // 3. Bay tới vị trí Phường / Xã / Đặc khu được chọn
   useEffect(() => {
     if (!mapRef.current) return;
-    const target = DISTRICT_CENTERS[selectedDistrict] || DISTRICT_CENTERS.ALL;
+    if (DISTRICT_CENTERS[selectedDistrict]) {
+      const target = DISTRICT_CENTERS[selectedDistrict];
+      mapRef.current.flyTo([target.lat, target.lng], target.zoom, {
+        duration: 1.2,
+        easeLinearity: 0.25,
+      });
+      return;
+    }
+    const matchingPin = pins.find(
+      (p) =>
+        (p.districtName === selectedDistrict || p.adminUnitName === selectedDistrict) &&
+        typeof p.latitude === 'number' &&
+        typeof p.longitude === 'number'
+    );
+    const target = matchingPin
+      ? { lat: matchingPin.latitude!, lng: matchingPin.longitude!, zoom: 14 }
+      : DISTRICT_CENTERS.ALL;
     mapRef.current.flyTo([target.lat, target.lng], target.zoom, {
       duration: 1.2,
       easeLinearity: 0.25,
     });
-  }, [selectedDistrict]);
+  }, [selectedDistrict, pins]);
 
   // 4. Đo đạc khoảng cách (Measurement Tool)
   useEffect(() => {

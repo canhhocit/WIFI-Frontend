@@ -101,7 +101,7 @@ const MODULE_TOUR_DEFINITIONS: Record<string, { title: string; content: string; 
   },
   'nav-campaigns': {
     title: 'Chiến Dịch Tuyên Truyền & Chính Sách',
-    content: 'Đăng tải video, áp phích tuyên truyền Dịch vụ công trực tuyến, phân bổ phát sóng chính xác theo từng Quận/Huyện/Xã.',
+    content: 'Đăng tải video, áp phích tuyên truyền Dịch vụ công trực tuyến, phân bổ phát sóng chính xác theo từng Phường/Xã/Đặc khu.',
     badge: 'Truyền thông số',
     placement: 'right'
   },

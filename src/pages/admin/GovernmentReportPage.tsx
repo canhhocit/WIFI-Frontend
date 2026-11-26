@@ -372,10 +372,10 @@ export const GovernmentReportPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Part II: District Breakdown Table */}
+          {/* Part II: Breakdown by Phường / Xã / Đặc khu */}
           <div className="mt-8 print:mt-3.5 space-y-3 print:space-y-1.5 font-sans">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 font-serif border-b pb-1">
-              II. CHI TIẾT TỔNG HỢP THEO 15 QUẬN / HUYỆN THÀNH PHỐ HẢI PHÒNG
+              II. CHI TIẾT TỔNG HỢP THEO {report.districtBreakdown.length} PHƯỜNG / XÃ / ĐẶC KHU THÀNH PHỐ HẢI PHÒNG
             </h3>
 
             <div className="overflow-x-auto print:overflow-visible border border-gray-300 rounded-sm">
@@ -383,8 +383,8 @@ export const GovernmentReportPage: React.FC = () => {
                 <thead className="bg-gray-100 font-serif text-gray-800">
                   <tr>
                     <th className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-bold">STT</th>
-                    <th className="px-3 py-2.5 print:px-2 print:py-1 text-left font-bold">Địa bàn Quận / Huyện</th>
-                    <th className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-bold">Chỉ tiêu NVH</th>
+                    <th className="px-3 py-2.5 print:px-2 print:py-1 text-left font-bold">Phường / Xã / Đặc khu</th>
+                    <th className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-bold">Số điểm phát</th>
                     <th className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-bold">Online</th>
                     <th className="px-3 py-2.5 print:px-1.5 print:py-1 text-center font-bold">Độ khả dụng</th>
                     <th className="px-3 py-2.5 print:px-1.5 print:py-1 text-right font-bold">Lượt truy cập</th>
@@ -462,7 +462,7 @@ export const GovernmentReportPage: React.FC = () => {
                 <strong>Cổng chào số &amp; Dịch vụ công:</strong> Cổng chào điện tử phục vụ truyền thông chuyển đổi số và điều hướng trực tiếp tới Cổng Dịch vụ công thành phố Hải Phòng tại các điểm đã lắp đặt thiết bị.
               </li>
               <li>
-                <strong>An toàn thông tin &amp; Lưu vết pháp lý:</strong> Hệ thống áp dụng phân quyền 3 cấp, kiểm soát tên miền DNS và lưu trữ nhật ký phiên truy cập 12 tháng phục vụ công tác kiểm tra, giám sát theo quy định.
+                <strong>An toàn thông tin &amp; Lưu vết pháp lý:</strong> Hệ thống áp dụng phân quyền chặt chẽ (Quản trị – Sở KH&amp;CN – UBND Phường/Xã/Đặc khu), kiểm soát tên miền DNS và lưu trữ nhật ký phiên truy cập 12 tháng phục vụ công tác kiểm tra, giám sát theo quy định.
               </li>
               <li>
                 <strong>Hiện trạng kết nối &amp; Tuân thủ SLA trong kỳ:</strong>{' '}

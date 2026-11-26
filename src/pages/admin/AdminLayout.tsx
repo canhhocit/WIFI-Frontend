@@ -367,8 +367,8 @@ export const AdminLayout: React.FC = () => {
       case "ROLE_DISTRICT_OFFICER":
       case "ROLE_COMMUNE_OFFICER":
         return {
-          label: "Cán bộ UBND Xã / Phường",
-          scope: currentUser?.adminUnitName?.replace(/^Quận\s+/i, "Phường ") || "Cơ sở Phường / Xã",
+          label: "Cán bộ UBND Phường / Xã / Đặc khu",
+          scope: currentUser?.adminUnitName || "Cơ sở Phường / Xã / Đặc khu",
           color: "bg-slate-700 text-slate-100 border-slate-600",
         };
       default:

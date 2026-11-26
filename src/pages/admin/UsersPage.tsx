@@ -73,7 +73,6 @@ export const UsersPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUserDto | null>(null);
   const [selectedUnitFilter, setSelectedUnitFilter] = useState<string>('ALL');
-  const [modalDistrictId, setModalDistrictId] = useState<string>('');
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -85,7 +84,7 @@ export const UsersPage: React.FC = () => {
     enabled: true,
   });
 
-  // Làm phẳng cây đơn vị hành chính 3 cấp (Thành phố -> Quận/Huyện -> Phường/Xã) và hợp nhất dữ liệu các cấp
+  // Làm phẳng cây đơn vị hành chính 2 cấp (Thành phố -> Phường / Xã / Đặc khu)
   const flattenAdminUnits = (
     tree: AdminUnitDto[],
     level2List: AdminUnitDto[],
@@ -110,19 +109,15 @@ export const UsersPage: React.FC = () => {
 
     walk(tree || []);
     for (const d of level2List || []) {
-      if (d && typeof d.id === 'number' && !map.has(d.id)) {
-        map.set(d.id, d);
+      if (d && typeof d.id === 'number') {
+        const existing = map.get(d.id);
+        map.set(d.id, { ...existing, ...d });
       }
     }
     for (const w of level3List || []) {
       if (w && typeof w.id === 'number') {
         const existing = map.get(w.id);
-        const parentDistrict = w.parentId ? map.get(w.parentId) : undefined;
-        map.set(w.id, {
-          ...existing,
-          ...w,
-          parentName: w.parentName || existing?.parentName || parentDistrict?.name,
-        });
+        map.set(w.id, { ...existing, ...w });
       }
     }
 
@@ -158,8 +153,13 @@ export const UsersPage: React.FC = () => {
   }, [search, page, pageSize]);
 
   const cityUnits = adminUnits.filter((u) => u.level === 1);
-  const districtUnits = adminUnits.filter((u) => u.level === 2);
-  const wardUnits = adminUnits.filter((u) => u.level === 3);
+  const communeUnits = adminUnits.filter((u) => u.level === 2 || u.level === 3);
+  const wardGroup = communeUnits.filter((u) => u.name.startsWith('Phường'));
+  const ruralGroup = communeUnits.filter((u) => u.name.startsWith('Xã'));
+  const specialGroup = communeUnits.filter((u) => u.name.startsWith('Đặc khu'));
+  const otherCommunes = communeUnits.filter(
+    (u) => !u.name.startsWith('Phường') && !u.name.startsWith('Xã') && !u.name.startsWith('Đặc khu')
+  );
 
   const formatOfficerFullName = (name?: string) => {
     if (!name) return '';
@@ -177,35 +177,20 @@ export const UsersPage: React.FC = () => {
         if (unit.level === 1) {
           return { title: unit.name, subtitle: 'Toàn thành phố', level: 1 };
         }
-        if (unit.level === 2) {
-          const wardTitle = unit.name
-            .replace(/^Quận\s+/i, 'Phường ')
-            .replace(/^Huyện\s+/i, 'Xã ');
-          return { title: wardTitle, subtitle: 'Xã / Phường', level: 3 };
-        }
-        if (unit.level === 3) {
-          return {
-            title: unit.name,
-            subtitle: 'Xã / Phường',
-            level: 3,
-          };
-        }
+        return { title: unit.name, subtitle: 'Phường / Xã / Đặc khu', level: unit.level || 2 };
       }
     }
     if (user.adminUnitName) {
       const cleaned = user.adminUnitName
         .replace(/\s*\(Cấp\s*\d+[^)]*\)|\s*\(\d+\)/gi, '')
-        .replace(/^Quận\s+/i, 'Phường ')
-        .replace(/^Huyện\s+/i, 'Xã ')
         .trim();
-      return { title: cleaned, subtitle: 'Xã / Phường', level: 3 };
+      return { title: cleaned, subtitle: 'Phường / Xã / Đặc khu', level: 2 };
     }
     return null;
   };
 
   const handleOpenCreate = () => {
     setEditingUser(null);
-    setModalDistrictId('');
     setFormData({
       username: '',
       password: '',
@@ -221,20 +206,6 @@ export const UsersPage: React.FC = () => {
 
   const handleOpenEdit = (user: AdminUserDto) => {
     setEditingUser(user);
-    let initialDistrictId = '';
-    if (user.adminUnitId) {
-      const matched = adminUnits.find((u) => u.id === user.adminUnitId);
-      if (matched) {
-        if (matched.level === 2) {
-          initialDistrictId = String(matched.id);
-        } else if (matched.level === 3 && matched.parentId) {
-          initialDistrictId = String(matched.parentId);
-        } else if (matched.level === 1) {
-          initialDistrictId = `CITY_${matched.id}`;
-        }
-      }
-    }
-    setModalDistrictId(initialDistrictId);
     setFormData({
       username: user.username,
       password: '',
@@ -337,7 +308,6 @@ export const UsersPage: React.FC = () => {
       const filterId = Number(selectedUnitFilter);
       if (!u.adminUnitId) return false;
       if (u.adminUnitId !== filterId) {
-        // Nếu lọc theo Quận/Huyện (Cấp 2), bao gồm cả cán bộ thuộc Phường/Xã (Cấp 3) trực thuộc Quận/Huyện đó
         const userUnit = adminUnits.find((unit) => unit.id === u.adminUnitId);
         if (!userUnit || userUnit.parentId !== filterId) {
           return false;
@@ -435,31 +405,36 @@ export const UsersPage: React.FC = () => {
             {cityUnits.length > 0 && (
               <optgroup label="Thành phố">
                 {cityUnits.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
+                  <option key={u.id} value={u.id}>{u.name}</option>
                 ))}
               </optgroup>
             )}
-            {districtUnits.length > 0 && (
-              <optgroup label="Quận / Huyện">
-                {districtUnits.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
+            {wardGroup.length > 0 && (
+              <optgroup label={`Phường (${wardGroup.length})`}>
+                {wardGroup.map((w) => (
+                  <option key={w.id} value={w.id}>{w.name}</option>
                 ))}
               </optgroup>
             )}
-            {wardUnits.length > 0 && (
-              <optgroup label="Phường / Xã / Thị trấn">
-                {wardUnits.map((w) => {
-                  const pName = w.parentName || districtUnits.find((d) => d.id === w.parentId)?.name;
-                  return (
-                    <option key={w.id} value={w.id}>
-                      {w.name}{pName ? ` — ${pName}` : ''}
-                    </option>
-                  );
-                })}
+            {ruralGroup.length > 0 && (
+              <optgroup label={`Xã (${ruralGroup.length})`}>
+                {ruralGroup.map((w) => (
+                  <option key={w.id} value={w.id}>{w.name}</option>
+                ))}
+              </optgroup>
+            )}
+            {specialGroup.length > 0 && (
+              <optgroup label={`Đặc khu (${specialGroup.length})`}>
+                {specialGroup.map((w) => (
+                  <option key={w.id} value={w.id}>{w.name}</option>
+                ))}
+              </optgroup>
+            )}
+            {otherCommunes.length > 0 && (
+              <optgroup label="Đơn vị khác">
+                {otherCommunes.map((w) => (
+                  <option key={w.id} value={w.id}>{w.name}</option>
+                ))}
               </optgroup>
             )}
           </select>
@@ -749,37 +724,28 @@ export const UsersPage: React.FC = () => {
                   <div className="space-y-3 bg-gray-50/70 p-3.5 rounded-sm border border-gray-200/80">
                     <div className="flex items-center justify-between gap-2">
                       <label className="block text-xs font-semibold text-gray-700 uppercase">
-                        Gán Địa bàn Quản lý (Quận / Huyện / Phường / Xã)
+                        Gán Địa bàn Quản lý (Thành phố / Phường / Xã / Đặc khu)
                       </label>
                       <span className="text-[11px] font-medium text-blue-600 shrink-0">
                         {formData.adminUnitId
                           ? (() => {
                               const u = adminUnits.find((item) => String(item.id) === String(formData.adminUnitId));
                               if (!u || u.level === 1) return 'Phạm vi: Toàn thành phố';
-                              return u.level === 2 ? 'Phạm vi: Quận / Huyện' : 'Phạm vi: Phường / Xã';
+                              return 'Phạm vi: Phường / Xã / Đặc khu';
                             })()
                           : 'Phạm vi: Toàn thành phố'}
                       </span>
                     </div>
 
-                    {/* Chọn Toàn Thành phố hoặc Quận / Huyện */}
                     <div>
                       <label className="block text-[11px] font-medium text-gray-600 mb-1">
-                        Quận / Huyện
+                        Đơn vị hành chính phụ trách
                       </label>
                       <select
-                        value={modalDistrictId}
+                        value={formData.adminUnitId ? String(formData.adminUnitId) : ''}
                         onChange={(e) => {
                           const val = e.target.value;
-                          setModalDistrictId(val);
-                          if (!val) {
-                            setFormData({ ...formData, adminUnitId: '' });
-                          } else if (val.startsWith('CITY_')) {
-                            const cityId = Number(val.replace('CITY_', ''));
-                            setFormData({ ...formData, adminUnitId: cityId });
-                          } else {
-                            setFormData({ ...formData, adminUnitId: Number(val) });
-                          }
+                          setFormData({ ...formData, adminUnitId: val ? Number(val) : '' });
                         }}
                         className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
@@ -787,75 +753,44 @@ export const UsersPage: React.FC = () => {
                         {cityUnits.length > 0 && (
                           <optgroup label="Thành phố">
                             {cityUnits.map((c) => (
-                              <option key={`city-${c.id}`} value={`CITY_${c.id}`}>
+                              <option key={`city-${c.id}`} value={String(c.id)}>
                                 {c.name}
                               </option>
                             ))}
                           </optgroup>
                         )}
-                        <optgroup label={`Quận / Huyện (${districtUnits.length} đơn vị)`}>
-                          {districtUnits.map((d) => (
-                            <option key={d.id} value={String(d.id)}>
-                              {d.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                      </select>
-                    </div>
-
-                    {/* Chọn Phường / Xã / Thị trấn trực thuộc Quận/Huyện đã chọn */}
-                    <div>
-                      <label className="block text-[11px] font-medium text-gray-600 mb-1">
-                        Phường / Xã / Thị trấn trực thuộc
-                      </label>
-                      <select
-                        value={
-                          adminUnits.find((u) => String(u.id) === String(formData.adminUnitId))?.level === 3
-                            ? String(formData.adminUnitId)
-                            : ''
-                        }
-                        onChange={(e) => {
-                          const wardId = e.target.value;
-                          if (wardId) {
-                            const ward = wardUnits.find((w) => String(w.id) === wardId);
-                            if (ward && ward.parentId) {
-                              setModalDistrictId(String(ward.parentId));
-                            }
-                            setFormData({ ...formData, adminUnitId: Number(wardId) });
-                          } else {
-                            if (modalDistrictId && !modalDistrictId.startsWith('CITY_')) {
-                              setFormData({ ...formData, adminUnitId: Number(modalDistrictId) });
-                            } else if (modalDistrictId.startsWith('CITY_')) {
-                              setFormData({ ...formData, adminUnitId: Number(modalDistrictId.replace('CITY_', '')) });
-                            } else {
-                              setFormData({ ...formData, adminUnitId: '' });
-                            }
-                          }
-                        }}
-                        className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">
-                          {modalDistrictId && !modalDistrictId.startsWith('CITY_')
-                            ? `-- Quản lý toàn bộ ${districtUnits.find((d) => String(d.id) === modalDistrictId)?.name || 'Quận/Huyện'} --`
-                            : '-- Không giới hạn ở Phường/Xã (Chọn nếu là Cán bộ Phường/Xã) --'}
-                        </option>
-                        {(modalDistrictId && !modalDistrictId.startsWith('CITY_')
-                          ? wardUnits.filter((w) => String(w.parentId) === modalDistrictId)
-                          : wardUnits
-                        ).map((w) => {
-                          const parentName = w.parentName || districtUnits.find((d) => d.id === w.parentId)?.name;
-                          return (
-                            <option key={w.id} value={String(w.id)}>
-                              {w.name}{parentName ? ` — ${parentName}` : ''}
-                            </option>
-                          );
-                        })}
+                        {wardGroup.length > 0 && (
+                          <optgroup label={`Phường (${wardGroup.length})`}>
+                            {wardGroup.map((w) => (
+                              <option key={w.id} value={String(w.id)}>{w.name}</option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {ruralGroup.length > 0 && (
+                          <optgroup label={`Xã (${ruralGroup.length})`}>
+                            {ruralGroup.map((w) => (
+                              <option key={w.id} value={String(w.id)}>{w.name}</option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {specialGroup.length > 0 && (
+                          <optgroup label={`Đặc khu (${specialGroup.length})`}>
+                            {specialGroup.map((w) => (
+                              <option key={w.id} value={String(w.id)}>{w.name}</option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {otherCommunes.length > 0 && (
+                          <optgroup label="Đơn vị khác">
+                            {otherCommunes.map((w) => (
+                              <option key={w.id} value={String(w.id)}>{w.name}</option>
+                            ))}
+                          </optgroup>
+                        )}
                       </select>
                       <p className="text-[11px] text-gray-500 mt-1">
-                        {formData.role === 'ROLE_DISTRICT_OFFICER'
-                          ? 'Gợi ý: Cán bộ Quận/Huyện chọn Quận/Huyện để quản lý toàn bộ các Phường/Xã trực thuộc.'
-                          : formData.role === 'ROLE_COMMUNE_OFFICER'
-                          ? 'Gợi ý: Cán bộ Phường/Xã chọn cụ thể Phường/Xã nơi mình phụ trách.'
+                        {formData.role === 'ROLE_COMMUNE_OFFICER'
+                          ? 'Gợi ý: Cán bộ cơ sở chọn cụ thể Phường / Xã / Đặc khu nơi mình phụ trách.'
                           : 'Gợi ý: Để trống nếu cán bộ phụ trách phạm vi toàn thành phố.'}
                       </p>
                     </div>

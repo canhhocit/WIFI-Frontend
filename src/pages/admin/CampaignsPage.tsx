@@ -1157,7 +1157,7 @@ export const CampaignsPage: React.FC = () => {
                     : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                 }`}
               >
-                Theo Quận / Huyện
+                Theo Phường / Xã / Đặc khu
               </button>
               <button
                 type="button"
@@ -1177,24 +1177,31 @@ export const CampaignsPage: React.FC = () => {
 
             {targetMode === 'ADMIN_UNIT' && (
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Chọn Địa bàn (Quận / Huyện / Phường / Xã):</label>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Chọn Địa bàn (Phường / Xã / Đặc khu):</label>
                 <select
                   value={formData.targetAdminUnitId || ''}
                   onChange={(e) => setFormData({ ...formData, targetAdminUnitId: e.target.value ? Number(e.target.value) : undefined })}
                   className="w-full h-9 px-2.5 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                 >
-                  <option value="">-- Chọn Quận/Huyện hoặc Phường/Xã phát sóng --</option>
-                  <optgroup label="Quận / Huyện">
-                    {adminUnits.filter((u) => u.level === 2 || !u.level).map((u) => (
-                      <option key={u.id} value={u.id}>{u.name}</option>
-                    ))}
-                  </optgroup>
-                  {adminUnits.some((u) => u.level === 3) && (
-                    <optgroup label="Phường / Xã / Thị trấn">
-                      {adminUnits.filter((u) => u.level === 3).map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.name}{u.parentName ? ` — ${u.parentName}` : ''}
-                        </option>
+                  <option value="">-- Chọn Phường / Xã / Đặc khu phát sóng --</option>
+                  {adminUnits.some((u) => u.name.startsWith('Phường')) && (
+                    <optgroup label="Phường">
+                      {adminUnits.filter((u) => u.name.startsWith('Phường')).map((u) => (
+                        <option key={u.id} value={u.id}>{u.name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {adminUnits.some((u) => u.name.startsWith('Xã')) && (
+                    <optgroup label="Xã">
+                      {adminUnits.filter((u) => u.name.startsWith('Xã')).map((u) => (
+                        <option key={u.id} value={u.id}>{u.name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {adminUnits.some((u) => u.name.startsWith('Đặc khu')) && (
+                    <optgroup label="Đặc khu">
+                      {adminUnits.filter((u) => u.name.startsWith('Đặc khu')).map((u) => (
+                        <option key={u.id} value={u.id}>{u.name}</option>
                       ))}
                     </optgroup>
                   )}
@@ -1375,7 +1382,7 @@ export const CampaignsPage: React.FC = () => {
                       : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                   }`}
                 >
-                  Theo Quận / Huyện
+                  Theo Phường / Xã / Đặc khu
                 </button>
                 <button
                   type="button"
@@ -1395,24 +1402,31 @@ export const CampaignsPage: React.FC = () => {
 
               {targetMode === 'ADMIN_UNIT' && (
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Chọn Địa bàn (Quận / Huyện / Phường / Xã):</label>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Chọn Địa bàn (Phường / Xã / Đặc khu):</label>
                   <select
                     value={formData.targetAdminUnitId || ''}
                     onChange={(e) => setFormData({ ...formData, targetAdminUnitId: e.target.value ? Number(e.target.value) : undefined })}
                     className="w-full h-9 px-2.5 text-xs bg-white border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87]"
                   >
-                    <option value="">-- Chọn Quận/Huyện hoặc Phường/Xã phát sóng --</option>
-                    <optgroup label="Quận / Huyện">
-                      {adminUnits.filter((u) => u.level === 2 || !u.level).map((u) => (
-                        <option key={u.id} value={u.id}>{u.name}</option>
-                      ))}
-                    </optgroup>
-                    {adminUnits.some((u) => u.level === 3) && (
-                      <optgroup label="Phường / Xã / Thị trấn">
-                        {adminUnits.filter((u) => u.level === 3).map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {u.name}{u.parentName ? ` — ${u.parentName}` : ''}
-                          </option>
+                    <option value="">-- Chọn Phường / Xã / Đặc khu phát sóng --</option>
+                    {adminUnits.some((u) => u.name.startsWith('Phường')) && (
+                      <optgroup label="Phường">
+                        {adminUnits.filter((u) => u.name.startsWith('Phường')).map((u) => (
+                          <option key={u.id} value={u.id}>{u.name}</option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {adminUnits.some((u) => u.name.startsWith('Xã')) && (
+                      <optgroup label="Xã">
+                        {adminUnits.filter((u) => u.name.startsWith('Xã')).map((u) => (
+                          <option key={u.id} value={u.id}>{u.name}</option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {adminUnits.some((u) => u.name.startsWith('Đặc khu')) && (
+                      <optgroup label="Đặc khu">
+                        {adminUnits.filter((u) => u.name.startsWith('Đặc khu')).map((u) => (
+                          <option key={u.id} value={u.id}>{u.name}</option>
                         ))}
                       </optgroup>
                     )}

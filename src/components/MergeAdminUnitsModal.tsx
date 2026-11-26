@@ -20,7 +20,7 @@ export const MergeAdminUnitsModal: React.FC<Props> = ({
   adminUnits,
   locations,
 }) => {
-  const [selectedDistrictId, setSelectedDistrictId] = useState<string>('');
+  const [unitTypeFilter, setUnitTypeFilter] = useState<'ALL' | 'PHUONG' | 'XA' | 'DAC_KHU'>('ALL');
   const [sourceUnitIds, setSourceUnitIds] = useState<number[]>([]);
   const [targetUnitId, setTargetUnitId] = useState<number | null>(null);
   const [notes, setNotes] = useState<string>('');
@@ -38,14 +38,17 @@ export const MergeAdminUnitsModal: React.FC<Props> = ({
     return map;
   }, [locations]);
 
-  // Communes filtered by district (level 3)
+  // All active Phường / Xã / Đặc khu (2-tier post-merger)
   const availableCommunes = useMemo(() => {
-    return adminUnits.filter((u) => {
-      if (u.status === 'MERGED') return false; // Already merged units cannot be merged again
-      if (!selectedDistrictId) return true;
-      return String(u.parentId) === selectedDistrictId;
+    const pool = adminUnits.length > 0 ? adminUnits : districts;
+    return pool.filter((u) => {
+      if (u.status === 'MERGED') return false;
+      if (unitTypeFilter === 'PHUONG') return u.name.startsWith('Phường');
+      if (unitTypeFilter === 'XA') return u.name.startsWith('Xã');
+      if (unitTypeFilter === 'DAC_KHU') return u.name.startsWith('Đặc khu');
+      return true;
     });
-  }, [adminUnits, selectedDistrictId]);
+  }, [adminUnits, districts, unitTypeFilter]);
 
   // Total locations that will be transferred
   const totalLocationsToMove = useMemo(() => {
@@ -150,27 +153,25 @@ export const MergeAdminUnitsModal: React.FC<Props> = ({
             </div>
           )}
 
-          {/* District Filter */}
+          {/* Unit Type Filter */}
           <div className="bg-slate-50 p-3.5 rounded-md border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
               <Building2 className="w-4 h-4 text-indigo-700" />
-              <span>Phạm vi Quận / Huyện thực hiện:</span>
+              <span>Lọc loại đơn vị cơ sở:</span>
             </div>
             <select
-              value={selectedDistrictId}
+              value={unitTypeFilter}
               onChange={(e) => {
-                setSelectedDistrictId(e.target.value);
+                setUnitTypeFilter(e.target.value as 'ALL' | 'PHUONG' | 'XA' | 'DAC_KHU');
                 setSourceUnitIds([]);
                 setTargetUnitId(null);
               }}
               className="text-xs bg-white border border-slate-300 rounded px-3 py-1.5 font-medium text-slate-800 focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
             >
-              <option value="">-- Tất cả 15 Quận / Huyện Hải Phòng --</option>
-              {districts.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name} ({d.code})
-                </option>
-              ))}
+              <option value="ALL">-- Tất cả Phường / Xã / Đặc khu TP Hải Phòng --</option>
+              <option value="PHUONG">Phường</option>
+              <option value="XA">Xã</option>
+              <option value="DAC_KHU">Đặc khu</option>
             </select>
           </div>
 

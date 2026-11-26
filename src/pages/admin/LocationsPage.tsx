@@ -50,7 +50,6 @@ export const LocationsPage: React.FC = () => {
   const [locations, setLocations] = useState<LocationDto[]>([]);
   const [districts, setDistricts] = useState<AdminUnitDto[]>([]);
   const [adminUnits, setAdminUnits] = useState<AdminUnitDto[]>([]);
-  const [selectedDistrictId, setSelectedDistrictId] = useState<string>('');
   const [createdNotification, setCreatedNotification] = useState<{ id: number; name: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -166,19 +165,58 @@ export const LocationsPage: React.FC = () => {
 
   const loadAdminUnits = async () => {
     try {
-      const [distList, commList] = await Promise.all([
-        adminApi.getAdminByLevel(2), // 15 Quận / Huyện Hải Phòng
-        adminApi.getAdminByLevel(3), // Xã / Phường
-      ]);
-      setDistricts(distList);
-      setAdminUnits(commList);
+      const level2List = await adminApi.getAdminByLevel(2); // 114 Phường / Xã / Đặc khu
+      const sorted = [...(level2List || [])].sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+      setDistricts(sorted);
+      setAdminUnits(sorted);
     } catch {
       // Silently fail or keep empty if no admin units yet
     }
   };
 
+  const renderAdminUnitGroups = (includeCode = false) => {
+    const wards = adminUnits.filter((u) => u.name.startsWith('Phường'));
+    const communes = adminUnits.filter((u) => u.name.startsWith('Xã'));
+    const specialZones = adminUnits.filter((u) => u.name.startsWith('Đặc khu'));
+    const others = adminUnits.filter(
+      (u) => !u.name.startsWith('Phường') && !u.name.startsWith('Xã') && !u.name.startsWith('Đặc khu')
+    );
+    const fmt = (u: AdminUnitDto) => (includeCode ? `${u.name} (${u.code})` : u.name);
+    return (
+      <>
+        {wards.length > 0 && (
+          <optgroup label={`Phường (${wards.length})`}>
+            {wards.map((u) => (
+              <option key={u.id} value={u.id}>{fmt(u)}</option>
+            ))}
+          </optgroup>
+        )}
+        {communes.length > 0 && (
+          <optgroup label={`Xã (${communes.length})`}>
+            {communes.map((u) => (
+              <option key={u.id} value={u.id}>{fmt(u)}</option>
+            ))}
+          </optgroup>
+        )}
+        {specialZones.length > 0 && (
+          <optgroup label={`Đặc khu (${specialZones.length})`}>
+            {specialZones.map((u) => (
+              <option key={u.id} value={u.id}>{fmt(u)}</option>
+            ))}
+          </optgroup>
+        )}
+        {others.length > 0 && (
+          <optgroup label="Đơn vị khác">
+            {others.map((u) => (
+              <option key={u.id} value={u.id}>{fmt(u)}</option>
+            ))}
+          </optgroup>
+        )}
+      </>
+    );
+  };
+
   const handleOpenCreate = () => {
-    setSelectedDistrictId('');
     setFormData({
       slug: '',
       name: '',
@@ -207,17 +245,6 @@ export const LocationsPage: React.FC = () => {
 
   const handleOpenEdit = (loc: LocationDto) => {
     setEditingLocation(loc);
-    let dId = '';
-    if (loc.adminUnitId) {
-      const commune = adminUnits.find((u) => u.id === loc.adminUnitId);
-      if (commune && commune.parentId) {
-        dId = String(commune.parentId);
-      } else {
-        const dist = districts.find((d) => d.id === loc.adminUnitId);
-        if (dist) dId = String(dist.id);
-      }
-    }
-    setSelectedDistrictId(dId);
     setFormData({
       slug: loc.slug,
       name: loc.name,
@@ -501,12 +528,8 @@ export const LocationsPage: React.FC = () => {
               onChange={(e) => setSelectedAdminUnit(e.target.value)}
               className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87]"
             >
-              <option value="">-- Tất cả Xã / Phường / Thị trấn --</option>
-              {adminUnits.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name} ({u.code})
-                </option>
-              ))}
+              <option value="">-- Tất cả Phường / Xã / Đặc khu --</option>
+              {renderAdminUnitGroups(true)}
             </select>
           </div>
         )}
@@ -868,69 +891,38 @@ export const LocationsPage: React.FC = () => {
               type="text"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              placeholder="Ví dụ: Thôn Lập Lễ, Xã Lập Lễ, Huyện Thủy Nguyên, Hải Phòng"
+              placeholder="Ví dụ: TDP số 1, Phường Hồng Bàng, TP Hải Phòng"
               className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87]"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Quận / Huyện TP Hải Phòng <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={selectedDistrictId}
-                onChange={(e) => {
-                  const dId = e.target.value;
-                  setSelectedDistrictId(dId);
-                  const dist = districts.find((d) => String(d.id) === dId);
-                  let newLat = formData.latitude;
-                  let newLng = formData.longitude;
-                  if (dist && DISTRICT_CENTERS[dist.name]) {
-                    newLat = String(DISTRICT_CENTERS[dist.name].lat);
-                    newLng = String(DISTRICT_CENTERS[dist.name].lng);
-                  }
-                  // Default adminUnitId to district ID if commune not chosen yet
-                  setFormData((prev) => ({
-                    ...prev,
-                    adminUnitId: dId || '',
-                    latitude: newLat,
-                    longitude: newLng,
-                  }));
-                }}
-                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white font-medium"
-              >
-                <option value="">-- Chọn Quận / Huyện --</option>
-                {districts.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Xã / Phường trực thuộc</label>
-              <select
-                value={formData.adminUnitId}
-                onChange={(e) => {
-                  const unitId = e.target.value;
-                  setFormData((prev) => ({ ...prev, adminUnitId: unitId || selectedDistrictId }));
-                }}
-                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
-              >
-                <option value={selectedDistrictId || ''}>
-                  {selectedDistrictId ? '-- Trực thuộc Quận/Huyện (mặc định) --' : '-- Chọn Quận/Huyện trước --'}
-                </option>
-                {adminUnits
-                  .filter((u) => !selectedDistrictId || String(u.parentId) === selectedDistrictId)
-                  .map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Phường / Xã / Đặc khu (TP Hải Phòng) <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.adminUnitId}
+              onChange={(e) => {
+                const unitId = e.target.value;
+                const unit = adminUnits.find((u) => String(u.id) === unitId);
+                let newLat = formData.latitude;
+                let newLng = formData.longitude;
+                if (unit && DISTRICT_CENTERS[unit.name]) {
+                  newLat = String(DISTRICT_CENTERS[unit.name].lat);
+                  newLng = String(DISTRICT_CENTERS[unit.name].lng);
+                }
+                setFormData((prev) => ({
+                  ...prev,
+                  adminUnitId: unitId,
+                  latitude: newLat,
+                  longitude: newLng,
+                }));
+              }}
+              className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white font-medium"
+            >
+              <option value="">-- Chọn Phường / Xã / Đặc khu --</option>
+              {renderAdminUnitGroups()}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -1137,63 +1129,33 @@ export const LocationsPage: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Quận / Huyện TP Hải Phòng <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={selectedDistrictId}
-                onChange={(e) => {
-                  const dId = e.target.value;
-                  setSelectedDistrictId(dId);
-                  const dist = districts.find((d) => String(d.id) === dId);
-                  let newLat = formData.latitude;
-                  let newLng = formData.longitude;
-                  if (dist && DISTRICT_CENTERS[dist.name]) {
-                    newLat = String(DISTRICT_CENTERS[dist.name].lat);
-                    newLng = String(DISTRICT_CENTERS[dist.name].lng);
-                  }
-                  setFormData((prev) => ({
-                    ...prev,
-                    adminUnitId: dId || '',
-                    latitude: newLat,
-                    longitude: newLng,
-                  }));
-                }}
-                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white font-medium"
-              >
-                <option value="">-- Chọn Quận / Huyện --</option>
-                {districts.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Xã / Phường trực thuộc</label>
-              <select
-                value={formData.adminUnitId}
-                onChange={(e) => {
-                  const unitId = e.target.value;
-                  setFormData((prev) => ({ ...prev, adminUnitId: unitId || selectedDistrictId }));
-                }}
-                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white"
-              >
-                <option value={selectedDistrictId || ''}>
-                  {selectedDistrictId ? '-- Trực thuộc Quận/Huyện (mặc định) --' : '-- Chọn Quận/Huyện trước --'}
-                </option>
-                {adminUnits
-                  .filter((u) => !selectedDistrictId || String(u.parentId) === selectedDistrictId)
-                  .map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Phường / Xã / Đặc khu (TP Hải Phòng) <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.adminUnitId}
+              onChange={(e) => {
+                const unitId = e.target.value;
+                const unit = adminUnits.find((u) => String(u.id) === unitId);
+                let newLat = formData.latitude;
+                let newLng = formData.longitude;
+                if (unit && DISTRICT_CENTERS[unit.name]) {
+                  newLat = String(DISTRICT_CENTERS[unit.name].lat);
+                  newLng = String(DISTRICT_CENTERS[unit.name].lng);
+                }
+                setFormData((prev) => ({
+                  ...prev,
+                  adminUnitId: unitId,
+                  latitude: newLat,
+                  longitude: newLng,
+                }));
+              }}
+              className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#004b87] focus:border-[#004b87] bg-white font-medium"
+            >
+              <option value="">-- Chọn Phường / Xã / Đặc khu --</option>
+              {renderAdminUnitGroups()}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
